@@ -2,7 +2,8 @@
 // locale must implement exactly these keys.
 //
 // The `common.*`, `number.*`, `dropdown.*`, `pagination.*`, `tabs.*`,
-// `search.*`, `splitter.*`, `password.*`, `combobox.*`, and `tagInput.*` blocks
+// `search.*`, `splitter.*`, `password.*`, `combobox.*`, `tagInput.*`,
+// `edit.*`, `copy.*`, and `editor.toast.*` blocks
 // are the shared label contract the ported UI primitives
 // fall back to when a caller passes no label prop. A host app that vendors a
 // primitive provides the same keys in its own locale dictionaries.
@@ -14,6 +15,7 @@ export const en = {
   'common.apply': 'Apply',
   'common.reload': 'Reload',
   'common.reset': 'Reset',
+  'common.copy': 'Copy',
 
   'number.increment': 'Increment',
   'number.decrement': 'Decrement',
@@ -33,6 +35,14 @@ export const en = {
   'combobox.remove': 'Remove {name}',
   'tagInput.suggestions': 'Tag suggestions',
   'tagInput.remove': 'Remove {name}',
+
+  'edit.editText': 'Edit text',
+  'edit.doubleClickToEdit': 'Double-click to edit',
+  'edit.edit': 'Edit',
+  'copy.toClipboard': 'Copy to clipboard',
+
+  'editor.toast.copied': 'Copied to clipboard',
+  'editor.toast.copyFailed': 'Failed to copy',
 
   'editor.content': 'Content',
   'editor.loading': 'Loading editor...',

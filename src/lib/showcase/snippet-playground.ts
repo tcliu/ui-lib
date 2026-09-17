@@ -21,13 +21,22 @@ import ChevronUpSmallIcon from '$lib/icons/ChevronUpSmallIcon.svelte'
 import CloseIcon from '$lib/icons/CloseIcon.svelte'
 import CodeIcon from '$lib/icons/CodeIcon.svelte'
 import CopyIcon from '$lib/icons/CopyIcon.svelte'
+import DeleteIcon from '$lib/icons/DeleteIcon.svelte'
 import EyeIcon from '$lib/icons/EyeIcon.svelte'
 import EyeSlashIcon from '$lib/icons/EyeSlashIcon.svelte'
+import ForestIcon from '$lib/icons/ForestIcon.svelte'
 import GlobeIcon from '$lib/icons/GlobeIcon.svelte'
+import KebabIcon from '$lib/icons/KebabIcon.svelte'
 import MenuIcon from '$lib/icons/MenuIcon.svelte'
 import PaletteIcon from '$lib/icons/PaletteIcon.svelte'
+import PlusIcon from '$lib/icons/PlusIcon.svelte'
+import RefreshIcon from '$lib/icons/RefreshIcon.svelte'
 import ResetIcon from '$lib/icons/ResetIcon.svelte'
+import SaveIcon from '$lib/icons/SaveIcon.svelte'
 import SearchIcon from '$lib/icons/SearchIcon.svelte'
+import SettingsIcon from '$lib/icons/SettingsIcon.svelte'
+import SortAscIcon from '$lib/icons/SortAscIcon.svelte'
+import SortDescIcon from '$lib/icons/SortDescIcon.svelte'
 
 // The showcase's live playground compiles an edited snippet in the browser and
 // renders it. `svelte/compiler` is imported dynamically so it lands in its own
@@ -73,13 +82,22 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/CloseIcon.svelte': { default: CloseIcon },
   'ui/CodeIcon.svelte': { default: CodeIcon },
   'ui/CopyIcon.svelte': { default: CopyIcon },
+  'ui/DeleteIcon.svelte': { default: DeleteIcon },
   'ui/EyeIcon.svelte': { default: EyeIcon },
   'ui/EyeSlashIcon.svelte': { default: EyeSlashIcon },
+  'ui/ForestIcon.svelte': { default: ForestIcon },
   'ui/GlobeIcon.svelte': { default: GlobeIcon },
+  'ui/KebabIcon.svelte': { default: KebabIcon },
   'ui/MenuIcon.svelte': { default: MenuIcon },
   'ui/PaletteIcon.svelte': { default: PaletteIcon },
+  'ui/PlusIcon.svelte': { default: PlusIcon },
+  'ui/RefreshIcon.svelte': { default: RefreshIcon },
   'ui/ResetIcon.svelte': { default: ResetIcon },
+  'ui/SaveIcon.svelte': { default: SaveIcon },
   'ui/SearchIcon.svelte': { default: SearchIcon },
+  'ui/SettingsIcon.svelte': { default: SettingsIcon },
+  'ui/SortAscIcon.svelte': { default: SortAscIcon },
+  'ui/SortDescIcon.svelte': { default: SortDescIcon },
 }
 
 const COMPONENT_IMPORTS = [
@@ -104,13 +122,22 @@ const COMPONENT_IMPORTS = [
   '  import CloseIcon from "ui/CloseIcon.svelte"',
   '  import CodeIcon from "ui/CodeIcon.svelte"',
   '  import CopyIcon from "ui/CopyIcon.svelte"',
+  '  import DeleteIcon from "ui/DeleteIcon.svelte"',
   '  import EyeIcon from "ui/EyeIcon.svelte"',
   '  import EyeSlashIcon from "ui/EyeSlashIcon.svelte"',
+  '  import ForestIcon from "ui/ForestIcon.svelte"',
   '  import GlobeIcon from "ui/GlobeIcon.svelte"',
+  '  import KebabIcon from "ui/KebabIcon.svelte"',
   '  import MenuIcon from "ui/MenuIcon.svelte"',
   '  import PaletteIcon from "ui/PaletteIcon.svelte"',
+  '  import PlusIcon from "ui/PlusIcon.svelte"',
+  '  import RefreshIcon from "ui/RefreshIcon.svelte"',
   '  import ResetIcon from "ui/ResetIcon.svelte"',
+  '  import SaveIcon from "ui/SaveIcon.svelte"',
   '  import SearchIcon from "ui/SearchIcon.svelte"',
+  '  import SettingsIcon from "ui/SettingsIcon.svelte"',
+  '  import SortAscIcon from "ui/SortAscIcon.svelte"',
+  '  import SortDescIcon from "ui/SortDescIcon.svelte"',
 ].join('\n')
 
 // Rewrite the compiler's ESM output for `new Function`: drop side-effect imports

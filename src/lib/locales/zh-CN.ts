@@ -8,6 +8,7 @@ export const zhCN: Record<MessageKey, string> = {
   'common.apply': '应用',
   'common.reload': '重新加载',
   'common.reset': '重置',
+  'common.copy': '复制',
 
   'number.increment': '增加',
   'number.decrement': '减少',
@@ -27,6 +28,14 @@ export const zhCN: Record<MessageKey, string> = {
   'combobox.remove': '移除 {name}',
   'tagInput.suggestions': '标签建议',
   'tagInput.remove': '移除 {name}',
+
+  'edit.editText': '编辑文本',
+  'edit.doubleClickToEdit': '双击编辑',
+  'edit.edit': '编辑',
+  'copy.toClipboard': '复制到剪贴板',
+
+  'editor.toast.copied': '已复制到剪贴板',
+  'editor.toast.copyFailed': '复制失败',
 
   'editor.content': '内容',
   'editor.loading': '正在加载编辑器...',

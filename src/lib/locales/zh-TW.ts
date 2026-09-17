@@ -8,6 +8,7 @@ export const zhTW: Record<MessageKey, string> = {
   'common.apply': '套用',
   'common.reload': '重新載入',
   'common.reset': '重設',
+  'common.copy': '複製',
 
   'number.increment': '增加',
   'number.decrement': '減少',
@@ -27,6 +28,14 @@ export const zhTW: Record<MessageKey, string> = {
   'combobox.remove': '移除 {name}',
   'tagInput.suggestions': '標籤建議',
   'tagInput.remove': '移除 {name}',
+
+  'edit.editText': '編輯文字',
+  'edit.doubleClickToEdit': '按兩下編輯',
+  'edit.edit': '編輯',
+  'copy.toClipboard': '複製到剪貼簿',
+
+  'editor.toast.copied': '已複製到剪貼簿',
+  'editor.toast.copyFailed': '複製失敗',
 
   'editor.content': '內容',
   'editor.loading': '正在載入編輯器...',
