@@ -17,6 +17,7 @@ const REGISTRY = join(process.env.HOME ?? '', '.agents', '.metadata', 'projects.
 // Shared files compared byte-for-byte across every app.
 const SHARED = {
   'src/lib/components': [
+    'BaseDialog.svelte',
     'Button.svelte',
     'Buttons.svelte',
     'Checkbox.svelte',
@@ -61,7 +62,6 @@ const SHARED = {
 
 // Per-project exceptions with the reason each may legitimately differ.
 const EXCEPTIONS = [
-  ['src/lib/components/BaseDialog.svelte', 'per-app dialog instance id and union-prop wiring'],
   ['src/lib/column-width-storage.ts', 'per-app storage-key prefix'],
   ['src/lib/i18n.svelte.ts', 'per-app locale dictionaries'],
   ['scripts/apply-schema.mjs', 'per-project schema fork'],
