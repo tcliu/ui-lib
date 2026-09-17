@@ -1,7 +1,12 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
   import '../styles.css'
+  import { createAppI18n, setI18nContext } from '$lib/i18n.svelte'
   import type { LayoutData } from './$types'
+
+  // One i18n store per app instance; children read it through the context.
+  const i18n = createAppI18n()
+  setI18nContext(i18n)
 
   let { children, data }: { children: Snippet; data: LayoutData } = $props()
 </script>
