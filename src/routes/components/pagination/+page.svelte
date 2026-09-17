@@ -64,7 +64,10 @@
 {/snippet}
 
 <ShowcasePage name="Pagination" props={propsSnippet}>
-  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault}>
+  <ShowcaseSection
+    title={i18n.t('showcase.default')}
+    code={codeDefault}
+    scope={{ pageSize, currentPage, handlePageSizeChange }}>
     <Pagination
       {total}
       {pageSize}
@@ -73,7 +76,7 @@
       onPageSizeChange={handlePageSizeChange} />
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized}>
+  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized} scope={{ pageSize, currentPage }}>
     {#each sizes as size (size)}
       <Pagination
         {total}
@@ -98,7 +101,7 @@
       onPageSizeChange={next => (pageSize = next)} />
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.state')} code={codeState}>
+  <ShowcaseSection title={i18n.t('showcase.state')} code={codeState} scope={{ currentPage, pageSize }}>
     <p class="text-sm text-slate-400">page: {currentPage}, size: {pageSize}</p>
   </ShowcaseSection>
 </ShowcasePage>

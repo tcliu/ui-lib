@@ -60,7 +60,10 @@
 {/snippet}
 
 <ShowcasePage name="Checkbox" props={propsSnippet}>
-  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault}>
+  <ShowcaseSection
+    title={i18n.t('showcase.default')}
+    code={codeDefault}
+    scope={{ basic, small, disabled, indeterminate, noLabel }}>
     <Checkbox bind:checked={basic} label={i18n.t('common.apply')} />
     <Checkbox bind:checked={basic} label={i18n.t('showcase.default')} name="demo" />
     <Checkbox bind:checked={small} size="sm" label={i18n.t('showcase.customized')} />
@@ -69,7 +72,10 @@
     <Checkbox bind:checked={noLabel} ariaLabel={i18n.t('common.close')} />
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized}>
+  <ShowcaseSection
+    title={i18n.t('showcase.customized')}
+    code={codeCustomized}
+    scope={{ basic, inputEl: null, lastChange }}>
     <Checkbox
       bind:checked={basic}
       label={i18n.t('common.ok')}
@@ -84,7 +90,10 @@
     <Checkbox bind:checked={basic} bind:inputRef={inputEl} label={i18n.t('common.reload')} />
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.state')} code={codeState}>
+  <ShowcaseSection
+    title={i18n.t('showcase.state')}
+    code={codeState}
+    scope={{ lastChange, inputEl: null }}>
     <p class="text-sm text-slate-400">lastChange: {lastChange}</p>
     <p class="text-sm text-slate-400">inputRef: {inputEl ? inputEl.type : '—'}</p>
   </ShowcaseSection>

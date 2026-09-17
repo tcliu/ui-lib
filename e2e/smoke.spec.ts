@@ -87,30 +87,43 @@ test('showcase: an unknown slug renders the localized not-found state', async ({
 	await expect(page.getByRole('heading', { level: 1, name: 'Component not found' })).toBeVisible();
 });
 
-test('showcase: a demo code snippet is editable and copyable', async ({ page, context }) => {
+// Replace the whole snippet buffer through the clipboard: CodeMirror owns the
+// contenteditable, so `.fill()` does not apply, and a clipboard paste routes
+// through the editor's own paste handling without per-key bracket auto-close.
+async function replaceSnippet(page: import('@playwright/test').Page, section: import('@playwright/test').Locator, source: string) {
+	const editor = section.locator('.cm-content');
+	await editor.click();
+	await page.keyboard.press('ControlOrMeta+A');
+	await page.evaluate(text => navigator.clipboard.writeText(text), source);
+	await page.keyboard.press('ControlOrMeta+V');
+}
+
+test('showcase: a code snippet is a live playground and stays copyable', async ({ page, context }) => {
 	await context.grantPermissions(['clipboard-read', 'clipboard-write']);
 	await page.goto('/components/button');
-	// Hydration binds the toggle and copy handlers; wait before interacting.
+	// Hydration binds the toggle, copy, and compile handlers; wait before interacting.
 	await page.waitForLoadState('networkidle');
-	const defaultSection = page.getByRole('region', { name: 'Default' });
-	const customizedSection = page.getByRole('region', { name: 'Customized' });
-	await expect(defaultSection.getByRole('button', { name: 'Show code' })).toBeVisible();
-	await expect(customizedSection.getByRole('button', { name: 'Show code' })).toBeVisible();
+	const section = page.getByRole('region', { name: 'Default' });
+	await section.getByRole('button', { name: 'Show code' }).click();
 
-	await defaultSection.getByRole('button', { name: 'Show code' }).click();
-	const snippet = defaultSection.getByRole('textbox', { name: 'Code' });
-	await expect(snippet).toBeVisible();
-	const defaultCode = await snippet.inputValue();
+	const preview = section.getByTestId('snippet-preview');
+	// The initial snippet compiles and renders below the editor.
+	await expect(preview.getByRole('button', { name: 'primary' })).toBeVisible();
 
-	await customizedSection.getByRole('button', { name: 'Show code' }).click();
-	const customizedSnippet = customizedSection.getByRole('textbox', { name: 'Code' });
-	await expect(customizedSnippet).toBeVisible();
-	expect(await customizedSnippet.inputValue()).not.toBe(defaultCode);
+	// Editing the snippet recompiles it and re-renders the preview.
+	await replaceSnippet(page, section, '<Button variant="primary">Live demo</Button>');
+	await expect(preview.getByRole('button', { name: 'Live demo' })).toBeVisible({ timeout: 10000 });
+	await expect(preview.getByRole('button', { name: 'primary' })).toHaveCount(0);
 
-	await snippet.fill('<Button variant="primary">Hello</Button>');
-	await defaultSection.getByRole('button', { name: 'Copy code' }).click();
-	await expect(defaultSection.getByRole('status')).toHaveText('Copied');
+	// The copy button still copies the edited source.
+	await section.getByRole('button', { name: 'Copy code' }).click();
+	await expect(section.getByRole('status')).toHaveText('Copied');
 	await expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
-		'<Button variant="primary">Hello</Button>'
+		'<Button variant="primary">Live demo</Button>'
 	);
+
+	// Invalid source shows an inline error and keeps the last demo on screen.
+	await replaceSnippet(page, section, '<Button variant="primary">Broken');
+	await expect(section.getByRole('alert')).toBeVisible();
+	await expect(preview.getByRole('button', { name: 'Live demo' })).toBeVisible();
 });

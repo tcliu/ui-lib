@@ -22,8 +22,11 @@ const SHARED = {
     'Buttons.svelte',
     'Checkbox.svelte',
     'Chip.svelte',
+    'CodeEditor.svelte',
+    'code-editor-max-content.ts',
     'ConfirmDialog.svelte',
     'FormField.svelte',
+    'LazyCodeEditor.svelte',
     'Menu.svelte',
     'NumberInput.svelte',
     'Pagination.svelte',
@@ -73,15 +76,25 @@ const SHARED = {
   ],
 }
 
-// Per-project exceptions with the reason each may legitimately differ.
+// Per-project exceptions with the reason each may legitimately differ. A
+// two-element entry exempts the file for every app; a three-element entry
+// `[app, path, reason]` exempts it for that app alone, so the canonical copy is
+// still byte-compared against the other apps.
 const EXCEPTIONS = [
   ['src/lib/column-width-storage.ts', 'per-app storage-key prefix'],
   ['src/lib/i18n.svelte.ts', 'per-app locale dictionaries'],
   ['scripts/apply-schema.mjs', 'per-project schema fork'],
   ['scripts/db-config.mjs', 'per-project database configuration fork'],
   ['scripts/deploy.mjs', 'per-project deploy fork'],
+  [
+    'tts',
+    'src/lib/components/CodeEditor.svelte',
+    'tts editor trades language loading, autoFocus, recreateKey, and maxContentLength for theme switching, selection control, and playback highlighting; not a drop-in for its call site',
+  ],
 ]
-const isExcepted = rel => EXCEPTIONS.some(([p]) => p === rel)
+const globalExceptions = new Set(EXCEPTIONS.filter(entry => entry.length === 2).map(([p]) => p))
+const appExceptions = EXCEPTIONS.filter(entry => entry.length === 3)
+const isAppExcepted = (app, rel) => appExceptions.some(([name, p]) => name === app && p === rel)
 
 function projectPaths() {
   if (!existsSync(REGISTRY)) return []
@@ -115,7 +128,7 @@ let compared = 0
 for (const [dir, files] of Object.entries(SHARED)) {
   for (const f of files) {
     const rel = `${dir}/${f}`
-    if (isExcepted(rel)) continue
+    if (globalExceptions.has(rel)) continue
     const canonical = join(ROOT, rel)
     if (!existsSync(canonical)) {
       console.error(`shared-parity: canonical file missing: ${rel}`)
@@ -123,6 +136,7 @@ for (const [dir, files] of Object.entries(SHARED)) {
     }
     const want = hash(canonical)
     for (const app of apps) {
+      if (isAppExcepted(app.name, rel)) continue
       const target = join(app.path, rel)
       if (!existsSync(target)) {
         missing.push(`${app.name}: ${rel}`)

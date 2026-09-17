@@ -33,7 +33,7 @@
 {/snippet}
 
 <ShowcasePage name="FormField" props={propsSnippet}>
-  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault}>
+  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault} scope={{ value }}>
     <FormField label={i18n.t('showcase.default')}>
       <input
         type="text"
@@ -48,7 +48,7 @@
     </FormField>
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized}>
+  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized} scope={{ value }}>
     <FormField label={i18n.t('common.reset')} className="rounded-md border border-cyan-500/40 p-3">
       <input
         type="text"

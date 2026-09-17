@@ -98,7 +98,10 @@
 {/snippet}
 
 <ShowcasePage name="SelectDropdown" props={propsSnippet}>
-  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault}>
+  <ShowcaseSection
+    title={i18n.t('showcase.default')}
+    code={codeDefault}
+    scope={{ options, value, labelFor }}>
     <SelectDropdown
       buttonLabel={labelFor(options, value)}
       activeValue={value}
@@ -108,7 +111,10 @@
     <span class="text-sm text-slate-400">value: {value}</span>
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized}>
+  <ShowcaseSection
+    title={i18n.t('showcase.customized')}
+    code={codeCustomized}
+    scope={{ fruits, filterValue, sizeValue, emptyValue, options, value, labelFor }}>
     <SelectDropdown
       buttonLabel={labelFor(fruits, filterValue)}
       activeValue={filterValue}

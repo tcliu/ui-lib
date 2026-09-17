@@ -50,7 +50,10 @@
 {/snippet}
 
 <ShowcasePage name="SearchInput" props={propsSnippet}>
-  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault}>
+  <ShowcaseSection
+    title={i18n.t('showcase.default')}
+    code={codeDefault}
+    scope={{ query, custom, handleKeydown }}>
     <div class="flex flex-col gap-1">
       <SearchInput bind:value={query} ariaLabel={i18n.t('common.apply')} onkeydown={handleKeydown} />
       <span class="text-sm text-slate-400">value: {query || '—'}</span>
@@ -58,7 +61,10 @@
     <SearchInput bind:value={custom} placeholder="Filter sessions" ariaLabel={i18n.t('common.reload')} />
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized}>
+  <ShowcaseSection
+    title={i18n.t('showcase.customized')}
+    code={codeCustomized}
+    scope={{ custom, inputEl: null, lastKey }}>
     <SearchInput
       bind:value={custom}
       bind:inputRef={inputEl}
@@ -68,7 +74,7 @@
       inputClass="w-56 rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 pl-7 text-sm text-cyan-200 outline-none focus-visible:border-cyan-500" />
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.state')} code={codeState}>
+  <ShowcaseSection title={i18n.t('showcase.state')} code={codeState} scope={{ lastKey, inputEl: null }}>
     <p class="text-sm text-slate-400">lastKey: {lastKey}</p>
     <p class="text-sm text-slate-400">inputRef: {inputEl ? inputEl.type : '—'}</p>
   </ShowcaseSection>

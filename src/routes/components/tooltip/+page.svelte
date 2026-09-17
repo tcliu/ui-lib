@@ -35,7 +35,7 @@
 {/snippet}
 
 <ShowcasePage name="Tooltip" props={propsSnippet}>
-  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault}>
+  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault} scope={{ explicitTrigger: null }}>
     <Button bind:buttonEl={explicitTrigger}>{i18n.t('common.apply')}</Button>
     <Tooltip trigger={explicitTrigger}>{i18n.t('common.apply')}</Tooltip>
   </ShowcaseSection>

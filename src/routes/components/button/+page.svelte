@@ -113,7 +113,7 @@
     <Button variant="primary" className="uppercase tracking-wide">className</Button>
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.iconsBadgeTooltip')} code={codeIcons}>
+  <ShowcaseSection title={i18n.t('showcase.iconsBadgeTooltip')} code={codeIcons} scope={{ checkIcon }}>
     <Button icon={checkIcon}>With icon</Button>
     <Button icon={checkIcon} ariaLabel={i18n.t('common.reload')} tooltip={i18n.t('common.reload')} />
     <Button tooltip={i18n.t('common.apply')} tooltipAlign="left">{i18n.t('common.apply')}</Button>
@@ -124,7 +124,10 @@
     <Button variant="primary" pending>{i18n.t('common.reload')}</Button>
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.interactive')} code={codeInteractive}>
+  <ShowcaseSection
+    title={i18n.t('showcase.interactive')}
+    code={codeInteractive}
+    scope={{ clicks, lastKey, pressed, expanded, submitted, boundEl: null, handleSubmit }}>
     <Button onClick={() => (clicks += 1)}>{i18n.t('common.apply')} ({clicks})</Button>
     <Button onKeyDown={event => (lastKey = event.key)}>{i18n.t('common.ok')} key: {lastKey || '—'}</Button>
     <Button ariaPressed={pressed} onClick={() => (pressed = !pressed)}>

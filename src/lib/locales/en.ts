@@ -34,6 +34,10 @@ export const en = {
   'tagInput.suggestions': 'Tag suggestions',
   'tagInput.remove': 'Remove {name}',
 
+  'editor.content': 'Content',
+  'editor.loading': 'Loading editor...',
+  'editor.loadFailed': 'Failed to load editor',
+
   'showcase.title': 'UI Library',
   'showcase.intro':
     'Canonical shared UI primitives for the sibling apps. Each page demonstrates one component, its props, and its customization surface.',
@@ -66,7 +70,8 @@ export const en = {
   'showcase.copyCode': 'Copy code',
   'showcase.copied': 'Copied',
   'showcase.copyFailed': 'Copy failed',
-  'showcase.codeNote': 'Editable reference — changes are not executed.',
+  'showcase.codeNote': 'Edit the snippet to re-render the preview below.',
+  'showcase.preview': 'Preview',
   'showcase.notFoundTitle': 'Component not found',
   'showcase.notFoundBody': 'No component matches this address. Choose one from the picker.',
 }

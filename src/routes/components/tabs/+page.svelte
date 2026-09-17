@@ -68,7 +68,10 @@
 {/snippet}
 
 <ShowcasePage name="Tabs" props={propsSnippet}>
-  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault}>
+  <ShowcaseSection
+    title={i18n.t('showcase.default')}
+    code={codeDefault}
+    scope={{ overviewContent, overviewToolbar, detailsContent, demoState }}>
     <Tabs
       tabs={[
         {
@@ -83,7 +86,10 @@
       ariaLabel={i18n.t('showcase.components')} />
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.routeMode')} code={codeRouteMode}>
+  <ShowcaseSection
+    title={i18n.t('showcase.routeMode')}
+    code={codeRouteMode}
+    scope={{ routePath, overviewContent, detailsContent, demoState }}>
     <div class="flex flex-col gap-3">
       <Button onClick={() => (routePath = routePath === '#overview' ? '#details' : '#overview')}>
         pathname: {routePath}
@@ -98,7 +104,10 @@
     </div>
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized}>
+  <ShowcaseSection
+    title={i18n.t('showcase.customized')}
+    code={codeCustomized}
+    scope={{ overviewContent, demoState }}>
     <Tabs
       tabs={[{ label: i18n.t('common.apply'), path: 'apply', content: overviewContent }]}
       state={demoState}

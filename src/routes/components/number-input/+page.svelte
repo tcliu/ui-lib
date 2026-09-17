@@ -62,7 +62,7 @@
 {/snippet}
 
 <ShowcasePage name="NumberInput" props={propsSnippet}>
-  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault}>
+  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault} scope={{ value, decimal, empty }}>
     <div class="flex flex-col gap-1">
       <NumberInput bind:value ariaLabel="default" />
       <span class="text-sm text-slate-400">value: {value}</span>
@@ -74,7 +74,10 @@
     <NumberInput bind:value={empty} placeholder="0" ariaLabel="placeholder" />
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized}>
+  <ShowcaseSection
+    title={i18n.t('showcase.customized')}
+    code={codeCustomized}
+    scope={{ disabled, stepless, custom, value, keydowns, inputs, blurs }}>
     <NumberInput bind:value={disabled} disabled ariaLabel="disabled" />
     <NumberInput bind:value={stepless} showControls={false} className="w-24" ariaLabel="no controls" />
     <NumberInput
@@ -91,7 +94,7 @@
       onblur={() => (blurs += 1)} />
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.events')} code={codeEvents}>
+  <ShowcaseSection title={i18n.t('showcase.events')} code={codeEvents} scope={{ keydowns, inputs, blurs }}>
     <p class="text-sm text-slate-400">keydown: {keydowns}, input: {inputs}, blur: {blurs}</p>
   </ShowcaseSection>
 </ShowcasePage>

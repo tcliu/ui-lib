@@ -67,7 +67,7 @@
 {/snippet}
 
 <ShowcasePage name="BaseDialog" props={propsSnippet}>
-  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault}>
+  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault} scope={{ open: defaultOpen }}>
     <Button variant="primary" onClick={() => (defaultOpen = true)}>{i18n.t('showcase.openDialog')}</Button>
     {#if defaultOpen}
       <BaseDialog title={i18n.t('showcase.dialogTitle')} onCancel={() => (defaultOpen = false)}>
@@ -80,7 +80,7 @@
     {/if}
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized}>
+  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized} scope={{ customHeader }}>
     <Button onClick={() => (styledOpen = true)}>titleClass + className</Button>
     <Button onClick={() => (headerOpen = true)}>header snippet</Button>
     <Button onClick={() => (fullscreenOpen = true)}>{i18n.t('showcase.fullscreenDialog')}</Button>

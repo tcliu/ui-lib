@@ -28,6 +28,10 @@ export const zhCN: Record<MessageKey, string> = {
   'tagInput.suggestions': '标签建议',
   'tagInput.remove': '移除 {name}',
 
+  'editor.content': '内容',
+  'editor.loading': '正在加载编辑器...',
+  'editor.loadFailed': '编辑器加载失败',
+
   'showcase.title': '界面库',
   'showcase.intro': '同级应用的规范共享界面组件。每个页面演示一个组件、它的属性以及自定义方式。',
   'showcase.components': '组件',
@@ -59,7 +63,8 @@ export const zhCN: Record<MessageKey, string> = {
   'showcase.copyCode': '复制代码',
   'showcase.copied': '已复制',
   'showcase.copyFailed': '复制失败',
-  'showcase.codeNote': '可编辑的参考代码 — 修改不会被执行。',
+  'showcase.codeNote': '编辑代码片段以在下方重新渲染预览。',
+  'showcase.preview': '预览',
   'showcase.notFoundTitle': '未找到组件',
   'showcase.notFoundBody': '没有与此地址匹配的组件。请从选择器中选择一个。',
 }

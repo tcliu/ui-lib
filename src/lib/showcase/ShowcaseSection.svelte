@@ -9,9 +9,10 @@
     title: string
     children: Snippet
     code?: string
+    scope?: Record<string, unknown>
   }
 
-  let { title, children, code }: Props = $props()
+  let { title, children, code, scope }: Props = $props()
   const i18n = getI18nContext()
 
   let open = $state(false)
@@ -40,7 +41,7 @@
   </div>
   {#if code && open}
     <div class="mt-4">
-      <CodeSnippet {code} />
+      <CodeSnippet {code} {scope} />
     </div>
   {/if}
 </section>

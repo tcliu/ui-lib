@@ -28,6 +28,10 @@ export const zhTW: Record<MessageKey, string> = {
   'tagInput.suggestions': '標籤建議',
   'tagInput.remove': '移除 {name}',
 
+  'editor.content': '內容',
+  'editor.loading': '正在載入編輯器...',
+  'editor.loadFailed': '編輯器載入失敗',
+
   'showcase.title': '介面庫',
   'showcase.intro': '同級應用的規範共享介面元件。每個頁面示範一個元件、它的屬性以及自訂方式。',
   'showcase.components': '元件',
@@ -59,7 +63,8 @@ export const zhTW: Record<MessageKey, string> = {
   'showcase.copyCode': '複製程式碼',
   'showcase.copied': '已複製',
   'showcase.copyFailed': '複製失敗',
-  'showcase.codeNote': '可編輯的參考程式碼 — 修改不會被執行。',
+  'showcase.codeNote': '編輯程式碼片段以在下方重新渲染預覽。',
+  'showcase.preview': '預覽',
   'showcase.notFoundTitle': '找不到元件',
   'showcase.notFoundBody': '沒有與此位址相符的元件。請從選擇器中選擇一個。',
 }
