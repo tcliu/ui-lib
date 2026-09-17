@@ -21,12 +21,14 @@ export const zhCN: Record<MessageKey, string> = {
 
   'tabs.label': '标签页',
   'search.placeholder': '搜索...',
+  'splitter.resize': '调整大小',
 
   'showcase.title': '界面库',
   'showcase.intro': '同级应用的规范共享界面组件。每个页面演示一个组件、它的属性以及自定义方式。',
   'showcase.components': '组件',
   'showcase.theme': '主题',
   'showcase.language': '语言',
+  'showcase.searchComponents': '搜索组件',
   'showcase.props': '属性',
   'showcase.default': '默认',
   'showcase.customized': '自定义',

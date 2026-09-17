@@ -13,16 +13,24 @@ Tailwind CSS v4. It supports multiple themes.
 
 ### Top bar
 
-The main page has a top bar with:
+The app shell's top bar has:
 - **Title** on the left (project name, semibold, tracking-tight)
-- **Action buttons** on the right (e.g., settings, profile/login)
+- **Theme** and **language** icon-button menus on the right
 - Responsive layout (`flex`, `justify-between`, `gap-4`)
 - Border bottom separator
 
 ### Main content
 
-The main content area fills the remaining viewport height (`flex-1`, `min-h-0`,
-`overflow-hidden`).
+The top bar is non-shrinking chrome; the content area fills the remaining
+viewport height (`flex-1`, `min-h-0`). The showcase is a two-pane splitter
+view:
+
+- **Left pane**: a search box (case-insensitive name filter) above the list of
+  components; selecting one routes to its page and marks it active.
+- **Right pane**: the selected component's showcase page, which scrolls.
+
+On narrow viewports the panes stack vertically (list on top) and the splitter
+resizes the list's height instead of its width.
 
 ## Theming
 

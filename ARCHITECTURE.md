@@ -19,9 +19,12 @@ ui-lib/
 │   ├── app.html                  # HTML shell, pre-paint theme script
 │   ├── styles.css                # Tailwind entry, theme palette overrides
 │   ├── routes/
-│   │   ├── +layout.svelte        # Root layout (renders children + dev tag)
+│   │   ├── +layout.svelte        # App shell: top bar (theme/language menus) + dev tag
 │   │   ├── +layout.server.ts     # Passes the DEV_TAG env to the layout
-│   │   ├── +page.svelte          # Main page — thin shell: top bar + content area
+│   │   ├── +page.ts              # Redirects / to the first showcase component
+│   │   ├── components/
+│   │   │   ├── +layout.svelte    # Two-pane showcase: searchable list + splitter
+│   │   │   └── <slug>/+page.svelte # One showcase page per component
 │   │   └── api/
 │   │       └── catalog/+server.ts # GET /api/catalog — project self-card for discovery
 │   └── lib/
@@ -56,8 +59,9 @@ ui-lib/
 
 ## Entry points to trace
 
-1. **`src/routes/+page.svelte`** — the main page shell. Read this first to
-   see the top bar layout and where feature content attaches.
+1. **`src/routes/+layout.svelte`** — the app shell. Read this first to see the
+   top bar (theme/language menus) and how `src/routes/components/+layout.svelte`
+   hosts the two-pane showcase.
 
 2. **Composable factories** (`src/lib/use-*.svelte.ts`) — own all domain
    state; added as features land. They are the only place where cross-domain

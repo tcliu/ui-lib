@@ -1,8 +1,8 @@
 // English messages. This file defines the key set (`MessageKey`); every other
 // locale must implement exactly these keys.
 //
-// The `common.*`, `number.*`, `dropdown.*`, `pagination.*`, `tabs.*`, and
-// `search.*` blocks are the shared label contract the ported UI primitives
+// The `common.*`, `number.*`, `dropdown.*`, `pagination.*`, `tabs.*`,
+// `search.*`, and `splitter.*` blocks are the shared label contract the ported UI primitives
 // fall back to when a caller passes no label prop. A host app that vendors a
 // primitive provides the same keys in its own locale dictionaries.
 export const en = {
@@ -26,6 +26,7 @@ export const en = {
 
   'tabs.label': 'Tabs',
   'search.placeholder': 'Search...',
+  'splitter.resize': 'Resize',
 
   'showcase.title': 'UI Library',
   'showcase.intro':
@@ -33,6 +34,7 @@ export const en = {
   'showcase.components': 'Components',
   'showcase.theme': 'Theme',
   'showcase.language': 'Language',
+  'showcase.searchComponents': 'Search components',
   'showcase.props': 'Props',
   'showcase.default': 'Default',
   'showcase.customized': 'Customized',

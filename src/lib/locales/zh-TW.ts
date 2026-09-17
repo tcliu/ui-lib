@@ -21,12 +21,14 @@ export const zhTW: Record<MessageKey, string> = {
 
   'tabs.label': '頁籤',
   'search.placeholder': '搜尋...',
+  'splitter.resize': '調整大小',
 
   'showcase.title': '介面庫',
   'showcase.intro': '同級應用的規範共享介面元件。每個頁面示範一個元件、它的屬性以及自訂方式。',
   'showcase.components': '元件',
   'showcase.theme': '佈景主題',
   'showcase.language': '語言',
+  'showcase.searchComponents': '搜尋元件',
   'showcase.props': '屬性',
   'showcase.default': '預設',
   'showcase.customized': '自訂',
