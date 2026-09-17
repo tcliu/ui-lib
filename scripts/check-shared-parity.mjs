@@ -22,6 +22,7 @@ const SHARED = {
     'Buttons.svelte',
     'Checkbox.svelte',
     'Chip.svelte',
+    'ConfirmDialog.svelte',
     'FormField.svelte',
     'Menu.svelte',
     'NumberInput.svelte',
@@ -32,6 +33,7 @@ const SHARED = {
     'Spinner.svelte',
     'Splitter.svelte',
     'Tabs.svelte',
+    'TagInput.svelte',
     'Tooltip.svelte',
   ],
   'src/lib/icons': [
@@ -71,14 +73,6 @@ const SHARED = {
 
 // Per-project exceptions with the reason each may legitimately differ.
 const EXCEPTIONS = [
-  [
-    'src/lib/components/ConfirmDialog.svelte',
-    'three variants trade closeLabel against dismissKeydownCapture and rely on different BaseDialog dismiss defaults',
-  ],
-  [
-    'src/lib/components/TagInput.svelte',
-    'share-text models tags as Tag[] objects with colors while the others use string[] and per-tag classes; data models are incompatible',
-  ],
   ['src/lib/column-width-storage.ts', 'per-app storage-key prefix'],
   ['src/lib/i18n.svelte.ts', 'per-app locale dictionaries'],
   ['scripts/apply-schema.mjs', 'per-project schema fork'],

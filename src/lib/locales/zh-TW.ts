@@ -25,6 +25,8 @@ export const zhTW: Record<MessageKey, string> = {
   'password.show': '顯示密碼',
   'password.hide': '隱藏密碼',
   'combobox.remove': '移除 {name}',
+  'tagInput.suggestions': '標籤建議',
+  'tagInput.remove': '移除 {name}',
 
   'showcase.title': '介面庫',
   'showcase.intro': '同級應用的規範共享介面元件。每個頁面示範一個元件、它的屬性以及自訂方式。',

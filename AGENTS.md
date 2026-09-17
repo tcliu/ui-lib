@@ -46,11 +46,16 @@ Project-specific development conventions for the UI Library web app.
   shared file against each registered sibling app. A change to a shared file is
   not complete until the sibling copies are re-ported or the divergence is added
   to that script's documented exception list with a reason.
+- Tag editing stays two distinct components, not one configurable control: the
+  shared `TagInput` models `string[]` (with an optional `chipClass`) and is
+  gated; a consuming app whose tags carry per-tag colors uses an object model
+  (`{ name, color }`) with its own distinct component name, and that control is
+  app-specific by design — never listed in `SHARED`.
 - The shared primitives resolve labels as `$derived(prop ?? i18n.t('key'))` and
   fall back to the locales in `src/lib/locales/`; a consuming app's locale
   dictionaries must define the shared keys (`common.*`, `number.*`, `dropdown.*`,
   `pagination.*`, `tabs.label`, `search.placeholder`, `splitter.*`, `password.*`,
-  and `combobox.remove`).
+  `combobox.*`, and `tagInput.*`).
 - Component attributes stay camelCase.
 - Reuse this project's existing UI primitives and patterns when they fit,
   especially dialog, dropdown, editor, and icon components; do not build a

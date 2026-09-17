@@ -2,7 +2,8 @@
 // locale must implement exactly these keys.
 //
 // The `common.*`, `number.*`, `dropdown.*`, `pagination.*`, `tabs.*`,
-// `search.*`, `splitter.*`, `password.*`, and `combobox.*` blocks are the shared label contract the ported UI primitives
+// `search.*`, `splitter.*`, `password.*`, `combobox.*`, and `tagInput.*` blocks
+// are the shared label contract the ported UI primitives
 // fall back to when a caller passes no label prop. A host app that vendors a
 // primitive provides the same keys in its own locale dictionaries.
 export const en = {
@@ -30,6 +31,8 @@ export const en = {
   'password.show': 'Show password',
   'password.hide': 'Hide password',
   'combobox.remove': 'Remove {name}',
+  'tagInput.suggestions': 'Tag suggestions',
+  'tagInput.remove': 'Remove {name}',
 
   'showcase.title': 'UI Library',
   'showcase.intro':
