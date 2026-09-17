@@ -46,11 +46,11 @@ Project-specific development conventions for the UI Library web app.
   shared file against each registered sibling app. A change to a shared file is
   not complete until the sibling copies are re-ported or the divergence is added
   to that script's documented exception list with a reason.
-- Tag editing stays two distinct components, not one configurable control: the
-  shared `TagInput` models `string[]` (with an optional `chipClass`) and is
-  gated; a consuming app whose tags carry per-tag colors uses an object model
-  (`{ name, color }`) with its own distinct component name, and that control is
-  app-specific by design — never listed in `SHARED`.
+- Tag editing stays one shared control: `TagInput` models `string[]` and covers
+  per-tag coloring through its optional `chipClassFor` hook plus `chip`/`option`
+  snippets, so an app whose tags carry extra data (e.g. `{ name, color }`) maps
+  that object model to `string[]` at the call site instead of forking a second
+  tag-input component. It exports `focus()` for dialog autofocus.
 - The shared primitives resolve labels as `$derived(prop ?? i18n.t('key'))` and
   fall back to the locales in `src/lib/locales/`; a consuming app's locale
   dictionaries must define the shared keys (`common.*`, `number.*`, `dropdown.*`,
@@ -87,6 +87,10 @@ Project-specific development conventions for the UI Library web app.
   owned by the browser (see `cross-browser.md`).
 - Icon-only `Button` uses uniform padding (`p-1.5` for `sm`, `p-2.5` for `md`);
   text buttons keep `px`/`py` distinction.
+- `ConfirmDialog` routes its dismiss affordances to a separate `onCancel` when
+  one is passed; a discard confirm passes `confirmOnDismiss` so Escape, overlay
+  click, and the close icon perform the confirm (the discard) instead of
+  returning to the form, while destructive confirms keep the safe cancel.
 
 ## Theming
 
