@@ -92,12 +92,24 @@ test('showcase: a demo code snippet is editable and copyable', async ({ page, co
 	await page.goto('/components/button');
 	// Hydration binds the toggle and copy handlers; wait before interacting.
 	await page.waitForLoadState('networkidle');
-	await page.getByRole('button', { name: 'Show code' }).click();
-	const snippet = page.getByRole('textbox', { name: 'Code' });
+	const defaultSection = page.getByRole('region', { name: 'Default' });
+	const customizedSection = page.getByRole('region', { name: 'Customized' });
+	await expect(defaultSection.getByRole('button', { name: 'Show code' })).toBeVisible();
+	await expect(customizedSection.getByRole('button', { name: 'Show code' })).toBeVisible();
+
+	await defaultSection.getByRole('button', { name: 'Show code' }).click();
+	const snippet = defaultSection.getByRole('textbox', { name: 'Code' });
 	await expect(snippet).toBeVisible();
+	const defaultCode = await snippet.inputValue();
+
+	await customizedSection.getByRole('button', { name: 'Show code' }).click();
+	const customizedSnippet = customizedSection.getByRole('textbox', { name: 'Code' });
+	await expect(customizedSnippet).toBeVisible();
+	expect(await customizedSnippet.inputValue()).not.toBe(defaultCode);
+
 	await snippet.fill('<Button variant="primary">Hello</Button>');
-	await page.getByRole('button', { name: 'Copy code' }).click();
-	await expect(page.getByRole('status')).toHaveText('Copied');
+	await defaultSection.getByRole('button', { name: 'Copy code' }).click();
+	await expect(defaultSection.getByRole('status')).toHaveText('Copied');
 	await expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
 		'<Button variant="primary">Hello</Button>'
 	);

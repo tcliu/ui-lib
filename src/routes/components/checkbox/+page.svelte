@@ -15,8 +15,28 @@
   let lastChange = $state('—')
   let inputEl = $state<HTMLInputElement | null>(null)
 
-  const code = `<Checkbox bind:checked label="Apply" />
-<Checkbox checked={false} indeterminate label="Mixed" size="sm" />`
+  const codeDefault = `<Checkbox bind:checked={basic} label="Apply" />
+<Checkbox bind:checked={basic} label="Default" name="demo" />
+<Checkbox bind:checked={small} size="sm" label="Customized" />
+<Checkbox bind:checked={disabled} disabled label="Default" />
+<Checkbox bind:checked={indeterminate} indeterminate label="indeterminate" />
+<Checkbox bind:checked={noLabel} ariaLabel="Close" />`
+
+  const codeCustomized = `<Checkbox
+  bind:checked={basic}
+  label="OK"
+  labelClass="text-cyan-300"
+  wrapperClass="rounded-md border border-slate-700 px-3 py-2"
+  boxClass="rounded-full" />
+<Checkbox
+  bind:checked={basic}
+  label="Cancel"
+  stopPropagation={false}
+  onChange={checked => (lastChange = String(checked))} />
+<Checkbox bind:checked={basic} bind:inputRef={inputEl} label="Reload" />`
+
+  const codeState = `<p>lastChange: {lastChange}</p>
+<p>inputRef: {inputEl ? inputEl.type : '—'}</p>`
 
   const props: PropRow[] = [
     { name: 'checked', type: 'boolean', defaultValue: '—', note: 'Bindable checked state.' },
@@ -39,8 +59,8 @@
   <PropsTable rows={props} />
 {/snippet}
 
-<ShowcasePage name="Checkbox" props={propsSnippet} {code}>
-  <ShowcaseSection title={i18n.t('showcase.default')}>
+<ShowcasePage name="Checkbox" props={propsSnippet}>
+  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault}>
     <Checkbox bind:checked={basic} label={i18n.t('common.apply')} />
     <Checkbox bind:checked={basic} label={i18n.t('showcase.default')} name="demo" />
     <Checkbox bind:checked={small} size="sm" label={i18n.t('showcase.customized')} />
@@ -49,7 +69,7 @@
     <Checkbox bind:checked={noLabel} ariaLabel={i18n.t('common.close')} />
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.customized')}>
+  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized}>
     <Checkbox
       bind:checked={basic}
       label={i18n.t('common.ok')}
@@ -64,7 +84,7 @@
     <Checkbox bind:checked={basic} bind:inputRef={inputEl} label={i18n.t('common.reload')} />
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.state')}>
+  <ShowcaseSection title={i18n.t('showcase.state')} code={codeState}>
     <p class="text-sm text-slate-400">lastChange: {lastChange}</p>
     <p class="text-sm text-slate-400">inputRef: {inputEl ? inputEl.type : '—'}</p>
   </ShowcaseSection>

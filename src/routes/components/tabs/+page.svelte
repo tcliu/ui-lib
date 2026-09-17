@@ -16,13 +16,30 @@
 
   let routePath = $state('#overview')
 
-  const code = `<Tabs
+  const codeDefault = `<Tabs
   tabs={[
     { label: 'Default', path: 'overview', content: overviewContent, toolbar: overviewToolbar },
     { label: 'Customized', path: 'details', content: detailsContent },
   ]}
   state={demoState}
   ariaLabel="Components" />`
+
+  const codeRouteMode = `<Button onClick={() => (routePath = routePath === '#overview' ? '#details' : '#overview')}>
+  pathname: {routePath}
+</Button>
+<Tabs
+  tabs={[
+    { label: 'Overview', path: '#overview', content: overviewContent },
+    { label: 'Details', path: '#details', content: detailsContent },
+  ]}
+  state={demoState}
+  pathname={routePath} />`
+
+  const codeCustomized = `<Tabs
+  tabs={[{ label: 'Apply', path: 'apply', content: overviewContent }]}
+  state={demoState}
+  headerClass="flex w-full items-center gap-2 rounded-lg border border-cyan-500/40 p-2"
+  class="text-cyan-300" />`
 
   const props: PropRow[] = [
     { name: 'tabs', type: 'Tab<TState>[]', defaultValue: '—', note: 'Label, path, optional toolbar snippet, content snippet.' },
@@ -50,8 +67,8 @@
   <PropsTable rows={props} />
 {/snippet}
 
-<ShowcasePage name="Tabs" props={propsSnippet} {code}>
-  <ShowcaseSection title={i18n.t('showcase.default')}>
+<ShowcasePage name="Tabs" props={propsSnippet}>
+  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault}>
     <Tabs
       tabs={[
         {
@@ -66,7 +83,7 @@
       ariaLabel={i18n.t('showcase.components')} />
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.routeMode')}>
+  <ShowcaseSection title={i18n.t('showcase.routeMode')} code={codeRouteMode}>
     <div class="flex flex-col gap-3">
       <Button onClick={() => (routePath = routePath === '#overview' ? '#details' : '#overview')}>
         pathname: {routePath}
@@ -81,7 +98,7 @@
     </div>
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.customized')}>
+  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized}>
     <Tabs
       tabs={[{ label: i18n.t('common.apply'), path: 'apply', content: overviewContent }]}
       state={demoState}

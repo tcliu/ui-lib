@@ -18,13 +18,27 @@
   let pending = $state(false)
   let allowPendingCancel = $state(false)
 
-  const code = `<Button variant="primary" onClick={() => (open = true)}>Open dialog</Button>
+  const codeDefault = `<Button variant="primary" onClick={() => (open = true)}>Open dialog</Button>
 
 {#if open}
   <BaseDialog title="Dialog title" onCancel={() => (open = false)}>
     <p>Dialog body content.</p>
   </BaseDialog>
 {/if}`
+
+  const codeCustomized = `<BaseDialog
+  title="Dialog title"
+  titleClass="text-cyan-200"
+  className="border-cyan-500/40"
+  maxWidth="lg"
+  height="fixed"
+  closeLabel="Close" />
+
+<BaseDialog header={customHeader} maxWidth="xl" height="tall" />
+
+<BaseDialog fullscreen closeLabel="Close" />
+
+<BaseDialog title="Pending" pending allowPendingCancel />`
 
   const props: PropRow[] = [
     { name: 'title', type: 'string', defaultValue: '—', note: 'Heading rendered when no header snippet is passed.' },
@@ -52,8 +66,8 @@
   <PropsTable rows={props} />
 {/snippet}
 
-<ShowcasePage name="BaseDialog" props={propsSnippet} {code}>
-  <ShowcaseSection title={i18n.t('showcase.default')}>
+<ShowcasePage name="BaseDialog" props={propsSnippet}>
+  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault}>
     <Button variant="primary" onClick={() => (defaultOpen = true)}>{i18n.t('showcase.openDialog')}</Button>
     {#if defaultOpen}
       <BaseDialog title={i18n.t('showcase.dialogTitle')} onCancel={() => (defaultOpen = false)}>
@@ -66,7 +80,7 @@
     {/if}
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.customized')}>
+  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized}>
     <Button onClick={() => (styledOpen = true)}>titleClass + className</Button>
     <Button onClick={() => (headerOpen = true)}>header snippet</Button>
     <Button onClick={() => (fullscreenOpen = true)}>{i18n.t('showcase.fullscreenDialog')}</Button>

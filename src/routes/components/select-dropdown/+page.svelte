@@ -36,10 +36,43 @@
     return list.find(option => option.value === current)?.label ?? current
   }
 
-  const code = `<SelectDropdown
+  const codeDefault = `<SelectDropdown
   buttonLabel={labelFor(options, value)}
   activeValue={value}
+  ariaLabel="default"
   options={options}
+  onSelect={next => (value = next)} />`
+
+  const codeCustomized = `<SelectDropdown
+  buttonLabel={labelFor(fruits, filterValue)}
+  activeValue={filterValue}
+  ariaLabel="filterable"
+  filterable
+  options={fruits}
+  controlClass="w-40 rounded-md border border-slate-700 bg-slate-950 pl-3 pr-7 py-2 text-sm"
+  onSelect={next => (filterValue = next)} />
+
+<SelectDropdown
+  buttonLabel="Three"
+  activeValue={sizeValue}
+  size="sm"
+  options={options}
+  onSelect={next => (sizeValue = next)} />
+
+<SelectDropdown
+  buttonLabel="No options"
+  activeValue={emptyValue}
+  options={[]}
+  emptyLabel="No options"
+  onSelect={next => (emptyValue = next)} />
+
+<SelectDropdown
+  buttonLabel={labelFor(options, value)}
+  activeValue={value}
+  ariaLabel="right aligned"
+  align="right"
+  autoPlace={false}
+  panelClass="fixed left-0 top-0 z-40 w-40 rounded-lg border border-cyan-500/40 bg-slate-900/95 p-1 shadow-2xl shadow-slate-950/60 backdrop-blur"
   onSelect={next => (value = next)} />`
 
   const props: PropRow[] = [
@@ -64,8 +97,8 @@
   <PropsTable rows={props} />
 {/snippet}
 
-<ShowcasePage name="SelectDropdown" props={propsSnippet} {code}>
-  <ShowcaseSection title={i18n.t('showcase.default')}>
+<ShowcasePage name="SelectDropdown" props={propsSnippet}>
+  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault}>
     <SelectDropdown
       buttonLabel={labelFor(options, value)}
       activeValue={value}
@@ -75,7 +108,7 @@
     <span class="text-sm text-slate-400">value: {value}</span>
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.customized')}>
+  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized}>
     <SelectDropdown
       buttonLabel={labelFor(fruits, filterValue)}
       activeValue={filterValue}

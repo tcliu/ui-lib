@@ -8,9 +8,22 @@
 
   const i18n = getI18nContext()
 
-  const code = `<Buttons align="right">
-  <Button variant="outline">Cancel</Button>
+  const codeDefault = `<Buttons>
   <Button variant="primary">OK</Button>
+  <Button>Cancel</Button>
+</Buttons>
+<Buttons align="center">
+  <Button variant="primary">Apply</Button>
+  <Button>Reset</Button>
+</Buttons>
+<Buttons align="right">
+  <Button variant="outline">Reload</Button>
+  <Button variant="primary">OK</Button>
+</Buttons>`
+
+  const codeCustomized = `<Buttons className="flex flex-col items-start gap-1">
+  <Button variant="primary">OK</Button>
+  <Button>Cancel</Button>
 </Buttons>`
 
   const props: PropRow[] = [
@@ -24,8 +37,8 @@
   <PropsTable rows={props} />
 {/snippet}
 
-<ShowcasePage name="Buttons" props={propsSnippet} {code}>
-  <ShowcaseSection title={i18n.t('showcase.default')}>
+<ShowcasePage name="Buttons" props={propsSnippet}>
+  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault}>
     <Buttons>
       <Button variant="primary">{i18n.t('common.ok')}</Button>
       <Button>{i18n.t('common.cancel')}</Button>
@@ -40,7 +53,7 @@
     </Buttons>
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.customized')}>
+  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized}>
     <Buttons className="flex flex-col items-start gap-1">
       <Button variant="primary">{i18n.t('common.ok')}</Button>
       <Button>{i18n.t('common.cancel')}</Button>

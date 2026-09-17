@@ -17,7 +17,26 @@
   let inputs = $state(0)
   let blurs = $state(0)
 
-  const code = `<NumberInput bind:value min={0} max={10} step={0.5} ariaLabel="Quantity" />`
+  const codeDefault = `<NumberInput bind:value ariaLabel="default" />
+<NumberInput bind:value={decimal} min={0} max={10} step={0.5} ariaLabel="decimal" />
+<NumberInput bind:value={empty} placeholder="0" ariaLabel="placeholder" />`
+
+  const codeCustomized = `<NumberInput bind:value={disabled} disabled ariaLabel="disabled" />
+<NumberInput bind:value={stepless} showControls={false} className="w-24" ariaLabel="no controls" />
+<NumberInput
+  bind:value={custom}
+  id="number-input-demo"
+  incrementLabel="Add one"
+  decrementLabel="Remove one"
+  ariaLabel="custom labels" />
+<NumberInput
+  bind:value={value}
+  ariaLabel="events"
+  onkeydown={() => (keydowns += 1)}
+  oninput={() => (inputs += 1)}
+  onblur={() => (blurs += 1)} />`
+
+  const codeEvents = `<p>keydown: {keydowns}, input: {inputs}, blur: {blurs}</p>`
 
   const props: PropRow[] = [
     { name: 'value', type: 'string', defaultValue: '—', note: 'Bindable field value.' },
@@ -42,8 +61,8 @@
   <PropsTable rows={props} />
 {/snippet}
 
-<ShowcasePage name="NumberInput" props={propsSnippet} {code}>
-  <ShowcaseSection title={i18n.t('showcase.default')}>
+<ShowcasePage name="NumberInput" props={propsSnippet}>
+  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault}>
     <div class="flex flex-col gap-1">
       <NumberInput bind:value ariaLabel="default" />
       <span class="text-sm text-slate-400">value: {value}</span>
@@ -55,7 +74,7 @@
     <NumberInput bind:value={empty} placeholder="0" ariaLabel="placeholder" />
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.customized')}>
+  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized}>
     <NumberInput bind:value={disabled} disabled ariaLabel="disabled" />
     <NumberInput bind:value={stepless} showControls={false} className="w-24" ariaLabel="no controls" />
     <NumberInput
@@ -72,7 +91,7 @@
       onblur={() => (blurs += 1)} />
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.events')}>
+  <ShowcaseSection title={i18n.t('showcase.events')} code={codeEvents}>
     <p class="text-sm text-slate-400">keydown: {keydowns}, input: {inputs}, blur: {blurs}</p>
   </ShowcaseSection>
 </ShowcasePage>

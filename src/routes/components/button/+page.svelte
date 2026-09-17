@@ -23,9 +23,44 @@
     submitted += 1
   }
 
-  const code = `<Button variant="primary" accent="cyan">Primary</Button>
-<Button variant="outline" accent="rose">Outline</Button>
-<Button icon={checkIcon} ariaLabel="Reload" tooltip="Reload" />`
+  const codeDefault = `<Button variant="primary">primary</Button>
+<Button variant="secondary">secondary</Button>
+<Button variant="danger">danger</Button>
+<Button variant="outline">outline</Button>
+<Button variant="ghost">ghost</Button>
+<Button variant="primary" size="sm">Default sm</Button>
+<Button disabled>Default disabled</Button>`
+
+  const codeCustomized = `<Button variant="primary" accent="cyan">cyan</Button>
+<Button variant="primary" accent="emerald">emerald</Button>
+<Button variant="primary" accent="amber">amber</Button>
+<Button variant="primary" accent="violet">violet</Button>
+<Button variant="primary" accent="rose">rose</Button>
+<Button variant="outline" accent="cyan">cyan</Button>
+<Button variant="outline" accent="emerald">emerald</Button>
+<Button variant="outline" accent="amber">amber</Button>
+<Button variant="outline" accent="violet">violet</Button>
+<Button variant="outline" accent="rose">rose</Button>
+<Button variant="primary" className="uppercase tracking-wide">className</Button>`
+
+  const codeIcons = `<Button icon={checkIcon}>With icon</Button>
+<Button icon={checkIcon} ariaLabel="Reload" tooltip="Reload" />
+<Button tooltip="Apply" tooltipAlign="left">Apply</Button>
+<Button tooltip="Cancel" tooltipAlign="right">Cancel</Button>
+<Button variant="primary" badge={3}>Apply</Button>
+<Button badge="new">Reload</Button>
+<Button variant="primary" dataTip="Reset">Reset dataTip</Button>
+<Button variant="primary" pending>Reload</Button>`
+
+  const codeInteractive = `<Button onClick={() => (clicks += 1)}>Apply ({clicks})</Button>
+<Button onKeyDown={event => (lastKey = event.key)}>OK key: {lastKey || '—'}</Button>
+<Button ariaPressed={pressed} onClick={() => (pressed = !pressed)}>pressed: {String(pressed)}</Button>
+<Button ariaExpanded={expanded} onClick={() => (expanded = !expanded)}>expanded: {String(expanded)}</Button>
+<Button preventFocusSteal onClick={() => (clicks += 1)}>preventFocusSteal</Button>
+<form onsubmit={handleSubmit}>
+  <Button type="submit">type=submit ({submitted})</Button>
+</form>
+<Button bind:buttonEl={boundEl}>buttonEl: {boundEl ? boundEl.tagName : '—'}</Button>`
 
   const props: PropRow[] = [
     { name: 'variant', type: "'primary' | 'secondary' | 'danger' | 'outline' | 'ghost'", defaultValue: "'secondary'", note: 'Visual treatment.' },
@@ -59,8 +94,8 @@
   <PropsTable rows={props} />
 {/snippet}
 
-<ShowcasePage name="Button" props={propsSnippet} {code}>
-  <ShowcaseSection title={i18n.t('showcase.default')}>
+<ShowcasePage name="Button" props={propsSnippet}>
+  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault}>
     {#each variants as variant (variant)}
       <Button {variant}>{variant}</Button>
     {/each}
@@ -68,7 +103,7 @@
     <Button disabled>{i18n.t('showcase.default')} disabled</Button>
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.customized')}>
+  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized}>
     {#each accents as accent (accent)}
       <Button variant="primary" {accent}>{accent}</Button>
     {/each}
@@ -78,7 +113,7 @@
     <Button variant="primary" className="uppercase tracking-wide">className</Button>
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.iconsBadgeTooltip')}>
+  <ShowcaseSection title={i18n.t('showcase.iconsBadgeTooltip')} code={codeIcons}>
     <Button icon={checkIcon}>With icon</Button>
     <Button icon={checkIcon} ariaLabel={i18n.t('common.reload')} tooltip={i18n.t('common.reload')} />
     <Button tooltip={i18n.t('common.apply')} tooltipAlign="left">{i18n.t('common.apply')}</Button>
@@ -89,7 +124,7 @@
     <Button variant="primary" pending>{i18n.t('common.reload')}</Button>
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.interactive')}>
+  <ShowcaseSection title={i18n.t('showcase.interactive')} code={codeInteractive}>
     <Button onClick={() => (clicks += 1)}>{i18n.t('common.apply')} ({clicks})</Button>
     <Button onKeyDown={event => (lastKey = event.key)}>{i18n.t('common.ok')} key: {lastKey || '—'}</Button>
     <Button ariaPressed={pressed} onClick={() => (pressed = !pressed)}>

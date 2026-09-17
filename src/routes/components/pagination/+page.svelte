@@ -17,12 +17,30 @@
     currentPage = 1
   }
 
-  const code = `<Pagination
+  const codeDefault = `<Pagination
   total={200}
-  pageSize={10}
-  currentPage={3}
+  pageSize={pageSize}
+  currentPage={currentPage}
   onPageChange={page => (currentPage = page)}
-  onPageSizeChange={size => (pageSize = size)} />`
+  onPageSizeChange={handlePageSizeChange} />`
+
+  const codeCustomized = `<Pagination total={200} pageSize={pageSize} currentPage={currentPage} size="xs" />
+<Pagination total={200} pageSize={pageSize} currentPage={currentPage} size="sm" />
+<Pagination total={200} pageSize={pageSize} currentPage={currentPage} size="md" />
+<Pagination total={200} pageSize={pageSize} currentPage={currentPage} size="lg" />
+<Pagination
+  total={200}
+  pageSize={pageSize}
+  currentPage={currentPage}
+  pageSizeOptions={[5, 10, 25, 100]}
+  previousLabel="Go back"
+  nextLabel="Go forward"
+  pageSizeLabel="Rows"
+  currentPageLabel="Page number"
+  paginationLabel="Results"
+  className="rounded-lg border border-cyan-500/40 p-2" />`
+
+  const codeState = `<p>page: {currentPage}, size: {pageSize}</p>`
 
   const props: PropRow[] = [
     { name: 'total', type: 'number', defaultValue: '—', note: 'Total item count.' },
@@ -45,8 +63,8 @@
   <PropsTable rows={props} />
 {/snippet}
 
-<ShowcasePage name="Pagination" props={propsSnippet} {code}>
-  <ShowcaseSection title={i18n.t('showcase.default')}>
+<ShowcasePage name="Pagination" props={propsSnippet}>
+  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault}>
     <Pagination
       {total}
       {pageSize}
@@ -55,7 +73,7 @@
       onPageSizeChange={handlePageSizeChange} />
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.customized')}>
+  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized}>
     {#each sizes as size (size)}
       <Pagination
         {total}
@@ -80,7 +98,7 @@
       onPageSizeChange={next => (pageSize = next)} />
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.state')}>
+  <ShowcaseSection title={i18n.t('showcase.state')} code={codeState}>
     <p class="text-sm text-slate-400">page: {currentPage}, size: {pageSize}</p>
   </ShowcaseSection>
 </ShowcasePage>

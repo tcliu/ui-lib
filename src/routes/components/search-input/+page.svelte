@@ -19,11 +19,19 @@
     }
   }
 
-  const code = `<SearchInput
-  bind:value={query}
-  ariaLabel="Search"
-  placeholder="Filter sessions"
-  onkeydown={handleKeydown} />`
+  const codeDefault = `<SearchInput bind:value={query} ariaLabel="Apply" onkeydown={handleKeydown} />
+<SearchInput bind:value={custom} placeholder="Filter sessions" ariaLabel="Reload" />`
+
+  const codeCustomized = `<SearchInput
+  bind:value={custom}
+  bind:inputRef={inputEl}
+  oninput={() => (lastKey = 'input')}
+  ariaLabel="Reset"
+  wrapperClass="rounded-lg border border-cyan-500/40 p-2"
+  inputClass="w-56 rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 pl-7 text-sm text-cyan-200 outline-none focus-visible:border-cyan-500" />`
+
+  const codeState = `<p>lastKey: {lastKey}</p>
+<p>inputRef: {inputEl ? inputEl.type : '—'}</p>`
 
   const props: PropRow[] = [
     { name: 'value', type: 'string', defaultValue: '—', note: 'Bindable search text.' },
@@ -41,8 +49,8 @@
   <PropsTable rows={props} />
 {/snippet}
 
-<ShowcasePage name="SearchInput" props={propsSnippet} {code}>
-  <ShowcaseSection title={i18n.t('showcase.default')}>
+<ShowcasePage name="SearchInput" props={propsSnippet}>
+  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault}>
     <div class="flex flex-col gap-1">
       <SearchInput bind:value={query} ariaLabel={i18n.t('common.apply')} onkeydown={handleKeydown} />
       <span class="text-sm text-slate-400">value: {query || '—'}</span>
@@ -50,7 +58,7 @@
     <SearchInput bind:value={custom} placeholder="Filter sessions" ariaLabel={i18n.t('common.reload')} />
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.customized')}>
+  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized}>
     <SearchInput
       bind:value={custom}
       bind:inputRef={inputEl}
@@ -60,7 +68,7 @@
       inputClass="w-56 rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 pl-7 text-sm text-cyan-200 outline-none focus-visible:border-cyan-500" />
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.state')}>
+  <ShowcaseSection title={i18n.t('showcase.state')} code={codeState}>
     <p class="text-sm text-slate-400">lastKey: {lastKey}</p>
     <p class="text-sm text-slate-400">inputRef: {inputEl ? inputEl.type : '—'}</p>
   </ShowcaseSection>

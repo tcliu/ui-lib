@@ -9,8 +9,15 @@
 
   let value = $state('')
 
-  const code = `<FormField label="Name" htmlFor="name">
-  <input id="name" type="text" bind:value />
+  const codeDefault = `<FormField label="Default">
+  <input type="text" bind:value />
+</FormField>
+<FormField label="Apply" htmlFor="form-field-demo">
+  <input id="form-field-demo" type="text" />
+</FormField>`
+
+  const codeCustomized = `<FormField label="Reset" className="rounded-md border border-cyan-500/40 p-3">
+  <input type="text" bind:value />
 </FormField>`
 
   const props: PropRow[] = [
@@ -25,8 +32,8 @@
   <PropsTable rows={props} />
 {/snippet}
 
-<ShowcasePage name="FormField" props={propsSnippet} {code}>
-  <ShowcaseSection title={i18n.t('showcase.default')}>
+<ShowcasePage name="FormField" props={propsSnippet}>
+  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault}>
     <FormField label={i18n.t('showcase.default')}>
       <input
         type="text"
@@ -41,7 +48,7 @@
     </FormField>
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.customized')}>
+  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized}>
     <FormField label={i18n.t('common.reset')} className="rounded-md border border-cyan-500/40 p-3">
       <input
         type="text"

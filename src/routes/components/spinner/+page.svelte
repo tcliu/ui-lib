@@ -7,8 +7,14 @@
 
   const i18n = getI18nContext()
 
-  const code = `<Spinner />
-<Spinner className="h-8 w-8 text-cyan-400" />`
+  const codeDefault = `<Spinner />
+<span class="inline-flex items-center gap-2 text-sm text-slate-300">
+  <Spinner /> Reload
+</span>`
+
+  const codeCustomized = `<Spinner className="h-6 w-6" />
+<Spinner className="h-8 w-8 text-cyan-400" />
+<Spinner className="h-10 w-10 text-amber-400" />`
 
   const props: PropRow[] = [
     { name: 'className', type: 'string', defaultValue: "'h-4 w-4'", note: 'Size and color classes for the SVG.' },
@@ -19,15 +25,15 @@
   <PropsTable rows={props} />
 {/snippet}
 
-<ShowcasePage name="Spinner" props={propsSnippet} {code}>
-  <ShowcaseSection title={i18n.t('showcase.default')}>
+<ShowcasePage name="Spinner" props={propsSnippet}>
+  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault}>
     <Spinner />
     <span class="inline-flex items-center gap-2 text-sm text-slate-300">
       <Spinner /> {i18n.t('common.reload')}
     </span>
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.customized')}>
+  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized}>
     <Spinner className="h-6 w-6" />
     <Spinner className="h-8 w-8 text-cyan-400" />
     <Spinner className="h-10 w-10 text-amber-400" />
