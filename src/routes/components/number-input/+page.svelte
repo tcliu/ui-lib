@@ -17,8 +17,14 @@
   let inputs = $state(0)
   let blurs = $state(0)
 
-  const codeDefault = `<NumberInput bind:value ariaLabel="default" />
-<NumberInput bind:value={decimal} min={0} max={10} step={0.5} ariaLabel="decimal" />
+  const codeDefault = `<div class="flex flex-col gap-1">
+  <NumberInput bind:value ariaLabel="default" />
+  <span class="text-sm text-slate-400">value: {value}</span>
+</div>
+<div class="flex flex-col gap-1">
+  <NumberInput bind:value={decimal} min={0} max={10} step={0.5} ariaLabel="decimal" />
+  <span class="text-sm text-slate-400">value: {decimal}</span>
+</div>
 <NumberInput bind:value={empty} placeholder="0" ariaLabel="placeholder" />`
 
   const codeCustomized = `<NumberInput bind:value={disabled} disabled ariaLabel="disabled" />
@@ -36,7 +42,7 @@
   oninput={() => (inputs += 1)}
   onblur={() => (blurs += 1)} />`
 
-  const codeEvents = `<p>keydown: {keydowns}, input: {inputs}, blur: {blurs}</p>`
+  const codeEvents = `<p class="text-sm text-slate-400">keydown: {keydowns}, input: {inputs}, blur: {blurs}</p>`
 
   const props: PropRow[] = [
     { name: 'value', type: 'string', defaultValue: '—', note: 'Bindable field value.' },

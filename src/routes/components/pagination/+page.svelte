@@ -24,10 +24,15 @@
   onPageChange={page => (currentPage = page)}
   onPageSizeChange={handlePageSizeChange} />`
 
-  const codeCustomized = `<Pagination total={200} pageSize={pageSize} currentPage={currentPage} size="xs" />
-<Pagination total={200} pageSize={pageSize} currentPage={currentPage} size="sm" />
-<Pagination total={200} pageSize={pageSize} currentPage={currentPage} size="md" />
-<Pagination total={200} pageSize={pageSize} currentPage={currentPage} size="lg" />
+  const codeCustomized = `{#each sizes as size (size)}
+  <Pagination
+    {total}
+    {pageSize}
+    {currentPage}
+    {size}
+    onPageChange={page => (currentPage = page)}
+    onPageSizeChange={next => (pageSize = next)} />
+{/each}
 <Pagination
   total={200}
   pageSize={pageSize}
@@ -38,9 +43,11 @@
   pageSizeLabel="Rows"
   currentPageLabel="Page number"
   paginationLabel="Results"
-  className="rounded-lg border border-cyan-500/40 p-2" />`
+  className="rounded-lg border border-cyan-500/40 p-2"
+  onPageChange={page => (currentPage = page)}
+  onPageSizeChange={next => (pageSize = next)} />`
 
-  const codeState = `<p>page: {currentPage}, size: {pageSize}</p>`
+  const codeState = `<p class="text-sm text-slate-400">page: {currentPage}, size: {pageSize}</p>`
 
   const props: PropRow[] = [
     { name: 'total', type: 'number', defaultValue: '—', note: 'Total item count.' },
@@ -76,7 +83,7 @@
       onPageSizeChange={handlePageSizeChange} />
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized} scope={{ pageSize, currentPage }}>
+  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized} scope={{ total, sizes, pageSize, currentPage }}>
     {#each sizes as size (size)}
       <Pagination
         {total}

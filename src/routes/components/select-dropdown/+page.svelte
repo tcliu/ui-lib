@@ -41,7 +41,8 @@
   activeValue={value}
   ariaLabel="default"
   options={options}
-  onSelect={next => (value = next)} />`
+  onSelect={next => (value = next)} />
+<span class="text-sm text-slate-400">value: {value}</span>`
 
   const codeCustomized = `<SelectDropdown
   buttonLabel={labelFor(fruits, filterValue)}
@@ -49,21 +50,25 @@
   ariaLabel="filterable"
   filterable
   options={fruits}
-  controlClass="w-40 rounded-md border border-slate-700 bg-slate-950 pl-3 pr-7 py-2 text-sm"
+  controlClass="w-40 rounded-md border border-slate-700 bg-slate-950 pl-3 pr-7 py-2 text-sm text-slate-100 outline-none transition motion-reduce:transition-none hover:border-cyan-500 focus-visible:border-cyan-500"
   onSelect={next => (filterValue = next)} />
 
-<SelectDropdown
-  buttonLabel="Three"
-  activeValue={sizeValue}
-  size="sm"
-  options={options}
-  onSelect={next => (sizeValue = next)} />
+{#each sizes as size (size)}
+  <SelectDropdown
+    buttonLabel={labelFor(options, sizeValue)}
+    activeValue={sizeValue}
+    {size}
+    ariaLabel={size}
+    {options}
+    onSelect={next => (sizeValue = next)} />
+{/each}
 
 <SelectDropdown
-  buttonLabel="No options"
+  buttonLabel={noOptionsLabel}
   activeValue={emptyValue}
+  ariaLabel="empty"
   options={[]}
-  emptyLabel="No options"
+  emptyLabel={noOptionsLabel}
   onSelect={next => (emptyValue = next)} />
 
 <SelectDropdown
@@ -73,6 +78,9 @@
   align="right"
   autoPlace={false}
   panelClass="fixed left-0 top-0 z-40 w-40 rounded-lg border border-cyan-500/40 bg-slate-900/95 p-1 shadow-2xl shadow-slate-950/60 backdrop-blur"
+  buttonClass="inline-flex min-w-24 cursor-pointer items-center justify-between gap-2 rounded-md border border-cyan-500/40 bg-slate-950 pl-3 pr-2 py-2 text-slate-100 outline-none transition motion-reduce:transition-none hover:border-cyan-400 focus-visible:border-cyan-400 text-sm"
+  optionClass="flex w-full cursor-pointer items-center justify-between gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-300 outline-none transition motion-reduce:transition-none hover:bg-slate-800 hover:text-cyan-200"
+  {options}
   onSelect={next => (value = next)} />`
 
   const props: PropRow[] = [
@@ -114,7 +122,7 @@
   <ShowcaseSection
     title={i18n.t('showcase.customized')}
     code={codeCustomized}
-    scope={{ fruits, filterValue, sizeValue, emptyValue, options, value, labelFor }}>
+    scope={{ fruits, filterValue, sizeValue, emptyValue, options, value, labelFor, sizes, noOptionsLabel: i18n.t('dropdown.noOptions') }}>
     <SelectDropdown
       buttonLabel={labelFor(fruits, filterValue)}
       activeValue={filterValue}

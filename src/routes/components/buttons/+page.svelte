@@ -9,21 +9,21 @@
   const i18n = getI18nContext()
 
   const codeDefault = `<Buttons>
-  <Button variant="primary">OK</Button>
-  <Button>Cancel</Button>
+  <Button variant="primary">{okLabel}</Button>
+  <Button>{cancelLabel}</Button>
 </Buttons>
 <Buttons align="center">
-  <Button variant="primary">Apply</Button>
-  <Button>Reset</Button>
+  <Button variant="primary">{applyLabel}</Button>
+  <Button>{resetLabel}</Button>
 </Buttons>
 <Buttons align="right">
-  <Button variant="outline">Reload</Button>
-  <Button variant="primary">OK</Button>
+  <Button variant="outline">{reloadLabel}</Button>
+  <Button variant="primary">{okLabel}</Button>
 </Buttons>`
 
   const codeCustomized = `<Buttons className="flex flex-col items-start gap-1">
-  <Button variant="primary">OK</Button>
-  <Button>Cancel</Button>
+  <Button variant="primary">{okLabel}</Button>
+  <Button>{cancelLabel}</Button>
 </Buttons>`
 
   const props: PropRow[] = [
@@ -38,7 +38,7 @@
 {/snippet}
 
 <ShowcasePage name="Buttons" props={propsSnippet}>
-  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault}>
+  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault} scope={{ okLabel: i18n.t('common.ok'), cancelLabel: i18n.t('common.cancel'), applyLabel: i18n.t('common.apply'), resetLabel: i18n.t('common.reset'), reloadLabel: i18n.t('common.reload') }}>
     <Buttons>
       <Button variant="primary">{i18n.t('common.ok')}</Button>
       <Button>{i18n.t('common.cancel')}</Button>
@@ -53,7 +53,7 @@
     </Buttons>
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized}>
+  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized} scope={{ okLabel: i18n.t('common.ok'), cancelLabel: i18n.t('common.cancel') }}>
     <Buttons className="flex flex-col items-start gap-1">
       <Button variant="primary">{i18n.t('common.ok')}</Button>
       <Button>{i18n.t('common.cancel')}</Button>

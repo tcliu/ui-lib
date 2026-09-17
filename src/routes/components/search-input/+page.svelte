@@ -19,19 +19,22 @@
     }
   }
 
-  const codeDefault = `<SearchInput bind:value={query} ariaLabel="Apply" onkeydown={handleKeydown} />
-<SearchInput bind:value={custom} placeholder="Filter sessions" ariaLabel="Reload" />`
+  const codeDefault = `<div class="flex flex-col gap-1">
+  <SearchInput bind:value={query} ariaLabel={applyLabel} onkeydown={handleKeydown} />
+  <span class="text-sm text-slate-400">value: {query || '—'}</span>
+</div>
+<SearchInput bind:value={custom} placeholder="Filter sessions" ariaLabel={reloadLabel} />`
 
   const codeCustomized = `<SearchInput
   bind:value={custom}
   bind:inputRef={inputEl}
   oninput={() => (lastKey = 'input')}
-  ariaLabel="Reset"
+  ariaLabel={resetLabel}
   wrapperClass="rounded-lg border border-cyan-500/40 p-2"
   inputClass="w-56 rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 pl-7 text-sm text-cyan-200 outline-none focus-visible:border-cyan-500" />`
 
-  const codeState = `<p>lastKey: {lastKey}</p>
-<p>inputRef: {inputEl ? inputEl.type : '—'}</p>`
+  const codeState = `<p class="text-sm text-slate-400">lastKey: {lastKey}</p>
+<p class="text-sm text-slate-400">inputRef: {inputEl ? inputEl.type : '—'}</p>`
 
   const props: PropRow[] = [
     { name: 'value', type: 'string', defaultValue: '—', note: 'Bindable search text.' },
@@ -53,7 +56,7 @@
   <ShowcaseSection
     title={i18n.t('showcase.default')}
     code={codeDefault}
-    scope={{ query, custom, handleKeydown }}>
+    scope={{ query, custom, handleKeydown, applyLabel: i18n.t('common.apply'), reloadLabel: i18n.t('common.reload') }}>
     <div class="flex flex-col gap-1">
       <SearchInput bind:value={query} ariaLabel={i18n.t('common.apply')} onkeydown={handleKeydown} />
       <span class="text-sm text-slate-400">value: {query || '—'}</span>
@@ -64,7 +67,7 @@
   <ShowcaseSection
     title={i18n.t('showcase.customized')}
     code={codeCustomized}
-    scope={{ custom, inputEl: null, lastKey }}>
+    scope={{ custom, inputEl: null, lastKey, resetLabel: i18n.t('common.reset') }}>
     <SearchInput
       bind:value={custom}
       bind:inputRef={inputEl}
@@ -74,7 +77,7 @@
       inputClass="w-56 rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 pl-7 text-sm text-cyan-200 outline-none focus-visible:border-cyan-500" />
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.state')} code={codeState} scope={{ lastKey, inputEl: null }}>
+  <ShowcaseSection title={i18n.t('showcase.state')} code={codeState} scope={{ lastKey, inputEl }}>
     <p class="text-sm text-slate-400">lastKey: {lastKey}</p>
     <p class="text-sm text-slate-400">inputRef: {inputEl ? inputEl.type : '—'}</p>
   </ShowcaseSection>

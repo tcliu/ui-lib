@@ -84,7 +84,10 @@ Project-specific development conventions for the UI Library web app.
   its snippet references through `ShowcaseSection`'s `scope`; compile and
   render failures show inline and keep the previous render, and the live demo
   row is `contain: paint` so a snippet that renders a fixed overlay cannot
-  cover the page.
+  cover the page. Every section's snippet must reproduce its own static demo
+  exactly (same structure, full class strings, localized text via `scope`, same
+  props), so opening Show-code with default state is pixel-identical until the
+  user edits.
 - The playground executes arbitrary JavaScript in the page: it evaluates the
   compiler output with `new Function` after rewriting its imports to a whitelist
   of shared primitives. This is not a sandbox — the code still reaches page

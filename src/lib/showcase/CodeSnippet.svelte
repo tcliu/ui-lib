@@ -3,13 +3,15 @@
   import { getI18nContext } from '$lib/i18n.svelte'
   import Button from '$lib/components/Button.svelte'
   import CopyIcon from '$lib/icons/CopyIcon.svelte'
+  import ResetIcon from '$lib/icons/ResetIcon.svelte'
   import LazyCodeEditor from '$lib/components/LazyCodeEditor.svelte'
 
   interface Props {
     draft?: string
+    initial?: string
   }
 
-  let { draft = $bindable('') }: Props = $props()
+  let { draft = $bindable(''), initial = '' }: Props = $props()
   const i18n = getI18nContext()
 
   let feedback = $state('')
@@ -31,6 +33,10 @@
     }, 1500)
   }
 
+  function reset() {
+    draft = initial
+  }
+
   function copy() {
     const writeText = navigator.clipboard?.writeText
     if (!writeText) {
@@ -44,6 +50,10 @@
   }
 </script>
 
+{#snippet resetIcon()}
+  <ResetIcon className="h-4 w-4" />
+{/snippet}
+
 {#snippet copyIcon()}
   <CopyIcon className="h-4 w-4" />
 {/snippet}
@@ -53,6 +63,12 @@
     <p class="text-xs text-slate-500">{i18n.t('showcase.codeNote')}</p>
     <span class="flex items-center gap-2">
       <span role="status" aria-live="polite" class="text-xs text-slate-400">{feedback}</span>
+      <Button
+        size="sm"
+        icon={resetIcon}
+        ariaLabel={i18n.t('common.reset')}
+        tooltip={i18n.t('common.reset')}
+        onClick={reset} />
       <Button
         size="sm"
         icon={copyIcon}

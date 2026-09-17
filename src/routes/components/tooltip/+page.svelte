@@ -10,16 +10,16 @@
 
   let explicitTrigger = $state<HTMLButtonElement | null>(null)
 
-  const codeDefault = `<Button bind:buttonEl={explicitTrigger}>Apply</Button>
-<Tooltip trigger={explicitTrigger}>Apply</Tooltip>`
+  const codeDefault = `<Button bind:buttonEl={explicitTrigger}>{applyLabel}</Button>
+<Tooltip trigger={explicitTrigger}>{applyLabel}</Tooltip>`
 
   const codeCustomized = `<span class="relative inline-flex">
-  <Button>OK</Button>
-  <Tooltip align="left">OK</Tooltip>
+  <Button>{okLabel}</Button>
+  <Tooltip align="left">{okLabel}</Tooltip>
 </span>
 <span class="relative inline-flex">
-  <Button>Cancel</Button>
-  <Tooltip align="right" class="border-cyan-500/40 text-cyan-200">Cancel</Tooltip>
+  <Button>{cancelLabel}</Button>
+  <Tooltip align="right" class="border-cyan-500/40 text-cyan-200">{cancelLabel}</Tooltip>
 </span>`
 
   const props: PropRow[] = [
@@ -35,12 +35,12 @@
 {/snippet}
 
 <ShowcasePage name="Tooltip" props={propsSnippet}>
-  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault} scope={{ explicitTrigger: null }}>
+  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault} scope={{ explicitTrigger: null, applyLabel: i18n.t('common.apply') }}>
     <Button bind:buttonEl={explicitTrigger}>{i18n.t('common.apply')}</Button>
     <Tooltip trigger={explicitTrigger}>{i18n.t('common.apply')}</Tooltip>
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized}>
+  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized} scope={{ okLabel: i18n.t('common.ok'), cancelLabel: i18n.t('common.cancel') }}>
     <span class="relative inline-flex">
       <Button>{i18n.t('common.ok')}</Button>
       <Tooltip align="left">{i18n.t('common.ok')}</Tooltip>

@@ -53,7 +53,7 @@
           {preview.error}
         </p>
       {/if}
-      <CodeSnippet bind:draft={preview.draft} />
+      <CodeSnippet bind:draft={preview.draft} initial={code ?? ''} />
     </div>
   {/if}
 </section>

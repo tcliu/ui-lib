@@ -9,15 +9,24 @@
 
   let value = $state('')
 
-  const codeDefault = `<FormField label="Default">
-  <input type="text" bind:value />
+  const codeDefault = `<FormField label={defaultLabel}>
+  <input
+    type="text"
+    bind:value
+    class="w-56 rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 outline-none focus-visible:border-cyan-500" />
 </FormField>
-<FormField label="Apply" htmlFor="form-field-demo">
-  <input id="form-field-demo" type="text" />
+<FormField label={applyLabel} htmlFor="form-field-demo">
+  <input
+    id="form-field-demo"
+    type="text"
+    class="w-56 rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 outline-none focus-visible:border-cyan-500" />
 </FormField>`
 
-  const codeCustomized = `<FormField label="Reset" className="rounded-md border border-cyan-500/40 p-3">
-  <input type="text" bind:value />
+  const codeCustomized = `<FormField label={resetLabel} className="rounded-md border border-cyan-500/40 p-3">
+  <input
+    type="text"
+    bind:value
+    class="w-56 rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 outline-none focus-visible:border-cyan-500" />
 </FormField>`
 
   const props: PropRow[] = [
@@ -33,7 +42,7 @@
 {/snippet}
 
 <ShowcasePage name="FormField" props={propsSnippet}>
-  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault} scope={{ value }}>
+  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault} scope={{ value, defaultLabel: i18n.t('showcase.default'), applyLabel: i18n.t('common.apply') }}>
     <FormField label={i18n.t('showcase.default')}>
       <input
         type="text"
@@ -48,7 +57,7 @@
     </FormField>
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized} scope={{ value }}>
+  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized} scope={{ value, resetLabel: i18n.t('common.reset') }}>
     <FormField label={i18n.t('common.reset')} className="rounded-md border border-cyan-500/40 p-3">
       <input
         type="text"

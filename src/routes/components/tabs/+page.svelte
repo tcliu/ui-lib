@@ -18,25 +18,27 @@
 
   const codeDefault = `<Tabs
   tabs={[
-    { label: 'Default', path: 'overview', content: overviewContent, toolbar: overviewToolbar },
-    { label: 'Customized', path: 'details', content: detailsContent },
+    { label: defaultLabel, path: 'overview', content: overviewContent, toolbar: overviewToolbar },
+    { label: customizedLabel, path: 'details', content: detailsContent },
   ]}
   state={demoState}
-  ariaLabel="Components" />`
+  ariaLabel={componentsLabel} />`
 
-  const codeRouteMode = `<Button onClick={() => (routePath = routePath === '#overview' ? '#details' : '#overview')}>
-  pathname: {routePath}
-</Button>
-<Tabs
-  tabs={[
-    { label: 'Overview', path: '#overview', content: overviewContent },
-    { label: 'Details', path: '#details', content: detailsContent },
-  ]}
-  state={demoState}
-  pathname={routePath} />`
+  const codeRouteMode = `<div class="flex flex-col gap-3">
+  <Button onClick={() => (routePath = routePath === '#overview' ? '#details' : '#overview')}>
+    pathname: {routePath}
+  </Button>
+  <Tabs
+    tabs={[
+      { label: 'Overview', path: '#overview', content: overviewContent },
+      { label: 'Details', path: '#details', content: detailsContent },
+    ]}
+    state={demoState}
+    pathname={routePath} />
+</div>`
 
   const codeCustomized = `<Tabs
-  tabs={[{ label: 'Apply', path: 'apply', content: overviewContent }]}
+  tabs={[{ label: applyLabel, path: 'apply', content: overviewContent }]}
   state={demoState}
   headerClass="flex w-full items-center gap-2 rounded-lg border border-cyan-500/40 p-2"
   class="text-cyan-300" />`
@@ -71,7 +73,7 @@
   <ShowcaseSection
     title={i18n.t('showcase.default')}
     code={codeDefault}
-    scope={{ overviewContent, overviewToolbar, detailsContent, demoState }}>
+    scope={{ overviewContent, overviewToolbar, detailsContent, demoState, defaultLabel: i18n.t('showcase.default'), customizedLabel: i18n.t('showcase.customized'), componentsLabel: i18n.t('showcase.components') }}>
     <Tabs
       tabs={[
         {
@@ -107,7 +109,7 @@
   <ShowcaseSection
     title={i18n.t('showcase.customized')}
     code={codeCustomized}
-    scope={{ overviewContent, demoState }}>
+    scope={{ overviewContent, demoState, applyLabel: i18n.t('common.apply') }}>
     <Tabs
       tabs={[{ label: i18n.t('common.apply'), path: 'apply', content: overviewContent }]}
       state={demoState}

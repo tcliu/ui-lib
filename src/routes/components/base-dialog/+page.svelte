@@ -18,27 +18,73 @@
   let pending = $state(false)
   let allowPendingCancel = $state(false)
 
-  const codeDefault = `<Button variant="primary" onClick={() => (open = true)}>Open dialog</Button>
+  const codeDefault = `<Button variant="primary" onClick={() => (open = true)}>{openDialogLabel}</Button>
 
 {#if open}
-  <BaseDialog title="Dialog title" onCancel={() => (open = false)}>
-    <p>Dialog body content.</p>
+  <BaseDialog title={dialogTitle} onCancel={() => (open = false)}>
+    <p data-testid="dialog-body">{dialogBody}</p>
+    <Buttons align="right" className="mt-4">
+      <Button onClick={() => (open = false)}>{cancelLabel}</Button>
+      <Button variant="primary" onClick={() => (open = false)}>{okLabel}</Button>
+    </Buttons>
   </BaseDialog>
 {/if}`
 
-  const codeCustomized = `<BaseDialog
-  title="Dialog title"
-  titleClass="text-cyan-200"
-  className="border-cyan-500/40"
-  maxWidth="lg"
-  height="fixed"
-  closeLabel="Close" />
+  const codeCustomized = `<Button onClick={() => (styledOpen = true)}>titleClass + className</Button>
+<Button onClick={() => (headerOpen = true)}>header snippet</Button>
+<Button onClick={() => (fullscreenOpen = true)}>{fullscreenLabel}</Button>
+<Button onClick={() => (pendingOpen = true)}>{pendingLabel}</Button>
 
-<BaseDialog header={customHeader} maxWidth="xl" height="tall" />
+{#if styledOpen}
+  <BaseDialog
+    title={dialogTitle}
+    titleClass="text-cyan-200"
+    className="border-cyan-500/40"
+    maxWidth="lg"
+    height="fixed"
+    closeLabel={closeLabel}
+    dismissKeydownCapture={true}
+    onCancel={() => (styledOpen = false)}>
+    <p>{dialogBody}</p>
+    <Buttons align="right" className="mt-4">
+      <Button variant="outline" onClick={() => (styledOpen = false)}>{closeLabel}</Button>
+    </Buttons>
+  </BaseDialog>
+{/if}
 
-<BaseDialog fullscreen closeLabel="Close" />
+{#if headerOpen}
+  <BaseDialog header={customHeader} maxWidth="xl" height="tall" onCancel={() => (headerOpen = false)}>
+    <p>{dialogBody}</p>
+    <Buttons align="right" className="mt-4">
+      <Button onClick={() => (headerOpen = false)}>{closeLabel}</Button>
+    </Buttons>
+  </BaseDialog>
+{/if}
 
-<BaseDialog title="Pending" pending allowPendingCancel />`
+{#if fullscreenOpen}
+  <BaseDialog fullscreen closeLabel={closeLabel} onCancel={() => (fullscreenOpen = false)}>
+    <p>{dialogBody}</p>
+    <Buttons align="right" className="mt-4">
+      <Button onClick={() => (fullscreenOpen = false)}>{closeLabel}</Button>
+    </Buttons>
+  </BaseDialog>
+{/if}
+
+{#if pendingOpen}
+  <BaseDialog
+    title={pendingLabel}
+    {pending}
+    {allowPendingCancel}
+    onCancel={() => (pendingOpen = false)}>
+    <div class="flex flex-col gap-3">
+      <Checkbox bind:checked={pending} label={pendingLabel} />
+      <Checkbox bind:checked={allowPendingCancel} label={allowPendingCancelLabel} />
+    </div>
+    <Buttons align="right" className="mt-4">
+      <Button variant="primary" disabled={pending} onClick={() => (pendingOpen = false)}>{okLabel}</Button>
+    </Buttons>
+  </BaseDialog>
+{/if}`
 
   const props: PropRow[] = [
     { name: 'title', type: 'string', defaultValue: '—', note: 'Heading rendered when no header snippet is passed.' },
@@ -67,7 +113,7 @@
 {/snippet}
 
 <ShowcasePage name="BaseDialog" props={propsSnippet}>
-  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault} scope={{ open: defaultOpen }}>
+  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault} scope={{ open: defaultOpen, openDialogLabel: i18n.t('showcase.openDialog'), dialogTitle: i18n.t('showcase.dialogTitle'), dialogBody: i18n.t('showcase.dialogBody'), cancelLabel: i18n.t('common.cancel'), okLabel: i18n.t('common.ok') }}>
     <Button variant="primary" onClick={() => (defaultOpen = true)}>{i18n.t('showcase.openDialog')}</Button>
     {#if defaultOpen}
       <BaseDialog title={i18n.t('showcase.dialogTitle')} onCancel={() => (defaultOpen = false)}>
@@ -80,7 +126,7 @@
     {/if}
   </ShowcaseSection>
 
-  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized} scope={{ customHeader }}>
+  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized} scope={{ customHeader, styledOpen, headerOpen, fullscreenOpen, pendingOpen, pending, allowPendingCancel, fullscreenLabel: i18n.t('showcase.fullscreenDialog'), pendingLabel: i18n.t('showcase.pendingOption'), allowPendingCancelLabel: i18n.t('showcase.allowPendingCancel'), dialogTitle: i18n.t('showcase.dialogTitle'), dialogBody: i18n.t('showcase.dialogBody'), closeLabel: i18n.t('common.close'), okLabel: i18n.t('common.ok') }}>
     <Button onClick={() => (styledOpen = true)}>titleClass + className</Button>
     <Button onClick={() => (headerOpen = true)}>header snippet</Button>
     <Button onClick={() => (fullscreenOpen = true)}>{i18n.t('showcase.fullscreenDialog')}</Button>

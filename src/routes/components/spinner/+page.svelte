@@ -9,7 +9,7 @@
 
   const codeDefault = `<Spinner />
 <span class="inline-flex items-center gap-2 text-sm text-slate-300">
-  <Spinner /> Reload
+  <Spinner /> {reloadLabel}
 </span>`
 
   const codeCustomized = `<Spinner className="h-6 w-6" />
@@ -26,7 +26,7 @@
 {/snippet}
 
 <ShowcasePage name="Spinner" props={propsSnippet}>
-  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault}>
+  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault} scope={{ reloadLabel: i18n.t('common.reload') }}>
     <Spinner />
     <span class="inline-flex items-center gap-2 text-sm text-slate-300">
       <Spinner /> {i18n.t('common.reload')}
