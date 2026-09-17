@@ -4,13 +4,16 @@ import BaseDialog from '$lib/components/BaseDialog.svelte'
 import Button from '$lib/components/Button.svelte'
 import Buttons from '$lib/components/Buttons.svelte'
 import Checkbox from '$lib/components/Checkbox.svelte'
+import DataTable from '$lib/components/DataTable.svelte'
 import FormField from '$lib/components/FormField.svelte'
 import NumberInput from '$lib/components/NumberInput.svelte'
 import Pagination from '$lib/components/Pagination.svelte'
+import PasswordInput from '$lib/components/PasswordInput.svelte'
 import SearchInput from '$lib/components/SearchInput.svelte'
 import SelectDropdown from '$lib/components/SelectDropdown.svelte'
 import Spinner from '$lib/components/Spinner.svelte'
 import Tabs from '$lib/components/Tabs.svelte'
+import TagInput from '$lib/components/TagInput.svelte'
 import Tooltip from '$lib/components/Tooltip.svelte'
 import CheckIcon from '$lib/icons/CheckIcon.svelte'
 import ChevronDownIcon from '$lib/icons/ChevronDownIcon.svelte'
@@ -65,13 +68,16 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/Button.svelte': { default: Button },
   'ui/Buttons.svelte': { default: Buttons },
   'ui/Checkbox.svelte': { default: Checkbox },
+  'ui/DataTable.svelte': { default: DataTable },
   'ui/FormField.svelte': { default: FormField },
   'ui/NumberInput.svelte': { default: NumberInput },
   'ui/Pagination.svelte': { default: Pagination },
+  'ui/PasswordInput.svelte': { default: PasswordInput },
   'ui/SearchInput.svelte': { default: SearchInput },
   'ui/SelectDropdown.svelte': { default: SelectDropdown },
   'ui/Spinner.svelte': { default: Spinner },
   'ui/Tabs.svelte': { default: Tabs },
+  'ui/TagInput.svelte': { default: TagInput },
   'ui/Tooltip.svelte': { default: Tooltip },
   'ui/CheckIcon.svelte': { default: CheckIcon },
   'ui/ChevronDownIcon.svelte': { default: ChevronDownIcon },
@@ -105,13 +111,16 @@ const COMPONENT_IMPORTS = [
   '  import Button from "ui/Button.svelte"',
   '  import Buttons from "ui/Buttons.svelte"',
   '  import Checkbox from "ui/Checkbox.svelte"',
+  '  import DataTable from "ui/DataTable.svelte"',
   '  import FormField from "ui/FormField.svelte"',
   '  import NumberInput from "ui/NumberInput.svelte"',
   '  import Pagination from "ui/Pagination.svelte"',
+  '  import PasswordInput from "ui/PasswordInput.svelte"',
   '  import SearchInput from "ui/SearchInput.svelte"',
   '  import SelectDropdown from "ui/SelectDropdown.svelte"',
   '  import Spinner from "ui/Spinner.svelte"',
   '  import Tabs from "ui/Tabs.svelte"',
+  '  import TagInput from "ui/TagInput.svelte"',
   '  import Tooltip from "ui/Tooltip.svelte"',
   '  import CheckIcon from "ui/CheckIcon.svelte"',
   '  import ChevronDownIcon from "ui/ChevronDownIcon.svelte"',
