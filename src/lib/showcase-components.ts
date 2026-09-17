@@ -10,6 +10,7 @@ export const SHOWCASE_COMPONENTS: ShowcaseComponent[] = [
   { slug: 'buttons', name: 'Buttons' },
   { slug: 'checkbox', name: 'Checkbox' },
   { slug: 'form-field', name: 'FormField' },
+  { slug: 'icons', name: 'Icons' },
   { slug: 'number-input', name: 'NumberInput' },
   { slug: 'pagination', name: 'Pagination' },
   { slug: 'search-input', name: 'SearchInput' },

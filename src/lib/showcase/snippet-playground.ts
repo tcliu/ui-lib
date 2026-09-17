@@ -12,6 +12,22 @@ import SelectDropdown from '$lib/components/SelectDropdown.svelte'
 import Spinner from '$lib/components/Spinner.svelte'
 import Tabs from '$lib/components/Tabs.svelte'
 import Tooltip from '$lib/components/Tooltip.svelte'
+import CheckIcon from '$lib/icons/CheckIcon.svelte'
+import ChevronDownIcon from '$lib/icons/ChevronDownIcon.svelte'
+import ChevronDownSmallIcon from '$lib/icons/ChevronDownSmallIcon.svelte'
+import ChevronLeftIcon from '$lib/icons/ChevronLeftIcon.svelte'
+import ChevronRightIcon from '$lib/icons/ChevronRightIcon.svelte'
+import ChevronUpSmallIcon from '$lib/icons/ChevronUpSmallIcon.svelte'
+import CloseIcon from '$lib/icons/CloseIcon.svelte'
+import CodeIcon from '$lib/icons/CodeIcon.svelte'
+import CopyIcon from '$lib/icons/CopyIcon.svelte'
+import EyeIcon from '$lib/icons/EyeIcon.svelte'
+import EyeSlashIcon from '$lib/icons/EyeSlashIcon.svelte'
+import GlobeIcon from '$lib/icons/GlobeIcon.svelte'
+import MenuIcon from '$lib/icons/MenuIcon.svelte'
+import PaletteIcon from '$lib/icons/PaletteIcon.svelte'
+import ResetIcon from '$lib/icons/ResetIcon.svelte'
+import SearchIcon from '$lib/icons/SearchIcon.svelte'
 
 // The showcase's live playground compiles an edited snippet in the browser and
 // renders it. `svelte/compiler` is imported dynamically so it lands in its own
@@ -48,6 +64,22 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/Spinner.svelte': { default: Spinner },
   'ui/Tabs.svelte': { default: Tabs },
   'ui/Tooltip.svelte': { default: Tooltip },
+  'ui/CheckIcon.svelte': { default: CheckIcon },
+  'ui/ChevronDownIcon.svelte': { default: ChevronDownIcon },
+  'ui/ChevronDownSmallIcon.svelte': { default: ChevronDownSmallIcon },
+  'ui/ChevronLeftIcon.svelte': { default: ChevronLeftIcon },
+  'ui/ChevronRightIcon.svelte': { default: ChevronRightIcon },
+  'ui/ChevronUpSmallIcon.svelte': { default: ChevronUpSmallIcon },
+  'ui/CloseIcon.svelte': { default: CloseIcon },
+  'ui/CodeIcon.svelte': { default: CodeIcon },
+  'ui/CopyIcon.svelte': { default: CopyIcon },
+  'ui/EyeIcon.svelte': { default: EyeIcon },
+  'ui/EyeSlashIcon.svelte': { default: EyeSlashIcon },
+  'ui/GlobeIcon.svelte': { default: GlobeIcon },
+  'ui/MenuIcon.svelte': { default: MenuIcon },
+  'ui/PaletteIcon.svelte': { default: PaletteIcon },
+  'ui/ResetIcon.svelte': { default: ResetIcon },
+  'ui/SearchIcon.svelte': { default: SearchIcon },
 }
 
 const COMPONENT_IMPORTS = [
@@ -63,6 +95,22 @@ const COMPONENT_IMPORTS = [
   '  import Spinner from "ui/Spinner.svelte"',
   '  import Tabs from "ui/Tabs.svelte"',
   '  import Tooltip from "ui/Tooltip.svelte"',
+  '  import CheckIcon from "ui/CheckIcon.svelte"',
+  '  import ChevronDownIcon from "ui/ChevronDownIcon.svelte"',
+  '  import ChevronDownSmallIcon from "ui/ChevronDownSmallIcon.svelte"',
+  '  import ChevronLeftIcon from "ui/ChevronLeftIcon.svelte"',
+  '  import ChevronRightIcon from "ui/ChevronRightIcon.svelte"',
+  '  import ChevronUpSmallIcon from "ui/ChevronUpSmallIcon.svelte"',
+  '  import CloseIcon from "ui/CloseIcon.svelte"',
+  '  import CodeIcon from "ui/CodeIcon.svelte"',
+  '  import CopyIcon from "ui/CopyIcon.svelte"',
+  '  import EyeIcon from "ui/EyeIcon.svelte"',
+  '  import EyeSlashIcon from "ui/EyeSlashIcon.svelte"',
+  '  import GlobeIcon from "ui/GlobeIcon.svelte"',
+  '  import MenuIcon from "ui/MenuIcon.svelte"',
+  '  import PaletteIcon from "ui/PaletteIcon.svelte"',
+  '  import ResetIcon from "ui/ResetIcon.svelte"',
+  '  import SearchIcon from "ui/SearchIcon.svelte"',
 ].join('\n')
 
 // Rewrite the compiler's ESM output for `new Function`: drop side-effect imports

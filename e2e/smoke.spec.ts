@@ -8,7 +8,7 @@ const DEMO_CONTROLS =
 
 // The Spinner demo is purely presentational and renders no interactive
 // control of its own, so it asserts the SVG it renders instead.
-const PRESENTATIONAL_SLUGS = new Set(['spinner']);
+const PRESENTATIONAL_SLUGS = new Set(['spinner', 'icons']);
 
 test('showcase: index redirects to the two-pane component browser', async ({ page }) => {
 	await page.goto('/');
