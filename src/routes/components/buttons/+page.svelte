@@ -8,6 +8,11 @@
 
   const i18n = getI18nContext()
 
+  const code = `<Buttons align="right">
+  <Button variant="outline">Cancel</Button>
+  <Button variant="primary">OK</Button>
+</Buttons>`
+
   const props: PropRow[] = [
     { name: 'align', type: "'left' | 'center' | 'right'", defaultValue: "'left'", note: 'Horizontal alignment of the default row.' },
     { name: 'className', type: 'string', defaultValue: '—', note: 'Replaces the default layout classes (align is ignored).' },
@@ -19,7 +24,7 @@
   <PropsTable rows={props} />
 {/snippet}
 
-<ShowcasePage name="Buttons" props={propsSnippet}>
+<ShowcasePage name="Buttons" props={propsSnippet} {code}>
   <ShowcaseSection title={i18n.t('showcase.default')}>
     <Buttons>
       <Button variant="primary">{i18n.t('common.ok')}</Button>

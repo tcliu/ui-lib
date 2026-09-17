@@ -16,6 +16,14 @@
 
   let routePath = $state('#overview')
 
+  const code = `<Tabs
+  tabs={[
+    { label: 'Default', path: 'overview', content: overviewContent, toolbar: overviewToolbar },
+    { label: 'Customized', path: 'details', content: detailsContent },
+  ]}
+  state={demoState}
+  ariaLabel="Components" />`
+
   const props: PropRow[] = [
     { name: 'tabs', type: 'Tab<TState>[]', defaultValue: '—', note: 'Label, path, optional toolbar snippet, content snippet.' },
     { name: 'state', type: 'TState', defaultValue: '—', note: 'Passed to the toolbar/content snippets.' },
@@ -42,7 +50,7 @@
   <PropsTable rows={props} />
 {/snippet}
 
-<ShowcasePage name="Tabs" props={propsSnippet}>
+<ShowcasePage name="Tabs" props={propsSnippet} {code}>
   <ShowcaseSection title={i18n.t('showcase.default')}>
     <Tabs
       tabs={[

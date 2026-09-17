@@ -19,6 +19,12 @@
     }
   }
 
+  const code = `<SearchInput
+  bind:value={query}
+  ariaLabel="Search"
+  placeholder="Filter sessions"
+  onkeydown={handleKeydown} />`
+
   const props: PropRow[] = [
     { name: 'value', type: 'string', defaultValue: '—', note: 'Bindable search text.' },
     { name: 'ariaLabel', type: 'string', defaultValue: '—', note: 'Required accessible name.' },
@@ -35,7 +41,7 @@
   <PropsTable rows={props} />
 {/snippet}
 
-<ShowcasePage name="SearchInput" props={propsSnippet}>
+<ShowcasePage name="SearchInput" props={propsSnippet} {code}>
   <ShowcaseSection title={i18n.t('showcase.default')}>
     <div class="flex flex-col gap-1">
       <SearchInput bind:value={query} ariaLabel={i18n.t('common.apply')} onkeydown={handleKeydown} />

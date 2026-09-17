@@ -17,6 +17,13 @@
     currentPage = 1
   }
 
+  const code = `<Pagination
+  total={200}
+  pageSize={10}
+  currentPage={3}
+  onPageChange={page => (currentPage = page)}
+  onPageSizeChange={size => (pageSize = size)} />`
+
   const props: PropRow[] = [
     { name: 'total', type: 'number', defaultValue: '—', note: 'Total item count.' },
     { name: 'pageSize', type: 'number', defaultValue: '—', note: 'Items per page.' },
@@ -38,7 +45,7 @@
   <PropsTable rows={props} />
 {/snippet}
 
-<ShowcasePage name="Pagination" props={propsSnippet}>
+<ShowcasePage name="Pagination" props={propsSnippet} {code}>
   <ShowcaseSection title={i18n.t('showcase.default')}>
     <Pagination
       {total}

@@ -59,3 +59,46 @@ test('showcase: BaseDialog page opens the dialog with content', async ({ page })
 	await page.keyboard.press('Escape');
 	await expect(dialog).toBeHidden();
 });
+
+test('showcase: the picker toggle hides and shows the component pane', async ({ page }) => {
+	await page.goto('/components/base-dialog');
+	// Hydration binds the toggle handler; wait for it before interacting.
+	await page.waitForLoadState('networkidle');
+	const toggle = page.getByRole('button', { name: 'Toggle component picker' });
+	const search = page.getByRole('searchbox', { name: 'Search components' });
+	await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+	await expect(search).toBeVisible();
+	await toggle.click();
+	await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+	await expect(search).toBeHidden();
+	await toggle.click();
+	await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+	await expect(search).toBeVisible();
+});
+
+test('showcase: a deep link selects its component in the picker', async ({ page }) => {
+	await page.goto('/components/tabs');
+	await expect(page.getByRole('heading', { level: 1, name: 'Tabs' })).toBeVisible();
+	await expect(page.getByRole('link', { name: 'Tabs' })).toHaveAttribute('aria-current', 'page');
+});
+
+test('showcase: an unknown slug renders the localized not-found state', async ({ page }) => {
+	await page.goto('/components/nope');
+	await expect(page.getByRole('heading', { level: 1, name: 'Component not found' })).toBeVisible();
+});
+
+test('showcase: a demo code snippet is editable and copyable', async ({ page, context }) => {
+	await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+	await page.goto('/components/button');
+	// Hydration binds the toggle and copy handlers; wait before interacting.
+	await page.waitForLoadState('networkidle');
+	await page.getByRole('button', { name: 'Show code' }).click();
+	const snippet = page.getByRole('textbox', { name: 'Code' });
+	await expect(snippet).toBeVisible();
+	await snippet.fill('<Button variant="primary">Hello</Button>');
+	await page.getByRole('button', { name: 'Copy code' }).click();
+	await expect(page.getByRole('status')).toHaveText('Copied');
+	await expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+		'<Button variant="primary">Hello</Button>'
+	);
+});

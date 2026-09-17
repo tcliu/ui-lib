@@ -7,6 +7,9 @@
 
   const i18n = getI18nContext()
 
+  const code = `<Spinner />
+<Spinner className="h-8 w-8 text-cyan-400" />`
+
   const props: PropRow[] = [
     { name: 'className', type: 'string', defaultValue: "'h-4 w-4'", note: 'Size and color classes for the SVG.' },
   ]
@@ -16,7 +19,7 @@
   <PropsTable rows={props} />
 {/snippet}
 
-<ShowcasePage name="Spinner" props={propsSnippet}>
+<ShowcasePage name="Spinner" props={propsSnippet} {code}>
   <ShowcaseSection title={i18n.t('showcase.default')}>
     <Spinner />
     <span class="inline-flex items-center gap-2 text-sm text-slate-300">

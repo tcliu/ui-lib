@@ -9,6 +9,10 @@
 
   let value = $state('')
 
+  const code = `<FormField label="Name" htmlFor="name">
+  <input id="name" type="text" bind:value />
+</FormField>`
+
   const props: PropRow[] = [
     { name: 'label', type: 'string', defaultValue: '—', note: 'Visible field label.' },
     { name: 'htmlFor', type: 'string', defaultValue: '—', note: 'Associates the label with a control id.' },
@@ -21,7 +25,7 @@
   <PropsTable rows={props} />
 {/snippet}
 
-<ShowcasePage name="FormField" props={propsSnippet}>
+<ShowcasePage name="FormField" props={propsSnippet} {code}>
   <ShowcaseSection title={i18n.t('showcase.default')}>
     <FormField label={i18n.t('showcase.default')}>
       <input

@@ -18,6 +18,14 @@
   let pending = $state(false)
   let allowPendingCancel = $state(false)
 
+  const code = `<Button variant="primary" onClick={() => (open = true)}>Open dialog</Button>
+
+{#if open}
+  <BaseDialog title="Dialog title" onCancel={() => (open = false)}>
+    <p>Dialog body content.</p>
+  </BaseDialog>
+{/if}`
+
   const props: PropRow[] = [
     { name: 'title', type: 'string', defaultValue: '—', note: 'Heading rendered when no header snippet is passed.' },
     { name: 'titleClass', type: 'string', defaultValue: "''", note: 'Extra classes for the title element.' },
@@ -44,7 +52,7 @@
   <PropsTable rows={props} />
 {/snippet}
 
-<ShowcasePage name="BaseDialog" props={propsSnippet}>
+<ShowcasePage name="BaseDialog" props={propsSnippet} {code}>
   <ShowcaseSection title={i18n.t('showcase.default')}>
     <Button variant="primary" onClick={() => (defaultOpen = true)}>{i18n.t('showcase.openDialog')}</Button>
     {#if defaultOpen}

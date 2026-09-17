@@ -59,6 +59,16 @@ export const en = {
   'showcase.pendingOption': 'Pending',
   'showcase.allowPendingCancel': 'Allow cancel while pending',
   'showcase.fullscreenDialog': 'Fullscreen dialog',
+  'showcase.toggleComponents': 'Toggle component picker',
+  'showcase.code': 'Code',
+  'showcase.showCode': 'Show code',
+  'showcase.hideCode': 'Hide code',
+  'showcase.copyCode': 'Copy code',
+  'showcase.copied': 'Copied',
+  'showcase.copyFailed': 'Copy failed',
+  'showcase.codeNote': 'Editable reference — changes are not executed.',
+  'showcase.notFoundTitle': 'Component not found',
+  'showcase.notFoundBody': 'No component matches this address. Choose one from the picker.',
 }
 
 export type MessageKey = keyof typeof en

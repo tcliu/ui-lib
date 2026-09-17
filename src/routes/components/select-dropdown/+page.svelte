@@ -36,6 +36,12 @@
     return list.find(option => option.value === current)?.label ?? current
   }
 
+  const code = `<SelectDropdown
+  buttonLabel={labelFor(options, value)}
+  activeValue={value}
+  options={options}
+  onSelect={next => (value = next)} />`
+
   const props: PropRow[] = [
     { name: 'buttonLabel', type: 'string', defaultValue: '—', note: 'Trigger label text.' },
     { name: 'options', type: '{ value: string; label: string }[]', defaultValue: '—', note: 'Selectable options.' },
@@ -58,7 +64,7 @@
   <PropsTable rows={props} />
 {/snippet}
 
-<ShowcasePage name="SelectDropdown" props={propsSnippet}>
+<ShowcasePage name="SelectDropdown" props={propsSnippet} {code}>
   <ShowcaseSection title={i18n.t('showcase.default')}>
     <SelectDropdown
       buttonLabel={labelFor(options, value)}

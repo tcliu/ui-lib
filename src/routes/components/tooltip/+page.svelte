@@ -10,6 +10,9 @@
 
   let explicitTrigger = $state<HTMLButtonElement | null>(null)
 
+  const code = `<Button bind:buttonEl={trigger}>Apply</Button>
+<Tooltip trigger={trigger}>Apply</Tooltip>`
+
   const props: PropRow[] = [
     { name: 'children', type: 'Snippet', defaultValue: '—', note: 'Tooltip text/content.' },
     { name: 'align', type: "'center' | 'left' | 'right'", defaultValue: "'center'", note: 'Horizontal alignment to the trigger.' },
@@ -22,7 +25,7 @@
   <PropsTable rows={props} />
 {/snippet}
 
-<ShowcasePage name="Tooltip" props={propsSnippet}>
+<ShowcasePage name="Tooltip" props={propsSnippet} {code}>
   <ShowcaseSection title={i18n.t('showcase.default')}>
     <Button bind:buttonEl={explicitTrigger}>{i18n.t('common.apply')}</Button>
     <Tooltip trigger={explicitTrigger}>{i18n.t('common.apply')}</Tooltip>

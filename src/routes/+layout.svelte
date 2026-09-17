@@ -4,6 +4,9 @@
   import { createAppI18n, setI18nContext } from '$lib/i18n.svelte'
   import LanguageMenu from '$lib/components/LanguageMenu.svelte'
   import ThemeMenu from '$lib/components/ThemeMenu.svelte'
+  import Button from '$lib/components/Button.svelte'
+  import MenuIcon from '$lib/icons/MenuIcon.svelte'
+  import { getPickerOpen, setPickerOpen } from '$lib/showcase-picker.svelte'
   import type { LayoutData } from './$types'
 
   // One i18n store per app instance; children read it through the context.
@@ -11,11 +14,26 @@
   setI18nContext(i18n)
 
   let { children, data }: { children: Snippet; data: LayoutData } = $props()
+
+  const pickerOpen = $derived(getPickerOpen())
 </script>
+
+{#snippet menuIcon()}
+  <MenuIcon className="h-5 w-5" />
+{/snippet}
 
 <div class="flex h-dvh flex-col bg-slate-950 text-slate-100">
   <header class="flex shrink-0 items-center justify-between gap-4 border-b border-slate-800 px-3 py-3 sm:px-4">
-    <span class="text-base font-semibold tracking-tight sm:text-lg">{i18n.t('showcase.title')}</span>
+    <div class="flex min-w-0 items-center gap-2">
+      <Button
+        icon={menuIcon}
+        ariaLabel={i18n.t('showcase.toggleComponents')}
+        ariaExpanded={pickerOpen}
+        tooltip={i18n.t('showcase.toggleComponents')}
+        tooltipAlign="left"
+        onClick={() => setPickerOpen(!pickerOpen)} />
+      <span class="truncate text-base font-semibold tracking-tight sm:text-lg">{i18n.t('showcase.title')}</span>
+    </div>
     <div class="flex items-center gap-2">
       <ThemeMenu align="right" />
       <LanguageMenu align="right" />

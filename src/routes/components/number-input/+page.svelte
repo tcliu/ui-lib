@@ -17,6 +17,8 @@
   let inputs = $state(0)
   let blurs = $state(0)
 
+  const code = `<NumberInput bind:value min={0} max={10} step={0.5} ariaLabel="Quantity" />`
+
   const props: PropRow[] = [
     { name: 'value', type: 'string', defaultValue: '—', note: 'Bindable field value.' },
     { name: 'min', type: 'number', defaultValue: '—', note: 'Lower clamp on blur and step.' },
@@ -40,7 +42,7 @@
   <PropsTable rows={props} />
 {/snippet}
 
-<ShowcasePage name="NumberInput" props={propsSnippet}>
+<ShowcasePage name="NumberInput" props={propsSnippet} {code}>
   <ShowcaseSection title={i18n.t('showcase.default')}>
     <div class="flex flex-col gap-1">
       <NumberInput bind:value ariaLabel="default" />

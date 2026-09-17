@@ -23,6 +23,10 @@
     submitted += 1
   }
 
+  const code = `<Button variant="primary" accent="cyan">Primary</Button>
+<Button variant="outline" accent="rose">Outline</Button>
+<Button icon={checkIcon} ariaLabel="Reload" tooltip="Reload" />`
+
   const props: PropRow[] = [
     { name: 'variant', type: "'primary' | 'secondary' | 'danger' | 'outline' | 'ghost'", defaultValue: "'secondary'", note: 'Visual treatment.' },
     { name: 'accent', type: "'cyan' | 'emerald' | 'amber' | 'violet' | 'rose'", defaultValue: "'cyan'", note: 'Tint for primary, outline, and badge.' },
@@ -55,7 +59,7 @@
   <PropsTable rows={props} />
 {/snippet}
 
-<ShowcasePage name="Button" props={propsSnippet}>
+<ShowcasePage name="Button" props={propsSnippet} {code}>
   <ShowcaseSection title={i18n.t('showcase.default')}>
     {#each variants as variant (variant)}
       <Button {variant}>{variant}</Button>

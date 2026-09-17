@@ -15,6 +15,9 @@
   let lastChange = $state('—')
   let inputEl = $state<HTMLInputElement | null>(null)
 
+  const code = `<Checkbox bind:checked label="Apply" />
+<Checkbox checked={false} indeterminate label="Mixed" size="sm" />`
+
   const props: PropRow[] = [
     { name: 'checked', type: 'boolean', defaultValue: '—', note: 'Bindable checked state.' },
     { name: 'label', type: 'string', defaultValue: '—', note: 'Visible label; also the accessible name.' },
@@ -36,7 +39,7 @@
   <PropsTable rows={props} />
 {/snippet}
 
-<ShowcasePage name="Checkbox" props={propsSnippet}>
+<ShowcasePage name="Checkbox" props={propsSnippet} {code}>
   <ShowcaseSection title={i18n.t('showcase.default')}>
     <Checkbox bind:checked={basic} label={i18n.t('common.apply')} />
     <Checkbox bind:checked={basic} label={i18n.t('showcase.default')} name="demo" />
