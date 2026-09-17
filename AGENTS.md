@@ -36,6 +36,20 @@ Project-specific development conventions for the UI Library web app.
 ## Architecture
 
 - The project root hosts the browser app.
+- This project is the canonical source for the shared UI surface: the primitives
+  in `src/lib/components/`, the shared icons and actions, and the generic
+  `scripts/`. Sibling apps vendor them through the `unify` skill and adapt only
+  import paths and per-app storage keys. Fix a shared component here first, then
+  port it; never fork one in a consuming app without syncing the change back, or
+  `npm run check`'s parity gate will fail.
+- `scripts/check-shared-parity.mjs` (run by `npm run check`) byte-compares every
+  shared file against each registered sibling app. A change to a shared file is
+  not complete until the sibling copies are re-ported or the divergence is added
+  to that script's documented exception list with a reason.
+- The shared primitives resolve labels as `$derived(prop ?? i18n.t('key'))` and
+  fall back to the locales in `src/lib/locales/`; a consuming app's locale
+  dictionaries must define the shared keys (`common.*`, `number.*`, `dropdown.*`,
+  `pagination.*`, `tabs.label`, `search.placeholder`).
 - Component attributes stay camelCase.
 - Reuse this project's existing UI primitives and patterns when they fit,
   especially dialog, dropdown, editor, and icon components; do not build a
