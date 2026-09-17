@@ -49,7 +49,8 @@ Project-specific development conventions for the UI Library web app.
 - The shared primitives resolve labels as `$derived(prop ?? i18n.t('key'))` and
   fall back to the locales in `src/lib/locales/`; a consuming app's locale
   dictionaries must define the shared keys (`common.*`, `number.*`, `dropdown.*`,
-  `pagination.*`, `tabs.label`, `search.placeholder`).
+  `pagination.*`, `tabs.label`, `search.placeholder`, `splitter.*`, `password.*`,
+  and `combobox.remove`).
 - Component attributes stay camelCase.
 - Reuse this project's existing UI primitives and patterns when they fit,
   especially dialog, dropdown, editor, and icon components; do not build a

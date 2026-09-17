@@ -22,6 +22,9 @@ export const zhCN: Record<MessageKey, string> = {
   'tabs.label': '标签页',
   'search.placeholder': '搜索...',
   'splitter.resize': '调整大小',
+  'password.show': '显示密码',
+  'password.hide': '隐藏密码',
+  'combobox.remove': '移除 {name}',
 
   'showcase.title': '界面库',
   'showcase.intro': '同级应用的规范共享界面组件。每个页面演示一个组件、它的属性以及自定义方式。',

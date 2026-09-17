@@ -21,12 +21,16 @@ const SHARED = {
     'Button.svelte',
     'Buttons.svelte',
     'Checkbox.svelte',
+    'Chip.svelte',
     'FormField.svelte',
+    'Menu.svelte',
     'NumberInput.svelte',
     'Pagination.svelte',
+    'PasswordInput.svelte',
     'SearchInput.svelte',
     'SelectDropdown.svelte',
     'Spinner.svelte',
+    'Splitter.svelte',
     'Tabs.svelte',
     'Tooltip.svelte',
   ],
@@ -38,10 +42,15 @@ const SHARED = {
     'ChevronRightIcon.svelte',
     'ChevronUpSmallIcon.svelte',
     'CloseIcon.svelte',
+    'EyeIcon.svelte',
+    'EyeSlashIcon.svelte',
+    'GlobeIcon.svelte',
+    'PaletteIcon.svelte',
     'SearchIcon.svelte',
   ],
   'src/lib/actions': [
     'click-outside.ts',
+    'drag-close-down.ts',
     'use-dropdown.svelte.ts',
     'use-focusout-close.ts',
     'use-list-selection.svelte.ts',
@@ -62,6 +71,14 @@ const SHARED = {
 
 // Per-project exceptions with the reason each may legitimately differ.
 const EXCEPTIONS = [
+  [
+    'src/lib/components/ConfirmDialog.svelte',
+    'three variants trade closeLabel against dismissKeydownCapture and rely on different BaseDialog dismiss defaults',
+  ],
+  [
+    'src/lib/components/TagInput.svelte',
+    'share-text models tags as Tag[] objects with colors while the others use string[] and per-tag classes; data models are incompatible',
+  ],
   ['src/lib/column-width-storage.ts', 'per-app storage-key prefix'],
   ['src/lib/i18n.svelte.ts', 'per-app locale dictionaries'],
   ['scripts/apply-schema.mjs', 'per-project schema fork'],
