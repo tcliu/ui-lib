@@ -1,0 +1,48 @@
+import type { MessageKey } from './en'
+
+export const zhCN: Record<MessageKey, string> = {
+  'common.close': '关闭',
+  'common.closeDialog': '关闭对话框',
+  'common.ok': '确定',
+  'common.cancel': '取消',
+  'common.apply': '应用',
+  'common.reload': '重新加载',
+  'common.reset': '重置',
+
+  'number.increment': '增加',
+  'number.decrement': '减少',
+  'dropdown.noOptions': '没有选项',
+
+  'pagination.pageSize': '每页条数',
+  'pagination.previous': '上一页',
+  'pagination.next': '下一页',
+  'pagination.label': '分页',
+  'pagination.current': '当前页',
+
+  'tabs.label': '标签页',
+  'search.placeholder': '搜索...',
+
+  'showcase.title': '界面库',
+  'showcase.intro': '同级应用的规范共享界面组件。每个页面演示一个组件、它的属性以及自定义方式。',
+  'showcase.components': '组件',
+  'showcase.theme': '主题',
+  'showcase.language': '语言',
+  'showcase.props': '属性',
+  'showcase.default': '默认',
+  'showcase.customized': '自定义',
+  'showcase.iconsBadgeTooltip': '图标、徽标、提示',
+  'showcase.interactive': '交互',
+  'showcase.state': '状态',
+  'showcase.events': '事件',
+  'showcase.routeMode': '路由模式',
+  'showcase.backToIndex': '全部组件',
+  'showcase.prop': '属性',
+  'showcase.type': '类型',
+  'showcase.note': '说明',
+  'showcase.openDialog': '打开对话框',
+  'showcase.dialogTitle': '对话框标题',
+  'showcase.dialogBody': '对话框内容。',
+  'showcase.pendingOption': '处理中',
+  'showcase.allowPendingCancel': '处理中允许取消',
+  'showcase.fullscreenDialog': '全屏对话框',
+}

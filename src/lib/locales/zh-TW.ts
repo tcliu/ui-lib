@@ -1,0 +1,48 @@
+import type { MessageKey } from './en'
+
+export const zhTW: Record<MessageKey, string> = {
+  'common.close': '關閉',
+  'common.closeDialog': '關閉對話框',
+  'common.ok': '確定',
+  'common.cancel': '取消',
+  'common.apply': '套用',
+  'common.reload': '重新載入',
+  'common.reset': '重設',
+
+  'number.increment': '增加',
+  'number.decrement': '減少',
+  'dropdown.noOptions': '沒有選項',
+
+  'pagination.pageSize': '每頁筆數',
+  'pagination.previous': '上一頁',
+  'pagination.next': '下一頁',
+  'pagination.label': '分頁',
+  'pagination.current': '目前頁',
+
+  'tabs.label': '頁籤',
+  'search.placeholder': '搜尋...',
+
+  'showcase.title': '介面庫',
+  'showcase.intro': '同級應用的規範共享介面元件。每個頁面示範一個元件、它的屬性以及自訂方式。',
+  'showcase.components': '元件',
+  'showcase.theme': '佈景主題',
+  'showcase.language': '語言',
+  'showcase.props': '屬性',
+  'showcase.default': '預設',
+  'showcase.customized': '自訂',
+  'showcase.iconsBadgeTooltip': '圖示、徽章、提示',
+  'showcase.interactive': '互動',
+  'showcase.state': '狀態',
+  'showcase.events': '事件',
+  'showcase.routeMode': '路由模式',
+  'showcase.backToIndex': '全部元件',
+  'showcase.prop': '屬性',
+  'showcase.type': '型別',
+  'showcase.note': '說明',
+  'showcase.openDialog': '開啟對話框',
+  'showcase.dialogTitle': '對話框標題',
+  'showcase.dialogBody': '對話框內容。',
+  'showcase.pendingOption': '處理中',
+  'showcase.allowPendingCancel': '處理中允許取消',
+  'showcase.fullscreenDialog': '全螢幕對話框',
+}
