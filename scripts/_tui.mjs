@@ -280,12 +280,7 @@ export function buildDialogBox({
   for (const header of headerLines) {
     lines.push(side(padRight(truncate(header, content), content)))
   }
-  // Only separate the header from an options list that exists; a dialog with
-  // no options (e.g. the worktree create prompt) would otherwise end on a
-  // dangling divider.
-  if (options.length > 0) {
-    lines.push(side('─'.repeat(content)))
-  }
+  lines.push(side('─'.repeat(content)))
 
   let start = 0
   if (options.length > listH) {

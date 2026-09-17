@@ -4,7 +4,7 @@ import { parseArgs as parseCliArgs } from 'node:util'
 
 import { c, selectOne } from './_terminal.mjs'
 import { interactiveShell } from './_interactive-shell.mjs'
-import { countDirtyFiles, deleteBranch, listDeleteTargets, listDeprecatedWorktrees, removeWorktree } from './_worktrees.mjs'
+import { countDirtyFiles, deleteBranch, findProcessesInPath, listDeleteTargets, removeWorktree, resolveWorktreesDir } from './_worktrees.mjs'
 
 function fail(message) {
   console.error(`${c.red}${message}${c.reset}`)
@@ -16,10 +16,6 @@ function printUsage() {
   console.log('  scripts/delete-worktrees.mjs [paths or names...] [--yes]')
   console.log('  scripts/delete-worktrees.mjs --interactive')
   console.log('')
-  console.log('  scripts/delete-worktrees.mjs --deprecated [--yes]')
-  console.log('')
-  console.log('  --deprecated   pre-select worktrees already merged into the base branch')
-  console.log('                 (--deprecated --yes deletes every merged worktree without prompting)')
   console.log('  --yes, -y   skip the delete confirmation (required when stdin is not a TTY)')
 }
 
@@ -30,7 +26,6 @@ function parseArgs(argv) {
       args: argv,
       options: {
         interactive: { type: 'boolean', short: 'i' },
-        deprecated: { type: 'boolean' },
         yes: { type: 'boolean', short: 'y' },
         help: { type: 'boolean', short: 'h' },
       },
@@ -47,7 +42,6 @@ function parseArgs(argv) {
   }
   return {
     interactive: Boolean(values.interactive) || positionals.length === 0,
-    deprecated: Boolean(values.deprecated),
     yes: Boolean(values.yes),
     positional: positionals,
   }
@@ -123,6 +117,20 @@ async function runDeleteInterview(worktrees) {
 // --yes (same contract as scripts/vercel.mjs remove-deployment).
 async function confirmDeletion({ selected, yes }) {
   for (const worktree of selected) {
+    // Warn-only here (unlike the manager's refuse-before-confirm): the CLI
+    // already requires an explicit Yes with No as the default, so this stays
+    // informed consent rather than changing the command's exit contract.
+    const blockers = findProcessesInPath(worktree.path)
+    if (blockers === null) {
+      console.log(
+        `  ${c.red}✖ ${worktree.path}${c.reset} ${c.gray}(process status unreadable — stop any processes inside or the delete half-finishes)${c.reset}`,
+      )
+    } else if (blockers.length > 0) {
+      const who = blockers.map(p => `${p.pid}${p.cmd ? ` (${p.cmd})` : ''}`).join(', ')
+      console.log(
+        `  ${c.red}✖ ${worktree.path}${c.reset} ${c.gray}(process(es) running inside: ${who} — stop them or the delete half-finishes)${c.reset}`,
+      )
+    }
     const dirty = countDirtyFiles(worktree.path)
     if (dirty === null || dirty > 0) {
       const detail = dirty === null ? 'status unavailable' : `${dirty} uncommitted change(s)`
@@ -144,19 +152,11 @@ async function confirmDeletion({ selected, yes }) {
 
 async function main() {
   const root = process.cwd()
-  const { interactive, deprecated, yes, positional } = parseArgs(process.argv.slice(2))
-  let worktrees = listDeleteTargets(root)
-  if (deprecated) {
-    const mergedPaths = new Set(listDeprecatedWorktrees(root).entries.map(entry => entry.path))
-    worktrees = worktrees.filter(worktree => mergedPaths.has(worktree.path))
-  }
+  const { interactive, yes, positional } = parseArgs(process.argv.slice(2))
+  const worktrees = listDeleteTargets(root, resolveWorktreesDir(root))
 
   if (worktrees.length === 0) {
-    if (deprecated) {
-      console.log(`${c.yellow}No deprecated worktrees found (every worktree holds commits missing from the base).${c.reset}`)
-    } else {
-      console.log(`${c.yellow}No worktrees found.${c.reset}`)
-    }
+    console.log(`${c.yellow}No worktrees found.${c.reset}`)
     return
   }
 
@@ -173,8 +173,6 @@ async function main() {
     if (selected.length === 0) {
       fail('No matching worktrees found.')
     }
-  } else if (deprecated && positional.length === 0 && yes) {
-    selected = worktrees
   } else {
     selected = (await runDeleteInterview(worktrees)).selected
   }
