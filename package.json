@@ -1,0 +1,44 @@
+{
+  "name": "ui-lib",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
+    "better-sqlite3": "^13.0.3"
+  },
+  "scripts": {
+    "dev": "vite dev --host",
+    "build": "svelte-kit sync && vite build",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "test": "vitest run --passWithNoTests",
+    "format": "prettier --write '**/*.{js,ts,svelte}'",
+    "e2e": "node scripts/run-e2e.mjs",
+    "deploy": "node scripts/deploy.mjs",
+    "env:sync:vercel": "node ./scripts/sync-vercel-env.mjs",
+    "schema:apply": "node ./scripts/apply-schema.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@sveltejs/adapter-vercel": "^6.3.4",
+    "@sveltejs/kit": "^2.61.1",
+    "@sveltejs/vite-plugin-svelte": "^7.1.2",
+    "@tailwindcss/vite": "^4.3.1",
+    "@types/node": "^26.4.1",
+    "jsdom": "^29.1.1",
+    "prettier": "^3.6.2",
+    "prettier-plugin-svelte": "^3.4.0",
+    "svelte": "^5.55.9",
+    "svelte-check": "^4.3.4",
+    "tailwindcss": "^4.3.1",
+    "typescript": "^6.0.3",
+    "vite": "^8.1.0",
+    "vitest": "^4.1.9"
+  },
+  "overrides": {
+    "cookie": "^0.7.2"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
+  }
+}

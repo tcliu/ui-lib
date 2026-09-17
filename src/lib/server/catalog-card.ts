@@ -1,0 +1,99 @@
+// Shared catalog-card contract: the generic `GET /api/catalog` self-card
+// every managed project exposes, and the envelope a catalog list endpoint
+// carries. Each project supplies its own app props; the shape and
+// the flat-vs-`self` resolution stay identical everywhere. Framework-agnostic
+// on purpose — projects can copy this file verbatim and only change props.
+export interface CatalogCardPayload {
+  id?: unknown;
+  name?: unknown;
+  icon?: unknown;
+  description?: unknown;
+  branch?: unknown;
+  repo?: unknown;
+  status?: unknown;
+  url?: unknown;
+  tags?: unknown;
+}
+
+export interface NormalizedCatalogCard {
+  id: string;
+  name: string;
+  icon: string | null;
+  description: string | null;
+  branch: string | null;
+  repo: string | null;
+  status: 'Active' | 'Inactive';
+  url: string | null;
+  tags: string[];
+}
+const VALID_STATUSES: Record<string, 'Active' | 'Inactive'> = { Active: 'Active', Inactive: 'Inactive' };
+
+function trimToNull(value: unknown): string | null {
+  if (value === undefined || value === null) return null;
+  const trimmed = String(value).trim();
+  return trimmed ? trimmed : null;
+}
+
+// Lightweight tag coercion only (trim, drop empties, dedupe). This file stays
+// dependency-free so projects keep copying it verbatim; the full tag policy
+// (caps, truncation) is enforced downstream when the record is stored.
+function normalizeCardTags(value: unknown): string[] {
+  const list = typeof value === 'string' ? value.split(',') : value;
+  if (!Array.isArray(list)) {
+    return [];
+  }
+  const seen = new Set<string>();
+  const tags: string[] = [];
+  for (const entry of list) {
+    if (typeof entry !== 'string' && typeof entry !== 'number') {
+      continue;
+    }
+    const tag = String(entry).trim();
+    if (!tag) {
+      continue;
+    }
+    const key = tag.toLowerCase();
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    tags.push(tag);
+  }
+  return tags;
+}
+export function normalizeCatalogCard(payload: CatalogCardPayload): NormalizedCatalogCard {
+  const id = trimToNull(payload.id);
+  const name = trimToNull(payload.name);
+  if (!id) {
+    throw new Error('Catalog card is missing required id.');
+  }
+  if (!name) {
+    throw new Error('Catalog card is missing required name.');
+  }
+  const status = trimToNull(payload.status);
+  return {
+    id,
+    name,
+    icon: trimToNull(payload.icon),
+    description: trimToNull(payload.description),
+    branch: trimToNull(payload.branch),
+    repo: trimToNull(payload.repo),
+    status: (status && VALID_STATUSES[status]) || 'Active',
+    url: trimToNull(payload.url),
+    tags: normalizeCardTags(payload.tags),
+  };
+}
+
+// Accepts either a flat self-card or a list envelope carrying it under
+// `self` (`{ ..., self: { ... } }`).
+export function resolveCatalogCardPayload(response: unknown): CatalogCardPayload {
+  if (!response || typeof response !== 'object') {
+    throw new Error('Response is not a JSON object.');
+  }
+  const record = response as { self?: unknown } & CatalogCardPayload;
+  const candidate = record.self !== undefined ? record.self : response;
+  if (!candidate || typeof candidate !== 'object') {
+    throw new Error('Response is missing a catalog card object.');
+  }
+  return candidate as CatalogCardPayload;
+}

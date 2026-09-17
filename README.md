@@ -1,0 +1,65 @@
+# UI Library
+
+A responsive UI Library web app.
+
+## Setup
+
+- Build the browser app at the project root; the web UI stack and component patterns stay in this repo.
+
+## Environment variables
+
+`.env.example` is the single example file documenting all knobs; it is never
+loaded. Copy it to `.env` (git-ignored) to override locally — Vite loads
+`.env` automatically during `npm run dev` — and create `.env.vercel`
+(git-ignored) for the values to push to Vercel. Every setting is optional:
+the app ships sensible defaults in code.
+
+## Deployment (Vercel)
+
+The app ships with `@sveltejs/adapter-vercel` (Node.js runtime) and is ready to
+deploy to Vercel.
+
+1. Install the Vercel CLI and log in:
+
+   ```bash
+   npx vercel login
+   ```
+
+2. Link the repo to your Vercel project once:
+
+   ```bash
+   npx vercel link
+   ```
+
+3. Push environment variables (optional):
+
+   Create `.env.vercel` (git-ignored; see `.env.example` for the documented
+   knobs) with at least:
+
+   ```bash
+   APP_BASE_URL=https://<your-alias>.vercel.app
+   ```
+
+   then sync it to Vercel:
+
+   ```bash
+   npm run env:sync:vercel
+   ```
+
+   By default this only upserts the vars from `.env.vercel` and leaves any
+   other project env vars untouched. Pass `--prune` to also remove vars that
+   are no longer present in that file.
+
+4. Deploy:
+
+   ```bash
+   npm run deploy -- --sync-env
+   ```
+
+    This starts a production deploy, streams the Vercel upload/build logs,
+    waits for the deployment to reach `READY`, and points the project's
+    production domain at `APP_BASE_URL` (resolved from the shell env, then
+    `.env.vercel`, then `.env`). Stale `<project>.vercel.app` aliases are
+    removed so only the configured domain remains.
+
+`vercel.json` sets the SvelteKit framework with `npm run build`.
