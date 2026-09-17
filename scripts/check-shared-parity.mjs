@@ -99,11 +99,6 @@ const EXCEPTIONS = [
   ['scripts/apply-schema.mjs', 'per-project schema fork'],
   ['scripts/db-config.mjs', 'per-project database configuration fork'],
   ['scripts/deploy.mjs', 'per-project deploy fork'],
-  [
-    'tts',
-    'src/lib/components/CodeEditor.svelte',
-    'tts editor trades language loading, autoFocus, recreateKey, and maxContentLength for theme switching, selection control, and playback highlighting; not a drop-in for its call site',
-  ],
 ]
 const globalExceptions = new Set(EXCEPTIONS.filter(entry => entry.length === 2).map(([p]) => p))
 const appExceptions = EXCEPTIONS.filter(entry => entry.length === 3)
