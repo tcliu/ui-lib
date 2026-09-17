@@ -98,22 +98,25 @@ async function replaceSnippet(page: import('@playwright/test').Page, section: im
 	await page.keyboard.press('ControlOrMeta+V');
 }
 
-test('showcase: a code snippet is a live playground and stays copyable', async ({ page, context }) => {
+test('showcase: a code snippet edits its section demo in place', async ({ page, context }) => {
 	await context.grantPermissions(['clipboard-read', 'clipboard-write']);
 	await page.goto('/components/button');
 	// Hydration binds the toggle, copy, and compile handlers; wait before interacting.
 	await page.waitForLoadState('networkidle');
 	const section = page.getByRole('region', { name: 'Default' });
-	await section.getByRole('button', { name: 'Show code' }).click();
+	const toggle = section.getByRole('button', { name: 'Show code' });
+	// The static demo paints before any compilation runs.
+	await expect(section.getByRole('button', { name: 'primary' }).first()).toBeVisible();
+	await toggle.click();
 
-	const preview = section.getByTestId('snippet-preview');
-	// The initial snippet compiles and renders below the editor.
-	await expect(preview.getByRole('button', { name: 'primary' })).toBeVisible();
+	// There is no separate preview block; the editor opens below the demo row.
+	await expect(section.locator('.cm-content')).toBeVisible();
+	await expect(section.getByTestId('snippet-preview')).toHaveCount(0);
 
-	// Editing the snippet recompiles it and re-renders the preview.
+	// Editing the snippet recompiles it and updates the section demo in place.
 	await replaceSnippet(page, section, '<Button variant="primary">Live demo</Button>');
-	await expect(preview.getByRole('button', { name: 'Live demo' })).toBeVisible({ timeout: 10000 });
-	await expect(preview.getByRole('button', { name: 'primary' })).toHaveCount(0);
+	await expect(section.getByRole('button', { name: 'Live demo' })).toBeVisible({ timeout: 10000 });
+	await expect(section.getByRole('button', { name: 'primary' })).toHaveCount(0);
 
 	// The copy button still copies the edited source.
 	await section.getByRole('button', { name: 'Copy code' }).click();
@@ -122,8 +125,14 @@ test('showcase: a code snippet is a live playground and stays copyable', async (
 		'<Button variant="primary">Live demo</Button>'
 	);
 
-	// Invalid source shows an inline error and keeps the last demo on screen.
+	// Invalid source shows an inline error and keeps the current demo on screen.
 	await replaceSnippet(page, section, '<Button variant="primary">Broken');
 	await expect(section.getByRole('alert')).toBeVisible();
-	await expect(preview.getByRole('button', { name: 'Live demo' })).toBeVisible();
+	await expect(section.getByRole('button', { name: 'Live demo' })).toBeVisible();
+
+	// Closing the toggle restores the static demo and clears the error.
+	await section.getByRole('button', { name: 'Hide code' }).click();
+	await expect(section.getByRole('button', { name: 'primary' }).first()).toBeVisible();
+	await expect(section.getByRole('alert')).toHaveCount(0);
+	await expect(section.locator('.cm-content')).toHaveCount(0);
 });

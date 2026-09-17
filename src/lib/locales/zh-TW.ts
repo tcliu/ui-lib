@@ -63,8 +63,7 @@ export const zhTW: Record<MessageKey, string> = {
   'showcase.copyCode': '複製程式碼',
   'showcase.copied': '已複製',
   'showcase.copyFailed': '複製失敗',
-  'showcase.codeNote': '編輯程式碼片段以在下方重新渲染預覽。',
-  'showcase.preview': '預覽',
+  'showcase.codeNote': '編輯程式碼片段以更新上方展示。',
   'showcase.notFoundTitle': '找不到元件',
   'showcase.notFoundBody': '沒有與此位址相符的元件。請從選擇器中選擇一個。',
 }

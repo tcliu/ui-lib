@@ -63,8 +63,7 @@ export const zhCN: Record<MessageKey, string> = {
   'showcase.copyCode': '复制代码',
   'showcase.copied': '已复制',
   'showcase.copyFailed': '复制失败',
-  'showcase.codeNote': '编辑代码片段以在下方重新渲染预览。',
-  'showcase.preview': '预览',
+  'showcase.codeNote': '编辑代码片段以更新上方演示。',
   'showcase.notFoundTitle': '未找到组件',
   'showcase.notFoundBody': '没有与此地址匹配的组件。请从选择器中选择一个。',
 }

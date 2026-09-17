@@ -4,6 +4,7 @@
   import CodeIcon from '$lib/icons/CodeIcon.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import CodeSnippet from './CodeSnippet.svelte'
+  import { SnippetPreview } from './use-snippet-preview.svelte'
 
   interface Props {
     title: string
@@ -15,7 +16,7 @@
   let { title, children, code, scope }: Props = $props()
   const i18n = getI18nContext()
 
-  let open = $state(false)
+  const preview = new SnippetPreview({ getSeed: () => code ?? '', getScope: () => scope ?? {} })
 </script>
 
 {#snippet codeIcon()}
@@ -30,18 +31,29 @@
         variant="ghost"
         size="sm"
         icon={codeIcon}
-        ariaLabel={open ? i18n.t('showcase.hideCode') : i18n.t('showcase.showCode')}
-        ariaExpanded={open}
-        tooltip={open ? i18n.t('showcase.hideCode') : i18n.t('showcase.showCode')}
-        onClick={() => (open = !open)} />
+        ariaLabel={preview.open ? i18n.t('showcase.hideCode') : i18n.t('showcase.showCode')}
+        ariaExpanded={preview.open}
+        tooltip={preview.open ? i18n.t('showcase.hideCode') : i18n.t('showcase.showCode')}
+        onClick={() => preview.toggle()} />
     {/if}
   </div>
-  <div class="flex flex-wrap items-start gap-4">
-    {@render children()}
-  </div>
-  {#if code && open}
+  {#if preview.live}
+    <div bind:this={preview.liveEl} class="flex flex-wrap items-start gap-4 [contain:paint]"></div>
+  {:else}
+    <div class="flex flex-wrap items-start gap-4">
+      {@render children()}
+    </div>
+  {/if}
+  {#if code && preview.open}
     <div class="mt-4">
-      <CodeSnippet {code} {scope} />
+      {#if preview.error}
+        <p
+          role="alert"
+          class="mb-2 rounded-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 font-mono text-xs text-rose-200">
+          {preview.error}
+        </p>
+      {/if}
+      <CodeSnippet bind:draft={preview.draft} />
     </div>
   {/if}
 </section>

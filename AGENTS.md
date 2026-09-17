@@ -75,13 +75,16 @@ Project-specific development conventions for the UI Library web app.
 - The shared `CodeEditor`/`LazyCodeEditor` load language packs on demand through
   a `docType` lookup, and its CodeMirror theme package requires `@babel/runtime`
   to be installed in any app that vendors it.
-- The showcase's per-section code panel is a live playground: `CodeSnippet`
-  compiles the edited Svelte source in the browser (`svelte/compiler` loaded via
-  dynamic `import()` so it stays a separate lazy chunk) and mounts the result
-  below the editor. A section passes the page bindings its snippet references
-  through `ShowcaseSection`'s `scope`; compile and render failures show inline
-  and keep the previous render, and a preview is `contain: paint` so a snippet
-  that renders a fixed overlay cannot cover the page.
+- The showcase's per-section code panel is a live playground: `ShowcaseSection`
+  owns a `SnippetPreview` (`src/lib/showcase/use-snippet-preview.svelte.ts`)
+  that compiles the edited Svelte source in the browser (`svelte/compiler`
+  loaded via dynamic `import()` so it stays a separate lazy chunk) and swaps
+  the section's own demo row with the live instance in place. `CodeSnippet`
+  is only the editor plus the copy button. A section passes the page bindings
+  its snippet references through `ShowcaseSection`'s `scope`; compile and
+  render failures show inline and keep the previous render, and the live demo
+  row is `contain: paint` so a snippet that renders a fixed overlay cannot
+  cover the page.
 - The playground executes arbitrary JavaScript in the page: it evaluates the
   compiler output with `new Function` after rewriting its imports to a whitelist
   of shared primitives. This is not a sandbox — the code still reaches page

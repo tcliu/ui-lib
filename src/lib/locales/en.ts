@@ -70,8 +70,7 @@ export const en = {
   'showcase.copyCode': 'Copy code',
   'showcase.copied': 'Copied',
   'showcase.copyFailed': 'Copy failed',
-  'showcase.codeNote': 'Edit the snippet to re-render the preview below.',
-  'showcase.preview': 'Preview',
+  'showcase.codeNote': 'Edit the snippet to update the demo in place.',
   'showcase.notFoundTitle': 'Component not found',
   'showcase.notFoundBody': 'No component matches this address. Choose one from the picker.',
 }
