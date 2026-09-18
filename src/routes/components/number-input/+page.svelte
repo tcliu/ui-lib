@@ -28,7 +28,7 @@
 <NumberInput bind:value={empty} placeholder="0" ariaLabel="placeholder" />`
 
   const codeCustomized = `<NumberInput bind:value={disabled} disabled ariaLabel="disabled" />
-<NumberInput bind:value={stepless} showControls={false} className="w-24" ariaLabel="no controls" />
+<NumberInput bind:value={stepless} showControls={false} className="w-24 px-3 py-2 text-sm" ariaLabel="no controls" />
 <NumberInput
   bind:value={custom}
   id="number-input-demo"
@@ -53,6 +53,7 @@
     { name: 'disabled', type: 'boolean', defaultValue: 'false', note: 'Disables the input and steppers.' },
     { name: 'className', type: 'string', defaultValue: "''", note: 'Extra classes for the input.' },
     { name: 'showControls', type: 'boolean', defaultValue: 'true', note: 'Renders the stepper buttons.' },
+    { name: 'inputStyle', type: 'string', defaultValue: '—', note: 'Inline style for the input; widths the field when steppers are hidden.' },
     { name: 'id', type: 'string', defaultValue: '—', note: 'Native input id.' },
     { name: 'ariaLabel', type: 'string', defaultValue: '—', note: 'Required accessible name.' },
     { name: 'incrementLabel', type: 'string', defaultValue: 'locale', note: 'Accessible name for the up button.' },
@@ -85,7 +86,7 @@
     code={codeCustomized}
     scope={{ disabled, stepless, custom, value, keydowns, inputs, blurs }}>
     <NumberInput bind:value={disabled} disabled ariaLabel="disabled" />
-    <NumberInput bind:value={stepless} showControls={false} className="w-24" ariaLabel="no controls" />
+    <NumberInput bind:value={stepless} showControls={false} className="w-24 px-3 py-2 text-sm" ariaLabel="no controls" />
     <NumberInput
       bind:value={custom}
       id="number-input-demo"
