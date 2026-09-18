@@ -19,20 +19,22 @@
 </script>
 
 {#snippet menuIcon()}
-  <MenuIcon className="h-5 w-5" />
+  <MenuIcon className="h-4 w-4" />
 {/snippet}
 
 <div class="flex h-dvh flex-col bg-slate-950 text-slate-100">
-  <header class="flex shrink-0 items-center justify-between gap-4 border-b border-slate-800 px-3 py-3 sm:px-4">
-    <div class="flex min-w-0 items-center gap-2">
+  <header class="flex flex-none items-center justify-between gap-4 border-b border-slate-800 px-3 py-3 sm:px-4">
+    <div class="flex items-center gap-2">
       <Button
+        size="sm"
         icon={menuIcon}
         ariaLabel={i18n.t('showcase.toggleComponents')}
         ariaExpanded={pickerOpen}
         tooltip={i18n.t('showcase.toggleComponents')}
         tooltipAlign="left"
+        preventFocusSteal
         onClick={() => setPickerOpen(!pickerOpen)} />
-      <span class="truncate text-base font-semibold tracking-tight sm:text-lg">{i18n.t('showcase.title')}</span>
+      <h1 class="text-base font-semibold tracking-tight text-slate-200 sm:text-lg">{i18n.t('showcase.title')}</h1>
     </div>
     <div class="flex items-center gap-2">
       <ThemeMenu align="right" />
