@@ -22,10 +22,27 @@ export const PRESET_COMMANDS = [
 
 export const MODES = ['Actions', 'Command']
 
+// Control hints, compact enough to stay within HELP_MAX_LINES on a normal
+// terminal (narrow terminals trim the tail via `fitHelpLines`). The full
+// command surface lives in the menu, so the footer only names what is not
+// discoverable there.
 export const HELP_TEXT =
-  'Arrows: move · Space: select · a: all · Tab: menu · c: cmd · s: shell · ' +
-  'Del: delete · n: new · d: deprecated · x: stop bg · r: refresh · PgUp/PgDn: cmd output · ' +
-  'q: quit · Ctrl-C: stop cmd/quit · Mouse: click focus · [ ] select · right-click menu · wheel scroll'
+  '↑↓ move · Space select · u changes · w dir · Tab menu · c cmd · s shell · Del delete · ' +
+  'n new · d deprecated · x stop bg · r refresh · PgUp scroll · q quit'
+export const HELP_MAX_LINES = 2
+
+// Wrap the control hints into at most `maxLines` rows, marking a trimmed tail
+// with an ellipsis so a narrow terminal shows that hints were dropped instead
+// of silently hiding controls. Every returned line fits `cols`.
+export function fitHelpLines(text, cols, maxLines = HELP_MAX_LINES) {
+  const all = wrapText(text, cols)
+  if (all.length <= maxLines) return all
+  const kept = all.slice(0, maxLines)
+  // Reserve the two columns the marker needs, so a line that already filled
+  // the width still shows that hints were dropped.
+  kept[maxLines - 1] = `${truncate(kept[maxLines - 1], Math.max(0, cols - 2))} …`
+  return kept
+}
 
 export const DIALOG_OPTION_START = 3 // border, tabs line, separator precede options
 export const CONFIRM_NO_ROW = 4 // border, message, detail, separator precede "No"
@@ -39,14 +56,32 @@ export const LIST_TOP_ROW = 3 // header, subheader, box top border precede rows
 export const CHECKBOX_FIRST_COL = 5
 export const CHECKBOX_LAST_COL = 7
 
+// Rows the frame spends outside the worktrees box: header + subheader above
+// it, the focused-row detail line, and status below it. The box adds its own
+// two borders, and `frameSplit()` reserves the pane's list/output divider
+// inside `boxH`, so one constant covers both pane states. `layout()` derives
+// the box budget from it and `frameHeight()` re-adds it, so the budget and the
+// drawn frame cannot drift apart (an overflowing frame is clipped from the
+// tail, which silently eats the help block).
+const CHROME_ROWS = 6
+
 export function layout({ termRows, termCols }) {
   const rows = Math.max(20, termRows || 24)
   const cols = Math.max(60, termCols || 80)
-  const helpLines = wrapText(HELP_TEXT, cols).slice(0, 3)
-  // header + subheader + box + status + blank + help
-  const boxH = Math.max(3, rows - 4 - helpLines.length)
+  const helpLines = fitHelpLines(HELP_TEXT, cols)
+  const boxH = Math.max(3, rows - CHROME_ROWS - helpLines.length)
   const boxW = cols // the frame always uses the entire console width
   return { rows, cols, boxH, helpLines, boxW }
+}
+
+// Total lines the frame occupies, box contents included. Callers and tests use
+// it to prove the frame fits the terminal height.
+/**
+ * @param {{ boxH: number, helpLines?: string[] }} frame
+ * @returns {number}
+ */
+export function frameHeight({ boxH, helpLines = [] }) {
+  return boxH + CHROME_ROWS + helpLines.length
 }
 
 // When a command pane is open the frame splits: list on top, divider, then the
@@ -65,6 +100,289 @@ export function listWindow({ count, cursor, listH }) {
   return { first, last, boxH: listH }
 }
 
+// A worktree is only a delete candidate when its HEAD is already in the base
+// branch *and* its working tree is clean: the delete path is
+// `git worktree remove --force`, so a checkout holding uncommitted work must
+// never read as deprecated. `dirty === null` means git could not report the
+// status, which counts as unsafe rather than clean. Pure predicate, so the
+// badge and the deprecated scan cannot drift apart.
+export function isDeprecated(row) {
+  return row.merged === true && row.dirty === 0
+}
+
+// Tags rendered after the branch. `[merged]` is the deprecation badge; a dirty
+// or unreadable status is called out instead of silently dropping the badge.
+// The main row reports its dirty state too so uncommitted work in the
+// default checkout is never invisible.
+function rowTags(row) {
+  const tags = []
+  if (row.dirty > 0) tags.push(`${c.yellow}[uncommitted:${row.dirty}]${c.reset}`)
+  else if (row.dirty === null) tags.push(`${c.yellow}[status unknown]${c.reset}`)
+  if (isDeprecated(row)) tags.push(`${c.yellow}[merged]${c.reset}`)
+  return tags.length ? ` ${tags.join(' ')}` : ''
+}
+
+// One-line summary of the focused row's uncommitted files for the detail line
+// under the list box (raw `git status --porcelain` entries, e.g.
+// `M src/foo.ts`, `?? new.ts`). Always returns one line so the frame keeps
+// a stable height while the cursor moves between clean and dirty rows.
+// Pure: the caller truncates to its own width.
+export function buildDirtyDetail({ row } = {}) {
+  if (!row) return ''
+  const label = row.main ? '(main)' : row.name
+  if (row.dirty === null || row.dirtyFiles == null) {
+    return `${c.yellow}Uncommitted in ${label}: status unreadable${c.reset}`
+  }
+  if (row.dirty === 0) return `${c.dim}Working tree clean in ${label}${c.reset}`
+  const files = row.dirtyFiles ?? []
+  const shown = files.map(f => diffFileLabel(f)).join(', ')
+  const extra = row.dirty - files.length
+  const more = extra > 0 ? ` +${extra} more` : ''
+  return `${c.yellow}Uncommitted in ${label} (${row.dirty}):${c.reset} ${shown}${c.dim}${more}${c.reset}`
+}
+
+// ---- uncommitted-changes viewer ----
+
+// Narrowest column a two-pane viewer allows the entries list; the diff keeps
+// the larger share of the width.
+const DIFF_LEFT_MIN = 20
+
+// `code path` label of a dirty file, as the viewer and the detail line show it.
+export function diffFileLabel(file) {
+  return file ? `${file.code} ${file.path}` : ''
+}
+
+// Additions, removals, and hunk headers carry the diff's meaning, so they keep
+// their conventional colors; the diff/index preamble stays dim.
+export function colorizeDiffLine(line) {
+  if (line.startsWith('@@')) return `${c.cyan}${line}${c.reset}`
+  if (line.startsWith('+++') || line.startsWith('---')) return `${c.dim}${line}${c.reset}`
+  if (line.startsWith('diff ') || line.startsWith('index ')) return `${c.dim}${line}${c.reset}`
+  if (line.startsWith('+')) return `${c.green}${line}${c.reset}`
+  if (line.startsWith('-')) return `${c.red}${line}${c.reset}`
+  return line
+}
+
+// One shared width policy for every two-pane viewer: the narrowest left
+// column that fits the corpus (capped at 40% of the width), one separator
+// column, one space, then the diff. Labels arrive pre-styled-free so every
+// caller measures plain text.
+/**
+ * @param {{ contentW: number, labels?: string[] }} pane
+ * @returns {{ leftW: number, rightW: number }}
+ */
+export function paneWidthsForLabels({ contentW, labels = [] }) {
+  const wanted = labels.reduce((n, label) => Math.max(n, displayWidth(label) + 2), 0)
+  const cap = Math.max(DIFF_LEFT_MIN, Math.floor(contentW * 0.4))
+  const leftW = Math.max(DIFF_LEFT_MIN, Math.min(wanted, cap, contentW - DIFF_LEFT_MIN - 2))
+  return { leftW, rightW: Math.max(1, contentW - leftW - 2) }
+}
+
+// ---- changes overlay (`u`: uncommitted + ahead + behind in one dialog) ----
+
+// Tab order inside the changes overlay. Counts render beside each label; a
+// null corpus (unreadable status, unresolvable side) renders as `?`.
+export const CHANGES_TABS = ['Uncommitted', 'Ahead', 'Behind']
+
+// Dialog-line rows (0-based) of the tab line and the first two-pane body row:
+// title(0), context(1), tabs(2), separator(3), pane header(4), entries(5+).
+export const CHANGES_TAB_ROW = 2
+export const CHANGES_BODY_START = 4
+
+// Display label of one overlay entry: `code path` on every tab, since all
+// three corpora are file lists (dirty files, branch-vs-base files,
+// base-vs-branch files).
+/**
+ * @param {{ entry?: { code?: string, path?: string }, tab?: number }} label
+ * @returns {string}
+ */
+export function changesEntryLabel({ entry } = {}) {
+  return diffFileLabel(entry)
+}
+
+// Tab line of the changes overlay, with the active tab highlighted. Counts
+// follow each label; null corpora show `?` instead of a number.
+/**
+ * @param {{ tab?: number, counts?: Array<number|null> }} view
+ * @returns {string}
+ */
+export function changesTabLine({ tab = 0, counts = [] } = {}) {
+  const parts = CHANGES_TABS.map((label, i) => {
+    const count = counts[i]
+    const text = `${label} (${count == null ? '?' : count})`
+    return i === tab ? `${c.cyan}${c.bold}${c.reverse}${text}${c.reset}` : `${c.gray}${text}${c.reset}`
+  })
+  return parts.join('  ')
+}
+
+// Column ranges of the tab labels inside the dialog's content area (relative
+// to the content start, after the frame's `│ `). The renderer and the mouse
+// hit test both derive from this, so a click always lands on the label it
+// appears to cover.
+/**
+ * @param {{ counts?: Array<number|null> }} view
+ * @returns {Array<{ tab: number, start: number, end: number }>}
+ */
+export function changesTabHitColumns({ counts = [] } = {}) {
+  const columns = []
+  let start = 0
+  CHANGES_TABS.forEach((label, i) => {
+    const count = counts[i]
+    const text = `${label} (${count == null ? '?' : count})`
+    columns.push({ tab: i, start, end: start + text.length - 1 })
+    start += text.length + 2
+  })
+  return columns
+}
+
+// Empty-state note per tab: only unreadable corpora report why (an empty tab
+// stays blank — there is nothing to explain when the other tabs hold the
+// worktree's changes).
+/**
+ * @param {{ tab?: number, entries?: Array<{ code?: string, path?: string }>|null }} view
+ * @returns {string}
+ */
+function changesEmptyNote({ tab = 0, entries }) {
+  if (entries === null) {
+    return tab === 0 ? 'Status unreadable (press r to retry).' : 'Branch range unresolvable.'
+  }
+  return ''
+}
+
+// Fullscreen geometry for the changes dialog: it stacks over the whole
+// terminal instead of floating centered like the menu. Title + context + tabs
+// + separator + footer separator + footer + bottom border take seven rows;
+// the rest is the body (one pane-header row plus the entry rows).
+export function changesFullscreenGeometry({ cols, rows }) {
+  const dialogW = Math.max(60, cols || 80)
+  const listH = Math.max(3, (rows || 24) - 7)
+  return { dialogW, listH }
+}
+
+// The changes dialog: the same cyan frame as every other overlay, a context
+// line (worktree + branch + base), the tab line, then a two-pane body with
+// the entries on the left and the focused entry's diff on the right. `entries` is the active tab's file corpus or null
+// when it could not be read; `diffLines` is the focused entry's raw diff or
+// null. `listH` counts the body rows including the pane header, so the dialog
+// is `listH + 5` lines tall (title + context + tabs + separator + bottom),
+// plus a separator and a footer row when `footer` is non-empty.
+/**
+ * @param {{ context?: string, tab?: number, counts?: Array<number|null>, entries?: Array<{ code?: string, path?: string }>|null, cursor?: number, diffLines?: string[]|null, scroll?: number, dialogW: number, listH: number, activePane?: 'entries'|'diff', footer?: string }} view
+ * @returns {{ lines: string[], leftW: number, rightW: number, first: number, entryH: number, diffTotal: number, scroll: number, activePane: 'entries'|'diff', total: number }}
+ */
+export function buildChangesDialog({
+  context = '',
+  tab = 0,
+  counts = [],
+  entries = [],
+  cursor = 0,
+  diffLines = null,
+  scroll = 0,
+  dialogW,
+  listH,
+  activePane = 'entries',
+  footer = '',
+}) {
+  const inner = dialogW - 2
+  const contentW = inner - 2
+  const border = s => `${c.cyan}${s}${c.reset}`
+  const side = t => `${c.cyan}│${c.reset} ${t}${c.cyan} │${c.reset}`
+  const labels = Array.isArray(entries) ? entries.map(entry => changesEntryLabel({ entry })) : []
+  const { leftW, rightW } = paneWidthsForLabels({ contentW, labels })
+  const separator = `${c.cyan}│${c.reset}`
+  const active = activePane === 'diff' ? 'diff' : 'entries'
+
+  const lines = [border(`┌ CHANGES ${'─'.repeat(Math.max(1, inner - 'CHANGES'.length - 2))}┐`)]
+  lines.push(side(padRight(truncate(context, contentW), contentW)))
+  lines.push(side(padRight(truncate(changesTabLine({ tab, counts }), contentW), contentW)))
+  lines.push(side('─'.repeat(contentW)))
+
+  const body = []
+  const paneName = 'FILES'
+  const header = (text, pane) =>
+    pane === active ? `▸ ${c.bold}${c.cyan}${text}${c.reset}` : `  ${c.dim}${text}${c.reset}`
+  const focusedLabel = Array.isArray(entries) && entries[cursor] ? labels[cursor] : 'none'
+  body.push(
+    `${padRight(truncate(header(`${paneName} (${labels.length})`, 'entries'), leftW), leftW)}${separator} ` +
+      padRight(truncate(header(`DIFF · ${focusedLabel}`, 'diff'), rightW), rightW),
+  )
+  const entryH = Math.max(1, listH - 1)
+  const wrapped = []
+  if (diffLines === null) {
+    wrapped.push(`${c.yellow}No text diff for this entry.${c.reset}`)
+  } else {
+    for (const line of diffLines) wrapped.push(...wrapPaneLine(colorizeDiffLine(line), rightW))
+  }
+  const total = wrapped.length
+  const maxScroll = Math.max(0, total - entryH)
+  const safeScroll = Math.max(0, Math.min(scroll, maxScroll))
+  const window = listWindow({ count: labels.length, cursor, listH: Math.max(1, entryH) })
+
+  if (!Array.isArray(entries) || entries.length === 0) {
+    const note = changesEmptyNote({ tab, entries })
+    if (note) {
+      // The note spans the whole dialog: there is no corpus to size the
+      // entries pane from, so clipping it to the minimum column would cut
+      // the explanation off mid-sentence.
+      const tone = entries === null ? c.yellow : c.dim
+      body.push(padRight(truncate(`${tone}${note}${c.reset}`, contentW), contentW))
+    }
+    for (let i = body.length - 1; i < entryH; i++) body.push(`${padRight('', leftW)}${separator} ${padRight('', rightW)}`)
+  } else {
+    for (let i = 0; i < entryH; i++) {
+      const entryIndex = window.first + i
+      const entry = entries[entryIndex]
+      let left = ''
+      if (entry) {
+        const selected = entryIndex === cursor
+        const marker = selected ? `${c.cyan}▸${c.reset}` : ' '
+        const raw = `${marker} ${c.gray}${entry.code}${c.reset} ${entry.path}`
+        left = selected ? truncate(raw, leftW) : truncate(`${c.dim}${raw}${c.reset}`, leftW)
+      }
+      const diffIndex = safeScroll + i
+      const right = diffIndex < total ? wrapped[diffIndex] : ''
+      body.push(`${padRight(left, leftW)}${separator} ${padRight(truncate(right, rightW), rightW)}`)
+    }
+  }
+
+  while (body.length < listH) body.push(`${padRight('', leftW)}${separator} ${padRight('', rightW)}`)
+  if (body.length > listH) body.length = listH
+  for (const row of body) lines.push(side(row))
+  // Fullscreen mode covers the frame's own status line, so the dialog carries
+  // its key hints as a footer row behind a separator, like the tab line.
+  if (footer) {
+    lines.push(side('─'.repeat(contentW)))
+    lines.push(side(padRight(truncate(footer, contentW), contentW)))
+  }
+  lines.push(border(`└${'─'.repeat(inner)}┘`))
+  return {
+    lines,
+    leftW,
+    rightW,
+    first: window.first,
+    entryH,
+    diffTotal: total,
+    scroll: safeScroll,
+    activePane: active,
+    total: Array.isArray(entries) ? entries.length : 0,
+  }
+}
+
+// Focused-entry summary for the detail line under the box while the overlay
+// is open: the entry label plus its diff size, or why there is none.
+/**
+ * @param {{ tab?: number, entries?: Array<{ code?: string, path?: string }>|null, cursor?: number, lineCount?: number|null, truncated?: boolean }} view
+ * @returns {string}
+ */
+export function buildChangesDetail({ tab = 0, entries = [], cursor = 0, lineCount = null, truncated = false } = {}) {
+  const entry = Array.isArray(entries) ? entries[cursor] : null
+  if (!entry) return ''
+  const label = `${c.cyan}${changesEntryLabel({ entry })}${c.reset}`
+  if (lineCount === null) return `${label}${c.dim} · no text diff${c.reset}`
+  const size = truncated ? `first ${lineCount}` : `${lineCount}`
+  return `${label}${c.dim} · ${size} diff lines${c.reset}`
+}
+
 // One visible list row per worktree, padded to the box width, plus scroll
 // arrows on the window edges. Pure: the caller passes its state slices.
 export function renderRows({ rows, cursor, checked, procs, boxW, first, last, boxH }) {
@@ -78,7 +396,7 @@ export function renderRows({ rows, cursor, checked, procs, boxW, first, last, bo
     const branch = row.branch ? `${c.gray}(${row.branch})${c.reset}` : `${c.gray}(detached)${c.reset}`
     const unregistered = row.registered === false ? ` ${c.yellow}[unregistered]${c.reset}` : ''
     const mainTag = row.main ? ` ${c.yellow}[main]${c.reset}` : ''
-    const mergedTag = row.merged ? ` ${c.yellow}[merged]${c.reset}` : ''
+    const mergedTag = rowTags(row)
     const aheadBehind = row.aheadBehind
     const parts = []
     const proc = procs.get(row.path)
@@ -111,8 +429,16 @@ export function dialogGeometry({ cols, rows }) {
   // Leave at least 8 columns of the list visible on each side so the menu
   // reads as an overlay instead of a full-width replacement.
   const dialogW = Math.min(cols - 16, 96)
-  const listH = Math.max(3, Math.min(10, rows - 8))
+  // Tall enough for the whole Actions list (12 entries) on a normal terminal.
+  const listH = Math.max(3, Math.min(12, rows - 8))
   return { dialogW, listH, rows, cols }
+}
+
+// Top row of a centered dialog, raised two rows above the exact center so a
+// tall menu clears the status and help lines at the bottom of the frame. Pure,
+// so the renderer and the mouse hit test place the dialog identically.
+export function dialogTop({ rows, dialogH }) {
+  return Math.max(0, Math.floor((rows - dialogH) / 2) - 2)
 }
 
 // Composite one dialog row over the row it covers: the base keeps its own
@@ -151,6 +477,7 @@ export function currentOptions({ menuTab, checkedCount }) {
   if (menuTab === 0) {
     return [
       'Run command…',
+      'Show changes…',
       'Interactive shell',
       `Delete checked (${checkedCount})`,
       'Delete focused',
@@ -214,27 +541,55 @@ export function buildDeleteConfirmDialog({ message, detail, yes, dialogW, listH 
   })
 }
 
-// The branch-name prompt for worktree creation: a text field with a block
-// cursor plus an optional error line. Pure: the caller owns the char array
-// and caret in its state, mirroring the command-prompt input convention.
-export function buildCreateDialog({ name, caret, error, dialogW }) {
-  const safeCaret = Math.max(0, Math.min(name.length, caret))
-  const before = name.slice(0, safeCaret).join('')
-  const at = name[safeCaret] ?? ' '
-  const after = name.slice(safeCaret + 1).join('')
+// One text prompt: a label row, the value with a block cursor, then either the
+// error or the key hints. Shared by the create-worktree and worktrees-dir
+// prompts so both keep identical field behavior and frame.
+// Pure: the caller owns the char array and caret in its state, mirroring the
+// command-prompt input convention.
+/**
+ * @param {{ title: string, label: string, hint: string, value?: string[], caret?: number, error?: string|null, dialogW: number }} prompt
+ * @returns {{ lines: string[], start: number, total: number }}
+ */
+export function buildPromptDialog({ title, label, hint, value = [], caret = 0, error, dialogW }) {
+  const safeCaret = Math.max(0, Math.min(value.length, caret))
+  const before = value.slice(0, safeCaret).join('')
+  const at = value[safeCaret] ?? ' '
+  const after = value.slice(safeCaret + 1).join('')
   const headerLines = [
-    `Branch name (${c.dim}type/name · empty cancels${c.reset}):`,
+    `${label} (${c.dim}${hint}${c.reset}):`,
     `${before}${c.reverse}${at}${c.reset}${after}`,
   ]
-  if (error) headerLines.push(`${c.red}${error}${c.reset}`)
-  else headerLines.push(`${c.dim}Enter creates · Esc cancels${c.reset}`)
-  return buildDialogBox({
+  headerLines.push(error ? `${c.red}${error}${c.reset}` : `${c.dim}Enter applies · Esc cancels${c.reset}`)
+  return buildDialogBox({ title, dialogW, listH: 0, options: [], selectedIndex: 0, headerLines })
+}
+
+// The branch-name prompt for worktree creation: a text field with a block
+// cursor plus an optional error line.
+export function buildCreateDialog({ name, caret, error, dialogW }) {
+  return buildPromptDialog({
     title: 'NEW WORKTREE',
+    label: 'Branch name',
+    hint: 'type/name · empty cancels',
+    value: name,
+    caret,
+    error,
     dialogW,
-    listH: 0,
-    options: [],
-    selectedIndex: 0,
-    headerLines,
+  })
+}
+
+// The worktree-directory prompt: the value is relative to the project root
+// (an absolute path is accepted) and an empty value restores `defaultDir`.
+export function buildWorktreesDirDialog({ value, caret, error, dialogW, defaultDir }) {
+  return buildPromptDialog({
+    title: 'WORKTREES DIR',
+    label: 'Directory',
+    // Keep label + hint inside a 56-column dialog, the width a 72-column
+    // terminal gives, so the reset target is never truncated away.
+    hint: `relative · empty resets to ${defaultDir}`,
+    value,
+    caret,
+    error,
+    dialogW,
   })
 }
 
