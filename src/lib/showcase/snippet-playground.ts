@@ -1,11 +1,24 @@
 import type { Component } from 'svelte'
 import * as svelteClient from 'svelte/internal/client'
+import {
+  buildSource,
+  collectDeclaredNames,
+  rewriteImports,
+  snippetErrorMessage,
+  splitLeadingScript,
+} from './snippet-source'
 import BaseDialog from '$lib/components/BaseDialog.svelte'
 import Button from '$lib/components/Button.svelte'
 import Buttons from '$lib/components/Buttons.svelte'
 import Checkbox from '$lib/components/Checkbox.svelte'
+import Chip from '$lib/components/Chip.svelte'
+import Combobox from '$lib/components/Combobox.svelte'
+import Copyable from '$lib/components/Copyable.svelte'
 import DataTable from '$lib/components/DataTable.svelte'
+import DateRangePicker from '$lib/components/DateRangePicker.svelte'
+import EditDialog from '$lib/components/EditDialog.svelte'
 import FormField from '$lib/components/FormField.svelte'
+import Menu from '$lib/components/Menu.svelte'
 import NumberInput from '$lib/components/NumberInput.svelte'
 import Pagination from '$lib/components/Pagination.svelte'
 import PasswordInput from '$lib/components/PasswordInput.svelte'
@@ -14,6 +27,7 @@ import SelectDropdown from '$lib/components/SelectDropdown.svelte'
 import Spinner from '$lib/components/Spinner.svelte'
 import Tabs from '$lib/components/Tabs.svelte'
 import TagInput from '$lib/components/TagInput.svelte'
+import Toast from '$lib/components/Toast.svelte'
 import Tooltip from '$lib/components/Tooltip.svelte'
 import CheckIcon from '$lib/icons/CheckIcon.svelte'
 import ChevronDownIcon from '$lib/icons/ChevronDownIcon.svelte'
@@ -68,8 +82,14 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/Button.svelte': { default: Button },
   'ui/Buttons.svelte': { default: Buttons },
   'ui/Checkbox.svelte': { default: Checkbox },
+  'ui/Chip.svelte': { default: Chip },
+  'ui/Combobox.svelte': { default: Combobox },
+  'ui/Copyable.svelte': { default: Copyable },
   'ui/DataTable.svelte': { default: DataTable },
+  'ui/DateRangePicker.svelte': { default: DateRangePicker },
+  'ui/EditDialog.svelte': { default: EditDialog },
   'ui/FormField.svelte': { default: FormField },
+  'ui/Menu.svelte': { default: Menu },
   'ui/NumberInput.svelte': { default: NumberInput },
   'ui/Pagination.svelte': { default: Pagination },
   'ui/PasswordInput.svelte': { default: PasswordInput },
@@ -78,6 +98,7 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/Spinner.svelte': { default: Spinner },
   'ui/Tabs.svelte': { default: Tabs },
   'ui/TagInput.svelte': { default: TagInput },
+  'ui/Toast.svelte': { default: Toast },
   'ui/Tooltip.svelte': { default: Tooltip },
   'ui/CheckIcon.svelte': { default: CheckIcon },
   'ui/ChevronDownIcon.svelte': { default: ChevronDownIcon },
@@ -106,76 +127,6 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/SortDescIcon.svelte': { default: SortDescIcon },
 }
 
-const COMPONENT_IMPORTS = [
-  '  import BaseDialog from "ui/BaseDialog.svelte"',
-  '  import Button from "ui/Button.svelte"',
-  '  import Buttons from "ui/Buttons.svelte"',
-  '  import Checkbox from "ui/Checkbox.svelte"',
-  '  import DataTable from "ui/DataTable.svelte"',
-  '  import FormField from "ui/FormField.svelte"',
-  '  import NumberInput from "ui/NumberInput.svelte"',
-  '  import Pagination from "ui/Pagination.svelte"',
-  '  import PasswordInput from "ui/PasswordInput.svelte"',
-  '  import SearchInput from "ui/SearchInput.svelte"',
-  '  import SelectDropdown from "ui/SelectDropdown.svelte"',
-  '  import Spinner from "ui/Spinner.svelte"',
-  '  import Tabs from "ui/Tabs.svelte"',
-  '  import TagInput from "ui/TagInput.svelte"',
-  '  import Tooltip from "ui/Tooltip.svelte"',
-  '  import CheckIcon from "ui/CheckIcon.svelte"',
-  '  import ChevronDownIcon from "ui/ChevronDownIcon.svelte"',
-  '  import ChevronDownSmallIcon from "ui/ChevronDownSmallIcon.svelte"',
-  '  import ChevronLeftIcon from "ui/ChevronLeftIcon.svelte"',
-  '  import ChevronRightIcon from "ui/ChevronRightIcon.svelte"',
-  '  import ChevronUpSmallIcon from "ui/ChevronUpSmallIcon.svelte"',
-  '  import CloseIcon from "ui/CloseIcon.svelte"',
-  '  import CodeIcon from "ui/CodeIcon.svelte"',
-  '  import CopyIcon from "ui/CopyIcon.svelte"',
-  '  import DeleteIcon from "ui/DeleteIcon.svelte"',
-  '  import EyeIcon from "ui/EyeIcon.svelte"',
-  '  import EyeSlashIcon from "ui/EyeSlashIcon.svelte"',
-  '  import ForestIcon from "ui/ForestIcon.svelte"',
-  '  import GlobeIcon from "ui/GlobeIcon.svelte"',
-  '  import KebabIcon from "ui/KebabIcon.svelte"',
-  '  import MenuIcon from "ui/MenuIcon.svelte"',
-  '  import PaletteIcon from "ui/PaletteIcon.svelte"',
-  '  import PlusIcon from "ui/PlusIcon.svelte"',
-  '  import RefreshIcon from "ui/RefreshIcon.svelte"',
-  '  import ResetIcon from "ui/ResetIcon.svelte"',
-  '  import SaveIcon from "ui/SaveIcon.svelte"',
-  '  import SearchIcon from "ui/SearchIcon.svelte"',
-  '  import SettingsIcon from "ui/SettingsIcon.svelte"',
-  '  import SortAscIcon from "ui/SortAscIcon.svelte"',
-  '  import SortDescIcon from "ui/SortDescIcon.svelte"',
-].join('\n')
-
-// Rewrite the compiler's ESM output for `new Function`: drop side-effect imports
-// (version disclosure, legacy flags), bind namespace/default/named imports to
-// the `__mods` registry, and turn the default export into the factory's return
-// value.
-function rewriteImports(code: string): string {
-  return code
-    .replace(/^import\s+['"][^'"]+['"];?\s*$/gm, '')
-    .replace(
-      /^import\s+\*\s+as\s+([\w$]+)\s+from\s+['"]([^'"]+)['"];?/gm,
-      (_, name: string, spec: string) => `const ${name} = __mods[${JSON.stringify(spec)}];`,
-    )
-    .replace(
-      /^import\s+\{([^}]*)\}\s+from\s+['"]([^'"]+)['"];?/gm,
-      (_, names: string, spec: string) => `const {${names}} = __mods[${JSON.stringify(spec)}];`,
-    )
-    .replace(
-      /^import\s+([\w$]+)\s+from\s+['"]([^'"]+)['"];?/gm,
-      (_, name: string, spec: string) => `const ${name} = __mods[${JSON.stringify(spec)}].default;`,
-    )
-    .replace(/export\s+default\s+function\s+([\w$]*)/, 'return function $1')
-}
-
-function buildSource(snippet: string, scopeKeys: string[]): string {
-  const scopeLine = scopeKeys.length > 0 ? `  let { ${scopeKeys.join(', ')} } = __scope\n` : ''
-  return `<script>\n${COMPONENT_IMPORTS}\n${scopeLine}</script>\n${snippet}`
-}
-
 // Compile the snippet and evaluate the resulting factory. Throws with a concise
 // message (no stack) so the caller can show it inline and keep the previous
 // render.
@@ -183,14 +134,20 @@ export async function createSnippetComponent(
   snippet: string,
   scope: Record<string, unknown>,
 ): Promise<Component> {
-  const { compile } = await import('svelte/compiler')
+  const { compile, parse } = await import('svelte/compiler')
   let compiled: string
   try {
-    compiled = compile(buildSource(snippet, Object.keys(scope)), {
-      generate: 'client',
-      dev: false,
-      filename: 'ShowcaseSnippet.svelte',
-    }).js.code
+    const { declarations, markup } = splitLeadingScript(snippet)
+    const ast = parse(`<script>${declarations}</script>`, { modern: true })
+    const declaredNames = ast.instance ? collectDeclaredNames(ast.instance.content) : new Set<string>()
+    compiled = compile(
+      buildSource({ markup, declarations, scopeKeys: Object.keys(scope), declaredNames }),
+      {
+        generate: 'client',
+        dev: false,
+        filename: 'ShowcaseSnippet.svelte',
+      },
+    ).js.code
   } catch (error) {
     throw new Error(snippetErrorMessage(error))
   }
@@ -199,13 +156,4 @@ export async function createSnippetComponent(
     scopeValues: Record<string, unknown>,
   ) => Component
   return factory(MODULE_REGISTRY, scope)
-}
-
-// User-facing message for a compile or render failure: the message only, never
-// the stack.
-export function snippetErrorMessage(error: unknown): string {
-  if (error instanceof Error && error.message) {
-    return error.message
-  }
-  return String(error)
 }

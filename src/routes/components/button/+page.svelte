@@ -1,68 +1,100 @@
 <script lang="ts">
   import Button from '$lib/components/Button.svelte'
+  import Buttons from '$lib/components/Buttons.svelte'
+  import FormField from '$lib/components/FormField.svelte'
+  import SelectDropdown from '$lib/components/SelectDropdown.svelte'
   import CheckIcon from '$lib/icons/CheckIcon.svelte'
+  import ResetIcon from '$lib/icons/ResetIcon.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import PropsTable, { type PropRow } from '$lib/showcase/PropsTable.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
+  import { buildButtonSnippet, type TriState } from './demo-snippet'
 
   const i18n = getI18nContext()
 
-  let clicks = $state(0)
-  let lastKey = $state('')
-  let pressed = $state(false)
-  let expanded = $state(false)
-  let submitted = $state(0)
-  let boundEl = $state<HTMLButtonElement | null>(null)
+  // Customizer playground state. Every curated option starts unset (the
+  // component default renders), so the cleared form applies no overrides.
+  let pgClicks = $state(0)
+  let pgVariant = $state('')
+  let pgAccent = $state('')
+  let pgSize = $state('')
+  let pgDisabled = $state<TriState>('')
+  let pgPending = $state<TriState>('')
+  let pgIcon = $state('')
+  let pgBadge = $state('')
+  let pgLabel = $state('')
+  let pgClassName = $state('')
 
-  const variants = ['primary', 'secondary', 'danger', 'outline', 'ghost'] as const
-  const accents = ['cyan', 'emerald', 'amber', 'violet', 'rose'] as const
+  const variants = ['primary', 'secondary', 'danger', 'outline', 'ghost']
+  const accents = ['cyan', 'emerald', 'amber', 'violet', 'rose']
+  const sizes = ['xs', 'sm', 'md', 'lg']
+  const iconOptions = [{ value: 'yes', label: 'Check icon' }]
 
-  function handleSubmit(event: SubmitEvent) {
-    event.preventDefault()
-    submitted += 1
+  // Unset renders the component default; Yes/No force the value.
+  function flagOn(value: TriState): boolean | undefined {
+    return value === '' ? undefined : value === 'yes'
   }
 
-  const codeDefault = `{#each variants as variant (variant)}
-  <Button {variant}>{variant}</Button>
-{/each}
-<Button variant="primary" size="sm">{defaultLabel} sm</Button>
-<Button disabled>{defaultLabel} disabled</Button>`
+  const demoVariant = $derived((pgVariant || undefined) as 'primary' | 'secondary' | 'danger' | 'outline' | 'ghost' | undefined)
+  const demoAccent = $derived((pgAccent || undefined) as 'cyan' | 'emerald' | 'amber' | 'violet' | 'rose' | undefined)
+  const demoSize = $derived((pgSize || undefined) as 'xs' | 'sm' | 'md' | 'lg' | undefined)
+  const disabled = $derived(flagOn(pgDisabled))
+  const pending = $derived(flagOn(pgPending))
+  const demoLabel = $derived(pgLabel || i18n.t('common.apply'))
 
-  const codeCustomized = `{#each accents as accent (accent)}
-  <Button variant="primary" {accent}>{accent}</Button>
-{/each}
-{#each accents as accent (accent)}
-  <Button variant="outline" {accent}>{accent}</Button>
-{/each}
-<Button variant="primary" className="uppercase tracking-wide">className</Button>`
+  const yesNoOptions = [
+    { value: 'yes', label: 'Yes' },
+    { value: 'no', label: 'No' },
+  ]
 
-  const codeIcons = `<Button icon={checkIcon}>With icon</Button>
-<Button icon={checkIcon} ariaLabel={reloadLabel} tooltip={reloadLabel} />
-<Button tooltip={applyLabel} tooltipAlign="left">{applyLabel}</Button>
-<Button tooltip={cancelLabel} tooltipAlign="right">{cancelLabel}</Button>
-<Button variant="primary" badge={3}>{applyLabel}</Button>
-<Button badge="new">{reloadLabel}</Button>
-<Button variant="primary" dataTip={resetLabel}>{resetLabel} dataTip</Button>
-<Button variant="primary" pending>{reloadLabel}</Button>`
+  function triLabel(value: TriState): string {
+    return value === '' ? 'Default' : value === 'yes' ? 'Yes' : 'No'
+  }
 
-  const codeInteractive = `<Button onClick={() => (clicks += 1)}>{applyLabel} ({clicks})</Button>
-<Button onKeyDown={event => (lastKey = event.key)}>{okLabel} key: {lastKey || '—'}</Button>
-<Button ariaPressed={pressed} onClick={() => (pressed = !pressed)}>pressed: {String(pressed)}</Button>
-<Button ariaExpanded={expanded} onClick={() => (expanded = !expanded)}>expanded: {String(expanded)}</Button>
-{#if expanded}
-  <div class="rounded-md border border-slate-700 px-3 py-2 text-sm text-slate-300">disclosure panel</div>
-{/if}
-<Button preventFocusSteal onClick={() => (clicks += 1)}>preventFocusSteal</Button>
-<form onsubmit={handleSubmit}>
-  <Button type="submit">type=submit ({submitted})</Button>
-</form>
-<Button bind:buttonEl={boundEl}>buttonEl: {boundEl ? boundEl.tagName : '—'}</Button>`
+  const isCustomized = $derived(
+    pgVariant !== '' ||
+      pgAccent !== '' ||
+      pgSize !== '' ||
+      pgDisabled !== '' ||
+      pgPending !== '' ||
+      pgIcon !== '' ||
+      pgBadge !== '' ||
+      pgLabel !== '' ||
+      pgClassName !== ''
+  )
+  const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
+
+  function clearPlayground() {
+    pgClicks = 0
+    pgVariant = ''
+    pgAccent = ''
+    pgSize = ''
+    pgDisabled = ''
+    pgPending = ''
+    pgIcon = ''
+    pgBadge = ''
+    pgLabel = ''
+    pgClassName = ''
+  }
+
+  const code = $derived.by(() =>
+    buildButtonSnippet({
+      variant: pgVariant,
+      accent: pgAccent,
+      size: pgSize,
+      disabled: pgDisabled,
+      pending: pgPending,
+      icon: pgIcon,
+      badge: pgBadge,
+      className: pgClassName,
+    })
+  )
 
   const props: PropRow[] = [
     { name: 'variant', type: "'primary' | 'secondary' | 'danger' | 'outline' | 'ghost'", defaultValue: "'secondary'", note: 'Visual treatment.' },
     { name: 'accent', type: "'cyan' | 'emerald' | 'amber' | 'violet' | 'rose'", defaultValue: "'cyan'", note: 'Tint for primary, outline, and badge.' },
-    { name: 'size', type: "'sm' | 'md'", defaultValue: "'md'", note: 'Control size.' },
+    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", defaultValue: "'md'", note: 'Control size.' },
     { name: 'disabled', type: 'boolean', defaultValue: 'false', note: 'Native disabled + reduced opacity.' },
     { name: 'pending', type: 'boolean', defaultValue: 'false', note: 'Disabled state with a spinner slot.' },
     { name: 'type', type: "'button' | 'submit' | 'reset'", defaultValue: "'button'", note: 'Native button type.' },
@@ -87,59 +119,128 @@
   <CheckIcon className="h-4 w-4" />
 {/snippet}
 
+{#snippet resetIcon()}
+  <ResetIcon className="h-4 w-4" />
+{/snippet}
+
 {#snippet propsSnippet()}
   <PropsTable rows={props} />
 {/snippet}
 
+{#snippet settingsPanel()}
+  <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
+      Reset
+    </Button>
+  </Buttons>
+  <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
+    <FormField label="Variant">
+      <SelectDropdown
+        buttonLabel={pgVariant || 'Default'}
+        activeValue={pgVariant}
+        ariaLabel="Variant"
+        options={variants.map(value => ({ value, label: value }))}
+        onSelect={value => (pgVariant = value)}
+        clearable
+        clearLabel="Clear variant"
+        onClear={() => (pgVariant = '')} />
+    </FormField>
+    <FormField label="Accent">
+      <SelectDropdown
+        buttonLabel={pgAccent || 'Default'}
+        activeValue={pgAccent}
+        ariaLabel="Accent"
+        options={accents.map(value => ({ value, label: value }))}
+        onSelect={value => (pgAccent = value)}
+        clearable
+        clearLabel="Clear accent"
+        onClear={() => (pgAccent = '')} />
+    </FormField>
+    <FormField label="Size">
+      <SelectDropdown
+        buttonLabel={pgSize || 'Default'}
+        activeValue={pgSize}
+        ariaLabel="Size"
+        options={sizes.map(value => ({ value, label: value }))}
+        onSelect={value => (pgSize = value)}
+        clearable
+        clearLabel="Clear size"
+        onClear={() => (pgSize = '')} />
+    </FormField>
+    <FormField label="Disabled">
+      <SelectDropdown
+        buttonLabel={triLabel(pgDisabled)}
+        activeValue={pgDisabled}
+        ariaLabel="Disabled"
+        options={yesNoOptions}
+        onSelect={value => (pgDisabled = value as TriState)}
+        clearable
+        clearLabel="Clear disabled"
+        onClear={() => (pgDisabled = '')} />
+    </FormField>
+    <FormField label="Pending">
+      <SelectDropdown
+        buttonLabel={triLabel(pgPending)}
+        activeValue={pgPending}
+        ariaLabel="Pending"
+        options={yesNoOptions}
+        onSelect={value => (pgPending = value as TriState)}
+        clearable
+        clearLabel="Clear pending"
+        onClear={() => (pgPending = '')} />
+    </FormField>
+    <FormField label="Icon">
+      <SelectDropdown
+        buttonLabel={pgIcon ? 'Check icon' : 'Default'}
+        activeValue={pgIcon}
+        ariaLabel="Icon"
+        options={iconOptions}
+        onSelect={value => (pgIcon = value)}
+        clearable
+        clearLabel="Clear icon"
+        onClear={() => (pgIcon = '')} />
+    </FormField>
+    <FormField label="Badge" htmlFor="pg-badge">
+      <input
+        id="pg-badge"
+        bind:value={pgBadge}
+        placeholder="new"
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+    </FormField>
+    <FormField label="Label" htmlFor="pg-label">
+      <input
+        id="pg-label"
+        bind:value={pgLabel}
+        placeholder="Apply"
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+    </FormField>
+    <FormField label="Class name" htmlFor="pg-classname">
+      <input
+        id="pg-classname"
+        bind:value={pgClassName}
+        placeholder="(none)"
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+    </FormField>
+  </div>
+{/snippet}
+
 <ShowcasePage name="Button" props={propsSnippet}>
-  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault} scope={{ variants, defaultLabel: i18n.t('showcase.default') }}>
-    {#each variants as variant (variant)}
-      <Button {variant}>{variant}</Button>
-    {/each}
-    <Button variant="primary" size="sm">{i18n.t('showcase.default')} sm</Button>
-    <Button disabled>{i18n.t('showcase.default')} disabled</Button>
-  </ShowcaseSection>
-
-  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized} scope={{ accents }}>
-    {#each accents as accent (accent)}
-      <Button variant="primary" {accent}>{accent}</Button>
-    {/each}
-    {#each accents as accent (accent)}
-      <Button variant="outline" {accent}>{accent}</Button>
-    {/each}
-    <Button variant="primary" className="uppercase tracking-wide">className</Button>
-  </ShowcaseSection>
-
-  <ShowcaseSection title={i18n.t('showcase.iconsBadgeTooltip')} code={codeIcons} scope={{ checkIcon, reloadLabel: i18n.t('common.reload'), applyLabel: i18n.t('common.apply'), cancelLabel: i18n.t('common.cancel'), resetLabel: i18n.t('common.reset') }}>
-    <Button icon={checkIcon}>With icon</Button>
-    <Button icon={checkIcon} ariaLabel={i18n.t('common.reload')} tooltip={i18n.t('common.reload')} />
-    <Button tooltip={i18n.t('common.apply')} tooltipAlign="left">{i18n.t('common.apply')}</Button>
-    <Button tooltip={i18n.t('common.cancel')} tooltipAlign="right">{i18n.t('common.cancel')}</Button>
-    <Button variant="primary" badge={3}>{i18n.t('common.apply')}</Button>
-    <Button badge="new">{i18n.t('common.reload')}</Button>
-    <Button variant="primary" dataTip={i18n.t('common.reset')}>{i18n.t('common.reset')} dataTip</Button>
-    <Button variant="primary" pending>{i18n.t('common.reload')}</Button>
-  </ShowcaseSection>
-
   <ShowcaseSection
-    title={i18n.t('showcase.interactive')}
-    code={codeInteractive}
-    scope={{ clicks, lastKey, pressed, expanded, submitted, boundEl: null, handleSubmit, applyLabel: i18n.t('common.apply'), okLabel: i18n.t('common.ok') }}>
-    <Button onClick={() => (clicks += 1)}>{i18n.t('common.apply')} ({clicks})</Button>
-    <Button onKeyDown={event => (lastKey = event.key)}>{i18n.t('common.ok')} key: {lastKey || '—'}</Button>
-    <Button ariaPressed={pressed} onClick={() => (pressed = !pressed)}>
-      pressed: {String(pressed)}
+    title={sectionTitle}
+    code={code}
+    footer={settingsPanel}
+    scope={{ clicks: pgClicks, label: demoLabel, checkIcon }}>
+    <Button
+      variant={demoVariant}
+      accent={demoAccent}
+      size={demoSize}
+      disabled={disabled}
+      pending={pending}
+      icon={pgIcon ? checkIcon : undefined}
+      badge={pgBadge || undefined}
+      className={pgClassName || undefined}
+      onClick={() => (pgClicks += 1)}>
+      {demoLabel} ({pgClicks})
     </Button>
-    <Button ariaExpanded={expanded} onClick={() => (expanded = !expanded)}>
-      expanded: {String(expanded)}
-    </Button>
-    {#if expanded}
-      <div class="rounded-md border border-slate-700 px-3 py-2 text-sm text-slate-300">disclosure panel</div>
-    {/if}
-    <Button preventFocusSteal onClick={() => (clicks += 1)}>preventFocusSteal</Button>
-    <form onsubmit={handleSubmit}>
-      <Button type="submit">type=submit ({submitted})</Button>
-    </form>
-    <Button bind:buttonEl={boundEl}>buttonEl: {boundEl ? boundEl.tagName : '—'}</Button>
   </ShowcaseSection>
 </ShowcasePage>

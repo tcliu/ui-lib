@@ -18,22 +18,23 @@
   const pickerOpen = $derived(getPickerOpen())
 </script>
 
-{#snippet menuIcon()}
-  <MenuIcon className="h-4 w-4" />
-{/snippet}
-
 <div class="flex h-dvh flex-col bg-slate-950 text-slate-100">
   <header class="flex flex-none items-center justify-between gap-4 border-b border-slate-800 px-3 py-3 sm:px-4">
     <div class="flex items-center gap-2">
       <Button
+        variant="secondary"
         size="sm"
-        icon={menuIcon}
+        className="-ml-1"
         ariaLabel={i18n.t('showcase.toggleComponents')}
         ariaExpanded={pickerOpen}
         tooltip={i18n.t('showcase.toggleComponents')}
         tooltipAlign="left"
         preventFocusSteal
-        onClick={() => setPickerOpen(!pickerOpen)} />
+        onClick={() => setPickerOpen(!pickerOpen)}>
+        {#snippet icon()}
+          <MenuIcon className="h-4 w-4" />
+        {/snippet}
+      </Button>
       <h1 class="text-base font-semibold tracking-tight text-slate-200 sm:text-lg">{i18n.t('showcase.title')}</h1>
     </div>
     <div class="flex items-center gap-2">

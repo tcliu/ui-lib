@@ -1,10 +1,15 @@
 <script lang="ts">
   import Button from '$lib/components/Button.svelte'
+  import Buttons from '$lib/components/Buttons.svelte'
+  import FormField from '$lib/components/FormField.svelte'
+  import SelectDropdown from '$lib/components/SelectDropdown.svelte'
   import Tabs from '$lib/components/Tabs.svelte'
+  import ResetIcon from '$lib/icons/ResetIcon.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import PropsTable, { type PropRow } from '$lib/showcase/PropsTable.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
+  import { STYLED_HEADER, STYLED_TAB, buildTabsSnippet } from './demo-snippet'
 
   const i18n = getI18nContext()
 
@@ -14,34 +19,34 @@
 
   const demoState: DemoState = { note: 'shared state' }
 
-  let routePath = $state('#overview')
+  // Customizer playground state. Every curated option starts unset (the
+  // component default renders), so the cleared form applies no overrides.
+  let pgRoutePath = $state('#overview')
+  let pgRouteMode = $state('')
+  let pgStyled = $state('')
+  let pgHeaderClass = $state('')
+  let pgTabClass = $state('')
 
-  const codeDefault = `<Tabs
-  tabs={[
-    { label: defaultLabel, path: 'overview', content: overviewContent, toolbar: overviewToolbar },
-    { label: customizedLabel, path: 'details', content: detailsContent },
-  ]}
-  state={demoState}
-  ariaLabel={componentsLabel} />`
+  const modeOptions = [{ value: 'yes', label: 'Route mode' }]
+  const styleOptions = [{ value: 'yes', label: 'Styled' }]
 
-  const codeRouteMode = `<div class="flex flex-col gap-3">
-  <Button onClick={() => (routePath = routePath === '#overview' ? '#details' : '#overview')}>
-    pathname: {routePath}
-  </Button>
-  <Tabs
-    tabs={[
-      { label: 'Overview', path: '#overview', content: overviewContent },
-      { label: 'Details', path: '#details', content: detailsContent },
-    ]}
-    state={demoState}
-    pathname={routePath} />
-</div>`
+  const overviewPath = $derived(pgRouteMode ? '#overview' : 'overview')
+  const detailsPath = $derived(pgRouteMode ? '#details' : 'details')
 
-  const codeCustomized = `<Tabs
-  tabs={[{ label: applyLabel, path: 'apply', content: overviewContent }]}
-  state={demoState}
-  headerClass="flex w-full items-center gap-2 rounded-lg border border-cyan-500/40 p-2"
-  class="text-cyan-300" />`
+  const isCustomized = $derived(
+    pgRouteMode !== '' || pgStyled !== '' || pgHeaderClass !== '' || pgTabClass !== ''
+  )
+  const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
+
+  function clearPlayground() {
+    pgRoutePath = '#overview'
+    pgRouteMode = ''
+    pgStyled = ''
+    pgHeaderClass = ''
+    pgTabClass = ''
+  }
+
+  const code = $derived.by(() => buildTabsSnippet({ routeMode: pgRouteMode, headerClass: pgHeaderClass, tabClass: pgTabClass }))
 
   const props: PropRow[] = [
     { name: 'tabs', type: 'Tab<TState>[]', defaultValue: '—', note: 'Label, path, optional toolbar snippet, content snippet.' },
@@ -65,55 +70,102 @@
   <p class="text-sm text-slate-300">details content — {state.note}</p>
 {/snippet}
 
+{#snippet resetIcon()}
+  <ResetIcon className="h-4 w-4" />
+{/snippet}
+
 {#snippet propsSnippet()}
   <PropsTable rows={props} />
 {/snippet}
 
+{#snippet settingsPanel()}
+  <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
+      Reset
+    </Button>
+  </Buttons>
+  <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
+    <FormField label="Mode">
+      <SelectDropdown
+        buttonLabel={pgRouteMode ? 'Route mode' : 'Default'}
+        activeValue={pgRouteMode}
+        ariaLabel="Mode"
+        options={modeOptions}
+        onSelect={value => (pgRouteMode = value)}
+        clearable
+        clearLabel="Clear mode"
+        onClear={() => (pgRouteMode = '')} />
+    </FormField>
+    <FormField label="Style">
+      <SelectDropdown
+        buttonLabel={pgStyled ? 'Styled' : 'Default'}
+        activeValue={pgStyled}
+        ariaLabel="Style"
+        options={styleOptions}
+        onSelect={value => {
+          pgStyled = value
+          pgHeaderClass = STYLED_HEADER
+          pgTabClass = STYLED_TAB
+        }}
+        clearable
+        clearLabel="Clear style"
+        onClear={() => {
+          pgStyled = ''
+          pgHeaderClass = ''
+          pgTabClass = ''
+        }} />
+    </FormField>
+    <FormField label="Header class" htmlFor="pg-headerclass">
+      <input
+        id="pg-headerclass"
+        bind:value={pgHeaderClass}
+        placeholder="(none)"
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+    </FormField>
+    <FormField label="Class" htmlFor="pg-class">
+      <input
+        id="pg-class"
+        bind:value={pgTabClass}
+        placeholder="(none)"
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+    </FormField>
+  </div>
+{/snippet}
+
 <ShowcasePage name="Tabs" props={propsSnippet}>
   <ShowcaseSection
-    title={i18n.t('showcase.default')}
-    code={codeDefault}
-    scope={{ overviewContent, overviewToolbar, detailsContent, demoState, defaultLabel: i18n.t('showcase.default'), customizedLabel: i18n.t('showcase.customized'), componentsLabel: i18n.t('showcase.components') }}>
+    title={sectionTitle}
+    code={code}
+    footer={settingsPanel}
+    scope={{
+      overviewContent,
+      overviewToolbar,
+      detailsContent,
+      demoState,
+      routePath: pgRoutePath,
+      defaultLabel: i18n.t('showcase.default'),
+      customizedLabel: i18n.t('showcase.customized'),
+      componentsLabel: i18n.t('showcase.components'),
+    }}>
+    {#if pgRouteMode}
+      <Button onClick={() => (pgRoutePath = pgRoutePath === '#overview' ? '#details' : '#overview')}>
+        pathname: {pgRoutePath}
+      </Button>
+    {/if}
     <Tabs
       tabs={[
         {
           label: i18n.t('showcase.default'),
-          path: 'overview',
+          path: overviewPath,
           content: overviewContent,
           toolbar: overviewToolbar,
         },
-        { label: i18n.t('showcase.customized'), path: 'details', content: detailsContent },
+        { label: i18n.t('showcase.customized'), path: detailsPath, content: detailsContent },
       ]}
       state={demoState}
+      pathname={pgRouteMode ? pgRoutePath : undefined}
+      headerClass={pgHeaderClass || undefined}
+      class={pgTabClass || undefined}
       ariaLabel={i18n.t('showcase.components')} />
-  </ShowcaseSection>
-
-  <ShowcaseSection
-    title={i18n.t('showcase.routeMode')}
-    code={codeRouteMode}
-    scope={{ routePath, overviewContent, detailsContent, demoState }}>
-    <div class="flex flex-col gap-3">
-      <Button onClick={() => (routePath = routePath === '#overview' ? '#details' : '#overview')}>
-        pathname: {routePath}
-      </Button>
-      <Tabs
-        tabs={[
-          { label: 'Overview', path: '#overview', content: overviewContent },
-          { label: 'Details', path: '#details', content: detailsContent },
-        ]}
-        state={demoState}
-        pathname={routePath} />
-    </div>
-  </ShowcaseSection>
-
-  <ShowcaseSection
-    title={i18n.t('showcase.customized')}
-    code={codeCustomized}
-    scope={{ overviewContent, demoState, applyLabel: i18n.t('common.apply') }}>
-    <Tabs
-      tabs={[{ label: i18n.t('common.apply'), path: 'apply', content: overviewContent }]}
-      state={demoState}
-      headerClass="flex w-full items-center gap-2 rounded-lg border border-cyan-500/40 p-2"
-      class="text-cyan-300" />
   </ShowcaseSection>
 </ShowcasePage>

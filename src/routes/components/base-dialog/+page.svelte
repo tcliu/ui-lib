@@ -2,89 +2,106 @@
   import BaseDialog from '$lib/components/BaseDialog.svelte'
   import Button from '$lib/components/Button.svelte'
   import Buttons from '$lib/components/Buttons.svelte'
-  import Checkbox from '$lib/components/Checkbox.svelte'
+  import FormField from '$lib/components/FormField.svelte'
+  import SelectDropdown from '$lib/components/SelectDropdown.svelte'
+  import ResetIcon from '$lib/icons/ResetIcon.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import PropsTable, { type PropRow } from '$lib/showcase/PropsTable.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
+  import { STYLED_PANEL, STYLED_TITLE, buildBaseDialogSnippet, type TriState } from './demo-snippet'
 
   const i18n = getI18nContext()
 
-  let defaultOpen = $state(false)
-  let styledOpen = $state(false)
-  let headerOpen = $state(false)
-  let pendingOpen = $state(false)
-  let fullscreenOpen = $state(false)
-  let pending = $state(false)
-  let allowPendingCancel = $state(false)
+  // Customizer playground state. Every curated option starts unset (the
+  // component default renders), so the cleared form applies no overrides.
+  let pgOpen = $state(false)
+  let pgMaxWidth = $state('')
+  let pgHeight = $state('')
+  let pgFullscreen = $state<TriState>('')
+  let pgPending = $state<TriState>('')
+  let pgAllowPendingCancel = $state<TriState>('')
+  let pgStyled = $state('')
+  let pgTitleClass = $state('')
+  let pgClassName = $state('')
+  let pgCustomHeader = $state('')
 
-  const codeDefault = `<Button variant="primary" onClick={() => (open = true)}>{openDialogLabel}</Button>
+  // Unset renders the component default; Yes/No force the value.
+  function flagOn(value: TriState): boolean | undefined {
+    return value === '' ? undefined : value === 'yes'
+  }
 
-{#if open}
-  <BaseDialog title={dialogTitle} onCancel={() => (open = false)}>
-    <p data-testid="dialog-body">{dialogBody}</p>
-    <Buttons align="right" className="mt-4">
-      <Button onClick={() => (open = false)}>{cancelLabel}</Button>
-      <Button variant="primary" onClick={() => (open = false)}>{okLabel}</Button>
-    </Buttons>
-  </BaseDialog>
-{/if}`
+  const demoMaxWidth = $derived(
+    (pgMaxWidth || undefined) as
+      | 'md'
+      | 'lg'
+      | 'xl'
+      | '2xl'
+      | '3xl'
+      | '4xl'
+      | '5xl'
+      | '6xl'
+      | '7xl'
+      | 'fit'
+      | 'wide'
+      | undefined
+  )
+  const demoHeight = $derived((pgHeight || undefined) as 'auto' | 'fixed' | 'tall' | undefined)
+  const fullscreen = $derived(flagOn(pgFullscreen))
+  const pending = $derived(flagOn(pgPending))
+  const allowPendingCancel = $derived(flagOn(pgAllowPendingCancel))
 
-  const codeCustomized = `<Button onClick={() => (styledOpen = true)}>titleClass + className</Button>
-<Button onClick={() => (headerOpen = true)}>header snippet</Button>
-<Button onClick={() => (fullscreenOpen = true)}>{fullscreenLabel}</Button>
-<Button onClick={() => (pendingOpen = true)}>{pendingLabel}</Button>
+  const maxWidthOptions = ['md', 'lg', 'xl', '2xl', 'fit', 'wide'].map(value => ({ value, label: value }))
+  const heightOptions = ['auto', 'fixed', 'tall'].map(value => ({ value, label: value }))
+  const styledOptions = [{ value: 'yes', label: 'Styled' }]
+  const headerOptions = [{ value: 'yes', label: 'Custom header' }]
+  const yesNoOptions = [
+    { value: 'yes', label: 'Yes' },
+    { value: 'no', label: 'No' },
+  ]
 
-{#if styledOpen}
-  <BaseDialog
-    title={dialogTitle}
-    titleClass="text-cyan-200"
-    className="border-cyan-500/40"
-    maxWidth="lg"
-    height="fixed"
-    closeLabel={closeLabel}
-    dismissKeydownCapture={true}
-    onCancel={() => (styledOpen = false)}>
-    <p>{dialogBody}</p>
-    <Buttons align="right" className="mt-4">
-      <Button variant="outline" onClick={() => (styledOpen = false)}>{closeLabel}</Button>
-    </Buttons>
-  </BaseDialog>
-{/if}
+  function triLabel(value: TriState): string {
+    return value === '' ? 'Default' : value === 'yes' ? 'Yes' : 'No'
+  }
 
-{#if headerOpen}
-  <BaseDialog header={customHeader} maxWidth="xl" height="tall" onCancel={() => (headerOpen = false)}>
-    <p>{dialogBody}</p>
-    <Buttons align="right" className="mt-4">
-      <Button onClick={() => (headerOpen = false)}>{closeLabel}</Button>
-    </Buttons>
-  </BaseDialog>
-{/if}
+  const isCustomized = $derived(
+    pgMaxWidth !== '' ||
+      pgHeight !== '' ||
+      pgFullscreen !== '' ||
+      pgPending !== '' ||
+      pgAllowPendingCancel !== '' ||
+      pgStyled !== '' ||
+      pgTitleClass !== '' ||
+      pgClassName !== '' ||
+      pgCustomHeader !== ''
+  )
+  const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
 
-{#if fullscreenOpen}
-  <BaseDialog fullscreen closeLabel={closeLabel} onCancel={() => (fullscreenOpen = false)}>
-    <p>{dialogBody}</p>
-    <Buttons align="right" className="mt-4">
-      <Button onClick={() => (fullscreenOpen = false)}>{closeLabel}</Button>
-    </Buttons>
-  </BaseDialog>
-{/if}
+  function clearPlayground() {
+    pgOpen = false
+    pgMaxWidth = ''
+    pgHeight = ''
+    pgFullscreen = ''
+    pgPending = ''
+    pgAllowPendingCancel = ''
+    pgStyled = ''
+    pgTitleClass = ''
+    pgClassName = ''
+    pgCustomHeader = ''
+  }
 
-{#if pendingOpen}
-  <BaseDialog
-    title={pendingLabel}
-    {pending}
-    {allowPendingCancel}
-    onCancel={() => (pendingOpen = false)}>
-    <div class="flex flex-col gap-3">
-      <Checkbox bind:checked={pending} label={pendingLabel} />
-      <Checkbox bind:checked={allowPendingCancel} label={allowPendingCancelLabel} />
-    </div>
-    <Buttons align="right" className="mt-4">
-      <Button variant="primary" disabled={pending} onClick={() => (pendingOpen = false)}>{okLabel}</Button>
-    </Buttons>
-  </BaseDialog>
-{/if}`
+  const code = $derived.by(() =>
+    buildBaseDialogSnippet({
+      maxWidth: pgMaxWidth,
+      height: pgHeight,
+      fullscreen: pgFullscreen,
+      pending: pgPending,
+      allowPendingCancel: pgAllowPendingCancel,
+      titleClass: pgTitleClass,
+      className: pgClassName,
+      customHeader: pgCustomHeader,
+    })
+  )
 
   const props: PropRow[] = [
     { name: 'title', type: 'string', defaultValue: '—', note: 'Heading rendered when no header snippet is passed.' },
@@ -108,82 +125,156 @@
   <p class="mt-1 text-sm text-slate-400">{i18n.t('showcase.dialogBody')}</p>
 {/snippet}
 
+{#snippet resetIcon()}
+  <ResetIcon className="h-4 w-4" />
+{/snippet}
+
 {#snippet propsSnippet()}
   <PropsTable rows={props} />
 {/snippet}
 
+{#snippet settingsPanel()}
+  <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
+      Reset
+    </Button>
+  </Buttons>
+  <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
+    <FormField label="Max width">
+      <SelectDropdown
+        buttonLabel={pgMaxWidth || 'Default'}
+        activeValue={pgMaxWidth}
+        ariaLabel="Max width"
+        options={maxWidthOptions}
+        onSelect={value => (pgMaxWidth = value)}
+        clearable
+        clearLabel="Clear max width"
+        onClear={() => (pgMaxWidth = '')} />
+    </FormField>
+    <FormField label="Height">
+      <SelectDropdown
+        buttonLabel={pgHeight || 'Default'}
+        activeValue={pgHeight}
+        ariaLabel="Height"
+        options={heightOptions}
+        onSelect={value => (pgHeight = value)}
+        clearable
+        clearLabel="Clear height"
+        onClear={() => (pgHeight = '')} />
+    </FormField>
+    <FormField label="Fullscreen">
+      <SelectDropdown
+        buttonLabel={triLabel(pgFullscreen)}
+        activeValue={pgFullscreen}
+        ariaLabel="Fullscreen"
+        options={yesNoOptions}
+        onSelect={value => (pgFullscreen = value as TriState)}
+        clearable
+        clearLabel="Clear fullscreen"
+        onClear={() => (pgFullscreen = '')} />
+    </FormField>
+    <FormField label="Pending">
+      <SelectDropdown
+        buttonLabel={triLabel(pgPending)}
+        activeValue={pgPending}
+        ariaLabel="Pending"
+        options={yesNoOptions}
+        onSelect={value => (pgPending = value as TriState)}
+        clearable
+        clearLabel="Clear pending"
+        onClear={() => (pgPending = '')} />
+    </FormField>
+    <FormField label="Allow pending cancel">
+      <SelectDropdown
+        buttonLabel={triLabel(pgAllowPendingCancel)}
+        activeValue={pgAllowPendingCancel}
+        ariaLabel="Allow pending cancel"
+        options={yesNoOptions}
+        onSelect={value => (pgAllowPendingCancel = value as TriState)}
+        clearable
+        clearLabel="Clear allow pending cancel"
+        onClear={() => (pgAllowPendingCancel = '')} />
+    </FormField>
+    <FormField label="Style">
+      <SelectDropdown
+        buttonLabel={pgStyled ? 'Styled' : 'Default'}
+        activeValue={pgStyled}
+        ariaLabel="Style"
+        options={styledOptions}
+        onSelect={value => {
+          pgStyled = value
+          pgTitleClass = STYLED_TITLE
+          pgClassName = STYLED_PANEL
+        }}
+        clearable
+        clearLabel="Clear style"
+        onClear={() => {
+          pgStyled = ''
+          pgTitleClass = ''
+          pgClassName = ''
+        }} />
+    </FormField>
+    <FormField label="Title class" htmlFor="pg-titleclass">
+      <input
+        id="pg-titleclass"
+        bind:value={pgTitleClass}
+        placeholder="(none)"
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+    </FormField>
+    <FormField label="Class name" htmlFor="pg-classname">
+      <input
+        id="pg-classname"
+        bind:value={pgClassName}
+        placeholder="(none)"
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+    </FormField>
+    <FormField label="Header">
+      <SelectDropdown
+        buttonLabel={pgCustomHeader ? 'Custom header' : 'Default'}
+        activeValue={pgCustomHeader}
+        ariaLabel="Header"
+        options={headerOptions}
+        onSelect={value => (pgCustomHeader = value)}
+        clearable
+        clearLabel="Clear header"
+        onClear={() => (pgCustomHeader = '')} />
+    </FormField>
+  </div>
+{/snippet}
+
 <ShowcasePage name="BaseDialog" props={propsSnippet}>
-  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault} scope={{ open: defaultOpen, openDialogLabel: i18n.t('showcase.openDialog'), dialogTitle: i18n.t('showcase.dialogTitle'), dialogBody: i18n.t('showcase.dialogBody'), cancelLabel: i18n.t('common.cancel'), okLabel: i18n.t('common.ok') }}>
-    <Button variant="primary" onClick={() => (defaultOpen = true)}>{i18n.t('showcase.openDialog')}</Button>
-    {#if defaultOpen}
-      <BaseDialog title={i18n.t('showcase.dialogTitle')} onCancel={() => (defaultOpen = false)}>
+  <ShowcaseSection
+    title={sectionTitle}
+    code={code}
+    footer={settingsPanel}
+    scope={{
+      customHeader,
+      open: pgOpen,
+      openDialogLabel: i18n.t('showcase.openDialog'),
+      dialogTitle: i18n.t('showcase.dialogTitle'),
+      dialogBody: i18n.t('showcase.dialogBody'),
+      cancelLabel: i18n.t('common.cancel'),
+      okLabel: i18n.t('common.ok'),
+    }}>
+    <Button variant="primary" onClick={() => (pgOpen = true)}>{i18n.t('showcase.openDialog')}</Button>
+    {#if pgOpen}
+      <BaseDialog
+        title={pgCustomHeader ? undefined : i18n.t('showcase.dialogTitle')}
+        header={pgCustomHeader ? customHeader : undefined}
+        titleClass={pgTitleClass || undefined}
+        className={pgClassName || undefined}
+        maxWidth={demoMaxWidth}
+        height={demoHeight}
+        fullscreen={fullscreen}
+        pending={pending}
+        allowPendingCancel={allowPendingCancel}
+        onCancel={() => (pgOpen = false)}>
         <p data-testid="dialog-body">{i18n.t('showcase.dialogBody')}</p>
-        <Buttons align="right" className="mt-4">
-          <Button onClick={() => (defaultOpen = false)}>{i18n.t('common.cancel')}</Button>
-          <Button variant="primary" onClick={() => (defaultOpen = false)}>{i18n.t('common.ok')}</Button>
+        <Buttons className="mt-4 flex w-full shrink-0 flex-wrap items-center justify-end gap-3">
+          <Button onClick={() => (pgOpen = false)}>{i18n.t('common.cancel')}</Button>
+          <Button variant="primary" onClick={() => (pgOpen = false)}>{i18n.t('common.ok')}</Button>
         </Buttons>
       </BaseDialog>
     {/if}
   </ShowcaseSection>
-
-  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized} scope={{ customHeader, styledOpen, headerOpen, fullscreenOpen, pendingOpen, pending, allowPendingCancel, fullscreenLabel: i18n.t('showcase.fullscreenDialog'), pendingLabel: i18n.t('showcase.pendingOption'), allowPendingCancelLabel: i18n.t('showcase.allowPendingCancel'), dialogTitle: i18n.t('showcase.dialogTitle'), dialogBody: i18n.t('showcase.dialogBody'), closeLabel: i18n.t('common.close'), okLabel: i18n.t('common.ok') }}>
-    <Button onClick={() => (styledOpen = true)}>titleClass + className</Button>
-    <Button onClick={() => (headerOpen = true)}>header snippet</Button>
-    <Button onClick={() => (fullscreenOpen = true)}>{i18n.t('showcase.fullscreenDialog')}</Button>
-    <Button onClick={() => (pendingOpen = true)}>{i18n.t('showcase.pendingOption')}</Button>
-  </ShowcaseSection>
-
-  {#if styledOpen}
-    <BaseDialog
-      title={i18n.t('showcase.dialogTitle')}
-      titleClass="text-cyan-200"
-      className="border-cyan-500/40"
-      maxWidth="lg"
-      height="fixed"
-      closeLabel={i18n.t('common.close')}
-      dismissKeydownCapture={true}
-      onCancel={() => (styledOpen = false)}>
-      <p>{i18n.t('showcase.dialogBody')}</p>
-      <Buttons align="right" className="mt-4">
-        <Button variant="outline" onClick={() => (styledOpen = false)}>{i18n.t('common.close')}</Button>
-      </Buttons>
-    </BaseDialog>
-  {/if}
-
-  {#if headerOpen}
-    <BaseDialog header={customHeader} maxWidth="xl" height="tall" onCancel={() => (headerOpen = false)}>
-      <p>{i18n.t('showcase.dialogBody')}</p>
-      <Buttons align="right" className="mt-4">
-        <Button onClick={() => (headerOpen = false)}>{i18n.t('common.close')}</Button>
-      </Buttons>
-    </BaseDialog>
-  {/if}
-
-  {#if pendingOpen}
-    <BaseDialog
-      title={i18n.t('showcase.pendingOption')}
-      {pending}
-      {allowPendingCancel}
-      onCancel={() => (pendingOpen = false)}>
-      <div class="flex flex-col gap-3">
-        <Checkbox bind:checked={pending} label={i18n.t('showcase.pendingOption')} />
-        <Checkbox bind:checked={allowPendingCancel} label={i18n.t('showcase.allowPendingCancel')} />
-      </div>
-      <Buttons align="right" className="mt-4">
-        <Button variant="primary" disabled={pending} onClick={() => (pendingOpen = false)}>
-          {i18n.t('common.ok')}
-        </Button>
-      </Buttons>
-    </BaseDialog>
-  {/if}
-
-  {#if fullscreenOpen}
-    <BaseDialog fullscreen closeLabel={i18n.t('common.close')} onCancel={() => (fullscreenOpen = false)}>
-      <p>{i18n.t('showcase.dialogBody')}</p>
-      <Buttons align="right" className="mt-4">
-        <Button onClick={() => (fullscreenOpen = false)}>{i18n.t('common.close')}</Button>
-      </Buttons>
-    </BaseDialog>
-  {/if}
-
 </ShowcasePage>

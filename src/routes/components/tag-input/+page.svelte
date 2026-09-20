@@ -1,34 +1,67 @@
 <script lang="ts">
+  import Button from '$lib/components/Button.svelte'
+  import Buttons from '$lib/components/Buttons.svelte'
+  import FormField from '$lib/components/FormField.svelte'
+  import SelectDropdown from '$lib/components/SelectDropdown.svelte'
   import TagInput from '$lib/components/TagInput.svelte'
+  import ResetIcon from '$lib/icons/ResetIcon.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import PropsTable, { type PropRow } from '$lib/showcase/PropsTable.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
+  import { buildTagInputSnippet, type TriState } from './demo-snippet'
 
   const i18n = getI18nContext()
 
-  let value = $state(['svelte', 'kit'])
-  let colored = $state(['svelte'])
-
+  const initialTags = ['svelte', 'kit']
   const availableTags = ['svelte', 'kit', 'icons', 'forms', 'tables']
 
+  // Customizer playground state. Every curated option starts unset (the
+  // component default renders), so the cleared form applies no overrides.
+  let pgValue = $state([...initialTags])
+  let pgPlaceholder = $state('')
+  let pgColored = $state('')
+  let pgDisabled = $state<TriState>('')
+  let pgChipClass = $state('')
+
   function colorFor(tag: string): string {
-    return tag === 'svelte' ? 'border-orange-700 bg-orange-950/50 text-orange-200' : 'border-slate-600 bg-slate-800 text-slate-200'
+    return tag === 'svelte'
+      ? 'border-orange-700 bg-orange-950/50 text-orange-200'
+      : 'border-slate-600 bg-slate-800 text-slate-200'
   }
 
-  const codeDefault = `<TagInput
-  value={value}
-  availableTags={availableTags}
-  placeholder="Add a tag"
-  onChange={next => (value = next)} />
-<span class="text-sm text-slate-400">tags: {value.join(', ')}</span>`
+  // Unset renders the component default; Yes/No force the value.
+  function flagOn(value: TriState): boolean | undefined {
+    return value === '' ? undefined : value === 'yes'
+  }
 
-  const codeCustomized = `<TagInput
-  value={colored}
-  availableTags={availableTags}
-  placeholder="Add a tag"
-  chipClassFor={colorFor}
-  onChange={next => (colored = next)} />`
+  const disabled = $derived(flagOn(pgDisabled))
+  const chipClassFor = $derived(pgColored ? colorFor : undefined)
+
+  const yesNoOptions = [
+    { value: 'yes', label: 'Yes' },
+    { value: 'no', label: 'No' },
+  ]
+  const colorOptions = [{ value: 'yes', label: 'Colored chips' }]
+
+  function triLabel(value: TriState): string {
+    return value === '' ? 'Default' : value === 'yes' ? 'Yes' : 'No'
+  }
+
+  const isCustomized = $derived(pgPlaceholder !== '' || pgColored !== '' || pgDisabled !== '' || pgChipClass !== '')
+  const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
+
+  function clearPlayground() {
+    pgValue = [...initialTags]
+    pgPlaceholder = ''
+    pgColored = ''
+    pgDisabled = ''
+    pgChipClass = ''
+  }
+
+  const code = $derived.by(() =>
+    buildTagInputSnippet({ placeholder: pgPlaceholder, colored: pgColored, disabled: pgDisabled, chipClass: pgChipClass })
+  )
 
   const props: PropRow[] = [
     { name: 'value', type: 'string[]', defaultValue: '[]', note: 'Selected tags.' },
@@ -44,32 +77,74 @@
   ]
 </script>
 
+{#snippet resetIcon()}
+  <ResetIcon className="h-4 w-4" />
+{/snippet}
+
 {#snippet propsSnippet()}
   <PropsTable rows={props} />
 {/snippet}
 
+{#snippet settingsPanel()}
+  <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
+      Reset
+    </Button>
+  </Buttons>
+  <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
+    <FormField label="Placeholder" htmlFor="pg-placeholder">
+      <input
+        id="pg-placeholder"
+        bind:value={pgPlaceholder}
+        placeholder="Add a tag"
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+    </FormField>
+    <FormField label="Chips">
+      <SelectDropdown
+        buttonLabel={pgColored ? 'Colored chips' : 'Default'}
+        activeValue={pgColored}
+        ariaLabel="Chips"
+        options={colorOptions}
+        onSelect={value => (pgColored = value)}
+        clearable
+        clearLabel="Clear chips"
+        onClear={() => (pgColored = '')} />
+    </FormField>
+    <FormField label="Disabled">
+      <SelectDropdown
+        buttonLabel={triLabel(pgDisabled)}
+        activeValue={pgDisabled}
+        ariaLabel="Disabled"
+        options={yesNoOptions}
+        onSelect={value => (pgDisabled = value as TriState)}
+        clearable
+        clearLabel="Clear disabled"
+        onClear={() => (pgDisabled = '')} />
+    </FormField>
+    <FormField label="Chip class" htmlFor="pg-chipclass">
+      <input
+        id="pg-chipclass"
+        bind:value={pgChipClass}
+        placeholder="(none)"
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+    </FormField>
+  </div>
+{/snippet}
+
 <ShowcasePage name="TagInput" props={propsSnippet}>
   <ShowcaseSection
-    title={i18n.t('showcase.default')}
-    code={codeDefault}
-    scope={{ value, availableTags }}>
+    title={sectionTitle}
+    code={code}
+    footer={settingsPanel}
+    scope={{ value: pgValue, availableTags, colorFor }}>
     <TagInput
-      value={value}
-      availableTags={availableTags}
-      placeholder="Add a tag"
-      onChange={next => (value = next)} />
-    <span class="text-sm text-slate-400">tags: {value.join(', ')}</span>
-  </ShowcaseSection>
-
-  <ShowcaseSection
-    title={i18n.t('showcase.customized')}
-    code={codeCustomized}
-    scope={{ colored, availableTags, colorFor }}>
-    <TagInput
-      value={colored}
-      availableTags={availableTags}
-      placeholder="Add a tag"
-      chipClassFor={colorFor}
-      onChange={next => (colored = next)} />
+      value={pgValue}
+      {availableTags}
+      placeholder={pgPlaceholder || 'Add a tag'}
+      chipClassFor={chipClassFor}
+      chipClass={pgChipClass || undefined}
+      disabled={disabled}
+      onChange={next => (pgValue = next)} />
+    <span class="text-sm text-slate-400">tags: {pgValue.join(', ')}</span>
   </ShowcaseSection>
 </ShowcasePage>

@@ -11,9 +11,13 @@
     children: Snippet
     code?: string
     scope?: Record<string, unknown>
+    // Static panel below the demo (and the code editor when open), separated
+    // by a rule. It stays mounted while the live snippet swaps the demo, so
+    // snippet reproductions keep comparing demo text only.
+    footer?: Snippet
   }
 
-  let { title, children, code, scope }: Props = $props()
+  let { title, children, code, scope, footer }: Props = $props()
   const i18n = getI18nContext()
 
   const preview = new SnippetPreview({ getSeed: () => code ?? '', getScope: () => scope ?? {} })
@@ -55,5 +59,9 @@
       {/if}
       <CodeSnippet bind:draft={preview.draft} initial={code ?? ''} />
     </div>
+  {/if}
+  {#if footer}
+    <hr class="my-4 border-slate-800" />
+    {@render footer()}
   {/if}
 </section>

@@ -1,5 +1,6 @@
 import { mount, onDestroy, tick, unmount } from 'svelte'
-import { createSnippetComponent, snippetErrorMessage } from './snippet-playground'
+import { createSnippetComponent } from './snippet-playground'
+import { snippetErrorMessage } from './snippet-source'
 
 interface SnippetPreviewOptions {
   // Current seed source for the panel; read synchronously so seed edits

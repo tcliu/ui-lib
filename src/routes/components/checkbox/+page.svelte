@@ -1,42 +1,88 @@
 <script lang="ts">
+  import Button from '$lib/components/Button.svelte'
+  import Buttons from '$lib/components/Buttons.svelte'
   import Checkbox from '$lib/components/Checkbox.svelte'
+  import FormField from '$lib/components/FormField.svelte'
+  import SelectDropdown from '$lib/components/SelectDropdown.svelte'
+  import ResetIcon from '$lib/icons/ResetIcon.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import PropsTable, { type PropRow } from '$lib/showcase/PropsTable.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
+  import { STYLED_BOX, STYLED_LABEL, STYLED_WRAPPER, buildCheckboxSnippet, type TriState } from './demo-snippet'
 
   const i18n = getI18nContext()
 
-  let basic = $state(true)
-  let small = $state(false)
-  let disabled = $state(true)
-  let indeterminate = $state(false)
-  let noLabel = $state(false)
-  let lastChange = $state('—')
-  let inputEl = $state<HTMLInputElement | null>(null)
+  // Customizer playground state. Every curated option starts unset (the
+  // component default renders), so the cleared form applies no overrides.
+  // Style is a preset that fills the three class fields below.
+  let pgChecked = $state(true)
+  let pgLastChange = $state('—')
+  let pgLabel = $state('')
+  let pgSize = $state('')
+  let pgDisabled = $state<TriState>('')
+  let pgIndeterminate = $state<TriState>('')
+  let pgStyled = $state('')
+  let pgLabelClass = $state('')
+  let pgWrapperClass = $state('')
+  let pgBoxClass = $state('')
 
-  const codeDefault = `<Checkbox bind:checked={basic} label={applyLabel} />
-<Checkbox bind:checked={basic} label={defaultLabel} name="demo" />
-<Checkbox bind:checked={small} size="sm" label={customizedLabel} />
-<Checkbox bind:checked={disabled} disabled label={defaultLabel} />
-<Checkbox bind:checked={indeterminate} indeterminate label="indeterminate" />
-<Checkbox bind:checked={noLabel} ariaLabel={closeLabel} />`
+  // Unset renders the component default; Yes/No force the value.
+  function flagOn(value: TriState): boolean | undefined {
+    return value === '' ? undefined : value === 'yes'
+  }
 
-  const codeCustomized = `<Checkbox
-  bind:checked={basic}
-  label={okLabel}
-  labelClass="text-cyan-300"
-  wrapperClass="rounded-md border border-slate-700 px-3 py-2"
-  boxClass="rounded-full" />
-<Checkbox
-  bind:checked={basic}
-  label={cancelLabel}
-  stopPropagation={false}
-  onChange={checked => (lastChange = String(checked))} />
-<Checkbox bind:checked={basic} bind:inputRef={inputEl} label={reloadLabel} />`
+  const demoSize = $derived((pgSize || undefined) as 'sm' | 'md' | undefined)
+  const disabled = $derived(flagOn(pgDisabled))
+  const indeterminate = $derived(flagOn(pgIndeterminate))
 
-  const codeState = `<p class="text-sm text-slate-400">lastChange: {lastChange}</p>
-<p class="text-sm text-slate-400">inputRef: {inputEl ? inputEl.type : '—'}</p>`
+  const sizeOptions = [{ value: 'sm', label: 'sm' }]
+  const styledOptions = [{ value: 'yes', label: 'Styled' }]
+  const yesNoOptions = [
+    { value: 'yes', label: 'Yes' },
+    { value: 'no', label: 'No' },
+  ]
+
+  function triLabel(value: TriState): string {
+    return value === '' ? 'Default' : value === 'yes' ? 'Yes' : 'No'
+  }
+
+  const isCustomized = $derived(
+    pgLabel !== '' ||
+      pgSize !== '' ||
+      pgDisabled !== '' ||
+      pgIndeterminate !== '' ||
+      pgStyled !== '' ||
+      pgLabelClass !== '' ||
+      pgWrapperClass !== '' ||
+      pgBoxClass !== ''
+  )
+  const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
+
+  function clearPlayground() {
+    pgChecked = true
+    pgLastChange = '—'
+    pgLabel = ''
+    pgSize = ''
+    pgDisabled = ''
+    pgIndeterminate = ''
+    pgStyled = ''
+    pgLabelClass = ''
+    pgWrapperClass = ''
+    pgBoxClass = ''
+  }
+
+  const code = $derived.by(() =>
+    buildCheckboxSnippet({
+      label: pgLabel,
+      size: pgSize,
+      disabled: pgDisabled,
+      indeterminate: pgIndeterminate,
+      labelClass: pgLabelClass,
+      wrapperClass: pgWrapperClass,
+      boxClass: pgBoxClass,
+    })
+  )
 
   const props: PropRow[] = [
     { name: 'checked', type: 'boolean', defaultValue: '—', note: 'Bindable checked state.' },
@@ -55,46 +101,122 @@
   ]
 </script>
 
+{#snippet resetIcon()}
+  <ResetIcon className="h-4 w-4" />
+{/snippet}
+
 {#snippet propsSnippet()}
   <PropsTable rows={props} />
 {/snippet}
 
+{#snippet settingsPanel()}
+  <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
+      Reset
+    </Button>
+  </Buttons>
+  <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
+    <FormField label="Label" htmlFor="pg-label">
+      <input
+        id="pg-label"
+        bind:value={pgLabel}
+        placeholder="Apply"
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+    </FormField>
+    <FormField label="Size">
+      <SelectDropdown
+        buttonLabel={pgSize || 'Default'}
+        activeValue={pgSize}
+        ariaLabel="Size"
+        options={sizeOptions}
+        onSelect={value => (pgSize = value)}
+        clearable
+        clearLabel="Clear size"
+        onClear={() => (pgSize = '')} />
+    </FormField>
+    <FormField label="Disabled">
+      <SelectDropdown
+        buttonLabel={triLabel(pgDisabled)}
+        activeValue={pgDisabled}
+        ariaLabel="Disabled"
+        options={yesNoOptions}
+        onSelect={value => (pgDisabled = value as TriState)}
+        clearable
+        clearLabel="Clear disabled"
+        onClear={() => (pgDisabled = '')} />
+    </FormField>
+    <FormField label="Indeterminate">
+      <SelectDropdown
+        buttonLabel={triLabel(pgIndeterminate)}
+        activeValue={pgIndeterminate}
+        ariaLabel="Indeterminate"
+        options={yesNoOptions}
+        onSelect={value => (pgIndeterminate = value as TriState)}
+        clearable
+        clearLabel="Clear indeterminate"
+        onClear={() => (pgIndeterminate = '')} />
+    </FormField>
+    <FormField label="Style">
+      <SelectDropdown
+        buttonLabel={pgStyled ? 'Styled' : 'Default'}
+        activeValue={pgStyled}
+        ariaLabel="Style"
+        options={styledOptions}
+        onSelect={value => {
+          pgStyled = value
+          pgLabelClass = STYLED_LABEL
+          pgWrapperClass = STYLED_WRAPPER
+          pgBoxClass = STYLED_BOX
+        }}
+        clearable
+        clearLabel="Clear style"
+        onClear={() => {
+          pgStyled = ''
+          pgLabelClass = ''
+          pgWrapperClass = ''
+          pgBoxClass = ''
+        }} />
+    </FormField>
+    <FormField label="Label class" htmlFor="pg-labelclass">
+      <input
+        id="pg-labelclass"
+        bind:value={pgLabelClass}
+        placeholder="(none)"
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+    </FormField>
+    <FormField label="Wrapper class" htmlFor="pg-wrapperclass">
+      <input
+        id="pg-wrapperclass"
+        bind:value={pgWrapperClass}
+        placeholder="(none)"
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+    </FormField>
+    <FormField label="Box class" htmlFor="pg-boxclass">
+      <input
+        id="pg-boxclass"
+        bind:value={pgBoxClass}
+        placeholder="(none)"
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+    </FormField>
+  </div>
+{/snippet}
+
 <ShowcasePage name="Checkbox" props={propsSnippet}>
   <ShowcaseSection
-    title={i18n.t('showcase.default')}
-    code={codeDefault}
-    scope={{ basic, small, disabled, indeterminate, noLabel, applyLabel: i18n.t('common.apply'), defaultLabel: i18n.t('showcase.default'), customizedLabel: i18n.t('showcase.customized'), closeLabel: i18n.t('common.close') }}>
-    <Checkbox bind:checked={basic} label={i18n.t('common.apply')} />
-    <Checkbox bind:checked={basic} label={i18n.t('showcase.default')} name="demo" />
-    <Checkbox bind:checked={small} size="sm" label={i18n.t('showcase.customized')} />
-    <Checkbox bind:checked={disabled} disabled label={i18n.t('showcase.default')} />
-    <Checkbox bind:checked={indeterminate} indeterminate label="indeterminate" />
-    <Checkbox bind:checked={noLabel} ariaLabel={i18n.t('common.close')} />
-  </ShowcaseSection>
-
-  <ShowcaseSection
-    title={i18n.t('showcase.customized')}
-    code={codeCustomized}
-    scope={{ basic, inputEl: null, lastChange, okLabel: i18n.t('common.ok'), cancelLabel: i18n.t('common.cancel'), reloadLabel: i18n.t('common.reload') }}>
+    title={sectionTitle}
+    code={code}
+    footer={settingsPanel}
+    scope={{ checked: pgChecked, lastChange: pgLastChange, applyLabel: i18n.t('common.apply') }}>
     <Checkbox
-      bind:checked={basic}
-      label={i18n.t('common.ok')}
-      labelClass="text-cyan-300"
-      wrapperClass="rounded-md border border-slate-700 px-3 py-2"
-      boxClass="rounded-full" />
-    <Checkbox
-      bind:checked={basic}
-      label={i18n.t('common.cancel')}
-      stopPropagation={false}
-      onChange={checked => (lastChange = String(checked))} />
-    <Checkbox bind:checked={basic} bind:inputRef={inputEl} label={i18n.t('common.reload')} />
-  </ShowcaseSection>
-
-  <ShowcaseSection
-    title={i18n.t('showcase.state')}
-    code={codeState}
-    scope={{ lastChange, inputEl }}>
-    <p class="text-sm text-slate-400">lastChange: {lastChange}</p>
-    <p class="text-sm text-slate-400">inputRef: {inputEl ? inputEl.type : '—'}</p>
+      bind:checked={pgChecked}
+      label={pgLabel || i18n.t('common.apply')}
+      size={demoSize}
+      disabled={disabled}
+      indeterminate={indeterminate}
+      labelClass={pgLabelClass || undefined}
+      wrapperClass={pgWrapperClass || undefined}
+      boxClass={pgBoxClass || undefined}
+      onChange={checked => (pgLastChange = String(checked))} />
+    <p class="text-sm text-slate-400">checked: {pgChecked}, lastChange: {pgLastChange}</p>
   </ShowcaseSection>
 </ShowcasePage>

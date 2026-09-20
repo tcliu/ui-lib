@@ -1,33 +1,44 @@
 <script lang="ts">
+  import Button from '$lib/components/Button.svelte'
+  import Buttons from '$lib/components/Buttons.svelte'
   import FormField from '$lib/components/FormField.svelte'
+  import SelectDropdown from '$lib/components/SelectDropdown.svelte'
+  import ResetIcon from '$lib/icons/ResetIcon.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import PropsTable, { type PropRow } from '$lib/showcase/PropsTable.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
+  import { STYLED_CLASS, buildFormFieldSnippet } from './demo-snippet'
 
   const i18n = getI18nContext()
 
-  let value = $state('')
+  // Customizer playground state. Every option starts unset (the component
+  // default renders), so the cleared form applies no overrides. Wrapper is a
+  // preset that fills the className field below.
+  let pgValue = $state('')
+  let pgLabel = $state('')
+  let pgHtmlFor = $state('')
+  let pgStyled = $state('')
+  let pgClassName = $state('')
 
-  const codeDefault = `<FormField label={defaultLabel}>
-  <input
-    type="text"
-    bind:value
-    class="w-56 rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 outline-none focus-visible:border-cyan-500" />
-</FormField>
-<FormField label={applyLabel} htmlFor="form-field-demo">
-  <input
-    id="form-field-demo"
-    type="text"
-    class="w-56 rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 outline-none focus-visible:border-cyan-500" />
-</FormField>`
+  const styledOptions = [{ value: 'yes', label: 'Styled wrapper' }]
 
-  const codeCustomized = `<FormField label={resetLabel} className="rounded-md border border-cyan-500/40 p-3">
-  <input
-    type="text"
-    bind:value
-    class="w-56 rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 outline-none focus-visible:border-cyan-500" />
-</FormField>`
+  const demoLabel = $derived(pgLabel || i18n.t('showcase.default'))
+  const demoHtmlFor = $derived(pgHtmlFor || undefined)
+  const demoClassName = $derived(pgClassName || undefined)
+
+  const isCustomized = $derived(pgLabel !== '' || pgHtmlFor !== '' || pgStyled !== '' || pgClassName !== '')
+  const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
+
+  function clearPlayground() {
+    pgValue = ''
+    pgLabel = ''
+    pgHtmlFor = ''
+    pgStyled = ''
+    pgClassName = ''
+  }
+
+  const code = $derived.by(() => buildFormFieldSnippet({ label: pgLabel, htmlFor: pgHtmlFor, className: pgClassName }))
 
   const props: PropRow[] = [
     { name: 'label', type: 'string', defaultValue: '—', note: 'Visible field label.' },
@@ -37,31 +48,73 @@
   ]
 </script>
 
+{#snippet resetIcon()}
+  <ResetIcon className="h-4 w-4" />
+{/snippet}
+
 {#snippet propsSnippet()}
   <PropsTable rows={props} />
 {/snippet}
 
-<ShowcasePage name="FormField" props={propsSnippet}>
-  <ShowcaseSection title={i18n.t('showcase.default')} code={codeDefault} scope={{ value, defaultLabel: i18n.t('showcase.default'), applyLabel: i18n.t('common.apply') }}>
-    <FormField label={i18n.t('showcase.default')}>
+{#snippet settingsPanel()}
+  <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
+      Reset
+    </Button>
+  </Buttons>
+  <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
+    <FormField label="Label" htmlFor="pg-label">
       <input
-        type="text"
-        bind:value
-        class="w-56 rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 outline-none focus-visible:border-cyan-500" />
+        id="pg-label"
+        bind:value={pgLabel}
+        placeholder="Default"
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
-    <FormField label={i18n.t('common.apply')} htmlFor="form-field-demo">
+    <FormField label="Control id" htmlFor="pg-htmlfor">
       <input
-        id="form-field-demo"
-        type="text"
-        class="w-56 rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 outline-none focus-visible:border-cyan-500" />
+        id="pg-htmlfor"
+        bind:value={pgHtmlFor}
+        placeholder="form-field-demo"
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
-  </ShowcaseSection>
+    <FormField label="Wrapper">
+      <SelectDropdown
+        buttonLabel={pgStyled ? 'Styled wrapper' : 'Default'}
+        activeValue={pgStyled}
+        ariaLabel="Wrapper"
+        options={styledOptions}
+        onSelect={value => {
+          pgStyled = value
+          pgClassName = STYLED_CLASS
+        }}
+        clearable
+        clearLabel="Clear wrapper"
+        onClear={() => {
+          pgStyled = ''
+          pgClassName = ''
+        }} />
+    </FormField>
+    <FormField label="Class name" htmlFor="pg-classname">
+      <input
+        id="pg-classname"
+        bind:value={pgClassName}
+        placeholder="(none)"
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+    </FormField>
+  </div>
+{/snippet}
 
-  <ShowcaseSection title={i18n.t('showcase.customized')} code={codeCustomized} scope={{ value, resetLabel: i18n.t('common.reset') }}>
-    <FormField label={i18n.t('common.reset')} className="rounded-md border border-cyan-500/40 p-3">
+<ShowcasePage name="FormField" props={propsSnippet}>
+  <ShowcaseSection
+    title={sectionTitle}
+    code={code}
+    footer={settingsPanel}
+    scope={{ value: pgValue, defaultLabel: i18n.t('showcase.default') }}>
+    <FormField label={demoLabel} htmlFor={demoHtmlFor} className={demoClassName}>
       <input
+        id={demoHtmlFor}
         type="text"
-        bind:value
+        bind:value={pgValue}
         class="w-56 rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 outline-none focus-visible:border-cyan-500" />
     </FormField>
   </ShowcaseSection>
