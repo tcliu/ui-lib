@@ -3,7 +3,7 @@
 //
 // The `common.*`, `number.*`, `dropdown.*`, `pagination.*`, `tabs.*`,
 // `search.*`, `splitter.*`, `password.*`, `combobox.*`, `tagInput.*`,
-// `edit.*`, `copy.*`, and `editor.toast.*` blocks
+// `kebab.*`, `range.*`, `edit.*`, `copy.*`, and `editor.toast.*` blocks
 // are the shared label contract the ported UI primitives
 // fall back to when a caller passes no label prop. A host app that vendors a
 // primitive provides the same keys in its own locale dictionaries.
@@ -33,8 +33,15 @@ export const en = {
   'password.show': 'Show password',
   'password.hide': 'Hide password',
   'combobox.remove': 'Remove {name}',
+  'combobox.placeholder': 'Select or type...',
   'tagInput.suggestions': 'Tag suggestions',
   'tagInput.remove': 'Remove {name}',
+  'kebab.label': 'More actions',
+  'range.selectDates': 'Select dates',
+  'range.calendar': 'Choose a date range',
+  'range.prevMonth': 'Previous month',
+  'range.nextMonth': 'Next month',
+  'range.clear': 'Clear dates',
 
   'edit.editText': 'Edit text',
   'edit.doubleClickToEdit': 'Double-click to edit',
@@ -70,6 +77,11 @@ export const en = {
   'showcase.openDialog': 'Open dialog',
   'showcase.dialogTitle': 'Dialog title',
   'showcase.dialogBody': 'Dialog body content.',
+  'showcase.edit': 'Edit',
+  'showcase.delete': 'Delete',
+  'showcase.discardTitle': 'Discard unsaved changes?',
+  'showcase.discardMessage': 'You have unsaved changes that will be lost.',
+  'showcase.discard': 'Discard',
   'showcase.pendingOption': 'Pending',
   'showcase.allowPendingCancel': 'Allow cancel while pending',
   'showcase.fullscreenDialog': 'Fullscreen dialog',
