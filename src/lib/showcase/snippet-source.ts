@@ -8,6 +8,7 @@ import type { Node, Program } from 'estree'
 // Imports injected into every compiled snippet preamble. Components resolve
 // through `MODULE_REGISTRY` after `rewriteImports` rewrites these specifiers.
 const COMPONENT_IMPORTS = [
+  '  import AppShell from "ui/AppShell.svelte"',
   '  import BaseDialog from "ui/BaseDialog.svelte"',
   '  import Button from "ui/Button.svelte"',
   '  import Buttons from "ui/Buttons.svelte"',

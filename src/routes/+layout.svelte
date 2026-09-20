@@ -1,11 +1,14 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
   import '../styles.css'
-  import { createAppI18n, setI18nContext } from '$lib/i18n.svelte'
+  import { page } from '$app/state'
+  import { APP_SHELL_DEFAULT_WIDTH } from '$lib/app-shell'
+  import AppShell from '$lib/components/AppShell.svelte'
   import LanguageMenu from '$lib/components/LanguageMenu.svelte'
+  import SearchInput from '$lib/components/SearchInput.svelte'
   import ThemeMenu from '$lib/components/ThemeMenu.svelte'
-  import Button from '$lib/components/Button.svelte'
-  import MenuIcon from '$lib/icons/MenuIcon.svelte'
+  import { createAppI18n, setI18nContext } from '$lib/i18n.svelte'
+  import { SHOWCASE_COMPONENTS } from '$lib/showcase-components'
   import { getPickerOpen, setPickerOpen } from '$lib/showcase-picker.svelte'
   import type { LayoutData } from './$types'
 
@@ -16,35 +19,56 @@
   let { children, data }: { children: Snippet; data: LayoutData } = $props()
 
   const pickerOpen = $derived(getPickerOpen())
+
+  let query = $state('')
+  let paneSize = $state(APP_SHELL_DEFAULT_WIDTH)
+
+  const currentPath = $derived(page.url.pathname)
+  const filteredComponents = $derived.by(() => {
+    const needle = query.trim().toLowerCase()
+    if (needle === '') return SHOWCASE_COMPONENTS
+    return SHOWCASE_COMPONENTS.filter(component => component.name.toLowerCase().includes(needle))
+  })
 </script>
 
 <div class="flex h-dvh flex-col bg-slate-950 text-slate-100">
-  <header class="flex flex-none items-center justify-between gap-4 border-b border-slate-800 px-3 py-3 sm:px-4">
-    <div class="flex items-center gap-2">
-      <Button
-        variant="secondary"
-        size="sm"
-        className="-ml-1"
-        ariaLabel={i18n.t('showcase.toggleComponents')}
-        ariaExpanded={pickerOpen}
-        tooltip={i18n.t('showcase.toggleComponents')}
-        tooltipAlign="left"
-        preventFocusSteal
-        onClick={() => setPickerOpen(!pickerOpen)}>
-        {#snippet icon()}
-          <MenuIcon className="h-4 w-4" />
-        {/snippet}
-      </Button>
+  <AppShell
+    open={pickerOpen}
+    paneSize={paneSize}
+    toggleShowLabel={i18n.t('showcase.toggleComponents')}
+    toggleHideLabel={i18n.t('showcase.toggleComponents')}
+    resizeLabel={i18n.t('splitter.resize')}
+    onOpenChange={setPickerOpen}
+    onPaneChange={value => (paneSize = value)}>
+    {#snippet headerLeft()}
       <h1 class="text-base font-semibold tracking-tight text-slate-200 sm:text-lg">{i18n.t('showcase.title')}</h1>
-    </div>
-    <div class="flex items-center gap-2">
+    {/snippet}
+    {#snippet headerRight()}
       <ThemeMenu align="right" />
       <LanguageMenu align="right" />
-    </div>
-  </header>
-  <div class="flex min-h-0 flex-1 flex-col">
+    {/snippet}
+    {#snippet leftPane()}
+      <SearchInput bind:value={query} ariaLabel={i18n.t('showcase.searchComponents')} />
+      <nav class="min-h-0 flex-1 overflow-y-auto" tabindex="-1" aria-label={i18n.t('showcase.components')}>
+        <ul class="flex flex-col gap-1">
+          {#each filteredComponents as component (component.slug)}
+            {@const active = currentPath === `/components/${component.slug}`}
+            <li>
+              <a
+                href={`/components/${component.slug}`}
+                aria-current={active ? 'page' : undefined}
+                class={`block rounded-md px-3 py-2 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-cyan-500/40 motion-reduce:transition-none ${
+                  active ? 'bg-cyan-500/15 text-cyan-200' : 'text-slate-300 hover:bg-slate-800 hover:text-cyan-200'
+                }`}>
+                {component.name}
+              </a>
+            </li>
+          {/each}
+        </ul>
+      </nav>
+    {/snippet}
     {@render children()}
-  </div>
+  </AppShell>
 </div>
 
 {#if data?.devTag}

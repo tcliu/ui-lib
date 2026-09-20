@@ -7,6 +7,7 @@ import {
   snippetErrorMessage,
   splitLeadingScript,
 } from './snippet-source'
+import AppShell from '$lib/components/AppShell.svelte'
 import BaseDialog from '$lib/components/BaseDialog.svelte'
 import Button from '$lib/components/Button.svelte'
 import Buttons from '$lib/components/Buttons.svelte'
@@ -78,6 +79,7 @@ import SortDescIcon from '$lib/icons/SortDescIcon.svelte'
 
 const MODULE_REGISTRY: Record<string, unknown> = {
   'svelte/internal/client': svelteClient,
+  'ui/AppShell.svelte': { default: AppShell },
   'ui/BaseDialog.svelte': { default: BaseDialog },
   'ui/Button.svelte': { default: Button },
   'ui/Buttons.svelte': { default: Buttons },

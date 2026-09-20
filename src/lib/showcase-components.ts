@@ -5,6 +5,7 @@ export interface ShowcaseComponent {
 
 // Single source of truth for the index list and the per-component routes.
 export const SHOWCASE_COMPONENTS: ShowcaseComponent[] = [
+  { slug: 'app-shell', name: 'AppShell' },
   { slug: 'base-dialog', name: 'BaseDialog' },
   { slug: 'button', name: 'Button' },
   { slug: 'buttons', name: 'Buttons' },
