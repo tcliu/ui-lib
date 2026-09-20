@@ -17,6 +17,7 @@ const REGISTRY = join(process.env.HOME ?? '', '.agents', '.metadata', 'projects.
 // Shared files compared byte-for-byte across every app.
 const SHARED = {
   'src/lib/components': [
+    'AppShell.svelte',
     'BaseDialog.svelte',
     'Button.svelte',
     'Buttons.svelte',
@@ -81,7 +82,7 @@ const SHARED = {
     'use-focusout-close.ts',
     'use-list-selection.svelte.ts',
   ],
-  'src/lib': ['dropdown-chrome.ts', 'position-panel.svelte.ts', 'text-size.ts'],
+  'src/lib': ['app-shell.ts', 'dropdown-chrome.ts', 'position-panel.svelte.ts', 'text-size.ts'],
   'src/lib/data-table': ['column-helpers.ts'],
   scripts: [
     'copy-worktree-config.mjs',

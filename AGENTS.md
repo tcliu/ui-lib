@@ -58,7 +58,7 @@ Project-specific development conventions for the UI Library web app.
   fall back to the locales in `src/lib/locales/`; a consuming app's locale
   dictionaries must define the shared keys (`common.*`, `number.*`, `dropdown.*`,
   `pagination.*`, `tabs.label`, `search.placeholder`, `splitter.*`, `password.*`,
-  `combobox.*`, `tagInput.*`, `kebab.*`, and `range.*`).
+  `combobox.*`, `tagInput.*`, `kebab.*`, `range.*`, and `appShell.*`).
 - Component attributes stay camelCase.
 - New sized components support the full `xs`–`lg` scale from the start (literal
   per-size classes, never interpolated) instead of growing sizes one use case

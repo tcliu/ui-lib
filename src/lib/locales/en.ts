@@ -3,7 +3,7 @@
 //
 // The `common.*`, `number.*`, `dropdown.*`, `pagination.*`, `tabs.*`,
 // `search.*`, `splitter.*`, `password.*`, `combobox.*`, `tagInput.*`,
-// `kebab.*`, `range.*`, `edit.*`, `copy.*`, and `editor.toast.*` blocks
+// `kebab.*`, `range.*`, `appShell.*`, `edit.*`, `copy.*`, and `editor.toast.*` blocks
 // are the shared label contract the ported UI primitives
 // fall back to when a caller passes no label prop. A host app that vendors a
 // primitive provides the same keys in its own locale dictionaries.
@@ -30,6 +30,9 @@ export const en = {
   'tabs.label': 'Tabs',
   'search.placeholder': 'Search...',
   'splitter.resize': 'Resize',
+  'appShell.showPane': 'Show pane',
+  'appShell.hidePane': 'Hide pane',
+  'appShell.resize': 'Resize pane',
   'password.show': 'Show password',
   'password.hide': 'Hide password',
   'combobox.remove': 'Remove {name}',
