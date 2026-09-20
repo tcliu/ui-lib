@@ -51,12 +51,22 @@ Project-specific development conventions for the UI Library web app.
   snippets, so an app whose tags carry extra data (e.g. `{ name, color }`) maps
   that object model to `string[]` at the call site instead of forking a second
   tag-input component. It exports `focus()` for dialog autofocus.
+- Never combine `align` with `className` on `Buttons`: a custom `className`
+  replaces the default row and silently drops `align`; spell the row out
+  (`flex w-full … justify-end`) instead.
 - The shared primitives resolve labels as `$derived(prop ?? i18n.t('key'))` and
   fall back to the locales in `src/lib/locales/`; a consuming app's locale
   dictionaries must define the shared keys (`common.*`, `number.*`, `dropdown.*`,
   `pagination.*`, `tabs.label`, `search.placeholder`, `splitter.*`, `password.*`,
-  `combobox.*`, and `tagInput.*`).
+  `combobox.*`, `tagInput.*`, `kebab.*`, and `range.*`).
 - Component attributes stay camelCase.
+- New sized components support the full `xs`–`lg` scale from the start (literal
+  per-size classes, never interpolated) instead of growing sizes one use case
+  at a time.
+- Size svg primitives (icons, spinner) through the `size` prop (`xs`–`lg` as
+  width/height attributes), never size classes: attributes compose with
+  `className`, while explicit size classes in `className` still win because
+  CSS beats attributes.
 - Reuse this project's existing UI primitives and patterns when they fit,
   especially dialog, dropdown, editor, and icon components; do not build a
   parallel design system for equivalent controls.
@@ -67,10 +77,23 @@ Project-specific development conventions for the UI Library web app.
   copies the gitignored local dev files (`.env.local` and all files under
   `.data/`) and sets `DEV_TAG=<branch>` so the dev tag identifies the branch,
   unless the user opts for the current worktree.
+- Worktree deletion refuses targets with running processes: `findProcessesInPath`
+  (`scripts/_worktrees.mjs`) scans `/proc` cwds and both delete flows refuse
+  guarded checkouts (an unreadable process status also refuses), because deleting
+  under a live server half-removes the worktree (unregistered,
+  files/branch/server left). An explicit terminate-and-delete step (default No;
+  `--kill` in `delete-worktrees.mjs`) stops guarding processes via the shared
+  `terminateProcessesInPath` helper — SIGTERM then SIGKILL on re-verified
+  individual PIDs only, never the invoker's own process chain.
 - Z ladder: sticky content `z-10`, drawer `z-20`, overlays `z-40`, dev tag
   `z-50` — keep overlays at or below `z-40` so the tag is never covered.
+- Portal dialogs to `document.body` through `positionPanel` sheet mode so no
+  ancestor stacking context (including the showcase's paint-contained demo row)
+  can clip or trap them.
 - Temporary scratch files (plans, proposals, notes) go in `.tmp/` (plans in
-  `.tmp/plans/`), never in source directories. In-progress feature requirements
+  `.tmp/plans/`), never in source directories. Direct every other temporary
+  file there too (dev-server logs, probe scripts, ad-hoc output) instead of
+  `/tmp`, so scratch stays inside the worktree and cleans up with it. In-progress feature requirements
   go in `.tmp/features/{feature-name}.md` as supplementary context only.
 - The shared `CodeEditor`/`LazyCodeEditor` load language packs on demand through
   a `docType` lookup, and its CodeMirror theme package requires `@babel/runtime`
@@ -84,15 +107,33 @@ Project-specific development conventions for the UI Library web app.
   its snippet references through `ShowcaseSection`'s `scope`; compile and
   render failures show inline and keep the previous render, and the live demo
   row is `contain: paint` so a snippet that renders a fixed overlay cannot
-  cover the page. Every section's snippet must reproduce its own static demo
+  cover the page (portaled dialogs escape it by design). Every section's snippet must reproduce its own static demo
   exactly (same structure, full class strings, localized text via `scope`, same
   props), so opening Show-code with default state is pixel-identical until the
-  user edits.
+  user edits. Snippets must never assign a constructed collection (`new
+  Set()`/`new Map()`) to state: the compiler then emits a legacy `init()` call
+  that throws when the playground mounts the snippet at the root — build the
+  value in a `scope` helper instead. A snippet may also declare local values
+  (data arrays, column defs) in a single leading `<script>` block: the
+  playground splits it out and merges it into the compiled preamble's instance
+  script, and local names override same-named `scope` keys, so a snippet can be
+  self-contained. The block must come first and must not use module context;
+  the split/merge logic lives in `src/lib/showcase/snippet-source.ts`.
 - The playground executes arbitrary JavaScript in the page: it evaluates the
   compiler output with `new Function` after rewriting its imports to a whitelist
   of shared primitives. This is not a sandbox — the code still reaches page
   globals, storage, and `fetch` — so it is acceptable only for this local
   showcase and must never be handed app secrets, stores, or fetch wrappers.
+- Every component showcase page is one `ShowcaseSection` with a single live
+  demo plus a settings-panel `footer` (`Reset` plus `FormField` controls over
+  `pg*` playground state, unset by default); a colocated `demo-snippet.ts`
+  builder (+ test) regenerates the Show-code source from that state, and the
+  section title derives from `isCustomized` (`showcase.default` /
+  `showcase.customized`).
+- A playground preset that derives other props fills visible panel fields for
+  them (shared builder constants as the single source), so static demo,
+  Show-code, and live render stay identical; every `size` prop gets a panel
+  control using the standard `xs`–`lg` options.
 
 ## UI behavior
 
@@ -106,7 +147,7 @@ Project-specific development conventions for the UI Library web app.
   one flexible editor region); do not add `min-h-screen`, clip the shell with
   `overflow-hidden`, or chase mobile keyboard gaps — those differences are
   owned by the browser (see `cross-browser.md`).
-- Icon-only `Button` uses uniform padding (`p-1.5` for `sm`, `p-2.5` for `md`);
+- Icon-only `Button` uses uniform padding (`p-1` for `xs`, `p-1.5` for `sm`, `p-2.5` for `md`, `p-3` for `lg`);
   text buttons keep `px`/`py` distinction.
 - `ConfirmDialog` routes its dismiss affordances to a separate `onCancel` when
   one is passed; a discard confirm passes `confirmOnDismiss` so Escape, overlay
