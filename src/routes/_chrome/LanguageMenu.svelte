@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Menu, { type MenuItemState } from './Menu.svelte'
+  import Menu, { type MenuItemState } from '$lib/components/Menu.svelte'
   import { LOCALES, getI18nContext } from '$lib/i18n.svelte'
   import GlobeIcon from '$lib/icons/GlobeIcon.svelte'
 

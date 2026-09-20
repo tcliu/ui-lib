@@ -4,8 +4,9 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 // Drift gate for the shared UI surface. `ui-lib` is the canonical source; every
-// sibling app must carry byte-identical copies of the files listed below, apart
-// from the documented per-project exceptions. Run from the `ui-lib` root:
+// sibling app must carry byte-identical copies of the shared directories and
+// files below, apart from the documented per-project exceptions. Run from the
+// `ui-lib` root:
 //   node scripts/check-shared-parity.mjs
 // Exits non-zero and names each diverged file so a port that was not synced
 // back is caught in `check` rather than discovered later.
@@ -14,88 +15,47 @@ const ROOT = fileURLToPath(new URL('..', import.meta.url))
 const SELF = 'ui-lib'
 const REGISTRY = join(process.env.HOME ?? '', '.agents', '.metadata', 'projects.yml')
 
-// Shared files compared byte-for-byte across every app.
-const SHARED = {
-  'src/lib/components': [
-    'AppShell.svelte',
-    'BaseDialog.svelte',
-    'Button.svelte',
-    'Buttons.svelte',
-    'Checkbox.svelte',
-    'Chip.svelte',
-    'ChipDropdown.svelte',
-    'CodeEditor.svelte',
-    'code-editor-max-content.ts',
-    'ColumnChooser.svelte',
-    'Combobox.svelte',
-    'ConfirmDialog.svelte',
-    'Copyable.svelte',
-    'CopyButton.svelte',
-    'DataTable.svelte',
-    'DateRangePicker.svelte',
-    'EditableText.svelte',
-    'EditDialog.svelte',
-    'FormField.svelte',
-    'LazyCodeEditor.svelte',
-    'Menu.svelte',
-    'NumberInput.svelte',
-    'Pagination.svelte',
-    'PasswordInput.svelte',
-    'SearchInput.svelte',
-    'SelectDropdown.svelte',
-    'Spinner.svelte',
-    'Splitter.svelte',
-    'Tabs.svelte',
-    'TagInput.svelte',
-    'Toast.svelte',
-    'Tooltip.svelte',
-  ],
-  'src/lib/icons': [
-    'CalendarIcon.svelte',
-    'CheckIcon.svelte',
-    'ChevronDownIcon.svelte',
-    'ChevronDownSmallIcon.svelte',
-    'ChevronLeftIcon.svelte',
-    'ChevronRightIcon.svelte',
-    'ChevronUpSmallIcon.svelte',
-    'CloseIcon.svelte',
-    'CopyIcon.svelte',
-    'DeleteIcon.svelte',
-    'EditIcon.svelte',
-    'EyeIcon.svelte',
-    'EyeSlashIcon.svelte',
-    'ForestIcon.svelte',
-    'GlobeIcon.svelte',
-    'KebabIcon.svelte',
-    'MenuIcon.svelte',
-    'PaletteIcon.svelte',
-    'PlusIcon.svelte',
-    'SearchIcon.svelte',
-    'SettingsIcon.svelte',
-    'SortAscIcon.svelte',
-    'SortDescIcon.svelte',
-  ],
-  'src/lib/actions': [
-    'click-outside.ts',
-    'drag-close-down.ts',
-    'use-dropdown.svelte.ts',
-    'use-focusout-close.ts',
-    'use-list-selection.svelte.ts',
-  ],
-  'src/lib': ['app-shell.ts', 'dropdown-chrome.ts', 'position-panel.svelte.ts', 'text-size.ts'],
-  'src/lib/data-table': ['column-helpers.ts'],
-  scripts: [
-    'copy-worktree-config.mjs',
-    'create-worktree.mjs',
-    'delete-worktrees.mjs',
-    'find-running-apps.mjs',
-    'register-worktrees.mjs',
-    'run-e2e.mjs',
-    'worktree-manager.mjs',
-    '_tui.mjs',
-    '_worktrees.mjs',
-  ],
+// Shared surface, by convention: every file under these directories is
+// canonical. App-private code stays out of them (ui-lib's own chrome lives
+// under src/routes/_chrome/), so no per-file list is maintained here.
+const SHARED_DIRS = [
+  'src/lib/components',
+  'src/lib/icons',
+  'src/lib/actions',
+  'src/lib/data-table',
+  'scripts',
+]
+
+// Top-level shared modules. src/lib/ also holds app-private modules,
+// subdirectories, locales, and tests, so only these files are gated.
+const SHARED_FILES = [
+  'src/lib/app-shell.ts',
+  'src/lib/dropdown-chrome.ts',
+  'src/lib/position-panel.svelte.ts',
+  'src/lib/text-size.ts',
+]
+
+// Never gated: colocated tests, test directories, and this gate itself
+// (siblings do not carry it).
+const SKIP_BASENAMES = new Set(['check-shared-parity.mjs'])
+const SKIP_SUFFIXES = ['.test.ts']
+const SKIP_DIRS = new Set(['__tests__'])
+
+function walk(dir) {
+  const out = []
+  for (const entry of readdirSync(join(ROOT, dir), { withFileTypes: true })) {
+    if (entry.name.startsWith('.')) continue
+    const rel = `${dir}/${entry.name}`
+    if (entry.isDirectory()) {
+      if (!SKIP_DIRS.has(entry.name)) out.push(...walk(rel))
+    } else if (!SKIP_BASENAMES.has(entry.name) && !SKIP_SUFFIXES.some(suffix => entry.name.endsWith(suffix))) {
+      out.push(rel)
+    }
+  }
+  return out
 }
+
+const SHARED = [...SHARED_DIRS.flatMap(walk), ...SHARED_FILES].sort()
 
 // Per-project exceptions with the reason each may legitimately differ. A
 // two-element entry exempts the file for every app; a three-element entry
@@ -107,6 +67,8 @@ const EXCEPTIONS = [
   ['scripts/apply-schema.mjs', 'per-project schema fork'],
   ['scripts/db-config.mjs', 'per-project database configuration fork'],
   ['scripts/deploy.mjs', 'per-project deploy fork'],
+  ['share-text', 'src/lib/components/Combobox.svelte', 'per-app listbox id prefix'],
+  ['session-catalog', 'src/lib/components/DateRangePicker.svelte', 'themed fork: prop-injected i18n and CSS-var palette'],
 ]
 const globalExceptions = new Set(EXCEPTIONS.filter(entry => entry.length === 2).map(([p]) => p))
 const appExceptions = EXCEPTIONS.filter(entry => entry.length === 3)
@@ -141,26 +103,23 @@ const diverged = []
 const missing = []
 let compared = 0
 
-for (const [dir, files] of Object.entries(SHARED)) {
-  for (const f of files) {
-    const rel = `${dir}/${f}`
-    if (globalExceptions.has(rel)) continue
-    const canonical = join(ROOT, rel)
-    if (!existsSync(canonical)) {
-      console.error(`shared-parity: canonical file missing: ${rel}`)
-      process.exit(2)
+for (const rel of SHARED) {
+  if (globalExceptions.has(rel)) continue
+  const canonical = join(ROOT, rel)
+  if (!existsSync(canonical)) {
+    console.error(`shared-parity: canonical file missing: ${rel}`)
+    process.exit(2)
+  }
+  const want = hash(canonical)
+  for (const app of apps) {
+    if (isAppExcepted(app.name, rel)) continue
+    const target = join(app.path, rel)
+    if (!existsSync(target)) {
+      missing.push(`${app.name}: ${rel}`)
+      continue
     }
-    const want = hash(canonical)
-    for (const app of apps) {
-      if (isAppExcepted(app.name, rel)) continue
-      const target = join(app.path, rel)
-      if (!existsSync(target)) {
-        missing.push(`${app.name}: ${rel}`)
-        continue
-      }
-      compared += 1
-      if (hash(target) !== want) diverged.push(`${app.name}: ${rel}`)
-    }
+    compared += 1
+    if (hash(target) !== want) diverged.push(`${app.name}: ${rel}`)
   }
 }
 

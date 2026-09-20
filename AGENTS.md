@@ -42,10 +42,14 @@ Project-specific development conventions for the UI Library web app.
   import paths and per-app storage keys. Fix a shared component here first, then
   port it; never fork one in a consuming app without syncing the change back, or
   `npm run check`'s parity gate will fail.
-- `scripts/check-shared-parity.mjs` (run by `npm run check`) byte-compares every
-  shared file against each registered sibling app. A change to a shared file is
-  not complete until the sibling copies are re-ported or the divergence is added
-  to that script's documented exception list with a reason.
+- `scripts/check-shared-parity.mjs` (run by `npm run check`) byte-compares the
+  shared directories (`src/lib/components/`, `src/lib/icons/`, `src/lib/actions/`,
+  `src/lib/data-table/`, `scripts/`) plus the listed top-level `src/lib/*.ts`
+  files against each registered sibling app. Keep app-private UI out of the
+  shared directories (this app's own chrome lives under `src/routes/_chrome/`);
+  a change to a shared file is not complete until the sibling copies are
+  re-ported or the divergence is added to that script's documented exception
+  list with a reason.
 - Tag editing stays one shared control: `TagInput` models `string[]` and covers
   per-tag coloring through its optional `chipClassFor` hook plus `chip`/`option`
   snippets, so an app whose tags carry extra data (e.g. `{ name, color }`) maps
