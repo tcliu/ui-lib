@@ -48,8 +48,8 @@
       <LanguageMenu align="right" />
     {/snippet}
     {#snippet leftPane()}
-      <SearchInput bind:value={query} ariaLabel={i18n.t('showcase.searchComponents')} />
-      <nav class="min-h-0 flex-1 overflow-y-auto" tabindex="-1" aria-label={i18n.t('showcase.components')}>
+      <SearchInput bind:value={query} ariaLabel={i18n.t('showcase.searchComponents')} wrapperClass="px-2 pt-3 sm:px-3" />
+      <nav class="min-h-0 flex-1 overflow-y-auto px-2 pb-3 sm:px-3" tabindex="-1" aria-label={i18n.t('showcase.components')}>
         <ul class="flex flex-col gap-1">
           {#each filteredComponents as component (component.slug)}
             {@const active = currentPath === `/components/${component.slug}`}

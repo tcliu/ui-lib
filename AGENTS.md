@@ -58,6 +58,8 @@ Project-specific development conventions for the UI Library web app.
 - Never combine `align` with `className` on `Buttons`: a custom `className`
   replaces the default row and silently drops `align`; spell the row out
   (`flex w-full … justify-end`) instead.
+- The `AppShell` aside carries no padding: left-pane content owns its own
+  spacing, so shell and pane padding never need compensating values.
 - The shared primitives resolve labels as `$derived(prop ?? i18n.t('key'))` and
   fall back to the locales in `src/lib/locales/`; a consuming app's locale
   dictionaries must define the shared keys (`common.*`, `number.*`, `dropdown.*`,
