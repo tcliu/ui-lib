@@ -38,7 +38,7 @@ const SHARED_FILES = [
 // Never gated: colocated tests, test directories, and this gate itself
 // (siblings do not carry it).
 const SKIP_BASENAMES = new Set(['check-shared-parity.mjs'])
-const SKIP_SUFFIXES = ['.test.ts']
+const SKIP_SUFFIXES = ['.test.ts', '.test.mjs']
 const SKIP_DIRS = new Set(['__tests__'])
 
 function walk(dir) {
@@ -67,6 +67,7 @@ const EXCEPTIONS = [
   ['scripts/apply-schema.mjs', 'per-project schema fork'],
   ['scripts/db-config.mjs', 'per-project database configuration fork'],
   ['scripts/deploy.mjs', 'per-project deploy fork'],
+  ['scripts/lib/cron-job.mjs', 'per-app scan job title'],
   ['share-text', 'src/lib/components/Combobox.svelte', 'per-app listbox id prefix'],
   ['session-catalog', 'src/lib/components/DateRangePicker.svelte', 'themed fork: prop-injected i18n and CSS-var palette'],
 ]
