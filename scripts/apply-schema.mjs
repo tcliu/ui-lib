@@ -80,9 +80,25 @@ function splitSqlStatements(sql) {
   return statements
 }
 
-const profile = resolveScriptProfile()
-const sql = await readFile(new URL('../sql/schema.sql', import.meta.url), 'utf8')
 const startedAt = Date.now()
+const profile = resolveScriptProfile()
+let sql
+try {
+  sql = await readFile(new URL('../sql/schema.sql', import.meta.url), 'utf8')
+} catch (error) {
+  if (error?.code === 'ENOENT') {
+    logEvent({
+      action: 'schema_apply_skip',
+      details: { profile, source: 'sql/schema.sql', reason: 'missing sql/schema.sql', level: 'WARN' },
+    })
+    process.exit(0)
+  }
+  logEvent({
+    action: 'schema_apply_error',
+    details: { profile, source: 'sql/schema.sql', elapsed_ms: Date.now() - startedAt, error: errorMessage(error) },
+  })
+  process.exit(1)
+}
 const verifyTables = getVerifyTables()
 
 if (profile === 'dev') {
@@ -119,7 +135,14 @@ if (profile === 'dev') {
     process.exitCode = 1
   }
 } else {
-  const { host: db_host, database: db_name } = describeDatabaseTarget(getDatabaseURL())
+  const databaseURL = getDatabaseURL()
+  if (!databaseURL) {
+    logEvent({
+      action: 'schema_apply_skip',
+      details: { profile, source: 'sql/schema.sql', reason: 'missing DATABASE_URL', level: 'WARN' },
+    })
+  } else {
+  const { host: db_host, database: db_name } = describeDatabaseTarget(databaseURL)
   const schemaName = getSchemaName()
   const schema = schemaName || 'public'
   logEvent({
@@ -176,5 +199,6 @@ if (profile === 'dev') {
     process.exitCode = 1
   } finally {
     await pool.end()
+  }
   }
 }
