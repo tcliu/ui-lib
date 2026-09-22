@@ -1,3 +1,6 @@
+import { mkdtempSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -6,8 +9,10 @@ import {
   ensureD1Database,
   ensurePagesProject,
   findD1DatabaseId,
+  generatedWranglerProjectName,
   getPagesProjectDomain,
   renderWranglerConfig,
+  resolveCloudflareAppUrl,
   resolveCloudflareProjectName,
   resolveD1DatabaseName,
   splitCloudflareEnv,
@@ -266,6 +271,42 @@ describe('ensureD1Database', () => {
   it('throws when listing fails', () => {
     const runner = () => ({ status: 1, output: '' })
     expect(() => ensureD1Database('my-app-d1', runner)).toThrow('d1 list failed')
+  })
+})
+
+describe('generatedWranglerProjectName', () => {
+  it('reads the name from the generated config', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'wrangler-name-'))
+    writeFileSync(join(dir, 'wrangler.toml'), 'name = "my-app"\n[vars]\n')
+    expect(generatedWranglerProjectName(dir)).toBe('my-app')
+  })
+
+  it('returns empty without a config', () => {
+    expect(generatedWranglerProjectName(mkdtempSync(join(tmpdir(), 'wrangler-empty-')))).toBe('')
+  })
+})
+
+describe('resolveCloudflareAppUrl', () => {
+  it('derives the live URL from the Pages production domain', () => {
+    expect(
+      resolveCloudflareAppUrl({ env: { CLOUDFLARE_PROJECT: 'ui-lib' }, runner: jsonRunner(PAGES_JSON) }),
+    ).toBe('https://ui-lib-b1s.pages.dev')
+  })
+
+  it('throws when the project is missing', () => {
+    expect(() =>
+      resolveCloudflareAppUrl({
+        env: {},
+        runner: jsonRunner(PAGES_JSON),
+        root: mkdtempSync(join(tmpdir(), 'wrangler-noproj-')),
+      }),
+    ).toThrow('Missing CLOUDFLARE_PROJECT')
+  })
+
+  it('throws when the production domain is unresolvable', () => {
+    expect(() =>
+      resolveCloudflareAppUrl({ env: { CLOUDFLARE_PROJECT: 'missing' }, runner: jsonRunner(PAGES_JSON) }),
+    ).toThrow('Could not resolve the Pages production domain for project missing')
   })
 })
 

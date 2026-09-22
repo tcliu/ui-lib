@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Syncs `.env.prod` overlaid by `.env.cloudflare` to the Cloudflare Pages
-// project (CLOUDFLARE_PROJECT owns the project name, APP_BASE_URL the live
-// URL). Generates the gitignored root `wrangler.toml` (name + static Pages
+// project (CLOUDFLARE_PROJECT owns the project name; the live URL is the
+// Pages production domain derived from it, never an overlay key).
+// Generates the gitignored root `wrangler.toml` (name + static Pages
 // stanza + `[vars]`) that `wrangler pages deploy` auto-discovers, and pushes
 // secrets via `wrangler pages secret put` (value on stdin, never argv).
 //
@@ -24,7 +25,7 @@
 // `--dry-run` reports the plan without writing. Empty local values are skipped
 // (the remote value survives); local-only keys are never synced.
 import { spawn } from 'node:child_process'
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parseEnvFile } from './env-file.mjs'
@@ -35,6 +36,7 @@ import {
   desiredPagesVars,
   ensurePagesProject,
   GENERATED_WRANGLER_CONFIG,
+  generatedWranglerProjectName,
   renderWranglerConfig,
   splitCloudflareEnv,
   wranglerBin,
@@ -87,13 +89,10 @@ function parseFlags(argv) {
 }
 
 // Project name from the last generated config: fallback so a checkout that
-// predates CLOUDFLARE_PROJECT keeps working.
+// predates CLOUDFLARE_PROJECT keeps working. Shared with the deploy and
+// standalone heartbeat flows (lib/cloudflare.mjs).
 function generatedProjectName() {
-  if (!existsSync(GENERATED_FILE)) {
-    return ''
-  }
-  const match = /^name\s*=\s*"([^"]+)"/m.exec(readFileSync(GENERATED_FILE, 'utf8'))
-  return match ? match[1] : ''
+  return generatedWranglerProjectName(ROOT_DIR)
 }
 
 function runWranglerAsync(args, { input } = {}) {
