@@ -17,3 +17,6 @@ data/
 !.env.example
 !.env.*.example
 .sqlite
+
+# Generated Cloudflare Pages config (npm run env:sync:cloudflare); never commit.
+wrangler.toml
