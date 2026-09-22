@@ -22,6 +22,7 @@ import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { parseEnvFile } from './env-file.mjs'
 import { errorMessage, logEvent } from './log-event.mjs'
+import { hasNeonSchema } from './db-config.mjs'
 import {
   applyHeartbeat,
   HEARTBEAT_CHOICES,
@@ -620,7 +621,7 @@ function readManagedDomainState() {
     const state = JSON.parse(readFileSync(DOMAIN_STATE_FILE, 'utf8'))
     return String(state.managedDomain || '').trim()
   } catch (error) {
-    console.error('Failed to read managed domain state:', error?.message || error)
+    logEvent({ action: 'vercel_domain_state_error', details: { error: error?.message || error, level: 'WARN' } })
     return ''
   }
 }
@@ -842,14 +843,21 @@ function buildDeployGraph() {
       message: 'Apply sql/schema.sql to the Neon database before deploy?',
       async process(ctx) {
         if (ctx.applySchema !== 'yes' && ctx.applySchema !== 'no') {
-          const picked = await ctx.selectOne(APPLY_SCHEMA_CHOICES, {
-            defaultValue: DEFAULT_CONFIRM,
-            render: renderOptionPicker(),
-          })
-          if (!picked) {
-            fail('Deploy cancelled.')
+          // No schema file, no question: asking would offer a dead choice
+          // (both apply flows read sql/schema.sql and fail without it).
+          if (!hasNeonSchema(ROOT_DIR)) {
+            ctx.applySchema = 'skip'
+            logEvent({ action: 'neon_schema_skip', details: { reason: 'missing sql/schema.sql' } })
+          } else {
+            const picked = await ctx.selectOne(APPLY_SCHEMA_CHOICES, {
+              defaultValue: DEFAULT_CONFIRM,
+              render: renderOptionPicker(),
+            })
+            if (!picked) {
+              fail('Deploy cancelled.')
+            }
+            ctx.applySchema = picked.value
           }
-          ctx.applySchema = picked.value
         }
         // Bypass the heartbeat node when there is nothing to ask: the
         // interview chrome prints every entered node's message, so entering
@@ -1083,6 +1091,11 @@ async function deployWithTarget(options) {
   }
   if (options.heartbeatFlag && !HEARTBEAT_PROVIDERS.includes(options.heartbeatFlag)) {
     fail(`Unknown heartbeat: ${options.heartbeatFlag} (expected cron-job|none).`)
+  }
+  // An explicit apply demand needs the file both apply flows read; without
+  // it the schema step would crash on a missing sql/schema.sql.
+  if (options.applySchemaFlag === 'yes' && !hasNeonSchema(ROOT_DIR)) {
+    fail('sql/schema.sql not found: cannot apply the schema. Re-run with --no-apply-schema.')
   }
   const seededProfile = options.profileFlag || process.env.PROFILE || ''
   // The heartbeat answer only gates the interview when wiring is possible:
@@ -1346,6 +1359,7 @@ function d1BindingName() {
     .toUpperCase()
     .replace(/[^A-Z0-9]+/g, '_')
     .replace(/^_|_$/g, '')
+    .replace(/^PROJECT_/, '')
   return `PROJECT_${slug || 'APP'}_D1`
 }
 

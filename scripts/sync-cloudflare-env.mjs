@@ -100,7 +100,7 @@ function runWranglerAsync(args, { input } = {}) {
     const bin = wranglerBin()
     const fullArgs = bin === 'npx' ? ['wrangler', ...args] : args
     // No command echo here: the only caller passes the secret on stdin, and
-    // per-key completion lines below carry the progress signal instead.
+    // per-key completion events below carry the progress signal instead.
     const child = spawn(bin, fullArgs, { cwd: ROOT_DIR, stdio: ['pipe', 'inherit', 'inherit'] })
     const stdin = child.stdin
     stdin.on('error', () => {
@@ -121,10 +121,11 @@ function runWranglerAsync(args, { input } = {}) {
 
 async function putSecret(project, key, value) {
   await runWranglerAsync(['pages', 'secret', 'put', key, '--project', project], { input: value })
-  console.log(`synced secret ${key}`)
+  logEvent({ action: 'cloudflare_env_secret_synced', details: { key } })
 }
 
 async function main() {
+  const startedAt = Date.now()
   const { dryRun, prune, secrets: secretsMode } = parseFlags(process.argv.slice(2))
   const missing = SOURCE_FILES.filter(file => !existsSync(join(ROOT_DIR, file)))
   if (missing.length > 0) {
@@ -147,15 +148,16 @@ async function main() {
   const { project: overlayProject, vars, secrets } = splitCloudflareEnv(raw)
   for (const key of Object.keys(raw)) {
     if (CLOUDFLARE_LOCAL_ONLY_KEYS.has(key)) {
-      console.log(`skipped ${key} (local-only; never synced)`)
+      logEvent({ action: 'cloudflare_env_local_skip', details: { key } })
     } else if (!raw[key]) {
-      console.log(`skipped ${key} (empty in .env files; remote value kept)`)
+      logEvent({ action: 'cloudflare_env_empty_skip', details: { key } })
     }
   }
   const project = overlayProject || generatedProjectName()
   if (!project) {
     fail('Missing CLOUDFLARE_PROJECT in .env.cloudflare: set it to the Pages project name.')
   }
+  logEvent({ action: 'cloudflare_env_sync_start', details: { project, dry_run: dryRun, secrets_mode: secretsMode } })
 
   // The desired set always carries the forced build vars, matching what
   // renderWranglerConfig would emit for a full write.
@@ -209,12 +211,12 @@ async function main() {
   const varsToWrite = { ...desiredVars }
   if (dryRun) {
     for (const key of Object.keys(varsToWrite)) {
-      console.log(`would sync var ${key}`)
+      logEvent({ action: 'cloudflare_env_var_synced', details: { key, dry_run: true } })
     }
   } else {
     writeFileSync(GENERATED_FILE, renderWranglerConfig({ project, vars: varsToWrite }))
     for (const key of Object.keys(varsToWrite)) {
-      console.log(`synced var ${key}`)
+      logEvent({ action: 'cloudflare_env_var_synced', details: { key } })
     }
   }
 
@@ -224,7 +226,7 @@ async function main() {
   const secretsToPut = secretsMode === 'missing' ? secretDiff.missing : Object.keys(secrets)
   for (const key of secretDiff.present) {
     if (!secretsToPut.includes(key)) {
-      console.log(`kept secret ${key} (already present; --secrets=always to rotate)`)
+      logEvent({ action: 'cloudflare_env_secret_kept', details: { key } })
     }
   }
   if (!dryRun && secretsToPut.length > 0 && process.env.PAGES_PROJECT_ASSURED !== '1') {
@@ -236,7 +238,7 @@ async function main() {
   const pendingSecrets = secretsToPut.map(key => [key, secrets[key]])
   if (dryRun) {
     for (const [key] of pendingSecrets) {
-      console.log(`would sync secret ${key}`)
+      logEvent({ action: 'cloudflare_env_secret_synced', details: { key, dry_run: true } })
     }
   } else {
     await runWithConcurrency(
@@ -264,14 +266,10 @@ async function main() {
       )
     : []
   if (forbidden.length > 0) {
-    console.log(
-      `${dryRun ? 'Would remove' : 'Removing'} ${forbidden.length} forbidden key(s) from the Pages project (${forbidden.join(', ')}).`,
-    )
+    logEvent({ action: 'cloudflare_env_forbidden_remove', details: { keys: forbidden, dry_run: dryRun } })
   }
   if (unmanaged.length > 0 && !prune) {
-    console.log(
-      `Skipped ${unmanaged.length} unmanaged secret(s) (${unmanaged.join(', ')}). Re-run with --prune to remove them.`,
-    )
+    logEvent({ action: 'cloudflare_env_prune_skip', details: { keys: unmanaged, hint: 're-run with --prune to remove them' } })
   }
   // One PATCH carries both deletions so the config hash is read once and the
   // forbidden-key removal cannot race the prune's stale hash.
@@ -287,20 +285,26 @@ async function main() {
       })
     }
     for (const key of forbidden) {
-      console.log(dryRun ? `would remove forbidden key ${key}` : `removed forbidden key ${key}`)
+      logEvent({ action: 'cloudflare_env_forbidden_removed', details: { key, dry_run: dryRun } })
     }
     for (const key of unmanaged) {
       if (prune) {
-        console.log(dryRun ? `would prune secret ${key}` : `pruned secret ${key}`)
+        logEvent({ action: 'cloudflare_env_pruned', details: { key, dry_run: dryRun } })
       }
     }
   }
 
-  console.log(
-    `Synced ${Object.keys(varsToWrite).length} var(s) to Cloudflare Pages (${project})` +
-      (remote ? ` (${varDiff.missing.length} missing, ${varDiff.changed.length} changed)` : '') +
-      ` and ${secretsToPut.length} of ${Object.keys(secrets).length} secret(s)`,
-  )
+  logEvent({
+    action: 'cloudflare_env_sync_end',
+    details: {
+      project,
+      vars: Object.keys(varsToWrite).length,
+      secrets_put: secretsToPut.length,
+      secrets_total: Object.keys(secrets).length,
+      dry_run: dryRun,
+      elapsed_ms: Date.now() - startedAt,
+    },
+  })
 }
 
 main().catch(error => {
