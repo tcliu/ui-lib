@@ -66,8 +66,10 @@ const EXCEPTIONS = [
   ['src/lib/i18n.svelte.ts', 'per-app locale dictionaries'],
   ['scripts/apply-schema.mjs', 'per-project schema fork'],
   ['scripts/db-config.mjs', 'per-project database configuration fork'],
-  ['scripts/deploy.mjs', 'per-project deploy fork'],
   ['scripts/lib/cron-job.mjs', 'per-app scan job title'],
+  ['share-text', 'scripts/sync-cloudflare-env.mjs', 'Neon backend: keeps DATABASE_URL on Cloudflare, forbids Vercel creds only'],
+  ['tts', 'scripts/sync-cloudflare-env.mjs', 'Neon backend: keeps DATABASE_URL on Cloudflare, forbids Vercel creds only'],
+  ['session-catalog', 'scripts/sync-cloudflare-env.mjs', 'Neon backend: keeps DATABASE_URL on Cloudflare, forbids Vercel creds only'],
   ['share-text', 'src/lib/components/Combobox.svelte', 'per-app listbox id prefix'],
   ['session-catalog', 'src/lib/components/DateRangePicker.svelte', 'themed fork: prop-injected i18n and CSS-var palette'],
 ]
