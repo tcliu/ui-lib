@@ -5,8 +5,8 @@ import { existsSync, readFileSync } from 'node:fs'
 // Keys that are local tooling config and must never be synced to a deploy
 // target: VERCEL_PROJECT is the CLI link slug (deploy.mjs only),
 // CLOUDFLARE_PROJECT owns the Pages project name (generator input only),
-// APP_BASE_URL is read by local scripts only (Vercel deploy domain sync,
-// heartbeat job URL) — no server module reads any of them at runtime.
+// APP_BASE_URL is read by local scripts only (deploy domain sync, heartbeat
+// job URL) — no server module reads any of them at runtime.
 export const LOCAL_ONLY_ENV_KEYS = new Set(['APP_BASE_URL', 'VERCEL_PROJECT', 'CLOUDFLARE_PROJECT'])
 
 // Dependency-free dotenv parser shared by CLI scripts. db-config.mjs pulls in
