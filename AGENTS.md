@@ -68,7 +68,9 @@ Project-specific development conventions for the UI Library web app.
   `inert` so focus stays in the drawer, and every floating dismissal
   (backdrop, Escape) is gated to overlay mode.
 - The shared primitives resolve labels as `$derived(prop ?? i18n.t('key'))` and
-  fall back to the locales in `src/lib/locales/`; a consuming app's locale
+  fall back to the locales in `src/lib/locales/` (nested `as const` trees with a
+  dotted-path `MessageKey`; every other locale is typed `LocaleMessages<typeof en>`
+  so a missing key fails the build). A consuming app's locale
   dictionaries must define the shared keys (`common.*`, `number.*`, `dropdown.*`,
   `pagination.*`, `tabs.label`, `search.placeholder`, `splitter.*`, `password.*`,
   `combobox.*`, `tagInput.*`, `kebab.*`, `range.*`, and `appShell.*`).
