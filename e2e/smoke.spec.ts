@@ -76,7 +76,9 @@ test('showcase: DataTable toolbar hosts search plus column selector and reset', 
   await search.fill('');
   await expect(section.locator('tbody tr')).toHaveCount(10);
   await section.getByRole('button', { name: 'Choose columns' }).click();
-  const panel = section.locator('.colchooser .panel');
+  // The panel is portaled to the body by positionPanel, so it is no longer a
+  // descendant of the section; select it by role instead.
+  const panel = page.locator('.panel[role="group"]');
   await expect(panel).toBeVisible();
   // The panel drops below the trigger, fully inside the viewport.
   const inViewport = await panel.evaluate(el => {
@@ -163,6 +165,53 @@ test('showcase: DataTable settings panel drives the demo table', async ({ page }
     'Search'
   );
 });
+
+// The big-component demos fill the page and expose a drag handle that narrows
+// their stage, so a narrow-container layout can be inspected in place.
+for (const slug of ['data-grid', 'data-table', 'splitter']) {
+  test(`showcase: the ${slug} demo stage is resizable`, async ({ page }) => {
+    await page.setViewportSize({ width: 1400, height: 1000 });
+    await page.goto(`/components/${slug}`);
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(400);
+    const section = page.locator('main > div > section').first();
+    // Scope to the stage row's own separator: the Splitter page's demo renders
+    // a second separator inside the pane.
+    const row = section.locator('div.flex.w-full.min-w-0').first();
+    const handle = row.locator(':scope > [role="separator"]');
+    await expect(handle).toBeVisible();
+    // The handle names what it resizes, not just "Resize".
+    await expect(handle).toHaveAttribute('aria-label', 'Resize demo');
+
+    const measure = () =>
+      row.evaluate(el => {
+        const rowBox = el.getBoundingClientRect();
+        const paneBox = el.firstElementChild!.getBoundingClientRect();
+        return { row: rowBox.width, pane: paneBox.width };
+      });
+
+    // Full container by default.
+    const before = await measure();
+    expect(before.pane / before.row).toBeGreaterThan(0.97);
+
+    // Dragging the handle left narrows the stage.
+    const box = await handle.boundingBox();
+    expect(box).not.toBeNull();
+    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box!.x - 300, box!.y + box!.height / 2, { steps: 10 });
+    await page.mouse.up();
+    await page.waitForTimeout(300);
+    const dragged = await measure();
+    expect(dragged.pane).toBeLessThan(before.pane - 100);
+
+    // The handle stays keyboard-operable.
+    await handle.focus();
+    await page.keyboard.press('ArrowRight');
+    const grown = await measure();
+    expect(grown.pane).toBeGreaterThan(dragged.pane);
+  });
+}
 
 test('showcase: BaseDialog page opens the dialog with content', async ({ page }) => {
   await page.goto('/components/base-dialog');

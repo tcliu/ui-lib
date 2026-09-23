@@ -5,6 +5,8 @@
 // Single-quoted lines throughout: backticks and ${} inside them stay literal,
 // so no escaping.
 
+import { stageCloseLines, stageOpenLines, stageStateLine } from '$lib/showcase/resizable-stage'
+
 export interface DemoRow {
   id: string
   name: string
@@ -33,11 +35,12 @@ function escapeAttr(value: string): string {
 }
 
 // A tri-state line: omitted while unset, bare while Yes, ={false} while No.
+// Indented for the DataTable props inside the resizable stage.
 function flagLine(name: string, value: TriState): string[] {
   if (value === '') {
     return []
   }
-  return [`  ${name}${value === 'yes' ? '' : '={false}'}`]
+  return [`      ${name}${value === 'yes' ? '' : '={false}'}`]
 }
 
 export function buildDataTableSnippet({
@@ -61,6 +64,7 @@ export function buildDataTableSnippet({
     "    { key: 'name', header: 'Name', sortable: true, searchable: true, cell: nameCell },",
     "    { key: 'status', header: 'Status', searchable: true, cell: statusCell },",
     '  ]',
+    stageStateLine('  '),
     '</script>',
     '{#snippet nameCell(row)}',
     '  <strong class="font-medium text-slate-100">{row.name}</strong>',
@@ -74,49 +78,51 @@ export function buildDataTableSnippet({
     '{#snippet tableTrailing()}',
     '  <span class="text-xs text-slate-400">{visibleTotal(rows, pgQuery)} rows</span>',
     '{/snippet}',
-    '<DataTable',
-    '  rows={visibleRows(rows, pgQuery, pgSortKey, pgSortDirection, pgPage, pgPageSize)}',
-    '  columns={columns.filter(column => !hidden.has(column.key))}',
-    '  rowId={row => row.id}',
+    ...stageOpenLines('', 'w-full'),
+    '    <DataTable',
+    '      rows={visibleRows(rows, pgQuery, pgSortKey, pgSortDirection, pgPage, pgPageSize)}',
+    '      columns={columns.filter(column => !hidden.has(column.key))}',
+    '      rowId={row => row.id}',
     ...(showSearch === 'no'
       ? []
       : [
-          '  searchAriaLabel="Search rows"',
-          '  bind:searchValue={pgQuery}',
-          '  onSearchInput={handleSearchInput}',
+          '      searchAriaLabel="Search rows"',
+          '      bind:searchValue={pgQuery}',
+          '      onSearchInput={handleSearchInput}',
         ]),
     ...flagLine('showSearch', showSearch),
-    ...(placeholder ? [`  searchPlaceholder="${escapeAttr(placeholder)}"`] : []),
-    ...(emptyMessage ? [`  emptyMessage="${escapeAttr(emptyMessage)}"`] : []),
+    ...(placeholder ? [`      searchPlaceholder="${escapeAttr(placeholder)}"`] : []),
+    ...(emptyMessage ? [`      emptyMessage="${escapeAttr(emptyMessage)}"`] : []),
     ...flagLine('showPagination', showPagination),
-    '  chooserColumns={columns.map(column => ({ key: column.key, header: column.header, checked: !hidden.has(column.key) }))}',
-    '  onToggleColumn={handleToggleColumn}',
-    '  onResetColumns={handleResetColumns}',
-    '  paginationTrailing={tableTrailing}',
-    '  bind:sortKey={pgSortKey}',
-    '  bind:sortDirection={pgSortDirection}',
-    '  total={visibleTotal(rows, pgQuery)}',
-    '  pageSize={pgPageSize}',
-    '  currentPage={pgPage}',
-    '  onPageChange={handlePageChange}',
-    '  onPageSizeChange={handlePageSizeChange}',
+    '      chooserColumns={columns.map(column => ({ key: column.key, header: column.header, checked: !hidden.has(column.key) }))}',
+    '      onToggleColumn={handleToggleColumn}',
+    '      onResetColumns={handleResetColumns}',
+    '      paginationTrailing={tableTrailing}',
+    '      bind:sortKey={pgSortKey}',
+    '      bind:sortDirection={pgSortDirection}',
+    '      total={visibleTotal(rows, pgQuery)}',
+    '      pageSize={pgPageSize}',
+    '      currentPage={pgPage}',
+    '      onPageChange={handlePageChange}',
+    '      onPageSizeChange={handlePageSizeChange}',
     ...flagLine('selectable', selectable),
     ...(selectable === 'yes'
       ? [
-          '  selectedIds={pgSelected}',
-          '  onToggleSelection={(id, checked) => (pgSelected = toggleSelection(pgSelected, id, checked))}',
-          '  onToggleAll={() => (pgSelected = toggleAllSelected(pgSelected, rows.map(row => row.id)))}',
-          '  allSelected={pgSelected.size > 0 && pgSelected.size === rows.length}',
-          '  someSelected={pgSelected.size > 0 && pgSelected.size < rows.length}',
-          '  selectAllAriaLabel="Select all rows"',
-          '  rowSelectAriaLabel={row => `Select ${row.name}`}',
+          '      selectedIds={pgSelected}',
+          '      onToggleSelection={(id, checked) => (pgSelected = toggleSelection(pgSelected, id, checked))}',
+          '      onToggleAll={() => (pgSelected = toggleAllSelected(pgSelected, rows.map(row => row.id)))}',
+          '      allSelected={pgSelected.size > 0 && pgSelected.size === rows.length}',
+          '      someSelected={pgSelected.size > 0 && pgSelected.size < rows.length}',
+          '      selectAllAriaLabel="Select all rows"',
+          '      rowSelectAriaLabel={row => `Select ${row.name}`}',
         ]
       : []),
     ...flagLine('dense', dense),
     ...flagLine('resizable', resizable),
-    ...(resizable === 'yes' ? ['  resizeAriaLabel={column => `Resize ${column.header}`}'] : []),
+    ...(resizable === 'yes' ? ['      resizeAriaLabel={column => `Resize ${column.header}`}'] : []),
     ...flagLine('loading', loading),
-    '/>',
+    '    />',
+    ...stageCloseLines(''),
   ]
   return lines.join('\n')
 }

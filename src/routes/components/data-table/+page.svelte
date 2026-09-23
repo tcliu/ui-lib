@@ -10,9 +10,12 @@
   import PropsTable, { type PropRow } from '$lib/showcase/PropsTable.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
+  import ShowcaseStage from '$lib/showcase/ShowcaseStage.svelte'
+  import { STAGE_RESIZE_DEFAULT } from '$lib/showcase/resizable-stage'
   import { buildDataTableSnippet, type DemoRow, type TriState } from './demo-snippet'
 
   const i18n = getI18nContext()
+  const stageResizeLabel = i18n.t('showcase.resizeDemo')
 
   const rows: DemoRow[] = [
     { id: 'p1', name: 'Catalog', status: 'Active' },
@@ -50,6 +53,9 @@
   let pgSortKey = $state<string | null>(null)
   let pgSortDirection = $state<'asc' | 'desc'>('asc')
   let pgSelected = $state(new Set<string>())
+  // Stage width is interaction state, not a curated option, so it stays out of
+  // isCustomized and Reset only restores it to the full-width default.
+  let pgStageWidth = $state(STAGE_RESIZE_DEFAULT)
 
   const pgPageSize = $derived.by(() => {
     const parsed = Number.parseInt(pgPageSizeText, 10)
@@ -105,6 +111,7 @@
     pgSortKey = null
     pgSortDirection = 'asc'
     pgSelected = new Set<string>()
+    pgStageWidth = STAGE_RESIZE_DEFAULT
   }
 
   function matches(row: DemoRow, text: string): boolean {
@@ -389,7 +396,7 @@
   </div>
 {/snippet}
 
-<ShowcasePage name="DataTable" props={propsSnippet}>
+<ShowcasePage name="DataTable" props={propsSnippet} wide>
   <ShowcaseSection
     title={sectionTitle}
     code={code}
@@ -417,42 +424,48 @@
       handleToggleColumn,
       handleResetColumns,
       handlePageChange,
-      handlePageSizeChange
+      handlePageSizeChange,
+      resizeLabel: stageResizeLabel
     }}>
-    <DataTable
-      rows={pageRows}
-      columns={visibleColumns}
-      rowId={row => row.id}
-      searchAriaLabel="Search rows"
-      bind:searchValue={pgQuery}
-      onSearchInput={handleSearchInput}
-      showSearch={showSearch}
-      searchPlaceholder={pgPlaceholder || undefined}
-      emptyMessage={pgEmptyMessage || undefined}
-      showPagination={showPagination}
-      chooserColumns={chooserEntries}
-      onToggleColumn={handleToggleColumn}
-      onResetColumns={handleResetColumns}
-      paginationTrailing={tableTrailing}
-      bind:sortKey={pgSortKey}
-      bind:sortDirection={pgSortDirection}
-      total={rowTotal}
-      pageSize={pgPageSize}
-      currentPage={pgPage}
-      onPageChange={handlePageChange}
-      onPageSizeChange={handlePageSizeChange}
-      selectable={selectable}
-      selectedIds={pgSelected}
-      onToggleSelection={handleToggleSelection}
-      onToggleAll={handleToggleAll}
-      allSelected={allRowsSelected}
-      someSelected={someRowsSelected}
-      selectAllAriaLabel="Select all rows"
-      rowSelectAriaLabel={row => `Select ${row.name}`}
-      dense={dense}
-      resizable={resizable}
-      resizeAriaLabel={column => `Resize ${column.header}`}
-      loading={loading} />
+    <ShowcaseStage
+      value={pgStageWidth}
+      onChange={next => (pgStageWidth = next)}
+      paneClass="w-full"
+      resizeLabel={stageResizeLabel}>
+      <DataTable
+        rows={pageRows}
+        columns={visibleColumns}
+        rowId={row => row.id}
+        searchAriaLabel="Search rows"
+        bind:searchValue={pgQuery}
+        onSearchInput={handleSearchInput}
+        showSearch={showSearch}
+        searchPlaceholder={pgPlaceholder || undefined}
+        emptyMessage={pgEmptyMessage || undefined}
+        showPagination={showPagination}
+        chooserColumns={chooserEntries}
+        onToggleColumn={handleToggleColumn}
+        onResetColumns={handleResetColumns}
+        paginationTrailing={tableTrailing}
+        bind:sortKey={pgSortKey}
+        bind:sortDirection={pgSortDirection}
+        total={rowTotal}
+        pageSize={pgPageSize}
+        currentPage={pgPage}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+        selectable={selectable}
+        selectedIds={pgSelected}
+        onToggleSelection={handleToggleSelection}
+        onToggleAll={handleToggleAll}
+        allSelected={allRowsSelected}
+        someSelected={someRowsSelected}
+        selectAllAriaLabel="Select all rows"
+        rowSelectAriaLabel={row => `Select ${row.name}`}
+        dense={dense}
+        resizable={resizable}
+        resizeAriaLabel={column => `Resize ${column.header}`}
+        loading={loading} />
+    </ShowcaseStage>
   </ShowcaseSection>
-
 </ShowcasePage>

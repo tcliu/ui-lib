@@ -13,12 +13,20 @@ import Button from '$lib/components/Button.svelte'
 import Buttons from '$lib/components/Buttons.svelte'
 import Checkbox from '$lib/components/Checkbox.svelte'
 import Chip from '$lib/components/Chip.svelte'
+import ChipDropdown from '$lib/components/ChipDropdown.svelte'
+import CodeEditor from '$lib/components/CodeEditor.svelte'
+import ColumnChooser from '$lib/components/ColumnChooser.svelte'
 import Combobox from '$lib/components/Combobox.svelte'
+import ConfirmDialog from '$lib/components/ConfirmDialog.svelte'
 import Copyable from '$lib/components/Copyable.svelte'
+import CopyButton from '$lib/components/CopyButton.svelte'
+import DataGrid from '$lib/components/DataGrid.svelte'
 import DataTable from '$lib/components/DataTable.svelte'
 import DateRangePicker from '$lib/components/DateRangePicker.svelte'
+import EditableText from '$lib/components/EditableText.svelte'
 import EditDialog from '$lib/components/EditDialog.svelte'
 import FormField from '$lib/components/FormField.svelte'
+import LazyCodeEditor from '$lib/components/LazyCodeEditor.svelte'
 import Menu from '$lib/components/Menu.svelte'
 import NumberInput from '$lib/components/NumberInput.svelte'
 import Pagination from '$lib/components/Pagination.svelte'
@@ -26,6 +34,7 @@ import PasswordInput from '$lib/components/PasswordInput.svelte'
 import SearchInput from '$lib/components/SearchInput.svelte'
 import SelectDropdown from '$lib/components/SelectDropdown.svelte'
 import Spinner from '$lib/components/Spinner.svelte'
+import Splitter from '$lib/components/Splitter.svelte'
 import Tabs from '$lib/components/Tabs.svelte'
 import TagInput from '$lib/components/TagInput.svelte'
 import Toast from '$lib/components/Toast.svelte'
@@ -85,12 +94,20 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/Buttons.svelte': { default: Buttons },
   'ui/Checkbox.svelte': { default: Checkbox },
   'ui/Chip.svelte': { default: Chip },
+  'ui/ChipDropdown.svelte': { default: ChipDropdown },
+  'ui/CodeEditor.svelte': { default: CodeEditor },
+  'ui/ColumnChooser.svelte': { default: ColumnChooser },
   'ui/Combobox.svelte': { default: Combobox },
+  'ui/ConfirmDialog.svelte': { default: ConfirmDialog },
   'ui/Copyable.svelte': { default: Copyable },
+  'ui/CopyButton.svelte': { default: CopyButton },
+  'ui/DataGrid.svelte': { default: DataGrid },
   'ui/DataTable.svelte': { default: DataTable },
   'ui/DateRangePicker.svelte': { default: DateRangePicker },
+  'ui/EditableText.svelte': { default: EditableText },
   'ui/EditDialog.svelte': { default: EditDialog },
   'ui/FormField.svelte': { default: FormField },
+  'ui/LazyCodeEditor.svelte': { default: LazyCodeEditor },
   'ui/Menu.svelte': { default: Menu },
   'ui/NumberInput.svelte': { default: NumberInput },
   'ui/Pagination.svelte': { default: Pagination },
@@ -98,6 +115,7 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/SearchInput.svelte': { default: SearchInput },
   'ui/SelectDropdown.svelte': { default: SelectDropdown },
   'ui/Spinner.svelte': { default: Spinner },
+  'ui/Splitter.svelte': { default: Splitter },
   'ui/Tabs.svelte': { default: Tabs },
   'ui/TagInput.svelte': { default: TagInput },
   'ui/Toast.svelte': { default: Toast },

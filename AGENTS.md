@@ -55,6 +55,12 @@ Project-specific development conventions for the UI Library web app.
   snippets, so an app whose tags carry extra data (e.g. `{ name, color }`) maps
   that object model to `string[]` at the call site instead of forking a second
   tag-input component. It exports `focus()` for dialog autofocus.
+- Spreadsheet editing stays one shared control: `DataGrid` models `string[][]`
+  and covers header/column-label, fixed-column, resize-persistence, and
+  read-only variants through props (`showHeaders`, `columnLabels`, `maxColumns`,
+  `editable`, `storageKey`), together with its `use-grid-*` hooks and grid
+  icons, so an app needing a CSV or key/value editor reuses it instead of
+  forking a grid.
 - Never combine `align` with `className` on `Buttons`: a custom `className`
   replaces the default row and silently drops `align`; spell the row out
   (`flex w-full … justify-end`) instead.
@@ -73,7 +79,7 @@ Project-specific development conventions for the UI Library web app.
   so a missing key fails the build). A consuming app's locale
   dictionaries must define the shared keys (`common.*`, `number.*`, `dropdown.*`,
   `pagination.*`, `tabs.label`, `search.placeholder`, `splitter.*`, `password.*`,
-  `combobox.*`, `tagInput.*`, `kebab.*`, `range.*`, and `appShell.*`).
+  `combobox.*`, `tagInput.*`, `kebab.*`, `range.*`, `grid.*`, and `appShell.*`).
 - Component attributes stay camelCase.
 - New sized components support the full `xs`–`lg` scale from the start (literal
   per-size classes, never interpolated) instead of growing sizes one use case
@@ -149,6 +155,16 @@ Project-specific development conventions for the UI Library web app.
   them (shared builder constants as the single source), so static demo,
   Show-code, and live render stay identical; every `size` prop gets a panel
   control using the standard `xs`–`lg` options.
+- Showcase demos for the wide components (`DataGrid`, `DataTable`, `Splitter`)
+  use `ShowcasePage wide`, fill the container (no max-width), and render inside
+  `ShowcaseStage` (`src/lib/showcase/ShowcaseStage.svelte`): a pane sized by an
+  inline `flex-basis` percentage plus a `Splitter unit="%"` handle that drags it
+  between 25% and its 100% default, labelled with `showcase.resizeDemo`. The
+  width is interaction state, excluded from `isCustomized` and restored by
+  `Reset`; the page passes the handle label through the section `scope` as
+  `resizeLabel`, and the `demo-snippet` builder emits the same stage from the
+  shared literals in `resizable-stage.ts` (including the snippet's local
+  `stageWidth` state) so static demo and Show-code stay identical.
 
 ## UI behavior
 
