@@ -6,13 +6,14 @@
     name: string
     children: Snippet
     props?: Snippet
+    wide?: boolean
   }
 
-  let { name, children, props }: Props = $props()
+  let { name, children, props, wide = false }: Props = $props()
   const i18n = getI18nContext()
 </script>
 
-<div class="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6">
+<div class={`mx-auto flex w-full flex-col gap-6 px-4 py-6 ${wide ? 'max-w-5xl' : 'max-w-3xl'}`}>
   <h1 class="text-base font-semibold tracking-tight sm:text-lg">{name}</h1>
   {@render children()}
   {#if props}
