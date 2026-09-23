@@ -192,6 +192,7 @@
       open: pgOpen,
       draft: pgDraft,
       saved: pgSaved,
+      openDialogLabel: i18n.t('showcase.openDialog'),
       dialogTitle: i18n.t('showcase.dialogTitle'),
       closeLabel: i18n.t('common.close'),
       okLabel: i18n.t('common.ok'),
