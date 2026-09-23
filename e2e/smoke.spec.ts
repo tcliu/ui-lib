@@ -192,6 +192,89 @@ test('showcase: the picker toggle hides and shows the component pane', async ({ 
 	await expect(search).toBeVisible();
 });
 
+test('showcase: the component pane floats above content on narrow viewports', async ({ page }) => {
+	await page.setViewportSize({ width: 500, height: 800 });
+	await page.goto('/components/base-dialog');
+	// Hydration binds the drawer handlers; the docked slide-in (200ms) must
+	// also settle before measuring boxes.
+	await page.waitForLoadState('networkidle');
+	await page.waitForTimeout(400);
+	const search = page.getByRole('searchbox', { name: 'Search components' });
+	const backdrop = page.getByRole('button', { name: 'Close pane' });
+	await expect(search).toBeVisible();
+	await expect(backdrop).toBeVisible();
+	// The floating overlay contains focus: the main column is inert behind it.
+	await expect(page.locator('main')).toHaveAttribute('inert', '');
+
+	// Floating removes the pane from the flow: it overlaps the main column
+	// instead of squeezing beside it.
+	const paneBox = await search.boundingBox();
+	const headingBox = await page.getByRole('heading', { level: 1, name: 'BaseDialog' }).boundingBox();
+	expect(paneBox).not.toBeNull();
+	expect(headingBox).not.toBeNull();
+	expect(paneBox!.x + paneBox!.width).toBeGreaterThan(headingBox!.x);
+
+	// Escape closes the overlay, returns focus to the main column, and lifts
+	// its inert state.
+	await page.keyboard.press('Escape');
+	await expect(search).toBeHidden();
+	await expect(backdrop).toBeHidden();
+	await expect(page.locator('main')).not.toHaveAttribute('inert', '');
+	await expect(page.locator('main')).toBeFocused();
+
+	// The header toggle reopens the drawer.
+	await page.getByRole('button', { name: 'Toggle component picker' }).click();
+	await expect(search).toBeVisible();
+	await expect(backdrop).toBeVisible();
+});
+
+test('showcase: the component pane docks beside content on wide viewports', async ({ page }) => {
+	await page.setViewportSize({ width: 1280, height: 800 });
+	await page.goto('/components/base-dialog');
+	await page.waitForLoadState('networkidle');
+	await page.waitForTimeout(400);
+	await expect(page.getByRole('searchbox', { name: 'Search components' })).toBeVisible();
+	await expect(page.getByRole('button', { name: 'Close pane' })).toHaveCount(0);
+	// The pane is docked in the flow, not overlaying.
+	await expect(page.locator('[data-drawer-presentation="docked"]')).toHaveCount(1);
+
+	// Docked shares the row: the pane ends where the main column begins.
+	const paneBox = await page.locator('aside').boundingBox();
+	const mainBox = await page.locator('main').boundingBox();
+	expect(paneBox).not.toBeNull();
+	expect(mainBox).not.toBeNull();
+	expect(Math.abs(paneBox!.x + paneBox!.width - mainBox!.x)).toBeLessThanOrEqual(2);
+});
+
+test('showcase: the AppShell demo opens a floating right drawer', async ({ page }) => {
+	await page.goto('/components/app-shell');
+	await page.waitForLoadState('networkidle');
+	const demo = page.getByRole('region', { name: 'Default' });
+	await expect(demo.getByText('Components', { exact: true })).toBeVisible();
+
+	// Enabling the right pane docks it beside the demo content (desktop).
+	await page.getByRole('combobox', { name: 'Right pane' }).click();
+	await page.getByRole('option', { name: 'Open' }).click();
+	const customized = page.getByRole('region', { name: 'Customized' });
+	await expect(customized.getByRole('button', { name: 'Hide right pane' })).toBeVisible();
+
+	// Pinning floating mode overlays both drawers behind one backdrop.
+	await page.getByRole('combobox', { name: 'Drawer mode' }).click();
+	await page.getByRole('option', { name: 'Floating' }).click();
+	await expect(customized.getByRole('button', { name: 'Close pane' })).toBeVisible();
+	// The docked panes slide out (200ms); wait until they detach so later
+	// assertions never catch a mid-transition duplicate.
+	await expect(customized.locator('[data-drawer-presentation="docked"]')).toHaveCount(0);
+
+	// Escape closes the right drawer first, then the left one.
+	await page.keyboard.press('Escape');
+	await expect(customized.getByRole('button', { name: 'Show right pane' })).toBeVisible();
+	await expect(customized.getByText('Components', { exact: true })).toBeVisible();
+	await page.keyboard.press('Escape');
+	await expect(customized.getByRole('button', { name: 'Close pane' })).toHaveCount(0);
+	await expect(customized.getByText('Components', { exact: true })).toHaveCount(0);
+});
+
 test('showcase: a deep link selects its component in the picker', async ({ page }) => {
 	await page.goto('/components/tabs');
 	await expect(page.getByRole('heading', { level: 1, name: 'Tabs' })).toBeVisible();

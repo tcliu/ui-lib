@@ -60,6 +60,13 @@ Project-specific development conventions for the UI Library web app.
   (`flex w-full … justify-end`) instead.
 - The `AppShell` aside carries no padding: left-pane content owns its own
   spacing, so shell and pane padding never need compensating values.
+- `AppShell` presents each pane docked beside the content while its own
+  container is wide and as an overlay drawer when narrow (`mode="auto"`,
+  measured on the shell container with `ResizeObserver`, not the viewport);
+  rail-collapse panes always dock, and both panes share one per-side controller
+  (`use-app-shell-drawer.svelte.ts`). A floating overlay marks the main column
+  `inert` so focus stays in the drawer, and every floating dismissal
+  (backdrop, Escape) is gated to overlay mode.
 - The shared primitives resolve labels as `$derived(prop ?? i18n.t('key'))` and
   fall back to the locales in `src/lib/locales/`; a consuming app's locale
   dictionaries must define the shared keys (`common.*`, `number.*`, `dropdown.*`,

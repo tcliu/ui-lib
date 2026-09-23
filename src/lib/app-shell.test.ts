@@ -7,6 +7,7 @@ import {
   clampPaneWidth,
   collapsesToRail,
   loadPaneSize,
+  resolveDrawerFloating,
   savePaneSize,
 } from './app-shell'
 
@@ -32,6 +33,20 @@ describe('collapsesToRail', () => {
   it('collapses at or below the rail width', () => {
     expect(collapsesToRail(APP_SHELL_RAIL_WIDTH, APP_SHELL_RAIL_WIDTH)).toBe(true)
     expect(collapsesToRail(APP_SHELL_RAIL_WIDTH + 1, APP_SHELL_RAIL_WIDTH)).toBe(false)
+  })
+})
+
+describe('resolveDrawerFloating', () => {
+  it('pins explicit modes regardless of layout', () => {
+    expect(resolveDrawerFloating('docked', false)).toBe(false)
+    expect(resolveDrawerFloating('docked', true)).toBe(false)
+    expect(resolveDrawerFloating('floating', false)).toBe(true)
+    expect(resolveDrawerFloating('floating', true)).toBe(true)
+  })
+
+  it('floats below the desktop breakpoint in auto mode', () => {
+    expect(resolveDrawerFloating('auto', false)).toBe(true)
+    expect(resolveDrawerFloating('auto', true)).toBe(false)
   })
 })
 
