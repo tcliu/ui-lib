@@ -9,7 +9,7 @@ for how to write code in this project, see `AGENTS.md`.
 
 - **Svelte 5** (runes) + **SvelteKit** (routing, server endpoints)
 - **Tailwind CSS v4** (utility-first styling, theme via CSS variable overrides)
-- **Vercel** deployment (`@sveltejs/adapter-vercel`, Node.js runtime)
+- **Vercel** deployment by default (`@sveltejs/adapter-vercel`, Node.js runtime), or **Cloudflare Pages** (`@sveltejs/adapter-cloudflare`, selected by `CF_PAGES=1`)
 
 ## Project structure
 
@@ -33,7 +33,9 @@ ui-lib/
 │       │   └── catalog-card.ts   # Shared catalog-card contract (normalize + resolve)
 │       └── use-*.svelte.ts       # Composable factories (domain state, added per feature)
 ├── scripts/
-│   ├── deploy.mjs                # Production deploy to Vercel
+│   ├── deploy.mjs                # Deploy entry (config -> interview -> plugin pipeline)
+│   ├── deploy.config.mjs         # Deploy-plugin selection (project-owned)
+│   ├── _deploy/                  # Pipeline core + targets/{vercel,cloudflare} + plugins
 │   ├── sync-vercel-env.mjs       # Push .env.vercel values to the Vercel project
 │   ├── create-worktree.mjs       # Worktree creation
 │   ├── worktree-manager.mjs      # TUI worktree manager
