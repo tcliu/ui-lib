@@ -29,8 +29,10 @@ view:
   components; selecting one routes to its page and marks it active.
 - **Right pane**: the selected component's showcase page, which scrolls.
 
-On narrow viewports the panes stack vertically (list on top) and the splitter
-resizes the list's height instead of its width.
+On narrow viewports the list becomes an overlay drawer above the dimmed
+content (below the 768px shell-container breakpoint in `auto` mode) instead
+of stacking; a pinned `docked` pane stays an in-flow row at every width and
+the content scrolls beside it.
 
 ## Theming
 

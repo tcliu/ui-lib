@@ -254,6 +254,12 @@ test('showcase: the component pane floats above content on narrow viewports', as
 	await expect(backdrop).toBeVisible();
 	// The floating overlay contains focus: the main column is inert behind it.
 	await expect(page.locator('main')).toHaveAttribute('inert', '');
+	// The overlay's own surface is opaque, so content behind the pane never
+	// shows through its body around the controls.
+	await expect(page.locator('[data-drawer-presentation="floating"]')).not.toHaveCSS(
+		'background-color',
+		'rgba(0, 0, 0, 0)',
+	);
 
 	// Floating removes the pane from the flow: it overlaps the main column
 	// instead of squeezing beside it.
@@ -293,6 +299,12 @@ test('showcase: the component pane docks beside content on wide viewports', asyn
 	expect(paneBox).not.toBeNull();
 	expect(mainBox).not.toBeNull();
 	expect(Math.abs(paneBox!.x + paneBox!.width - mainBox!.x)).toBeLessThanOrEqual(2);
+	// The wrapper owns the explicit pane width, so the fixed-size aside can
+	// never overflow it (content-dependent intrinsic sizing once let the
+	// aside's border cross into the main column on narrower font metrics).
+	const wrapperBox = await page.locator('[data-drawer-presentation="docked"]').boundingBox();
+	expect(wrapperBox).not.toBeNull();
+	expect(Math.abs(wrapperBox!.width - paneBox!.width)).toBeLessThanOrEqual(1);
 });
 
 test('showcase: the AppShell demo opens a floating right drawer', async ({ page }) => {
@@ -300,12 +312,14 @@ test('showcase: the AppShell demo opens a floating right drawer', async ({ page 
 	await page.waitForLoadState('networkidle');
 	const demo = page.getByRole('region', { name: 'Default' });
 	await expect(demo.getByText('Components', { exact: true })).toBeVisible();
+	const rightPane = () => page.getByRole('complementary', { name: 'Right pane' });
 
 	// Enabling the right pane docks it beside the demo content (desktop).
 	await page.getByRole('combobox', { name: 'Right pane' }).click();
 	await page.getByRole('option', { name: 'Open' }).click();
 	const customized = page.getByRole('region', { name: 'Customized' });
-	await expect(customized.getByRole('button', { name: 'Hide right pane' })).toBeVisible();
+	await expect(rightPane()).toBeVisible();
+	await expect(customized.locator('[data-drawer-presentation="docked"]')).toHaveCount(2);
 
 	// Pinning floating mode overlays both drawers behind one backdrop.
 	await page.getByRole('combobox', { name: 'Drawer mode' }).click();
@@ -317,7 +331,7 @@ test('showcase: the AppShell demo opens a floating right drawer', async ({ page 
 
 	// Escape closes the right drawer first, then the left one.
 	await page.keyboard.press('Escape');
-	await expect(customized.getByRole('button', { name: 'Show right pane' })).toBeVisible();
+	await expect(rightPane()).toBeHidden();
 	await expect(customized.getByText('Components', { exact: true })).toBeVisible();
 	await page.keyboard.press('Escape');
 	await expect(customized.getByRole('button', { name: 'Close pane' })).toHaveCount(0);

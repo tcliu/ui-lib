@@ -1,20 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { APP_SHELL_DESKTOP_BREAKPOINT } from '$lib/app-shell'
 import { buildAppShellSnippet } from './demo-snippet'
 
-const unset = { collapseMode: '', visibility: '', mode: '', rightPane: '' }
+const unset = { collapseMode: '', visibility: '', mode: '', rightPane: '', footer: '' }
 
 describe('buildAppShellSnippet', () => {
-  it('keeps the demo stage at or above the dock breakpoint', () => {
+  it('stays responsive without horizontal scrolling', () => {
     const source = buildAppShellSnippet(unset)
-    // The demo stage must stay wide enough that the shell's own container
-    // never falls under the breakpoint, which would float the pane over the
-    // text instead of docking it beside the content.
-    const match = source.match(/min-w-\[(\d+(?:\.\d+)?)rem\]/)
-    expect(match).not.toBeNull()
-    expect(Number(match![1]) * 16).toBeGreaterThanOrEqual(APP_SHELL_DESKTOP_BREAKPOINT)
-    // The scroll wrapper is a non-interactive overflow container.
-    expect(source).toContain('overflow-x-auto" tabindex="-1"')
+    // The demo stage is fluid: no fixed min-width and no horizontal scroll
+    // wrapper, so the shell floats its pane over the text when narrow.
+    expect(source).not.toMatch(/min-w-\[/)
+    expect(source).not.toContain('overflow-x-auto')
+    expect(source).toContain('w-full min-w-0 flex-col overflow-hidden')
   })
 
   it('renders a bare AppShell while unset', () => {
@@ -24,6 +20,7 @@ describe('buildAppShellSnippet', () => {
     expect(source).not.toContain('open=')
     expect(source).not.toContain('mode=')
     expect(source).not.toContain('rightPane')
+    expect(source).not.toContain('{#snippet footer()}')
   })
 
   it('emits collapseMode and closed state separately', () => {
@@ -43,11 +40,34 @@ describe('buildAppShellSnippet', () => {
     expect(source).toContain('{bodyText}')
   })
 
+  it('emits the footer snippet when shown', () => {
+    const source = buildAppShellSnippet({ ...unset, footer: 'show' })
+    expect(source).toContain('{#snippet footer()}')
+    expect(source).toContain('{navLabel}')
+    expect(source).toContain('{demoTitle}')
+    // The footer reproduces the static demo's row wrapper.
+    expect(source).toContain('<div class="flex min-w-0 flex-1 items-center justify-between gap-4">')
+  })
+
   it('keeps the header and pane snippets behind the demo', () => {
     const source = buildAppShellSnippet(unset)
-    expect(source).toContain('{#snippet headerLeft()}')
+    expect(source).toContain('{#snippet header(api)}')
     expect(source).toContain('{demoTitle}')
     expect(source).toContain('{navLabel}')
     expect(source).toContain('{bodyText}')
+  })
+
+  it('reproduces the static header markup through scope labels only', () => {
+    const source = buildAppShellSnippet(unset)
+    // The playground scope exposes `showLabel`/`hideLabel`, not the page's i18n
+    // helper: a bare `i18n` reference would throw when the snippet renders.
+    expect(source).not.toContain('i18n')
+    expect(source).toContain('{@const toggleLabel = api.open ? hideLabel : showLabel}')
+    // Same props and class strings as the static demo's toggle and title.
+    expect(source).toContain('className="-ml-1"')
+    expect(source).toContain('tooltip={toggleLabel}')
+    expect(source).toContain('tooltipAlign="left"')
+    expect(source).toContain('preventFocusSteal')
+    expect(source).toContain('class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-200"')
   })
 })

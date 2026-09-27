@@ -4,6 +4,9 @@
   import { page } from '$app/state'
   import { APP_SHELL_DEFAULT_WIDTH } from '$lib/app-shell'
   import AppShell from '$lib/components/AppShell.svelte'
+  import Button from '$lib/components/Button.svelte'
+  import MenuIcon from '$lib/icons/MenuIcon.svelte'
+  import type { AppShellHeaderApi } from '$lib/app-shell'
   import LanguageMenu from './_chrome/LanguageMenu.svelte'
   import SearchInput from '$lib/components/SearchInput.svelte'
   import ThemeMenu from './_chrome/ThemeMenu.svelte'
@@ -35,17 +38,32 @@
   <AppShell
     open={pickerOpen}
     paneSize={paneSize}
-    toggleShowLabel={i18n.t('showcase.toggleComponents')}
-    toggleHideLabel={i18n.t('showcase.toggleComponents')}
     resizeLabel={i18n.t('splitter.resize')}
     onOpenChange={setPickerOpen}
     onPaneChange={value => (paneSize = value)}>
-    {#snippet headerLeft()}
-      <h1 class="text-base font-semibold tracking-tight text-slate-200 sm:text-lg">{i18n.t('showcase.title')}</h1>
-    {/snippet}
-    {#snippet headerRight()}
-      <ThemeMenu align="right" />
-      <LanguageMenu align="right" />
+    {#snippet header(api: AppShellHeaderApi)}
+      <Button
+        variant="secondary"
+        size="sm"
+        className="-ml-1"
+        ariaLabel={i18n.t('showcase.toggleComponents')}
+        ariaExpanded={api.open}
+        tooltip={i18n.t('showcase.toggleComponents')}
+        tooltipAlign="left"
+        preventFocusSteal
+        onClick={api.toggleLeft}>
+        {#snippet icon()}
+          <MenuIcon className="h-4 w-4" />
+        {/snippet}
+      </Button>
+      <div class="flex min-w-0 flex-1 items-center justify-between gap-4">
+        <h1 class="min-w-0 truncate text-base font-semibold tracking-tight text-slate-200 sm:text-lg"
+          >{i18n.t('showcase.title')}</h1>
+        <div class="flex items-center gap-2">
+          <ThemeMenu align="right" />
+          <LanguageMenu align="right" />
+        </div>
+      </div>
     {/snippet}
     {#snippet leftPane()}
       <SearchInput bind:value={query} ariaLabel={i18n.t('showcase.searchComponents')} wrapperClass="px-2 pt-3 sm:px-3" />

@@ -1,6 +1,8 @@
 <script lang="ts">
   import AppShell from '$lib/components/AppShell.svelte'
   import Button from '$lib/components/Button.svelte'
+  import MenuIcon from '$lib/icons/MenuIcon.svelte'
+  import type { AppShellHeaderApi } from '$lib/app-shell'
   import Buttons from '$lib/components/Buttons.svelte'
   import FormField from '$lib/components/FormField.svelte'
   import SelectDropdown from '$lib/components/SelectDropdown.svelte'
@@ -19,6 +21,7 @@
   let pgCollapseMode = $state('')
   let pgVisibility = $state('')
   let pgRightPane = $state('')
+  let pgFooter = $state('')
 
   const modeOptions = [
     { value: 'docked', label: 'Docked' },
@@ -30,20 +33,23 @@
   ]
   const visibilityOptions = [{ value: 'closed', label: 'Closed' }]
   const rightPaneOptions = [{ value: 'open', label: 'Open' }]
+  const footerOptions = [{ value: 'show', label: 'Show' }]
 
   const demoDrawerMode = $derived((pgMode || undefined) as 'docked' | 'floating' | undefined)
   const demoMode = $derived((pgCollapseMode || undefined) as 'hide' | 'rail' | undefined)
   const demoOpen = $derived(pgVisibility !== 'closed')
   const demoRightOpen = $derived(pgRightPane === 'open')
+  const demoFooterOpen = $derived(pgFooter === 'show')
 
-  const isCustomized = $derived(pgMode !== '' || pgCollapseMode !== '' || pgVisibility !== '' || pgRightPane !== '')
+  const isCustomized = $derived(pgMode !== '' || pgCollapseMode !== '' || pgVisibility !== '' || pgRightPane !== '' || pgFooter !== '')
   const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
 
-  function clearPlayground() {
+  function clearPlayground(): void {
     pgMode = ''
     pgCollapseMode = ''
     pgVisibility = ''
     pgRightPane = ''
+    pgFooter = ''
   }
 
   const code = $derived.by(() =>
@@ -52,6 +58,7 @@
       visibility: pgVisibility,
       mode: pgMode,
       rightPane: pgRightPane,
+      footer: pgFooter,
     }),
   )
 
@@ -60,7 +67,7 @@
       name: 'mode',
       type: "'auto' | 'docked' | 'floating'",
       defaultValue: "'auto'",
-      note: 'Auto docks beside content while the shell container is wide and floats above it when narrow (measured on the shell, not the viewport). Rail panes always dock.',
+      note: 'Auto docks beside content while the shell container is wide and floats above it when narrow (measured on the shell, not the viewport). Pinned docked stays an in-flow row at every width; rail panes float as an open-or-closed overlay below the breakpoint.',
     },
     {
       name: 'open',
@@ -99,19 +106,6 @@
       type: 'string | undefined',
       defaultValue: 'undefined',
       note: 'Optional persistence; default none (session-only, no storage touch).',
-    },
-    { name: 'showToggle', type: 'boolean', defaultValue: 'true', note: 'Header collapse toggle (Button + MenuIcon).' },
-    {
-      name: 'toggleShowLabel',
-      type: 'string | undefined',
-      defaultValue: "i18n 'appShell.showPane'",
-      note: 'Label override for the closed toggle.',
-    },
-    {
-      name: 'toggleHideLabel',
-      type: 'string | undefined',
-      defaultValue: "i18n 'appShell.hidePane'",
-      note: 'Label override for the open toggle.',
     },
     {
       name: 'resizeLabel',
@@ -162,24 +156,6 @@
       note: 'Optional persistence for the right pane width.',
     },
     {
-      name: 'showRightToggle',
-      type: 'boolean',
-      defaultValue: 'true',
-      note: 'Header toggle for the right pane (renders when rightPane is passed).',
-    },
-    {
-      name: 'rightToggleShowLabel',
-      type: 'string | undefined',
-      defaultValue: "i18n 'appShell.showRightPane'",
-      note: 'Label override for the closed right toggle.',
-    },
-    {
-      name: 'rightToggleHideLabel',
-      type: 'string | undefined',
-      defaultValue: "i18n 'appShell.hideRightPane'",
-      note: 'Label override for the open right toggle.',
-    },
-    {
       name: 'rightResizeLabel',
       type: 'string | undefined',
       defaultValue: "i18n 'appShell.resizeRight'",
@@ -216,12 +192,17 @@
       defaultValue: '—',
       note: 'Fires after right drag; width already persisted.',
     },
-    { name: 'headerLeft', type: 'Snippet', defaultValue: '—', note: 'Brand content left of the header toggle row.' },
     {
-      name: 'headerRight',
+      name: 'header',
+      type: 'Snippet<[AppShellHeaderApi]>',
+      defaultValue: '—',
+      note: 'Header content; receives open/rightOpen state plus toggleLeft/toggleRight callbacks for caller-rendered toggles.',
+    },
+    {
+      name: 'footer',
       type: 'Snippet',
       defaultValue: '—',
-      note: 'Controls (theme, language) at the header right.',
+      note: 'Footer content; rendered only when passed.',
     },
     {
       name: 'leftPane',
@@ -240,6 +221,13 @@
 
 {#snippet rightPaneContent()}
   <p class="px-3 py-2 text-sm text-slate-300">{i18n.t('showcase.intro')}</p>
+{/snippet}
+
+{#snippet footerContent()}
+  <div class="flex min-w-0 flex-1 items-center justify-between gap-4">
+    <span class="text-xs text-slate-400">{i18n.t('showcase.components')}</span>
+    <span class="text-xs text-slate-400">{i18n.t('showcase.title')}</span>
+  </div>
 {/snippet}
 
 {#snippet propsSnippet()}
@@ -295,6 +283,17 @@
         clearLabel="Clear right pane"
         onClear={() => (pgRightPane = '')} />
     </FormField>
+    <FormField label="Footer">
+      <SelectDropdown
+        buttonLabel={footerOptions.find(option => option.value === pgFooter)?.label ?? 'Default'}
+        activeValue={pgFooter}
+        ariaLabel="Footer"
+        options={footerOptions}
+        onSelect={value => (pgFooter = value)}
+        clearable
+        clearLabel="Clear footer"
+        onClear={() => (pgFooter = '')} />
+    </FormField>
   </div>
 {/snippet}
 
@@ -307,30 +306,44 @@
       demoTitle: i18n.t('showcase.title'),
       navLabel: i18n.t('showcase.components'),
       bodyText: i18n.t('showcase.intro'),
+      showLabel: i18n.t('appShell.showPane'),
+      hideLabel: i18n.t('appShell.hidePane'),
     }}>
-    <!-- The stage keeps the shell's own container at or above the dock
-      breakpoint so the demo shows the docked layout instead of `auto` floating
-      the pane over the text whenever the page (or an embedding preview pane)
-      is narrower. Narrower viewports scroll this stage instead of the page. -->
-    <div class="w-full min-w-0 overflow-x-auto" tabindex="-1">
-      <div class="flex h-80 w-full min-w-[49rem] flex-col overflow-hidden rounded-lg border border-slate-800">
-        <AppShell
-          mode={demoDrawerMode}
-          collapseMode={demoMode}
-          open={demoOpen}
-          rightOpen={demoRightOpen}
-          rightPane={demoRightOpen ? rightPaneContent : undefined}>
-          {#snippet headerLeft()}
-            <span class="text-sm font-semibold text-slate-200">{i18n.t('showcase.title')}</span>
-          {/snippet}
-          {#snippet leftPane()}
-            <p class="px-3 py-2 text-sm text-slate-300">{i18n.t('showcase.components')}</p>
-          {/snippet}
-          <p class="p-4 text-sm text-slate-300">{i18n.t('showcase.intro')}</p>
-        </AppShell>
-      </div>
+    <!-- The stage is fluid: the shell measures its own container and floats
+      the pane over the text when narrow, so shrinking the viewport never
+      needs horizontal scrolling. -->
+    <div class="flex h-80 w-full min-w-0 flex-col overflow-hidden rounded-lg border border-slate-800">
+      <AppShell
+        mode={demoDrawerMode}
+        collapseMode={demoMode}
+        open={demoOpen}
+        rightOpen={demoRightOpen}
+        rightPane={demoRightOpen ? rightPaneContent : undefined}
+        footer={demoFooterOpen ? footerContent : undefined}>
+        {#snippet header(api: AppShellHeaderApi)}
+          {@const toggleLabel = api.open ? i18n.t('appShell.hidePane') : i18n.t('appShell.showPane')}
+          <Button
+            variant="secondary"
+            size="sm"
+            className="-ml-1"
+            ariaLabel={toggleLabel}
+            ariaExpanded={api.open}
+            tooltip={toggleLabel}
+            tooltipAlign="left"
+            preventFocusSteal
+            onClick={api.toggleLeft}>
+            {#snippet icon()}
+              <MenuIcon className="h-4 w-4" />
+            {/snippet}
+          </Button>
+          <span class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-200"
+            >{i18n.t('showcase.title')}</span>
+        {/snippet}
+        {#snippet leftPane()}
+          <p class="px-3 py-2 text-sm text-slate-300">{i18n.t('showcase.components')}</p>
+        {/snippet}
+        <p class="p-4 text-sm text-slate-300">{i18n.t('showcase.intro')}</p>
+      </AppShell>
     </div>
   </ShowcaseSection>
 </ShowcasePage>
-
-

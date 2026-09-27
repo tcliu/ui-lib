@@ -35,8 +35,6 @@ export const zhCN = {
   appShell: {
     showPane: '显示面板',
     hidePane: '隐藏面板',
-    showRightPane: '显示右侧面板',
-    hideRightPane: '隐藏右侧面板',
     closePane: '关闭面板',
     leftPane: '左侧面板',
     rightPane: '右侧面板',

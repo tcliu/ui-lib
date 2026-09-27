@@ -24,6 +24,11 @@ export default defineConfig(async ({ command, mode }) => {
 
   return {
     plugins: [sveltekit(), tailwindcss()],
+    // Vitest runs the SSR transform pipeline, so `svelte` resolves to its
+    // server entry and component mounting is unavailable. Scope the browser
+    // export conditions to vitest only (Svelte's testing guidance); dev/build
+    // keep the framework's own resolution.
+    resolve: process.env.VITEST ? { conditions: ["browser"] } : undefined,
     server: {
       watch: {
         ignored: [

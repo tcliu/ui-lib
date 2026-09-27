@@ -35,8 +35,6 @@ export const en = {
   appShell: {
     showPane: 'Show pane',
     hidePane: 'Hide pane',
-    showRightPane: 'Show right pane',
-    hideRightPane: 'Hide right pane',
     closePane: 'Close pane',
     leftPane: 'Left pane',
     rightPane: 'Right pane',

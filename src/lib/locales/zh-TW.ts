@@ -35,8 +35,6 @@ export const zhTW = {
   appShell: {
     showPane: '顯示面板',
     hidePane: '隱藏面板',
-    showRightPane: '顯示右側面板',
-    hideRightPane: '隱藏右側面板',
     closePane: '關閉面板',
     leftPane: '左側面板',
     rightPane: '右側面板',

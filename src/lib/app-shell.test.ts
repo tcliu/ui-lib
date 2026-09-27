@@ -6,9 +6,11 @@ import {
   APP_SHELL_RAIL_WIDTH,
   clampPaneWidth,
   collapsesToRail,
+  combineNestingOverlay,
   loadPaneSize,
   resolveDrawerFloating,
   savePaneSize,
+  shouldSuppressFloatingPane,
 } from './app-shell'
 
 describe('clampPaneWidth', () => {
@@ -47,6 +49,24 @@ describe('resolveDrawerFloating', () => {
   it('floats below the desktop breakpoint in auto mode', () => {
     expect(resolveDrawerFloating('auto', false)).toBe(true)
     expect(resolveDrawerFloating('auto', true)).toBe(false)
+  })
+})
+
+describe('shouldSuppressFloatingPane', () => {
+  it('suppresses only a floating pane under an open ancestor overlay', () => {
+    expect(shouldSuppressFloatingPane(true, true)).toBe(true)
+    expect(shouldSuppressFloatingPane(true, false)).toBe(false)
+    expect(shouldSuppressFloatingPane(false, true)).toBe(false)
+    expect(shouldSuppressFloatingPane(false, false)).toBe(false)
+  })
+})
+
+describe('combineNestingOverlay', () => {
+  it('publishes self or ancestor openness so suppression chains', () => {
+    expect(combineNestingOverlay(false, false)).toBe(false)
+    expect(combineNestingOverlay(true, false)).toBe(true)
+    expect(combineNestingOverlay(false, true)).toBe(true)
+    expect(combineNestingOverlay(true, true)).toBe(true)
   })
 })
 

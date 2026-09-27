@@ -73,16 +73,6 @@ const EXCEPTIONS = [
   ['project-catalog', 'scripts/sync-cloudflare-env.mjs', 'D1 backend: keeps the D1 binding path on Cloudflare, forbids the Neon URL only'],
   ['share-text', 'src/lib/components/Combobox.svelte', 'per-app listbox id prefix'],
   ['session-catalog', 'src/lib/components/DateRangePicker.svelte', 'themed fork: prop-injected i18n and CSS-var palette'],
-  // AppShell drawer modes (docked/floating) plus the right drawer are
-  // canonical here first; port them with the unify skill, then drop these.
-  ['project-catalog', 'src/lib/components/AppShell.svelte', 'drawer modes + right drawer pending unify port'],
-  ['project-catalog', 'src/lib/app-shell.ts', 'drawer modes + right drawer pending unify port'],
-  ['share-text', 'src/lib/components/AppShell.svelte', 'drawer modes + right drawer pending unify port'],
-  ['share-text', 'src/lib/app-shell.ts', 'drawer modes + right drawer pending unify port'],
-  ['tts', 'src/lib/components/AppShell.svelte', 'drawer modes + right drawer pending unify port'],
-  ['tts', 'src/lib/app-shell.ts', 'drawer modes + right drawer pending unify port'],
-  ['session-catalog', 'src/lib/components/AppShell.svelte', 'drawer modes + right drawer pending unify port'],
-  ['session-catalog', 'src/lib/app-shell.ts', 'drawer modes + right drawer pending unify port'],
 ]
 const globalExceptions = new Set(EXCEPTIONS.filter(entry => entry.length === 2).map(([p]) => p))
 const appExceptions = EXCEPTIONS.filter(entry => entry.length === 3)

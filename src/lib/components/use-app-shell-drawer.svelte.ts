@@ -1,7 +1,7 @@
-// Per-side drawer controller for AppShell. Owns one pane's geometry, rail
-// collapse, persistence, and floating-overlay focus moves so the component
-// wires the left and right panes through the same implementation instead of
-// mirroring the logic twice.
+// Per-side drawer controller for AppShell. One pane's geometry, rail
+// collapse, persistence, and floating-overlay focus moves live here so the
+// component wires the left and right panes through the same implementation
+// instead of mirroring the logic twice.
 import { tick } from 'svelte'
 import { clampPaneWidth, collapsesToRail, loadPaneSize, savePaneSize, type AppShellCollapseMode } from '$lib/app-shell'
 
@@ -26,7 +26,7 @@ export interface AppShellDrawerOptions {
 }
 
 // Focus after Svelte flushes the state change that mounts/unmounts the pane.
-function focusAfterTick(target: HTMLElement | null) {
+function focusAfterTick(target: HTMLElement | null): void {
   if (!target) {
     return
   }
@@ -34,7 +34,7 @@ function focusAfterTick(target: HTMLElement | null) {
 }
 
 export class AppShellDrawer {
-  // Bound to the floating pane element so opening moves focus into it.
+  // Bound to the pane element so opening a floating drawer moves focus into it.
   asideEl = $state<HTMLElement | null>(null)
   private readonly options: AppShellDrawerOptions
 
@@ -42,29 +42,29 @@ export class AppShellDrawer {
     this.options = options
   }
 
-  get open() {
+  get open(): boolean {
     return this.options.getOpen()
   }
 
   // Rail collapse only applies to a docked pane; a floating drawer is either
   // open above the content or closed.
-  get visible() {
+  get visible(): boolean {
     return this.open || (this.options.collapseMode() === 'rail' && !this.options.floating())
   }
 
-  get floatingOpen() {
+  get floatingOpen(): boolean {
     return this.options.floating() && this.open
   }
 
-  get effectiveSize() {
+  get effectiveSize(): number {
     return this.open ? this.options.getSize() : this.options.railWidth()
   }
 
-  get splitterMin() {
+  get splitterMin(): number {
     return this.options.collapseMode() === 'rail' ? this.options.railWidth() : this.options.min()
   }
 
-  restoreSize() {
+  restoreSize(): void {
     const loaded = loadPaneSize(
       this.options.storageKey(),
       this.options.defaultSize(),
@@ -76,7 +76,7 @@ export class AppShellDrawer {
     }
   }
 
-  setOpen(next: boolean) {
+  setOpen(next: boolean): void {
     this.options.setOpen(next)
     this.options.notifyOpenChange(next)
     if (this.options.floating()) {
@@ -84,7 +84,7 @@ export class AppShellDrawer {
     }
   }
 
-  changeSize(next: number) {
+  changeSize(next: number): void {
     const { collapseMode, railWidth, min, max, defaultSize } = this.options
     if (collapseMode() === 'rail' && collapsesToRail(next, railWidth())) {
       const size = defaultSize()
@@ -98,7 +98,7 @@ export class AppShellDrawer {
     this.options.notifySizeChange(size)
   }
 
-  save() {
+  save(): void {
     savePaneSize(this.options.storageKey(), this.options.getSize())
     this.options.notifyDragEnd()
   }
