@@ -1,9 +1,9 @@
-// Shared catalog-card contract: the generic `GET /api/catalog` self-card
+// Shared card contract: the generic `GET /api/info` self-card
 // every managed project exposes, and the envelope a catalog list endpoint
 // carries. Each project supplies its own app props; the shape and
 // the flat-vs-`self` resolution stay identical everywhere. Framework-agnostic
 // on purpose — projects can copy this file verbatim and only change props.
-export interface CatalogCardPayload {
+export interface CardPayload {
   id?: unknown;
   name?: unknown;
   icon?: unknown;
@@ -15,7 +15,7 @@ export interface CatalogCardPayload {
   tags?: unknown;
 }
 
-export interface NormalizedCatalogCard {
+export interface NormalizedCard {
   id: string;
   name: string;
   icon: string | null;
@@ -61,14 +61,14 @@ function normalizeCardTags(value: unknown): string[] {
   }
   return tags;
 }
-export function normalizeCatalogCard(payload: CatalogCardPayload): NormalizedCatalogCard {
+export function normalizeCard(payload: CardPayload): NormalizedCard {
   const id = trimToNull(payload.id);
   const name = trimToNull(payload.name);
   if (!id) {
-    throw new Error('Catalog card is missing required id.');
+    throw new Error('Card is missing required id.');
   }
   if (!name) {
-    throw new Error('Catalog card is missing required name.');
+    throw new Error('Card is missing required name.');
   }
   const status = trimToNull(payload.status);
   return {
@@ -86,14 +86,14 @@ export function normalizeCatalogCard(payload: CatalogCardPayload): NormalizedCat
 
 // Accepts either a flat self-card or a list envelope carrying it under
 // `self` (`{ ..., self: { ... } }`).
-export function resolveCatalogCardPayload(response: unknown): CatalogCardPayload {
+export function resolveCardPayload(response: unknown): CardPayload {
   if (!response || typeof response !== 'object') {
     throw new Error('Response is not a JSON object.');
   }
-  const record = response as { self?: unknown } & CatalogCardPayload;
+  const record = response as { self?: unknown } & CardPayload;
   const candidate = record.self !== undefined ? record.self : response;
   if (!candidate || typeof candidate !== 'object') {
-    throw new Error('Response is missing a catalog card object.');
+    throw new Error('Response is missing a card object.');
   }
-  return candidate as CatalogCardPayload;
+  return candidate as CardPayload;
 }
