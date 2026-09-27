@@ -31,9 +31,7 @@ describe('buildCodeEditorSnippet', () => {
 
   it('keeps the bounded wrapper and editor classes', () => {
     const source = buildCodeEditorSnippet({ docType: '', editable: '', theme: '' })
-    expect(source).toContain(
-      'containerClass="h-full overflow-hidden rounded-md border border-slate-700 bg-slate-950"',
-    )
+    expect(source).toContain('containerClass="h-full overflow-hidden rounded-md border border-slate-700 bg-slate-950"')
     expect(source).toContain('editorClass="h-full"')
   })
 })

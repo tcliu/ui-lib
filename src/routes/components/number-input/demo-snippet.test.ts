@@ -3,7 +3,15 @@ import { STEPLESS_CLASS, buildNumberInputSnippet } from './demo-snippet'
 
 describe('buildNumberInputSnippet', () => {
   it('omits numeric bounds and flags while unset', () => {
-    const source = buildNumberInputSnippet({ min: '', max: '', step: '', placeholder: '', disabled: '', showControls: '', className: '' })
+    const source = buildNumberInputSnippet({
+      min: '',
+      max: '',
+      step: '',
+      placeholder: '',
+      disabled: '',
+      showControls: '',
+      className: '',
+    })
     expect(source).toContain('<NumberInput bind:value ariaLabel={applyLabel}')
     expect(source).not.toContain('min=')
     expect(source).not.toContain('disabled')
@@ -31,7 +39,15 @@ describe('buildNumberInputSnippet', () => {
   })
 
   it('ignores non-numeric bounds', () => {
-    const source = buildNumberInputSnippet({ min: 'abc', max: '', step: '', placeholder: '', disabled: '', showControls: '', className: '' })
+    const source = buildNumberInputSnippet({
+      min: 'abc',
+      max: '',
+      step: '',
+      placeholder: '',
+      disabled: '',
+      showControls: '',
+      className: '',
+    })
     expect(source).not.toContain('min=')
   })
 })

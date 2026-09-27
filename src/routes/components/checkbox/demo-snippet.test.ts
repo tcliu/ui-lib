@@ -3,7 +3,15 @@ import { STYLED_BOX, STYLED_LABEL, STYLED_WRAPPER, buildCheckboxSnippet } from '
 
 describe('buildCheckboxSnippet', () => {
   it('uses the scoped label while unset', () => {
-    const source = buildCheckboxSnippet({ label: '', size: '', disabled: '', indeterminate: '', labelClass: '', wrapperClass: '', boxClass: '' })
+    const source = buildCheckboxSnippet({
+      label: '',
+      size: '',
+      disabled: '',
+      indeterminate: '',
+      labelClass: '',
+      wrapperClass: '',
+      boxClass: '',
+    })
     expect(source).toContain('label={applyLabel}')
     expect(source).not.toContain('size=')
     expect(source).not.toContain('disabled')

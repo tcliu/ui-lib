@@ -47,10 +47,7 @@ function flagLine(name: string, value: TriState, indent: number): string[] {
   return [`${' '.repeat(indent)}${name}${value === 'yes' ? '' : '={false}'}`]
 }
 
-export function buildLazyCodeEditorSnippet({
-  docType,
-  editable,
-}: LazyCodeEditorSnippetState): string {
+export function buildLazyCodeEditorSnippet({ docType, editable }: LazyCodeEditorSnippetState): string {
   const resolvedDocType = docType || DEFAULT_DOC_TYPE
   return [
     '<div class="h-64 w-full max-w-xl">',

@@ -31,11 +31,7 @@ function flagLine(name: string, value: TriState, indent: number): string[] {
   return [`${' '.repeat(indent)}${name}${value === 'yes' ? '' : '={false}'}`]
 }
 
-export function buildDataGridSnippet({
-  editable,
-  showHeaders,
-  hideHeaderToggle,
-}: DataGridSnippetState): string {
+export function buildDataGridSnippet({ editable, showHeaders, hideHeaderToggle }: DataGridSnippetState): string {
   return [
     '<script>',
     stageStateLine('  '),

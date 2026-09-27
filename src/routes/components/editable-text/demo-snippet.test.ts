@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  DEFAULT_TEXT,
-  buildEditableTextSnippet,
-  type EditableTextSnippetState,
-} from './demo-snippet'
+import { DEFAULT_TEXT, buildEditableTextSnippet, type EditableTextSnippetState } from './demo-snippet'
 
 const base: EditableTextSnippetState = {
   value: '',

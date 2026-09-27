@@ -1,7 +1,7 @@
-import { sveltekit } from "@sveltejs/kit/vite";
-import tailwindcss from "@tailwindcss/vite";
-import { defineConfig } from "vitest/config";
-import { loadEnv } from "vite";
+import { sveltekit } from '@sveltejs/kit/vite'
+import tailwindcss from '@tailwindcss/vite'
+import { defineConfig } from 'vitest/config'
+import { loadEnv } from 'vite'
 
 // Vite exposes only VITE_* to the client and never puts dotenv values into
 // the server's process.env, but server code reads process.env directly.
@@ -9,17 +9,17 @@ import { loadEnv } from "vite";
 // .env.local, .env.[mode], .env.[mode].local precedence) for `vite dev`
 // only; real environment always wins.
 function loadDevEnv(mode: string) {
-  const fileValues = loadEnv(mode, process.cwd(), "");
+  const fileValues = loadEnv(mode, process.cwd(), '')
   for (const [key, value] of Object.entries(fileValues)) {
     if (process.env[key] === undefined) {
-      process.env[key] = value;
+      process.env[key] = value
     }
   }
 }
 
 export default defineConfig(async ({ command, mode }) => {
-  if (command === "serve" && mode === "development") {
-    loadDevEnv(mode);
+  if (command === 'serve' && mode === 'development') {
+    loadDevEnv(mode)
   }
 
   return {
@@ -28,23 +28,16 @@ export default defineConfig(async ({ command, mode }) => {
     // server entry and component mounting is unavailable. Scope the browser
     // export conditions to vitest only (Svelte's testing guidance); dev/build
     // keep the framework's own resolution.
-    resolve: process.env.VITEST ? { conditions: ["browser"] } : undefined,
+    resolve: process.env.VITEST ? { conditions: ['browser'] } : undefined,
     server: {
       watch: {
-        ignored: [
-          "**/.vercel/**",
-          "**/.data/**",
-          "**/.tmp/**",
-          "**/.svelte-kit/**",
-          "**/coverage/**",
-          "**/.git/**",
-        ],
+        ignored: ['**/.vercel/**', '**/.data/**', '**/.tmp/**', '**/.svelte-kit/**', '**/coverage/**', '**/.git/**'],
       },
     },
     test: {
-      environment: "jsdom",
+      environment: 'jsdom',
       globals: true,
-      include: ["src/**/*.{test,spec}.{js,ts}", "scripts/**/*.test.mjs"],
+      include: ['src/**/*.{test,spec}.{js,ts}', 'scripts/**/*.test.mjs'],
     },
-  };
-});
+  }
+})

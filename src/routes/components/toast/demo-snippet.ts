@@ -25,9 +25,7 @@ export function buildToastSnippet({ message, toastType, position, size, action }
     ...(toastType ? [`    type="${toastType}"`] : []),
     ...(position ? [`    position="${position}"`] : []),
     ...(size ? [`    size="${size}"`] : []),
-    ...(action
-      ? [`    actionLabel="${escapeAttr(action)}"`, '    onAction={() => (actionTaken = actionLabel)}']
-      : []),
+    ...(action ? [`    actionLabel="${escapeAttr(action)}"`, '    onAction={() => (actionTaken = actionLabel)}'] : []),
     '    onClose={() => (open = false)} />',
     '{/if}',
     `<span class="text-sm text-slate-400">action: {actionTaken || '—'}</span>`,

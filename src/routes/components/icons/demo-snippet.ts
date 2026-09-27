@@ -15,8 +15,6 @@ export const ICON_SIZES: Record<string, string> = {
   lg: 'h-6 w-6',
 }
 
-
-
 export const ICON_NAMES = [
   'Check',
   'ChevronDown',
@@ -56,7 +54,7 @@ export function buildIconsSnippet({ size, tint, className }: IconsSnippetState):
     '<div class="grid grid-cols-4 gap-3 sm:grid-cols-8">',
     ...ICON_NAMES.map(
       name =>
-        `  <span class="flex flex-col items-center gap-1 text-xs text-slate-400"><${name}Icon${attrs} />${name}</span>`
+        `  <span class="flex flex-col items-center gap-1 text-xs text-slate-400"><${name}Icon${attrs} />${name}</span>`,
     ),
     '</div>',
   ]

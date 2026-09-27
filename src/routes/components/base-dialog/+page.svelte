@@ -33,18 +33,7 @@
 
   const demoMaxWidth = $derived(
     (pgMaxWidth || undefined) as
-      | 'md'
-      | 'lg'
-      | 'xl'
-      | '2xl'
-      | '3xl'
-      | '4xl'
-      | '5xl'
-      | '6xl'
-      | '7xl'
-      | 'fit'
-      | 'wide'
-      | undefined
+      'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | '7xl' | 'fit' | 'wide' | undefined,
   )
   const demoHeight = $derived((pgHeight || undefined) as 'auto' | 'fixed' | 'tall' | undefined)
   const fullscreen = $derived(flagOn(pgFullscreen))
@@ -73,7 +62,7 @@
       pgStyled !== '' ||
       pgTitleClass !== '' ||
       pgClassName !== '' ||
-      pgCustomHeader !== ''
+      pgCustomHeader !== '',
   )
   const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
 
@@ -100,7 +89,7 @@
       titleClass: pgTitleClass,
       className: pgClassName,
       customHeader: pgCustomHeader,
-    })
+    }),
   )
 
   const props: PropRow[] = [
@@ -110,8 +99,18 @@
     { name: 'maxWidth', type: "'md' | … | '7xl' | 'fit' | 'wide'", defaultValue: "'md'", note: 'Panel width variant.' },
     { name: 'height', type: "'auto' | 'fixed' | 'tall'", defaultValue: "'auto'", note: 'Panel height variant.' },
     { name: 'pending', type: 'boolean', defaultValue: 'false', note: 'Disables dismissal while an operation runs.' },
-    { name: 'allowPendingCancel', type: 'boolean', defaultValue: 'false', note: 'Keeps dismissal enabled while pending.' },
-    { name: 'dismissKeydownCapture', type: 'boolean', defaultValue: 'true', note: 'Registers the capture-phase Escape/Tab handler.' },
+    {
+      name: 'allowPendingCancel',
+      type: 'boolean',
+      defaultValue: 'false',
+      note: 'Keeps dismissal enabled while pending.',
+    },
+    {
+      name: 'dismissKeydownCapture',
+      type: 'boolean',
+      defaultValue: 'true',
+      note: 'Registers the capture-phase Escape/Tab handler.',
+    },
     { name: 'fullscreen', type: 'boolean', defaultValue: 'false', note: 'Fills the viewport on an opaque surface.' },
     { name: 'closeLabel', type: 'string', defaultValue: 'locale', note: 'Overrides the close accessible name.' },
     { name: 'onCancel', type: '() => void', defaultValue: '—', note: 'Called by every dismissal affordance.' },
@@ -135,9 +134,7 @@
 
 {#snippet settingsPanel()}
   <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
-      Reset
-    </Button>
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
   </Buttons>
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Max width">
@@ -219,14 +216,14 @@
         id="pg-titleclass"
         bind:value={pgTitleClass}
         placeholder="(none)"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
     <FormField label="Class name" htmlFor="pg-classname">
       <input
         id="pg-classname"
         bind:value={pgClassName}
         placeholder="(none)"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
     <FormField label="Header">
       <SelectDropdown
@@ -245,7 +242,7 @@
 <ShowcasePage name="BaseDialog" props={propsSnippet}>
   <ShowcaseSection
     title={sectionTitle}
-    code={code}
+    {code}
     footer={settingsPanel}
     scope={{
       customHeader,
@@ -265,9 +262,9 @@
         className={pgClassName || undefined}
         maxWidth={demoMaxWidth}
         height={demoHeight}
-        fullscreen={fullscreen}
-        pending={pending}
-        allowPendingCancel={allowPendingCancel}
+        {fullscreen}
+        {pending}
+        {allowPendingCancel}
         onCancel={() => (pgOpen = false)}>
         <p data-testid="dialog-body">{i18n.t('showcase.dialogBody')}</p>
         <Buttons className="mt-4 flex w-full shrink-0 flex-wrap items-center justify-end gap-3">

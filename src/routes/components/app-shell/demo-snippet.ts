@@ -12,7 +12,13 @@ export interface AppShellSnippetState {
   footer: string
 }
 
-export function buildAppShellSnippet({ collapseMode, visibility, mode, rightPane, footer }: AppShellSnippetState): string {
+export function buildAppShellSnippet({
+  collapseMode,
+  visibility,
+  mode,
+  rightPane,
+  footer,
+}: AppShellSnippetState): string {
   const attrs = [
     ...(mode ? [` mode="${mode}"`] : []),
     ...(collapseMode ? [` collapseMode="${collapseMode}"`] : []),

@@ -31,13 +31,7 @@ export const DEFAULT_DOC_TYPE: DocType = 'json'
 // Default document shown by the demo. The page seeds its bindable content from
 // this and passes it to the snippet through scope, so the static demo and the
 // live instance start from the same text.
-export const DEFAULT_CONTENT = [
-  '{',
-  '  "name": "ui-lib",',
-  '  "components": 24,',
-  '  "shared": true',
-  '}',
-].join('\n')
+export const DEFAULT_CONTENT = ['{', '  "name": "ui-lib",', '  "components": 24,', '  "shared": true', '}'].join('\n')
 
 export interface CodeEditorSnippetState {
   docType: string
@@ -53,11 +47,7 @@ function flagLine(name: string, value: TriState, indent: number): string[] {
   return [`${' '.repeat(indent)}${name}${value === 'yes' ? '' : '={false}'}`]
 }
 
-export function buildCodeEditorSnippet({
-  docType,
-  editable,
-  theme,
-}: CodeEditorSnippetState): string {
+export function buildCodeEditorSnippet({ docType, editable, theme }: CodeEditorSnippetState): string {
   const resolvedDocType = docType || DEFAULT_DOC_TYPE
   return [
     '<div class="h-64 w-full max-w-xl">',

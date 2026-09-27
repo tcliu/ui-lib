@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { parse } from 'svelte/compiler'
-import {
-  buildSource,
-  collectDeclaredNames,
-  rewriteImports,
-  splitLeadingScript,
-} from './snippet-source'
+import { buildSource, collectDeclaredNames, rewriteImports, splitLeadingScript } from './snippet-source'
 
 describe('splitLeadingScript', () => {
   it('returns the snippet untouched when it has no script', () => {
@@ -32,21 +27,17 @@ describe('splitLeadingScript', () => {
     expect(() => splitLeadingScript('<script context="module">const a = 1</script>')).toThrow(
       /must not have attributes/,
     )
-    expect(() => splitLeadingScript('<script module>const a = 1</script>')).toThrow(
-      /must not have attributes/,
-    )
+    expect(() => splitLeadingScript('<script module>const a = 1</script>')).toThrow(/must not have attributes/)
   })
 
   it('rejects a second top-level script', () => {
-    expect(() =>
-      splitLeadingScript('<script>const a = 1</script>\n<script>const b = 2</script>'),
-    ).toThrow(/at most one top-level/)
+    expect(() => splitLeadingScript('<script>const a = 1</script>\n<script>const b = 2</script>')).toThrow(
+      /at most one top-level/,
+    )
   })
 
   it('rejects a script that is not first', () => {
-    expect(() => splitLeadingScript('<span />\n<script>const a = 1</script>')).toThrow(
-      /must be the first thing/,
-    )
+    expect(() => splitLeadingScript('<span />\n<script>const a = 1</script>')).toThrow(/must be the first thing/)
   })
 })
 

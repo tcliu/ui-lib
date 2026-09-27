@@ -3,7 +3,16 @@ import { buildButtonSnippet } from './demo-snippet'
 
 describe('buildButtonSnippet', () => {
   it('omits every option while unset', () => {
-    const source = buildButtonSnippet({ variant: '', accent: '', size: '', disabled: '', pending: '', icon: '', badge: '', className: '' })
+    const source = buildButtonSnippet({
+      variant: '',
+      accent: '',
+      size: '',
+      disabled: '',
+      pending: '',
+      icon: '',
+      badge: '',
+      className: '',
+    })
     expect(source).toContain('<Button')
     expect(source).toContain('onClick={() => (clicks += 1)}>{label} ({clicks})')
     expect(source).not.toContain('variant=')

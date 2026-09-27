@@ -29,9 +29,7 @@ describe('buildDataGridSnippet', () => {
     const source = buildDataGridSnippet({ editable: '', showHeaders: '', hideHeaderToggle: '' })
     expect(source).toContain('let stageWidth = $state(100)')
     expect(source).toContain(`<div class="${STAGE_ROW}">`)
-    expect(source).toContain(
-      `<div class="${STAGE_PANE} h-72 w-full" style={\`flex-basis:\${stageWidth}%\`}>`
-    )
+    expect(source).toContain(`<div class="${STAGE_PANE} h-72 w-full" style={\`flex-basis:\${stageWidth}%\`}>`)
     expect(source).toContain('value={stageWidth}')
     expect(source).toContain('onChange={next => (stageWidth = next)}')
     expect(source).toContain('ariaLabel={resizeLabel}')

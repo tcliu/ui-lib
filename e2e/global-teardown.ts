@@ -2,4 +2,4 @@
 // (e.g. throwaway accounts) here as features land.
 async function globalTeardown() {}
 
-export default globalTeardown;
+export default globalTeardown

@@ -29,7 +29,7 @@
 
 <section aria-label={title} class="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
   <div class="mb-4 flex items-center justify-between gap-2">
-    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-400">{title}</h2>
+    <h2 class="text-sm font-semibold tracking-wide text-slate-400 uppercase">{title}</h2>
     {#if code}
       <Button
         variant="ghost"

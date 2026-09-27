@@ -12,7 +12,13 @@ describe('buildToastSnippet', () => {
   })
 
   it('emits message, type, position, size, and the action wiring', () => {
-    const source = buildToastSnippet({ message: 'Saved', toastType: 'success', position: 'top-right', size: 'md', action: 'Undo' })
+    const source = buildToastSnippet({
+      message: 'Saved',
+      toastType: 'success',
+      position: 'top-right',
+      size: 'md',
+      action: 'Undo',
+    })
     expect(source).toContain('message="Saved"')
     expect(source).toContain('type="success"')
     expect(source).toContain('position="top-right"')

@@ -48,23 +48,51 @@
     pgEditable = ''
   }
 
-  const code = $derived.by(() =>
-    buildLazyCodeEditorSnippet({ docType: pgDocType, editable: pgEditable })
-  )
+  const code = $derived.by(() => buildLazyCodeEditorSnippet({ docType: pgDocType, editable: pgEditable }))
 
   const props: PropRow[] = [
     { name: 'content', type: 'string', defaultValue: '—', note: 'Bindable editor document.' },
     { name: 'editable', type: 'boolean', defaultValue: 'true', note: 'Enables typing; false renders read-only.' },
-    { name: 'docType', type: 'string', defaultValue: "'text'", note: "Language pack key: json, javascript, html, markdown, yaml, or xml (loaded on demand). 'text' loads none." },
-    { name: 'containerClass', type: 'string', defaultValue: "''", note: 'Classes for the outer wrapper; give it a bounded height.' },
-    { name: 'editorClass', type: 'string', defaultValue: "''", note: 'Classes for the CodeMirror host; use h-full inside a sized wrapper.' },
-    { name: 'editorAriaLabel', type: 'string', defaultValue: 'editor.content', note: 'Accessible name for the editor textbox; defaults to the localized editor.content key.' },
+    {
+      name: 'docType',
+      type: 'string',
+      defaultValue: "'text'",
+      note: "Language pack key: json, javascript, html, markdown, yaml, or xml (loaded on demand). 'text' loads none.",
+    },
+    {
+      name: 'containerClass',
+      type: 'string',
+      defaultValue: "''",
+      note: 'Classes for the outer wrapper; give it a bounded height.',
+    },
+    {
+      name: 'editorClass',
+      type: 'string',
+      defaultValue: "''",
+      note: 'Classes for the CodeMirror host; use h-full inside a sized wrapper.',
+    },
+    {
+      name: 'editorAriaLabel',
+      type: 'string',
+      defaultValue: 'editor.content',
+      note: 'Accessible name for the editor textbox; defaults to the localized editor.content key.',
+    },
     { name: 'autoFocus', type: 'boolean', defaultValue: 'false', note: 'Focuses the editor once it mounts.' },
     { name: 'recreateKey', type: 'string', defaultValue: "''", note: 'Changing it destroys and rebuilds the editor.' },
-    { name: 'maxContentLength', type: 'number', defaultValue: '0', note: 'Caps the document length; 0 disables the cap.' },
+    {
+      name: 'maxContentLength',
+      type: 'number',
+      defaultValue: '0',
+      note: 'Caps the document length; 0 disables the cap.',
+    },
     { name: 'onReady', type: '() => void', defaultValue: '—', note: 'Called once the EditorView exists.' },
     { name: 'onAutoFocused', type: '() => void', defaultValue: '—', note: 'Called after an autofocus.' },
-    { name: 'onContentChange', type: '(content: string) => void', defaultValue: '—', note: 'Called with the document after every edit.' },
+    {
+      name: 'onContentChange',
+      type: '(content: string) => void',
+      defaultValue: '—',
+      note: 'Called with the document after every edit.',
+    },
   ]
 </script>
 
@@ -78,9 +106,7 @@
 
 {#snippet settingsPanel()}
   <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
-      Reset
-    </Button>
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
   </Buttons>
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Document type">
@@ -112,12 +138,12 @@
 {/snippet}
 
 <ShowcasePage name="LazyCodeEditor" props={propsSnippet}>
-  <ShowcaseSection title={sectionTitle} code={code} footer={settingsPanel} scope={{ content: pgContent }}>
+  <ShowcaseSection title={sectionTitle} {code} footer={settingsPanel} scope={{ content: pgContent }}>
     <div class="h-64 w-full max-w-xl">
       <LazyCodeEditor
         bind:content={pgContent}
         docType={demoDocType}
-        editable={editable}
+        {editable}
         containerClass="h-full overflow-hidden rounded-md border border-slate-700 bg-slate-950"
         editorClass="h-full" />
     </div>

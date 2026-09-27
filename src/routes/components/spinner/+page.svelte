@@ -44,8 +44,18 @@
   const code = $derived.by(() => buildSpinnerSnippet({ size: pgSize, tint: pgTint }))
 
   const props: PropRow[] = [
-    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", defaultValue: "'xs'", note: 'Width/height attributes (16/24/32/40px); composes with className.' },
-    { name: 'className', type: 'string', defaultValue: "''", note: 'Color and extra classes; explicit size classes win over the size attributes.' },
+    {
+      name: 'size',
+      type: "'xs' | 'sm' | 'md' | 'lg'",
+      defaultValue: "'xs'",
+      note: 'Width/height attributes (16/24/32/40px); composes with className.',
+    },
+    {
+      name: 'className',
+      type: 'string',
+      defaultValue: "''",
+      note: 'Color and extra classes; explicit size classes win over the size attributes.',
+    },
   ]
 </script>
 
@@ -59,9 +69,7 @@
 
 {#snippet settingsPanel()}
   <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
-      Reset
-    </Button>
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
   </Buttons>
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Size">
@@ -90,14 +98,11 @@
 {/snippet}
 
 <ShowcasePage name="Spinner" props={propsSnippet}>
-  <ShowcaseSection
-    title={sectionTitle}
-    code={code}
-    footer={settingsPanel}
-    scope={{ reloadLabel: i18n.t('common.reload') }}>
+  <ShowcaseSection title={sectionTitle} {code} footer={settingsPanel} scope={{ reloadLabel: i18n.t('common.reload') }}>
     <Spinner size={demoSize} className={demoTint} />
     <span class="inline-flex items-center gap-2 text-sm text-slate-300">
-      <Spinner size={demoSize} className={demoTint} /> {i18n.t('common.reload')}
+      <Spinner size={demoSize} className={demoTint} />
+      {i18n.t('common.reload')}
     </span>
   </ShowcaseSection>
 </ShowcasePage>

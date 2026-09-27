@@ -31,18 +31,7 @@
 
   const demoMaxWidth = $derived(
     (pgMaxWidth || undefined) as
-      | 'md'
-      | 'lg'
-      | 'xl'
-      | '2xl'
-      | '3xl'
-      | '4xl'
-      | '5xl'
-      | '6xl'
-      | '7xl'
-      | 'fit'
-      | 'wide'
-      | undefined
+      'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | '7xl' | 'fit' | 'wide' | undefined,
   )
   const dirty = $derived(flagOn(pgDirty) ?? false)
   const pending = $derived(flagOn(pgPending))
@@ -60,7 +49,7 @@
   }
 
   const isCustomized = $derived(
-    pgMaxWidth !== '' || pgDirty !== '' || pgPending !== '' || pgSaveDisabled !== '' || pgShowReset !== ''
+    pgMaxWidth !== '' || pgDirty !== '' || pgPending !== '' || pgSaveDisabled !== '' || pgShowReset !== '',
   )
   const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
 
@@ -87,7 +76,7 @@
       pending: pgPending,
       saveDisabled: pgSaveDisabled,
       showReset: pgShowReset,
-    })
+    }),
   )
 
   const props: PropRow[] = [
@@ -105,7 +94,12 @@
     { name: 'showReset', type: 'boolean', defaultValue: 'true', note: 'Shows the Reset button.' },
     { name: 'onSave', type: '() => void', defaultValue: '—', note: 'Save handler.' },
     { name: 'onReset', type: '() => void', defaultValue: '—', note: 'Reset handler.' },
-    { name: 'onClose', type: '() => void', defaultValue: '—', note: 'Final close (direct when clean, after discard confirm).' },
+    {
+      name: 'onClose',
+      type: '() => void',
+      defaultValue: '—',
+      note: 'Final close (direct when clean, after discard confirm).',
+    },
     { name: 'children', type: 'Snippet', defaultValue: '—', note: 'Form body.' },
   ]
 </script>
@@ -120,9 +114,7 @@
 
 {#snippet settingsPanel()}
   <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
-      Reset
-    </Button>
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
   </Buttons>
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Max width">
@@ -186,7 +178,7 @@
 <ShowcasePage name="EditDialog" props={propsSnippet}>
   <ShowcaseSection
     title={sectionTitle}
-    code={code}
+    {code}
     footer={settingsPanel}
     scope={{
       open: pgOpen,

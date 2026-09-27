@@ -60,7 +60,12 @@
   }
 
   const code = $derived.by(() =>
-    buildTagInputSnippet({ placeholder: pgPlaceholder, colored: pgColored, disabled: pgDisabled, chipClass: pgChipClass })
+    buildTagInputSnippet({
+      placeholder: pgPlaceholder,
+      colored: pgColored,
+      disabled: pgDisabled,
+      chipClass: pgChipClass,
+    }),
   )
 
   const props: PropRow[] = [
@@ -71,7 +76,12 @@
     { name: 'disabled', type: 'boolean', defaultValue: 'false', note: 'Disables the input.' },
     { name: 'inputId', type: 'string', defaultValue: '—', note: 'Native input id.' },
     { name: 'chipClass', type: 'string', defaultValue: 'built-in', note: 'Base classes for every chip.' },
-    { name: 'chipClassFor', type: '(tag: string) => string', defaultValue: '—', note: 'Per-tag chip classes; wins over chipClass.' },
+    {
+      name: 'chipClassFor',
+      type: '(tag: string) => string',
+      defaultValue: '—',
+      note: 'Per-tag chip classes; wins over chipClass.',
+    },
     { name: 'chip', type: 'Snippet<[tag, remove]>', defaultValue: '—', note: 'Custom chip renderer.' },
     { name: 'option', type: 'Snippet<[tag]>', defaultValue: '—', note: 'Custom suggestion renderer.' },
   ]
@@ -87,9 +97,7 @@
 
 {#snippet settingsPanel()}
   <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
-      Reset
-    </Button>
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
   </Buttons>
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Placeholder" htmlFor="pg-placeholder">
@@ -97,7 +105,7 @@
         id="pg-placeholder"
         bind:value={pgPlaceholder}
         placeholder="Add a tag"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
     <FormField label="Chips">
       <SelectDropdown
@@ -126,7 +134,7 @@
         id="pg-chipclass"
         bind:value={pgChipClass}
         placeholder="(none)"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
   </div>
 {/snippet}
@@ -134,16 +142,16 @@
 <ShowcasePage name="TagInput" props={propsSnippet}>
   <ShowcaseSection
     title={sectionTitle}
-    code={code}
+    {code}
     footer={settingsPanel}
     scope={{ value: pgValue, availableTags, colorFor }}>
     <TagInput
       value={pgValue}
       {availableTags}
       placeholder={pgPlaceholder || 'Add a tag'}
-      chipClassFor={chipClassFor}
+      {chipClassFor}
       chipClass={pgChipClass || undefined}
-      disabled={disabled}
+      {disabled}
       onChange={next => (pgValue = next)} />
     <span class="text-sm text-slate-400">tags: {pgValue.join(', ')}</span>
   </ShowcaseSection>

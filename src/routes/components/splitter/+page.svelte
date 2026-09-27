@@ -80,20 +80,50 @@
       orientation: pgOrientation as '' | SplitterOrientation,
       unit: pgUnit as '' | SplitterUnit,
       ariaLabel: pgAriaLabel,
-    })
+    }),
   )
 
   const props: PropRow[] = [
-    { name: 'value', type: 'number', defaultValue: '—', note: 'Divider position in pixels or percent; drive it from onChange.' },
+    {
+      name: 'value',
+      type: 'number',
+      defaultValue: '—',
+      note: 'Divider position in pixels or percent; drive it from onChange.',
+    },
     { name: 'min', type: 'number', defaultValue: '—', note: 'Lower clamp for the divider position.' },
     { name: 'max', type: 'number', defaultValue: '—', note: 'Upper clamp for the divider position.' },
-    { name: 'onChange', type: '(value: number) => void', defaultValue: '—', note: 'Fires while dragging and on arrow-key nudges.' },
-    { name: 'onDragEnd', type: '() => void', defaultValue: '—', note: 'Fires after a drag or keyboard nudge completes.' },
-    { name: 'ariaLabel', type: 'string', defaultValue: "i18n 'splitter.resize'", note: 'Accessible name for the separator.' },
+    {
+      name: 'onChange',
+      type: '(value: number) => void',
+      defaultValue: '—',
+      note: 'Fires while dragging and on arrow-key nudges.',
+    },
+    {
+      name: 'onDragEnd',
+      type: '() => void',
+      defaultValue: '—',
+      note: 'Fires after a drag or keyboard nudge completes.',
+    },
+    {
+      name: 'ariaLabel',
+      type: 'string',
+      defaultValue: "i18n 'splitter.resize'",
+      note: 'Accessible name for the separator.',
+    },
     { name: 'className', type: 'string', defaultValue: "''", note: 'Extra classes for the separator handle.' },
     { name: 'lineClass', type: 'string', defaultValue: "''", note: 'Extra classes for the visible divider line.' },
-    { name: 'unit', type: "'px' | '%'", defaultValue: "'px'", note: 'Unit for the value, drag delta, and arrow-key step.' },
-    { name: 'orientation', type: "'vertical' | 'horizontal'", defaultValue: "'vertical'", note: 'Vertical splits left/right; horizontal splits top/bottom.' },
+    {
+      name: 'unit',
+      type: "'px' | '%'",
+      defaultValue: "'px'",
+      note: 'Unit for the value, drag delta, and arrow-key step.',
+    },
+    {
+      name: 'orientation',
+      type: "'vertical' | 'horizontal'",
+      defaultValue: "'vertical'",
+      note: 'Vertical splits left/right; horizontal splits top/bottom.',
+    },
   ]
 </script>
 
@@ -107,9 +137,7 @@
 
 {#snippet settingsPanel()}
   <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
-      Reset
-    </Button>
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
   </Buttons>
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Orientation">
@@ -139,7 +167,7 @@
         id="pg-splitter-label"
         bind:value={pgAriaLabel}
         placeholder="Resize"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
   </div>
 {/snippet}
@@ -147,7 +175,7 @@
 <ShowcasePage name="Splitter" props={propsSnippet} wide>
   <ShowcaseSection
     title={sectionTitle}
-    code={code}
+    {code}
     footer={settingsPanel}
     scope={{
       initialSplit: pgSplit,
@@ -163,7 +191,9 @@
       <div class={orientation === 'horizontal' ? `${SPLITTER_WRAPPER} flex-col` : SPLITTER_WRAPPER}>
         <div
           class={SPLITTER_PANE}
-          style={orientation === 'horizontal' ? `height:${pgSplit}${unit}` : `width:${pgSplit}${unit}`}>{i18n.t('appShell.leftPane')}</div>
+          style={orientation === 'horizontal' ? `height:${pgSplit}${unit}` : `width:${pgSplit}${unit}`}>
+          {i18n.t('appShell.leftPane')}
+        </div>
         <Splitter
           value={pgSplit}
           min={preset.min}

@@ -11,7 +11,7 @@
   <p class="text-sm text-slate-400">{i18n.t('showcase.notFoundBody')}</p>
   <a
     href={`/components/${firstSlug}`}
-    class="w-fit rounded-md px-3 py-2 text-sm text-cyan-200 outline-none transition hover:bg-slate-800 focus-visible:ring-2 focus-visible:ring-cyan-500/40 motion-reduce:transition-none">
+    class="w-fit rounded-md px-3 py-2 text-sm text-cyan-200 transition outline-none hover:bg-slate-800 focus-visible:ring-2 focus-visible:ring-cyan-500/40 motion-reduce:transition-none">
     {i18n.t('showcase.backToIndex')}
   </a>
 </div>

@@ -64,7 +64,12 @@
   }
 
   const code = $derived.by(() =>
-    buildMenuSnippet({ align: pgAlign, triggerLabel: pgTriggerLabel, firstLabel: pgFirstLabel, secondLabel: pgSecondLabel })
+    buildMenuSnippet({
+      align: pgAlign,
+      triggerLabel: pgTriggerLabel,
+      firstLabel: pgFirstLabel,
+      secondLabel: pgSecondLabel,
+    }),
   )
 
   const props: PropRow[] = [
@@ -101,9 +106,7 @@
 
 {#snippet settingsPanel()}
   <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
-      Reset
-    </Button>
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
   </Buttons>
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Align">
@@ -122,21 +125,21 @@
         id="pg-trigger"
         bind:value={pgTriggerLabel}
         placeholder="More actions"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
     <FormField label="First item" htmlFor="pg-first">
       <input
         id="pg-first"
         bind:value={pgFirstLabel}
         placeholder="Edit"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
     <FormField label="Second item" htmlFor="pg-second">
       <input
         id="pg-second"
         bind:value={pgSecondLabel}
         placeholder="Delete"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
   </div>
 {/snippet}
@@ -144,7 +147,7 @@
 <ShowcasePage name="Menu" props={propsSnippet}>
   <ShowcaseSection
     title={sectionTitle}
-    code={code}
+    {code}
     footer={settingsPanel}
     scope={{
       menuItemClass,

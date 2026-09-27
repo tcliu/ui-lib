@@ -37,7 +37,7 @@
 <div class="flex h-dvh flex-col bg-slate-950 text-slate-100">
   <AppShell
     open={pickerOpen}
-    paneSize={paneSize}
+    {paneSize}
     resizeLabel={i18n.t('splitter.resize')}
     onOpenChange={setPickerOpen}
     onPaneChange={value => (paneSize = value)}>
@@ -57,8 +57,9 @@
         {/snippet}
       </Button>
       <div class="flex min-w-0 flex-1 items-center justify-between gap-4">
-        <h1 class="min-w-0 truncate text-base font-semibold tracking-tight text-slate-200 sm:text-lg"
-          >{i18n.t('showcase.title')}</h1>
+        <h1 class="min-w-0 truncate text-base font-semibold tracking-tight text-slate-200 sm:text-lg">
+          {i18n.t('showcase.title')}
+        </h1>
         <div class="flex items-center gap-2">
           <ThemeMenu align="right" />
           <LanguageMenu align="right" />
@@ -66,8 +67,14 @@
       </div>
     {/snippet}
     {#snippet leftPane()}
-      <SearchInput bind:value={query} ariaLabel={i18n.t('showcase.searchComponents')} wrapperClass="px-2 pt-3 sm:px-3" />
-      <nav class="min-h-0 flex-1 overflow-y-auto px-2 pb-3 sm:px-3" tabindex="-1" aria-label={i18n.t('showcase.components')}>
+      <SearchInput
+        bind:value={query}
+        ariaLabel={i18n.t('showcase.searchComponents')}
+        wrapperClass="px-2 pt-3 sm:px-3" />
+      <nav
+        class="min-h-0 flex-1 overflow-y-auto px-2 pb-3 sm:px-3"
+        tabindex="-1"
+        aria-label={i18n.t('showcase.components')}>
         <ul class="flex flex-col gap-1">
           {#each filteredComponents as component (component.slug)}
             {@const active = currentPath === `/components/${component.slug}`}
@@ -75,7 +82,7 @@
               <a
                 href={`/components/${component.slug}`}
                 aria-current={active ? 'page' : undefined}
-                class={`block rounded-md px-3 py-2 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-cyan-500/40 motion-reduce:transition-none ${
+                class={`block rounded-md px-3 py-2 text-sm transition outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40 motion-reduce:transition-none ${
                   active ? 'bg-cyan-500/15 text-cyan-200' : 'text-slate-300 hover:bg-slate-800 hover:text-cyan-200'
                 }`}>
                 {component.name}

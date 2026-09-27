@@ -12,7 +12,13 @@ describe('buildEditDialogSnippet', () => {
   })
 
   it('emits sizing and flags when set', () => {
-    const source = buildEditDialogSnippet({ maxWidth: 'lg', dirty: 'yes', pending: 'no', saveDisabled: 'yes', showReset: 'no' })
+    const source = buildEditDialogSnippet({
+      maxWidth: 'lg',
+      dirty: 'yes',
+      pending: 'no',
+      saveDisabled: 'yes',
+      showReset: 'no',
+    })
     expect(source).toContain('maxWidth="lg"')
     expect(source).toContain('    dirty\n')
     expect(source).toContain('pending={false}')

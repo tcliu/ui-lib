@@ -1,12 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { STAGE_PANE, STAGE_ROW } from '$lib/showcase/resizable-stage'
-import {
-  SPLITTER_MAIN,
-  SPLITTER_PANE,
-  SPLITTER_WRAPPER,
-  buildSplitterSnippet,
-  splitterPreset,
-} from './demo-snippet'
+import { SPLITTER_MAIN, SPLITTER_PANE, SPLITTER_WRAPPER, buildSplitterSnippet, splitterPreset } from './demo-snippet'
 
 const unset = { orientation: '', unit: '', ariaLabel: '' } as const
 
@@ -68,9 +62,7 @@ describe('buildSplitterSnippet', () => {
     const source = buildSplitterSnippet(unset)
     expect(source).toContain('let stageWidth = $state(100)')
     expect(source).toContain(`<div class="${STAGE_ROW}">`)
-    expect(source).toContain(
-      `<div class="${STAGE_PANE} w-full" style={\`flex-basis:\${stageWidth}%\`}>`
-    )
+    expect(source).toContain(`<div class="${STAGE_PANE} w-full" style={\`flex-basis:\${stageWidth}%\`}>`)
     expect(source).toContain('value={stageWidth}')
     expect(source).toContain('onChange={next => (stageWidth = next)}')
     expect(source).toContain('ariaLabel={resizeLabel}')

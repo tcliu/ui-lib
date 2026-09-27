@@ -43,7 +43,7 @@
   }
 
   const demoVariant = $derived(
-    (pgVariant || undefined) as 'sky' | 'violet' | 'amber' | 'fuchsia' | 'emerald' | undefined
+    (pgVariant || undefined) as 'sky' | 'violet' | 'amber' | 'fuchsia' | 'emerald' | undefined,
   )
   const filterable = $derived(flagOn(pgFilterable))
   const disabled = $derived(flagOn(pgDisabled))
@@ -64,7 +64,7 @@
   }
 
   const isCustomized = $derived(
-    pgVariant !== '' || pgFilterable !== '' || pgDisabled !== '' || pgAlign !== '' || pgFilterPlaceholder !== ''
+    pgVariant !== '' || pgFilterable !== '' || pgDisabled !== '' || pgAlign !== '' || pgFilterPlaceholder !== '',
   )
   const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
 
@@ -84,7 +84,7 @@
       disabled: pgDisabled,
       align: pgAlign,
       filterPlaceholder: pgFilterPlaceholder,
-    })
+    }),
   )
 
   const props: PropRow[] = [
@@ -93,11 +93,21 @@
     { name: 'activeValue', type: 'string', defaultValue: "''", note: 'Committed value; marked in the panel.' },
     { name: 'ariaLabel', type: 'string', defaultValue: '—', note: 'Accessible name for the trigger.' },
     { name: 'disabled', type: 'boolean', defaultValue: 'false', note: 'Disables the trigger.' },
-    { name: 'variant', type: "'sky' | 'violet' | 'amber' | 'fuchsia' | 'emerald'", defaultValue: "'violet'", note: 'Chip color scheme.' },
+    {
+      name: 'variant',
+      type: "'sky' | 'violet' | 'amber' | 'fuchsia' | 'emerald'",
+      defaultValue: "'violet'",
+      note: 'Chip color scheme.',
+    },
     { name: 'buttonClass', type: 'string', defaultValue: 'built-in', note: 'Replaces the trigger chip classes.' },
     { name: 'filterable', type: 'boolean', defaultValue: 'false', note: 'Adds a search field to the panel.' },
     { name: 'filterPlaceholder', type: 'string', defaultValue: "'Search…'", note: 'Search input placeholder.' },
-    { name: 'emptyText', type: 'string', defaultValue: "'No results.'", note: 'Shown when the filtered panel is empty.' },
+    {
+      name: 'emptyText',
+      type: 'string',
+      defaultValue: "'No results.'",
+      note: 'Shown when the filtered panel is empty.',
+    },
     { name: 'onSelect', type: '(value: string) => void', defaultValue: '—', note: 'Called with the chosen value.' },
     { name: 'align', type: "'left' | 'right'", defaultValue: "'left'", note: 'Panel edge anchored to the trigger.' },
     { name: 'autoPlace', type: 'boolean', defaultValue: 'true', note: 'Flips the panel when crowded.' },
@@ -115,9 +125,7 @@
 
 {#snippet settingsPanel()}
   <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
-      Reset
-    </Button>
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
   </Buttons>
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Variant">
@@ -169,24 +177,20 @@
         id="pg-filter-placeholder"
         bind:value={pgFilterPlaceholder}
         placeholder="Search…"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
   </div>
 {/snippet}
 
 <ShowcasePage name="ChipDropdown" props={propsSnippet}>
-  <ShowcaseSection
-    title={sectionTitle}
-    code={code}
-    footer={settingsPanel}
-    scope={{ options, value: pgValue, labelFor }}>
+  <ShowcaseSection title={sectionTitle} {code} footer={settingsPanel} scope={{ options, value: pgValue, labelFor }}>
     <ChipDropdown
       label={labelFor(options, pgValue)}
       activeValue={pgValue}
       ariaLabel="Set status"
       variant={demoVariant}
-      filterable={filterable}
-      disabled={disabled}
+      {filterable}
+      {disabled}
       align={demoAlign}
       filterPlaceholder={pgFilterPlaceholder || undefined}
       {options}

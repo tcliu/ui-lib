@@ -58,7 +58,7 @@
       copyPosition: pgPosition,
       alwaysVisible: pgAlwaysVisible,
       className: pgClassName,
-    })
+    }),
   )
 
   const props: PropRow[] = [
@@ -68,7 +68,12 @@
     { name: 'containerClass', type: 'string', defaultValue: "''", note: 'Extra classes for the wrapper.' },
     { name: 'copyAriaLabel', type: 'string', defaultValue: 'locale', note: 'Accessible name for the copy button.' },
     { name: 'copyTooltip', type: 'string', defaultValue: 'locale', note: 'Tooltip for the copy button.' },
-    { name: 'alwaysVisible', type: 'boolean', defaultValue: 'false', note: 'Keeps the copy button visible (top-right mode implies it).' },
+    {
+      name: 'alwaysVisible',
+      type: 'boolean',
+      defaultValue: 'false',
+      note: 'Keeps the copy button visible (top-right mode implies it).',
+    },
     { name: 'copyPosition', type: "'inline' | 'top-right'", defaultValue: "'inline'", note: 'Copy button placement.' },
     { name: 'children', type: 'Snippet', defaultValue: '—', note: 'Renders instead of text when passed.' },
   ]
@@ -84,9 +89,7 @@
 
 {#snippet settingsPanel()}
   <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
-      Reset
-    </Button>
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
   </Buttons>
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Text" htmlFor="pg-text">
@@ -94,7 +97,7 @@
         id="pg-text"
         bind:value={pgText}
         placeholder="Copy me"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
     <FormField label="Copy position">
       <SelectDropdown
@@ -123,17 +126,13 @@
         id="pg-classname"
         bind:value={pgClassName}
         placeholder="(none)"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
   </div>
 {/snippet}
 
 <ShowcasePage name="Copyable" props={propsSnippet}>
-  <ShowcaseSection title={sectionTitle} code={code} footer={settingsPanel}>
-    <Copyable
-      text={pgText || 'Copy me'}
-      copyPosition={demoPosition}
-      alwaysVisible={alwaysVisible}
-      className={demoClassName} />
+  <ShowcaseSection title={sectionTitle} {code} footer={settingsPanel}>
+    <Copyable text={pgText || 'Copy me'} copyPosition={demoPosition} {alwaysVisible} className={demoClassName} />
   </ShowcaseSection>
 </ShowcasePage>

@@ -30,8 +30,18 @@
   const props: PropRow[] = [
     { name: 'from', type: 'string', defaultValue: "''", note: 'Range start as YYYY-MM-DD; invalid reads as unset.' },
     { name: 'to', type: 'string', defaultValue: "''", note: 'Range end as YYYY-MM-DD; invalid reads as unset.' },
-    { name: 'onFrom', type: '(value: string) => void', defaultValue: '—', note: 'Called with the picked start (or reset).' },
-    { name: 'onTo', type: '(value: string) => void', defaultValue: '—', note: 'Called with the picked end (or reset).' },
+    {
+      name: 'onFrom',
+      type: '(value: string) => void',
+      defaultValue: '—',
+      note: 'Called with the picked start (or reset).',
+    },
+    {
+      name: 'onTo',
+      type: '(value: string) => void',
+      defaultValue: '—',
+      note: 'Called with the picked end (or reset).',
+    },
   ]
 </script>
 
@@ -45,9 +55,7 @@
 
 {#snippet settingsPanel()}
   <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
-      Reset
-    </Button>
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
   </Buttons>
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="From" htmlFor="pg-from">
@@ -55,24 +63,20 @@
         id="pg-from"
         bind:value={pgFrom}
         placeholder="YYYY-MM-DD"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
     <FormField label="To" htmlFor="pg-to">
       <input
         id="pg-to"
         bind:value={pgTo}
         placeholder="YYYY-MM-DD"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
   </div>
 {/snippet}
 
 <ShowcasePage name="DateRangePicker" props={propsSnippet}>
-  <ShowcaseSection
-    title={sectionTitle}
-    code={code}
-    footer={settingsPanel}
-    scope={{ from: pgFrom, to: pgTo }}>
+  <ShowcaseSection title={sectionTitle} {code} footer={settingsPanel} scope={{ from: pgFrom, to: pgTo }}>
     <div class="flex flex-col gap-1">
       <DateRangePicker from={pgFrom} to={pgTo} onFrom={value => (pgFrom = value)} onTo={value => (pgTo = value)} />
       <span class="text-sm text-slate-400">range: {pgFrom || '—'} – {pgTo || '—'}</span>

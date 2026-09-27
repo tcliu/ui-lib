@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  CHOOSER_LABEL,
-  CHOOSER_RESET_LABEL,
-  DEMO_COLUMNS,
-  buildColumnChooserSnippet,
-} from './demo-snippet'
+import { CHOOSER_LABEL, CHOOSER_RESET_LABEL, DEMO_COLUMNS, buildColumnChooserSnippet } from './demo-snippet'
 
 const unset = { label: '', resetLabel: '' }
 
@@ -16,7 +11,7 @@ describe('buildColumnChooserSnippet', () => {
       expect(source).toContain(`{ key: '${column.key}', header: '${column.header}' },`)
     }
     expect(source).toContain(
-      'columns={columns.map(column => ({ key: column.key, header: column.header, checked: !hidden.has(column.key) }))}'
+      'columns={columns.map(column => ({ key: column.key, header: column.header, checked: !hidden.has(column.key) }))}',
     )
   })
 

@@ -21,6 +21,8 @@ describe('buildSearchInputSnippet', () => {
     expect(source).toContain('placeholder="Filter sessions"')
     expect(source).toContain('size="md"')
     expect(source).toContain('wrapperClass="rounded-lg border border-cyan-500/40 p-2"')
-    expect(source).toContain('inputClass="w-56 rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 pl-7 text-sm text-cyan-200 outline-none focus-visible:border-cyan-500"')
+    expect(source).toContain(
+      'inputClass="w-56 rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 pl-7 text-sm text-cyan-200 outline-none focus-visible:border-cyan-500"',
+    )
   })
 })

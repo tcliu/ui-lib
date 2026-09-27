@@ -34,9 +34,7 @@ export function splitterPreset(orientation: SplitterOrientation, unit: SplitterU
   if (unit === '%') {
     return { min: 20, max: 80, value: 40 }
   }
-  return orientation === 'horizontal'
-    ? { min: 80, max: 200, value: 120 }
-    : { min: 120, max: 320, value: 160 }
+  return orientation === 'horizontal' ? { min: 80, max: 200, value: 120 } : { min: 120, max: 320, value: 160 }
 }
 
 function escapeAttr(value: string): string {
@@ -47,18 +45,11 @@ export function buildSplitterSnippet({ orientation, unit, ariaLabel }: SplitterS
   const resolvedOrientation: SplitterOrientation = orientation || 'vertical'
   const resolvedUnit: SplitterUnit = unit || 'px'
   const preset = splitterPreset(resolvedOrientation, resolvedUnit)
-  const wrapperClass =
-    resolvedOrientation === 'horizontal' ? `${SPLITTER_WRAPPER} flex-col` : SPLITTER_WRAPPER
+  const wrapperClass = resolvedOrientation === 'horizontal' ? `${SPLITTER_WRAPPER} flex-col` : SPLITTER_WRAPPER
   const paneSide = resolvedOrientation === 'horizontal' ? 'height' : 'width'
   // Built by concatenation so the `${split}` expression stays literal text.
   const paneLine =
-    '      <div class="' +
-    SPLITTER_PANE +
-    '" style={`' +
-    paneSide +
-    ':${split}' +
-    resolvedUnit +
-    '`}>{leftLabel}</div>'
+    '      <div class="' + SPLITTER_PANE + '" style={`' + paneSide + ':${split}' + resolvedUnit + '`}>{leftLabel}</div>'
   return [
     '<script>',
     '  let split = $state(initialSplit)',

@@ -8,12 +8,7 @@
   import PropsTable, { type PropRow } from '$lib/showcase/PropsTable.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
-  import {
-    CHOOSER_LABEL,
-    CHOOSER_RESET_LABEL,
-    DEMO_COLUMNS,
-    buildColumnChooserSnippet,
-  } from './demo-snippet'
+  import { CHOOSER_LABEL, CHOOSER_RESET_LABEL, DEMO_COLUMNS, buildColumnChooserSnippet } from './demo-snippet'
 
   const i18n = getI18nContext()
 
@@ -61,15 +56,28 @@
     hidden = clearedColumns()
   }
 
-  const code = $derived.by(() =>
-    buildColumnChooserSnippet({ label: pgLabel, resetLabel: pgResetLabel })
-  )
+  const code = $derived.by(() => buildColumnChooserSnippet({ label: pgLabel, resetLabel: pgResetLabel }))
 
   const props: PropRow[] = [
     { name: 'label', type: 'string', defaultValue: '—', note: 'Accessible name and tooltip for the trigger.' },
-    { name: 'resetLabel', type: 'string', defaultValue: '—', note: 'Accessible name and tooltip for the reset button.' },
-    { name: 'columns', type: 'ChooserColumn[]', defaultValue: '—', note: 'Entries with key, header, and checked state.' },
-    { name: 'onToggle', type: '(key: string, checked: boolean) => void', defaultValue: '—', note: 'Fires when a column checkbox changes.' },
+    {
+      name: 'resetLabel',
+      type: 'string',
+      defaultValue: '—',
+      note: 'Accessible name and tooltip for the reset button.',
+    },
+    {
+      name: 'columns',
+      type: 'ChooserColumn[]',
+      defaultValue: '—',
+      note: 'Entries with key, header, and checked state.',
+    },
+    {
+      name: 'onToggle',
+      type: '(key: string, checked: boolean) => void',
+      defaultValue: '—',
+      note: 'Fires when a column checkbox changes.',
+    },
     { name: 'onReset', type: '() => void', defaultValue: '—', note: 'Fires when the reset button is pressed.' },
   ]
 </script>
@@ -84,9 +92,7 @@
 
 {#snippet settingsPanel()}
   <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
-      Reset
-    </Button>
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
   </Buttons>
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Trigger label" htmlFor="pg-chooser-label">
@@ -94,14 +100,14 @@
         id="pg-chooser-label"
         bind:value={pgLabel}
         placeholder="Choose columns"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
     <FormField label="Reset label" htmlFor="pg-chooser-reset">
       <input
         id="pg-chooser-reset"
         bind:value={pgResetLabel}
         placeholder="Reset columns"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
   </div>
 {/snippet}
@@ -109,7 +115,7 @@
 <ShowcasePage name="ColumnChooser" props={propsSnippet}>
   <ShowcaseSection
     title={sectionTitle}
-    code={code}
+    {code}
     footer={settingsPanel}
     scope={{
       hidden,
@@ -120,7 +126,7 @@
     }}>
     <ColumnChooser
       label={chooserLabel}
-      resetLabel={resetLabel}
+      {resetLabel}
       columns={columns.map(column => ({
         key: column.key,
         header: column.header,

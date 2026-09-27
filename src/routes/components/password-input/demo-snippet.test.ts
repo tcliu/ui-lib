@@ -3,7 +3,14 @@ import { buildPasswordInputSnippet } from './demo-snippet'
 
 describe('buildPasswordInputSnippet', () => {
   it('falls back to the default placeholder', () => {
-    const source = buildPasswordInputSnippet({ placeholder: '', showLabel: '', hideLabel: '', disabled: '', required: '', className: '' })
+    const source = buildPasswordInputSnippet({
+      placeholder: '',
+      showLabel: '',
+      hideLabel: '',
+      disabled: '',
+      required: '',
+      className: '',
+    })
     expect(source).toContain('placeholder="Password"')
     expect(source).not.toContain('showLabel=')
     expect(source).not.toContain('disabled')

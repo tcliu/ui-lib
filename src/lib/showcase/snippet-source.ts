@@ -83,16 +83,12 @@ export function splitLeadingScript(snippet: string): SplitSnippet {
   const match = LEADING_SCRIPT.exec(snippet)
   if (!match) {
     if (STRAY_SCRIPT.test(snippet)) {
-      throw new Error(
-        'The snippet <script> block must be the first thing in the snippet.',
-      )
+      throw new Error('The snippet <script> block must be the first thing in the snippet.')
     }
     return { declarations: '', markup: snippet }
   }
   if (match[1].trim().length > 0) {
-    throw new Error(
-      'The snippet <script> block must not have attributes; a module-context script is not supported.',
-    )
+    throw new Error('The snippet <script> block must not have attributes; a module-context script is not supported.')
   }
   const markup = snippet.slice(match[0].length)
   if (STRAY_SCRIPT.test(markup)) {
@@ -111,12 +107,7 @@ export interface BuildSourceOptions {
 // Assemble the compilable source: the preamble imports, a scope destructure for
 // every key the snippet does not declare itself (so a local declaration wins
 // over a same-named scope value), then the snippet declarations, then markup.
-export function buildSource({
-  markup,
-  declarations,
-  scopeKeys,
-  declaredNames,
-}: BuildSourceOptions): string {
+export function buildSource({ markup, declarations, scopeKeys, declaredNames }: BuildSourceOptions): string {
   const names = scopeKeys.filter(key => !declaredNames.has(key))
   const scopeLine = names.length > 0 ? `  let { ${names.join(', ')} } = __scope\n` : ''
   const body = declarations.replace(/^\s*\n/, '').replace(/\s+$/, '')

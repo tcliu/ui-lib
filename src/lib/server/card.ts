@@ -4,73 +4,73 @@
 // the flat-vs-`self` resolution stay identical everywhere. Framework-agnostic
 // on purpose — projects can copy this file verbatim and only change props.
 export interface CardPayload {
-  id?: unknown;
-  name?: unknown;
-  icon?: unknown;
-  description?: unknown;
-  branch?: unknown;
-  repo?: unknown;
-  status?: unknown;
-  url?: unknown;
-  tags?: unknown;
+  id?: unknown
+  name?: unknown
+  icon?: unknown
+  description?: unknown
+  branch?: unknown
+  repo?: unknown
+  status?: unknown
+  url?: unknown
+  tags?: unknown
 }
 
 export interface NormalizedCard {
-  id: string;
-  name: string;
-  icon: string | null;
-  description: string | null;
-  branch: string | null;
-  repo: string | null;
-  status: 'Active' | 'Inactive';
-  url: string | null;
-  tags: string[];
+  id: string
+  name: string
+  icon: string | null
+  description: string | null
+  branch: string | null
+  repo: string | null
+  status: 'Active' | 'Inactive'
+  url: string | null
+  tags: string[]
 }
-const VALID_STATUSES: Record<string, 'Active' | 'Inactive'> = { Active: 'Active', Inactive: 'Inactive' };
+const VALID_STATUSES: Record<string, 'Active' | 'Inactive'> = { Active: 'Active', Inactive: 'Inactive' }
 
 function trimToNull(value: unknown): string | null {
-  if (value === undefined || value === null) return null;
-  const trimmed = String(value).trim();
-  return trimmed ? trimmed : null;
+  if (value === undefined || value === null) return null
+  const trimmed = String(value).trim()
+  return trimmed ? trimmed : null
 }
 
 // Lightweight tag coercion only (trim, drop empties, dedupe). This file stays
 // dependency-free so projects keep copying it verbatim; the full tag policy
 // (caps, truncation) is enforced downstream when the record is stored.
 function normalizeCardTags(value: unknown): string[] {
-  const list = typeof value === 'string' ? value.split(',') : value;
+  const list = typeof value === 'string' ? value.split(',') : value
   if (!Array.isArray(list)) {
-    return [];
+    return []
   }
-  const seen = new Set<string>();
-  const tags: string[] = [];
+  const seen = new Set<string>()
+  const tags: string[] = []
   for (const entry of list) {
     if (typeof entry !== 'string' && typeof entry !== 'number') {
-      continue;
+      continue
     }
-    const tag = String(entry).trim();
+    const tag = String(entry).trim()
     if (!tag) {
-      continue;
+      continue
     }
-    const key = tag.toLowerCase();
+    const key = tag.toLowerCase()
     if (seen.has(key)) {
-      continue;
+      continue
     }
-    seen.add(key);
-    tags.push(tag);
+    seen.add(key)
+    tags.push(tag)
   }
-  return tags;
+  return tags
 }
 export function normalizeCard(payload: CardPayload): NormalizedCard {
-  const id = trimToNull(payload.id);
-  const name = trimToNull(payload.name);
+  const id = trimToNull(payload.id)
+  const name = trimToNull(payload.name)
   if (!id) {
-    throw new Error('Card is missing required id.');
+    throw new Error('Card is missing required id.')
   }
   if (!name) {
-    throw new Error('Card is missing required name.');
+    throw new Error('Card is missing required name.')
   }
-  const status = trimToNull(payload.status);
+  const status = trimToNull(payload.status)
   return {
     id,
     name,
@@ -81,19 +81,19 @@ export function normalizeCard(payload: CardPayload): NormalizedCard {
     status: (status && VALID_STATUSES[status]) || 'Active',
     url: trimToNull(payload.url),
     tags: normalizeCardTags(payload.tags),
-  };
+  }
 }
 
 // Accepts either a flat self-card or a list envelope carrying it under
 // `self` (`{ ..., self: { ... } }`).
 export function resolveCardPayload(response: unknown): CardPayload {
   if (!response || typeof response !== 'object') {
-    throw new Error('Response is not a JSON object.');
+    throw new Error('Response is not a JSON object.')
   }
-  const record = response as { self?: unknown } & CardPayload;
-  const candidate = record.self !== undefined ? record.self : response;
+  const record = response as { self?: unknown } & CardPayload
+  const candidate = record.self !== undefined ? record.self : response
   if (!candidate || typeof candidate !== 'object') {
-    throw new Error('Response is missing a card object.');
+    throw new Error('Response is missing a card object.')
   }
-  return candidate as CardPayload;
+  return candidate as CardPayload
 }

@@ -35,12 +35,12 @@
 
   const demoType = $derived((pgType || undefined) as 'success' | 'info' | 'warning' | 'error' | undefined)
   const demoPosition = $derived(
-    (pgPosition || undefined) as 'top-right' | 'top-center' | 'bottom-right' | 'bottom-center' | undefined
+    (pgPosition || undefined) as 'top-right' | 'top-center' | 'bottom-right' | 'bottom-center' | undefined,
   )
   const demoSize = $derived((pgSize || undefined) as 'sm' | 'md' | undefined)
 
   const isCustomized = $derived(
-    pgMessage !== '' || pgType !== '' || pgPosition !== '' || pgSize !== '' || pgAction !== ''
+    pgMessage !== '' || pgType !== '' || pgPosition !== '' || pgSize !== '' || pgAction !== '',
   )
   const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
 
@@ -61,16 +61,31 @@
       position: pgPosition,
       size: pgSize,
       action: pgAction,
-    })
+    }),
   )
 
   const props: PropRow[] = [
     { name: 'message', type: 'string', defaultValue: '—', note: 'Toast body text.' },
     { name: 'closeLabel', type: 'string', defaultValue: '—', note: 'Accessible name for the dismiss button.' },
-    { name: 'position', type: "'top-right' | 'top-center' | 'bottom-right' | 'bottom-center'", defaultValue: "'bottom-right'", note: 'Viewport edge the toast docks to.' },
+    {
+      name: 'position',
+      type: "'top-right' | 'top-center' | 'bottom-right' | 'bottom-center'",
+      defaultValue: "'bottom-right'",
+      note: 'Viewport edge the toast docks to.',
+    },
     { name: 'size', type: "'sm' | 'md'", defaultValue: "'sm'", note: 'Text scale.' },
-    { name: 'type', type: "'success' | 'info' | 'warning' | 'error'", defaultValue: "'info'", note: 'Accent treatment.' },
-    { name: 'actionLabel', type: 'string', defaultValue: '—', note: 'Paired action button; renders only with onAction.' },
+    {
+      name: 'type',
+      type: "'success' | 'info' | 'warning' | 'error'",
+      defaultValue: "'info'",
+      note: 'Accent treatment.',
+    },
+    {
+      name: 'actionLabel',
+      type: 'string',
+      defaultValue: '—',
+      note: 'Paired action button; renders only with onAction.',
+    },
     { name: 'onAction', type: '() => void', defaultValue: '—', note: 'Action button handler.' },
     { name: 'onClose', type: '() => void', defaultValue: '—', note: 'Dismiss handler (button and Escape).' },
   ]
@@ -86,9 +101,7 @@
 
 {#snippet settingsPanel()}
   <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
-      Reset
-    </Button>
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
   </Buttons>
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Message" htmlFor="pg-message">
@@ -96,7 +109,7 @@
         id="pg-message"
         bind:value={pgMessage}
         placeholder="Default"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
     <FormField label="Type">
       <SelectDropdown
@@ -136,7 +149,7 @@
         id="pg-action"
         bind:value={pgAction}
         placeholder="(none)"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
   </div>
 {/snippet}
@@ -144,7 +157,7 @@
 <ShowcasePage name="Toast" props={propsSnippet}>
   <ShowcaseSection
     title={sectionTitle}
-    code={code}
+    {code}
     footer={settingsPanel}
     scope={{
       open: pgOpen,

@@ -50,12 +50,8 @@
   const showHeaders = $derived(flagOn(pgShowHeaders))
   const hideHeaderToggle = $derived(flagOn(pgHideHeaderToggle))
 
-  const isCustomized = $derived(
-    pgEditable !== '' || pgShowHeaders !== '' || pgHideHeaderToggle !== ''
-  )
-  const sectionTitle = $derived(
-    isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default')
-  )
+  const isCustomized = $derived(pgEditable !== '' || pgShowHeaders !== '' || pgHideHeaderToggle !== '')
+  const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
 
   function clearPlayground() {
     pgValue = freshValue()
@@ -70,20 +66,50 @@
       editable: pgEditable,
       showHeaders: pgShowHeaders,
       hideHeaderToggle: pgHideHeaderToggle,
-    })
+    }),
   )
 
   const props: PropRow[] = [
-    { name: 'value', type: 'string[][]', defaultValue: '[]', note: 'Cells as rows of strings; the first row is the header when showHeaders is on.' },
-    { name: 'onChange', type: '(rows: string[][]) => void', defaultValue: '—', note: 'Called with the whole grid after every edit.' },
-    { name: 'editable', type: 'boolean', defaultValue: 'true', note: 'Enables in-place cell editing and structure edits.' },
-    { name: 'showHeaders', type: 'boolean', defaultValue: 'true', note: 'Treats the first row as a header (bindable).' },
+    {
+      name: 'value',
+      type: 'string[][]',
+      defaultValue: '[]',
+      note: 'Cells as rows of strings; the first row is the header when showHeaders is on.',
+    },
+    {
+      name: 'onChange',
+      type: '(rows: string[][]) => void',
+      defaultValue: '—',
+      note: 'Called with the whole grid after every edit.',
+    },
+    {
+      name: 'editable',
+      type: 'boolean',
+      defaultValue: 'true',
+      note: 'Enables in-place cell editing and structure edits.',
+    },
+    {
+      name: 'showHeaders',
+      type: 'boolean',
+      defaultValue: 'true',
+      note: 'Treats the first row as a header (bindable).',
+    },
     { name: 'testId', type: 'string', defaultValue: "'data-grid'", note: 'data-testid for the grid root.' },
     { name: 'maxColumns', type: 'number', defaultValue: '—', note: 'Locks the column count (e.g. key/value grids).' },
     { name: 'columnLabels', type: 'string[]', defaultValue: '—', note: 'Replaces column letters with display labels.' },
     { name: 'hideHeaderToggle', type: 'boolean', defaultValue: 'false', note: 'Hides the toolbar header toggle.' },
-    { name: 'initialColumnWidths', type: 'string[]', defaultValue: '—', note: 'Initial widths as px numbers or percent strings.' },
-    { name: 'storageKey', type: 'string', defaultValue: '—', note: 'Persists resized widths under this localStorage key.' },
+    {
+      name: 'initialColumnWidths',
+      type: 'string[]',
+      defaultValue: '—',
+      note: 'Initial widths as px numbers or percent strings.',
+    },
+    {
+      name: 'storageKey',
+      type: 'string',
+      defaultValue: '—',
+      note: 'Persists resized widths under this localStorage key.',
+    },
   ]
 </script>
 
@@ -97,9 +123,7 @@
 
 {#snippet settingsPanel()}
   <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
-      Reset
-    </Button>
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
   </Buttons>
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Editable">
@@ -141,7 +165,7 @@
 <ShowcasePage name="DataGrid" props={propsSnippet} wide>
   <ShowcaseSection
     title={sectionTitle}
-    code={code}
+    {code}
     footer={settingsPanel}
     scope={{ value: pgValue, resizeLabel: stageResizeLabel }}>
     <ShowcaseStage
@@ -149,12 +173,7 @@
       onChange={next => (pgStageWidth = next)}
       paneClass="h-72 w-full"
       resizeLabel={stageResizeLabel}>
-      <DataGrid
-        value={pgValue}
-        onChange={next => (pgValue = next)}
-        editable={editable}
-        showHeaders={showHeaders}
-        hideHeaderToggle={hideHeaderToggle} />
+      <DataGrid value={pgValue} onChange={next => (pgValue = next)} {editable} {showHeaders} {hideHeaderToggle} />
     </ShowcaseStage>
   </ShowcaseSection>
 </ShowcasePage>

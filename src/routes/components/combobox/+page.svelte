@@ -34,7 +34,7 @@
     pgSuggestions = pool.filter(
       option =>
         !pgSelected.some(selected => selected.value === option.value) &&
-        (needle === '' || option.label.toLowerCase().includes(needle))
+        (needle === '' || option.label.toLowerCase().includes(needle)),
     )
   }
 
@@ -63,11 +63,31 @@
 
   const props: PropRow[] = [
     { name: 'selected', type: 'ComboboxOption[]', defaultValue: '—', note: 'Chosen options rendered as chips.' },
-    { name: 'suggestions', type: 'ComboboxOption[]', defaultValue: '—', note: 'Dropdown options for the current query.' },
-    { name: 'onQueryChange', type: '(query: string) => void', defaultValue: '—', note: 'Called on every keystroke; caller filters suggestions.' },
-    { name: 'onAdd', type: '(item: ComboboxOption) => void', defaultValue: '—', note: 'Called when an option is picked or Enter creates one.' },
+    {
+      name: 'suggestions',
+      type: 'ComboboxOption[]',
+      defaultValue: '—',
+      note: 'Dropdown options for the current query.',
+    },
+    {
+      name: 'onQueryChange',
+      type: '(query: string) => void',
+      defaultValue: '—',
+      note: 'Called on every keystroke; caller filters suggestions.',
+    },
+    {
+      name: 'onAdd',
+      type: '(item: ComboboxOption) => void',
+      defaultValue: '—',
+      note: 'Called when an option is picked or Enter creates one.',
+    },
     { name: 'onRemove', type: '(value: string) => void', defaultValue: '—', note: 'Called when a chip is removed.' },
-    { name: 'placeholder', type: 'string', defaultValue: 'locale', note: 'Input placeholder while nothing is selected.' },
+    {
+      name: 'placeholder',
+      type: 'string',
+      defaultValue: 'locale',
+      note: 'Input placeholder while nothing is selected.',
+    },
     { name: 'id', type: 'string', defaultValue: '—', note: 'Native input id; prefixes the listbox ids.' },
     { name: 'chip', type: 'Snippet<[option, remove]>', defaultValue: '—', note: 'Custom chip renderer.' },
     { name: 'option', type: 'Snippet<[suggestion]>', defaultValue: '—', note: 'Custom suggestion renderer.' },
@@ -84,9 +104,7 @@
 
 {#snippet settingsPanel()}
   <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
-      Reset
-    </Button>
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
   </Buttons>
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Placeholder" htmlFor="pg-placeholder">
@@ -94,7 +112,7 @@
         id="pg-placeholder"
         bind:value={pgPlaceholder}
         placeholder="Select or type..."
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
   </div>
 {/snippet}
@@ -102,7 +120,7 @@
 <ShowcasePage name="Combobox" props={propsSnippet}>
   <ShowcaseSection
     title={sectionTitle}
-    code={code}
+    {code}
     footer={settingsPanel}
     scope={{
       selected: pgSelected,

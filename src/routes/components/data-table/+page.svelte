@@ -92,7 +92,7 @@
       pgLoading !== '' ||
       pgPlaceholder !== '' ||
       pgEmptyMessage !== '' ||
-      pgPageSizeText !== ''
+      pgPageSizeText !== '',
   )
   const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
 
@@ -125,13 +125,13 @@
     key: string | null,
     direction: 'asc' | 'desc',
     page: number,
-    size: number
+    size: number,
   ): DemoRow[] {
     const filtered = all.filter(row => matches(row, text))
     const sorted =
       key === 'name'
         ? [...filtered].sort((a, b) =>
-            direction === 'desc' ? b.name.localeCompare(a.name) : a.name.localeCompare(b.name)
+            direction === 'desc' ? b.name.localeCompare(a.name) : a.name.localeCompare(b.name),
           )
         : filtered
     return sorted.slice((page - 1) * size, page * size)
@@ -188,11 +188,9 @@
       key: column.key,
       header: column.header,
       checked: !hidden.has(column.key),
-    }))
+    })),
   )
-  const pageRows = $derived(
-    visibleRows(rows, pgQuery, pgSortKey, pgSortDirection, pgPage, pgPageSize)
-  )
+  const pageRows = $derived(visibleRows(rows, pgQuery, pgSortKey, pgSortDirection, pgPage, pgPageSize))
   const rowTotal = $derived(visibleTotal(rows, pgQuery))
   const allRowsSelected = $derived(pgSelected.size > 0 && pgSelected.size === rows.length)
   const someRowsSelected = $derived(pgSelected.size > 0 && pgSelected.size < rows.length)
@@ -217,7 +215,10 @@
     pgSelected = toggleSelection(pgSelected, id, checked)
   }
   function handleToggleAll() {
-    pgSelected = toggleAllSelected(pgSelected, rows.map(row => row.id))
+    pgSelected = toggleAllSelected(
+      pgSelected,
+      rows.map(row => row.id),
+    )
   }
 
   const code = $derived.by(() =>
@@ -231,25 +232,70 @@
       loading: pgLoading,
       placeholder: pgPlaceholder,
       emptyMessage: pgEmptyMessage,
-    })
+    }),
   )
 
   const props: PropRow[] = [
-    { name: 'rows', type: 'T[]', defaultValue: '—', note: 'Rows on the current page; the caller filters, sorts, and slices.' },
+    {
+      name: 'rows',
+      type: 'T[]',
+      defaultValue: '—',
+      note: 'Rows on the current page; the caller filters, sorts, and slices.',
+    },
     { name: 'rowId', type: '(row: T) => string', defaultValue: '—', note: 'Stable key per row.' },
-    { name: 'columns', type: 'DataTableColumn<T>[]', defaultValue: '—', note: 'Column defs with optional cell renderers.' },
+    {
+      name: 'columns',
+      type: 'DataTableColumn<T>[]',
+      defaultValue: '—',
+      note: 'Column defs with optional cell renderers.',
+    },
     { name: 'loading', type: 'boolean', defaultValue: 'false', note: 'Shows the spinner when there are no rows yet.' },
     { name: 'emptyMessage', type: 'string', defaultValue: "'No rows'", note: 'Shown when rows is empty.' },
-    { name: 'searchValue', type: 'string', defaultValue: "''", note: 'Bindable search text; filtering stays with the caller.' },
-    { name: 'searchAriaLabel', type: 'string', defaultValue: "'Search'", note: 'Accessible name for the search field.' },
+    {
+      name: 'searchValue',
+      type: 'string',
+      defaultValue: "''",
+      note: 'Bindable search text; filtering stays with the caller.',
+    },
+    {
+      name: 'searchAriaLabel',
+      type: 'string',
+      defaultValue: "'Search'",
+      note: 'Accessible name for the search field.',
+    },
     { name: 'searchPlaceholder', type: 'string', defaultValue: "'Search'", note: 'Search placeholder.' },
     { name: 'showSearch', type: 'boolean', defaultValue: 'true', note: 'Renders the search field.' },
-    { name: 'chooserColumns', type: 'ChooserColumn[]', defaultValue: '—', note: 'Column selector entries; the chooser is omitted when undefined.' },
-    { name: 'chooserLabel', type: 'string', defaultValue: "'Choose columns'", note: 'Accessible name for the column selector.' },
-    { name: 'chooserResetLabel', type: 'string', defaultValue: "'Reset columns'", note: 'Accessible name for the reset button.' },
+    {
+      name: 'chooserColumns',
+      type: 'ChooserColumn[]',
+      defaultValue: '—',
+      note: 'Column selector entries; the chooser is omitted when undefined.',
+    },
+    {
+      name: 'chooserLabel',
+      type: 'string',
+      defaultValue: "'Choose columns'",
+      note: 'Accessible name for the column selector.',
+    },
+    {
+      name: 'chooserResetLabel',
+      type: 'string',
+      defaultValue: "'Reset columns'",
+      note: 'Accessible name for the reset button.',
+    },
     { name: 'onToggleColumn', type: '(key, checked) => void', defaultValue: '—', note: 'Column visibility handler.' },
-    { name: 'onResetColumns', type: '() => void', defaultValue: '—', note: 'Reset handler; the caller also bumps resetWidthsSignal to drop resized widths.' },
-    { name: 'paginationTrailing', type: 'Snippet', defaultValue: '—', note: 'Arbitrary content for the pagination row’s right edge.' },
+    {
+      name: 'onResetColumns',
+      type: '() => void',
+      defaultValue: '—',
+      note: 'Reset handler; the caller also bumps resetWidthsSignal to drop resized widths.',
+    },
+    {
+      name: 'paginationTrailing',
+      type: 'Snippet',
+      defaultValue: '—',
+      note: 'Arbitrary content for the pagination row’s right edge.',
+    },
     { name: 'selectable', type: 'boolean', defaultValue: 'false', note: 'Renders the checkbox column.' },
     { name: 'selectedIds', type: 'Set<string>', defaultValue: '—', note: 'Selected row ids; managed by the caller.' },
     { name: 'onToggleSelection', type: '(id, checked) => void', defaultValue: '—', note: 'Row checkbox handler.' },
@@ -259,14 +305,29 @@
     { name: 'currentPage', type: 'number', defaultValue: '—', note: 'One-based current page.' },
     { name: 'onPageChange', type: '(page: number) => void', defaultValue: '—', note: 'Page navigation handler.' },
     { name: 'onPageSizeChange', type: '(size: number) => void', defaultValue: '—', note: 'Page-size handler.' },
-    { name: 'tableClass', type: 'string', defaultValue: "'min-w-0'", note: 'Extra classes for the table element; raise the minimum width when columns need a horizontal scroll floor.' },
+    {
+      name: 'tableClass',
+      type: 'string',
+      defaultValue: "'min-w-0'",
+      note: 'Extra classes for the table element; raise the minimum width when columns need a horizontal scroll floor.',
+    },
     { name: 'fillHeight', type: 'boolean', defaultValue: 'false', note: 'Fills the parent; table body scrolls.' },
-    { name: 'bodyScroll', type: 'boolean', defaultValue: 'false', note: 'Fixed header band with a body-only scrollport (needs fillHeight).' },
+    {
+      name: 'bodyScroll',
+      type: 'boolean',
+      defaultValue: 'false',
+      note: 'Fixed header band with a body-only scrollport (needs fillHeight).',
+    },
     { name: 'showPagination', type: 'boolean', defaultValue: 'true', note: 'Renders the pagination footer.' },
     { name: 'dense', type: 'boolean', defaultValue: 'false', note: 'Compact padding for panel tables.' },
     { name: 'sortKey', type: 'string | null', defaultValue: 'null', note: 'Bindable active sort column.' },
     { name: 'sortDirection', type: "'asc' | 'desc'", defaultValue: "'asc'", note: 'Bindable sort direction.' },
-    { name: 'onSort', type: '(key, direction) => void', defaultValue: '—', note: 'Sort handler; or bind sortKey/sortDirection.' },
+    {
+      name: 'onSort',
+      type: '(key, direction) => void',
+      defaultValue: '—',
+      note: 'Sort handler; or bind sortKey/sortDirection.',
+    },
     { name: 'resizable', type: 'boolean', defaultValue: 'false', note: 'Draggable column resize handles.' },
     { name: 'storageKey', type: 'string', defaultValue: '—', note: 'Persists resized widths under this key.' },
   ]
@@ -298,9 +359,7 @@
 
 {#snippet settingsPanel()}
   <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
-      Reset
-    </Button>
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
   </Buttons>
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Show search">
@@ -374,14 +433,14 @@
         id="pg-placeholder"
         bind:value={pgPlaceholder}
         placeholder="Search"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
     <FormField label="Empty message" htmlFor="pg-empty">
       <input
         id="pg-empty"
         bind:value={pgEmptyMessage}
         placeholder="No rows"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
     <FormField label="Page size" htmlFor="pg-pagesize">
       <NumberInput
@@ -399,7 +458,7 @@
 <ShowcasePage name="DataTable" props={propsSnippet} wide>
   <ShowcaseSection
     title={sectionTitle}
-    code={code}
+    {code}
     footer={settingsPanel}
     scope={{
       hidden,
@@ -425,7 +484,7 @@
       handleResetColumns,
       handlePageChange,
       handlePageSizeChange,
-      resizeLabel: stageResizeLabel
+      resizeLabel: stageResizeLabel,
     }}>
     <ShowcaseStage
       value={pgStageWidth}
@@ -439,10 +498,10 @@
         searchAriaLabel="Search rows"
         bind:searchValue={pgQuery}
         onSearchInput={handleSearchInput}
-        showSearch={showSearch}
+        {showSearch}
         searchPlaceholder={pgPlaceholder || undefined}
         emptyMessage={pgEmptyMessage || undefined}
-        showPagination={showPagination}
+        {showPagination}
         chooserColumns={chooserEntries}
         onToggleColumn={handleToggleColumn}
         onResetColumns={handleResetColumns}
@@ -454,7 +513,7 @@
         currentPage={pgPage}
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
-        selectable={selectable}
+        {selectable}
         selectedIds={pgSelected}
         onToggleSelection={handleToggleSelection}
         onToggleAll={handleToggleAll}
@@ -462,10 +521,10 @@
         someSelected={someRowsSelected}
         selectAllAriaLabel="Select all rows"
         rowSelectAriaLabel={row => `Select ${row.name}`}
-        dense={dense}
-        resizable={resizable}
+        {dense}
+        {resizable}
         resizeAriaLabel={column => `Resize ${column.header}`}
-        loading={loading} />
+        {loading} />
     </ShowcaseStage>
   </ShowcaseSection>
 </ShowcasePage>

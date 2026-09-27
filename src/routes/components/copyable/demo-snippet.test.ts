@@ -11,7 +11,12 @@ describe('buildCopyableSnippet', () => {
   })
 
   it('emits text, position, visibility, and className when set', () => {
-    const source = buildCopyableSnippet({ text: 'npm run check', copyPosition: 'top-right', alwaysVisible: 'yes', className: 'font-mono' })
+    const source = buildCopyableSnippet({
+      text: 'npm run check',
+      copyPosition: 'top-right',
+      alwaysVisible: 'yes',
+      className: 'font-mono',
+    })
     expect(source).toContain('text="npm run check"')
     expect(source).toContain('copyPosition="top-right"')
     expect(source).toContain('  alwaysVisible\n')

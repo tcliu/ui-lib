@@ -7,8 +7,8 @@ describe('buildConfirmDialogSnippet', () => {
   it('omits every override while unset', () => {
     const source = buildConfirmDialogSnippet({ ...unset })
     expect(source).toContain('title={discardTitle}')
-    expect(source).toContain('onConfirm={() => { result = \'confirmed\'; open = false }}')
-    expect(source).toContain('onCancel={() => { result = \'cancelled\'; open = false }}')
+    expect(source).toContain("onConfirm={() => { result = 'confirmed'; open = false }}")
+    expect(source).toContain("onCancel={() => { result = 'cancelled'; open = false }}")
     expect(source).not.toContain('maxWidth=')
     expect(source).not.toContain('confirmColor=')
     expect(source).not.toContain('pending')

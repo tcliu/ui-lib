@@ -24,11 +24,7 @@ function escapeAttr(value: string): string {
 // The value is baked into a single-quoted JS string in the snippet's leading
 // script, so backslashes, quotes, and line breaks must stay literal.
 function escapeScriptString(value: string): string {
-  return value
-    .replace(/\\/g, '\\\\')
-    .replace(/'/g, "\\'")
-    .replace(/\n/g, '\\n')
-    .replace(/\r/g, '\\r')
+  return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/\r/g, '\\r')
 }
 
 // A tri-state line: omitted while unset, bare while Yes, ={false} while No.
@@ -39,12 +35,7 @@ function flagLine(name: string, value: TriState): string[] {
   return [`    ${name}${value === 'yes' ? '' : '={false}'}`]
 }
 
-export function buildEditableTextSnippet({
-  value,
-  size,
-  copyable,
-  className,
-}: EditableTextSnippetState): string {
+export function buildEditableTextSnippet({ value, size, copyable, className }: EditableTextSnippetState): string {
   return [
     '<script>',
     `  let value = $state('${escapeScriptString(value || DEFAULT_TEXT)}')`,

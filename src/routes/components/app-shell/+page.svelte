@@ -41,7 +41,9 @@
   const demoRightOpen = $derived(pgRightPane === 'open')
   const demoFooterOpen = $derived(pgFooter === 'show')
 
-  const isCustomized = $derived(pgMode !== '' || pgCollapseMode !== '' || pgVisibility !== '' || pgRightPane !== '' || pgFooter !== '')
+  const isCustomized = $derived(
+    pgMode !== '' || pgCollapseMode !== '' || pgVisibility !== '' || pgRightPane !== '' || pgFooter !== '',
+  )
   const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
 
   function clearPlayground(): void {
@@ -336,8 +338,7 @@
               <MenuIcon className="h-4 w-4" />
             {/snippet}
           </Button>
-          <span class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-200"
-            >{i18n.t('showcase.title')}</span>
+          <span class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-200">{i18n.t('showcase.title')}</span>
         {/snippet}
         {#snippet leftPane()}
           <p class="px-3 py-2 text-sm text-slate-300">{i18n.t('showcase.components')}</p>

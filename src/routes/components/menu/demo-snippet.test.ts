@@ -13,7 +13,12 @@ describe('buildMenuSnippet', () => {
   })
 
   it('emits align and custom labels when set', () => {
-    const source = buildMenuSnippet({ align: 'left', triggerLabel: 'Options', firstLabel: 'Rename', secondLabel: 'Remove' })
+    const source = buildMenuSnippet({
+      align: 'left',
+      triggerLabel: 'Options',
+      firstLabel: 'Rename',
+      secondLabel: 'Remove',
+    })
     expect(source).toContain('align="left"')
     expect(source).toContain('ariaLabel="Options"')
     expect(source).toContain('label: "Rename"')

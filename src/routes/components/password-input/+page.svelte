@@ -46,7 +46,7 @@
       pgHideLabel !== '' ||
       pgDisabled !== '' ||
       pgRequired !== '' ||
-      pgClassName !== ''
+      pgClassName !== '',
   )
   const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
 
@@ -68,7 +68,7 @@
       disabled: pgDisabled,
       required: pgRequired,
       className: pgClassName,
-    })
+    }),
   )
 
   const props: PropRow[] = [
@@ -79,8 +79,18 @@
     { name: 'autocomplete', type: 'string', defaultValue: "'current-password'", note: 'Native autocomplete token.' },
     { name: 'disabled', type: 'boolean', defaultValue: 'false', note: 'Disables the field and the toggle.' },
     { name: 'required', type: 'boolean', defaultValue: 'false', note: 'Native required flag.' },
-    { name: 'showLabel', type: 'string', defaultValue: '—', note: 'Toggle label when hidden; falls back to the locale.' },
-    { name: 'hideLabel', type: 'string', defaultValue: '—', note: 'Toggle label when visible; falls back to the locale.' },
+    {
+      name: 'showLabel',
+      type: 'string',
+      defaultValue: '—',
+      note: 'Toggle label when hidden; falls back to the locale.',
+    },
+    {
+      name: 'hideLabel',
+      type: 'string',
+      defaultValue: '—',
+      note: 'Toggle label when visible; falls back to the locale.',
+    },
     { name: 'className', type: 'string', defaultValue: "''", note: 'Extra classes for the input.' },
     { name: 'oninput', type: '(event: Event) => void', defaultValue: '—', note: 'Native input handler.' },
   ]
@@ -96,9 +106,7 @@
 
 {#snippet settingsPanel()}
   <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
-      Reset
-    </Button>
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
   </Buttons>
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Placeholder" htmlFor="pg-placeholder">
@@ -106,21 +114,21 @@
         id="pg-placeholder"
         bind:value={pgPlaceholder}
         placeholder="Password"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
     <FormField label="Show label" htmlFor="pg-show">
       <input
         id="pg-show"
         bind:value={pgShowLabel}
         placeholder="Show secret"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
     <FormField label="Hide label" htmlFor="pg-hide">
       <input
         id="pg-hide"
         bind:value={pgHideLabel}
         placeholder="Hide secret"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
     <FormField label="Disabled">
       <SelectDropdown
@@ -149,24 +157,20 @@
         id="pg-classname"
         bind:value={pgClassName}
         placeholder="(none)"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
   </div>
 {/snippet}
 
 <ShowcasePage name="PasswordInput" props={propsSnippet}>
-  <ShowcaseSection
-    title={sectionTitle}
-    code={code}
-    footer={settingsPanel}
-    scope={{ value: pgValue }}>
+  <ShowcaseSection title={sectionTitle} {code} footer={settingsPanel} scope={{ value: pgValue }}>
     <PasswordInput
       bind:value={pgValue}
       placeholder={pgPlaceholder || 'Password'}
       showLabel={pgShowLabel || undefined}
       hideLabel={pgHideLabel || undefined}
-      disabled={disabled}
-      required={required}
+      {disabled}
+      {required}
       className={pgClassName || undefined} />
     <span class="text-sm text-slate-400">length: {pgValue.length}</span>
   </ShowcaseSection>

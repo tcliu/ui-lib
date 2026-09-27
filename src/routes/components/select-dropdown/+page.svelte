@@ -67,7 +67,7 @@
   }
 
   const isCustomized = $derived(
-    pgSize !== '' || pgFilterable !== '' || pgControlClass !== '' || pgClearable !== '' || pgAlign !== ''
+    pgSize !== '' || pgFilterable !== '' || pgControlClass !== '' || pgClearable !== '' || pgAlign !== '',
   )
   const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
 
@@ -87,7 +87,7 @@
       controlClass: pgControlClass,
       clearable: pgClearable,
       align: pgAlign,
-    })
+    }),
   )
 
   const props: PropRow[] = [
@@ -102,9 +102,24 @@
     { name: 'controlClass', type: 'string', defaultValue: 'built-in', note: 'Replaces the filterable input classes.' },
     { name: 'optionClass', type: 'string', defaultValue: 'built-in', note: 'Replaces the option row classes.' },
     { name: 'emptyLabel', type: 'string', defaultValue: '—', note: 'Shown when the filtered list is empty.' },
-    { name: 'clearable', type: 'boolean', defaultValue: 'false', note: 'Appends a cross button that clears the value.' },
-    { name: 'clearLabel', type: 'string', defaultValue: "'Clear selection'", note: 'Accessible name for the clear button.' },
-    { name: 'onClear', type: '() => void', defaultValue: 'onSelect(\'\')', note: 'Clear handler; selects empty when omitted.' },
+    {
+      name: 'clearable',
+      type: 'boolean',
+      defaultValue: 'false',
+      note: 'Appends a cross button that clears the value.',
+    },
+    {
+      name: 'clearLabel',
+      type: 'string',
+      defaultValue: "'Clear selection'",
+      note: 'Accessible name for the clear button.',
+    },
+    {
+      name: 'onClear',
+      type: '() => void',
+      defaultValue: "onSelect('')",
+      note: 'Clear handler; selects empty when omitted.',
+    },
     { name: 'align', type: "'left' | 'right'", defaultValue: "'left'", note: 'Panel edge anchored to the trigger.' },
     { name: 'autoPlace', type: 'boolean', defaultValue: 'true', note: 'Flips the panel when crowded.' },
     { name: 'panelClass', type: 'string', defaultValue: 'built-in', note: 'Replaces the floating panel classes.' },
@@ -121,9 +136,7 @@
 
 {#snippet settingsPanel()}
   <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
-      Reset
-    </Button>
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
   </Buttons>
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Size">
@@ -158,7 +171,7 @@
         id="pg-controlclass"
         bind:value={pgControlClass}
         placeholder="(none)"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
     <FormField label="Clearable">
       <SelectDropdown
@@ -186,19 +199,15 @@
 {/snippet}
 
 <ShowcasePage name="SelectDropdown" props={propsSnippet}>
-  <ShowcaseSection
-    title={sectionTitle}
-    code={code}
-    footer={settingsPanel}
-    scope={{ options, value: pgValue, labelFor }}>
+  <ShowcaseSection title={sectionTitle} {code} footer={settingsPanel} scope={{ options, value: pgValue, labelFor }}>
     <SelectDropdown
       buttonLabel={labelFor(options, pgValue)}
       activeValue={pgValue}
       ariaLabel="default"
       size={demoSize}
-      filterable={filterable}
+      {filterable}
       controlClass={demoControlClass}
-      clearable={clearable}
+      {clearable}
       align={demoAlign}
       {options}
       onSelect={next => (pgValue = next)} />

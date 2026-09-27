@@ -36,9 +36,7 @@
     return value === '' ? 'Default' : value === 'yes' ? 'Yes' : 'No'
   }
 
-  const isCustomized = $derived(
-    pgText !== '' || pgAlwaysVisible !== '' || pgAriaLabel !== '' || pgTooltip !== ''
-  )
+  const isCustomized = $derived(pgText !== '' || pgAlwaysVisible !== '' || pgAriaLabel !== '' || pgTooltip !== '')
   const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
 
   function clearPlayground() {
@@ -54,12 +52,17 @@
       alwaysVisible: pgAlwaysVisible,
       copyAriaLabel: pgAriaLabel,
       copyTooltip: pgTooltip,
-    })
+    }),
   )
 
   const props: PropRow[] = [
     { name: 'text', type: 'string', defaultValue: '—', note: 'Text placed on the clipboard (required).' },
-    { name: 'alwaysVisible', type: 'boolean', defaultValue: 'false', note: 'Keeps the button visible instead of revealing it on hover/focus.' },
+    {
+      name: 'alwaysVisible',
+      type: 'boolean',
+      defaultValue: 'false',
+      note: 'Keeps the button visible instead of revealing it on hover/focus.',
+    },
     { name: 'copyAriaLabel', type: 'string', defaultValue: 'locale', note: 'Accessible name for the copy button.' },
     { name: 'copyTooltip', type: 'string', defaultValue: 'locale', note: 'Tooltip shown on hover/focus.' },
   ]
@@ -75,9 +78,7 @@
 
 {#snippet settingsPanel()}
   <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
-      Reset
-    </Button>
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
   </Buttons>
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Text" htmlFor="pg-text">
@@ -85,7 +86,7 @@
         id="pg-text"
         bind:value={pgText}
         placeholder={DEFAULT_TEXT}
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
     <FormField label="Always visible">
       <SelectDropdown
@@ -103,30 +104,26 @@
         id="pg-aria"
         bind:value={pgAriaLabel}
         placeholder="(locale)"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
     <FormField label="Tooltip" htmlFor="pg-tooltip">
       <input
         id="pg-tooltip"
         bind:value={pgTooltip}
         placeholder="(locale)"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
   </div>
 {/snippet}
 
 <ShowcasePage name="CopyButton" props={propsSnippet}>
-  <ShowcaseSection
-    title={sectionTitle}
-    code={code}
-    footer={settingsPanel}
-    scope={{ copyHint: i18n.t('copy.toClipboard') }}>
+  <ShowcaseSection title={sectionTitle} {code} footer={settingsPanel} scope={{ copyHint: i18n.t('copy.toClipboard') }}>
     <div class="group flex flex-wrap items-center gap-3">
       <div class="flex max-w-full items-center gap-2 rounded-md border border-slate-800 bg-slate-950 px-3 py-2">
         <span class="min-w-0 truncate font-mono text-sm text-slate-300">{pgText || DEFAULT_TEXT}</span>
         <CopyButton
           text={pgText || DEFAULT_TEXT}
-          alwaysVisible={alwaysVisible}
+          {alwaysVisible}
           copyAriaLabel={pgAriaLabel || undefined}
           copyTooltip={pgTooltip || undefined} />
       </div>

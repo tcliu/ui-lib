@@ -13,7 +13,13 @@
   let { className = '', size = 'md' }: Props = $props()
 </script>
 
-<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" width={SIZE_PX[size]} height={SIZE_PX[size]} class={className}>
+<svg
+  viewBox="0 0 16 16"
+  fill="currentColor"
+  aria-hidden="true"
+  width={SIZE_PX[size]}
+  height={SIZE_PX[size]}
+  class={className}>
   <path
     d="M1.75 2h4.5c.414 0 .75.336.75.75v4.5a.75.75 0 0 1-.75.75h-4.5A.75.75 0 0 1 1 7.25v-4.5C1 2.336 1.336 2 1.75 2Zm0 7h4.5c.414 0 .75.336.75.75v4.5a.75.75 0 0 1-.75.75h-4.5A.75.75 0 0 1 1 14.25v-4.5C1 9.336 1.336 9 1.75 9Zm8-7h4.5c.414 0 .75.336.75.75v4.5a.75.75 0 0 1-.75.75h-4.5A.75.75 0 0 1 9 7.25v-4.5c0-.414.336-.75.75-.75Zm0 7h4.5c.414 0 .75.336.75.75v4.5a.75.75 0 0 1-.75.75h-4.5a.75.75 0 0 1-.75-.75v-4.5c0-.414.336-.75.75-.75Z" />
 </svg>

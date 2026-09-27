@@ -43,9 +43,19 @@
 
   const props: PropRow[] = [
     { name: 'children', type: 'Snippet', defaultValue: '—', note: 'Tooltip text/content.' },
-    { name: 'align', type: "'center' | 'left' | 'right'", defaultValue: "'center'", note: 'Horizontal alignment to the trigger.' },
+    {
+      name: 'align',
+      type: "'center' | 'left' | 'right'",
+      defaultValue: "'center'",
+      note: 'Horizontal alignment to the trigger.',
+    },
     { name: 'class', type: 'string', defaultValue: "''", note: 'Extra classes for the tooltip box.' },
-    { name: 'trigger', type: 'HTMLElement | null', defaultValue: 'null', note: 'Explicit trigger; falls back to the anchor parent.' },
+    {
+      name: 'trigger',
+      type: 'HTMLElement | null',
+      defaultValue: 'null',
+      note: 'Explicit trigger; falls back to the anchor parent.',
+    },
   ]
 </script>
 
@@ -59,9 +69,7 @@
 
 {#snippet settingsPanel()}
   <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
-      Reset
-    </Button>
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
   </Buttons>
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Align">
@@ -97,7 +105,7 @@
         id="pg-class"
         bind:value={pgClass}
         placeholder="(none)"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
   </div>
 {/snippet}
@@ -105,7 +113,7 @@
 <ShowcasePage name="Tooltip" props={propsSnippet}>
   <ShowcaseSection
     title={sectionTitle}
-    code={code}
+    {code}
     footer={settingsPanel}
     scope={{ explicitTrigger: null, applyLabel: i18n.t('common.apply') }}>
     <Button bind:buttonEl={explicitTrigger}>{i18n.t('common.apply')}</Button>

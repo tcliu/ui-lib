@@ -56,7 +56,7 @@
   }
 
   const code = $derived.by(() =>
-    buildChipSnippet({ mode: pgMode, label: pgLabel, chipClass: pgChipClass, active: pgActive })
+    buildChipSnippet({ mode: pgMode, label: pgLabel, chipClass: pgChipClass, active: pgActive }),
   )
 
   const props: PropRow[] = [
@@ -70,7 +70,12 @@
     { name: 'disabled', type: 'boolean', defaultValue: 'false', note: 'Disables the remove/toggle button.' },
     { name: 'onRemove', type: '() => void', defaultValue: '—', note: 'Renders the remove button.' },
     { name: 'active', type: 'boolean', defaultValue: 'false', note: 'Pressed state in toggle mode.' },
-    { name: 'onclick', type: '() => void', defaultValue: '—', note: 'Renders the toggle button instead of the static pill.' },
+    {
+      name: 'onclick',
+      type: '() => void',
+      defaultValue: '—',
+      note: 'Renders the toggle button instead of the static pill.',
+    },
   ]
 </script>
 
@@ -84,9 +89,7 @@
 
 {#snippet settingsPanel()}
   <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
-      Reset
-    </Button>
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
   </Buttons>
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Mode">
@@ -108,14 +111,14 @@
         id="pg-label"
         bind:value={pgLabel}
         placeholder="Default"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
     <FormField label="Chip class" htmlFor="pg-chipclass">
       <input
         id="pg-chipclass"
         bind:value={pgChipClass}
         placeholder="(none)"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
     <FormField label="Active">
       <SelectDropdown
@@ -134,7 +137,7 @@
 <ShowcasePage name="Chip" props={propsSnippet}>
   <ShowcaseSection
     title={sectionTitle}
-    code={code}
+    {code}
     footer={settingsPanel}
     scope={{ defaultLabel: i18n.t('showcase.default'), chipActive, removed: pgRemoved }}>
     {#if pgMode === 'removable'}

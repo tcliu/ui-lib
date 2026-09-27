@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  DEFAULT_TEXT,
-  buildCopyButtonSnippet,
-  type CopyButtonSnippetState,
-} from './demo-snippet'
+import { DEFAULT_TEXT, buildCopyButtonSnippet, type CopyButtonSnippetState } from './demo-snippet'
 
 const base: CopyButtonSnippetState = {
   text: '',

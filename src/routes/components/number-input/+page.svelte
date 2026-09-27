@@ -64,7 +64,7 @@
       pgDisabled !== '' ||
       pgStepless !== '' ||
       pgShowControls !== '' ||
-      pgClassName !== ''
+      pgClassName !== '',
   )
   const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
 
@@ -89,7 +89,7 @@
       disabled: pgDisabled,
       showControls: pgShowControls,
       className: pgClassName,
-    })
+    }),
   )
 
   const props: PropRow[] = [
@@ -101,7 +101,12 @@
     { name: 'disabled', type: 'boolean', defaultValue: 'false', note: 'Disables the input and steppers.' },
     { name: 'className', type: 'string', defaultValue: "''", note: 'Extra classes for the input.' },
     { name: 'showControls', type: 'boolean', defaultValue: 'true', note: 'Renders the stepper buttons.' },
-    { name: 'inputStyle', type: 'string', defaultValue: '—', note: 'Inline style for the input; widths the field when steppers are hidden.' },
+    {
+      name: 'inputStyle',
+      type: 'string',
+      defaultValue: '—',
+      note: 'Inline style for the input; widths the field when steppers are hidden.',
+    },
     { name: 'id', type: 'string', defaultValue: '—', note: 'Native input id.' },
     { name: 'ariaLabel', type: 'string', defaultValue: '—', note: 'Required accessible name.' },
     { name: 'incrementLabel', type: 'string', defaultValue: 'locale', note: 'Accessible name for the up button.' },
@@ -122,9 +127,7 @@
 
 {#snippet settingsPanel()}
   <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
-      Reset
-    </Button>
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
   </Buttons>
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Min" htmlFor="pg-min">
@@ -156,7 +159,7 @@
         id="pg-placeholder"
         bind:value={pgPlaceholder}
         placeholder="0"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
     <FormField label="Disabled">
       <SelectDropdown
@@ -204,7 +207,7 @@
         id="pg-classname"
         bind:value={pgClassName}
         placeholder="(none)"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
   </div>
 {/snippet}
@@ -212,19 +215,19 @@
 <ShowcasePage name="NumberInput" props={propsSnippet}>
   <ShowcaseSection
     title={sectionTitle}
-    code={code}
+    {code}
     footer={settingsPanel}
     scope={{ value: pgValue, applyLabel: i18n.t('common.apply') }}>
     <div class="flex flex-col gap-1">
       <NumberInput
         bind:value={pgValue}
         ariaLabel={i18n.t('common.apply')}
-        min={min}
-        max={max}
-        step={step}
+        {min}
+        {max}
+        {step}
         placeholder={pgPlaceholder || undefined}
-        disabled={disabled}
-        showControls={showControls}
+        {disabled}
+        {showControls}
         className={demoClassName} />
       <span class="text-sm text-slate-400">value: {pgValue}</span>
     </div>

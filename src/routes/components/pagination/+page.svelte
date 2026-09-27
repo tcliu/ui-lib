@@ -45,7 +45,7 @@
   }
 
   const isCustomized = $derived(
-    pgSize !== '' || pgCustomOptions !== '' || pgCustomLabels !== '' || pgStyled !== '' || pgClassName !== ''
+    pgSize !== '' || pgCustomOptions !== '' || pgCustomLabels !== '' || pgStyled !== '' || pgClassName !== '',
   )
   const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
 
@@ -65,7 +65,7 @@
       customOptions: pgCustomOptions,
       customLabels: pgCustomLabels,
       className: pgClassName,
-    })
+    }),
   )
 
   const props: PropRow[] = [
@@ -76,11 +76,21 @@
     { name: 'className', type: 'string', defaultValue: "''", note: 'Extra classes for the nav.' },
     { name: 'pageSizeOptions', type: 'number[]', defaultValue: '[10, 20, 50]', note: 'Page-size choices.' },
     { name: 'onPageChange', type: '(page: number) => void', defaultValue: '—', note: 'Called on page change.' },
-    { name: 'onPageSizeChange', type: '(size: number) => void', defaultValue: '—', note: 'Called on page-size change.' },
+    {
+      name: 'onPageSizeChange',
+      type: '(size: number) => void',
+      defaultValue: '—',
+      note: 'Called on page-size change.',
+    },
     { name: 'previousLabel', type: 'string', defaultValue: 'locale', note: 'Accessible name for the previous arrow.' },
     { name: 'nextLabel', type: 'string', defaultValue: 'locale', note: 'Accessible name for the next arrow.' },
     { name: 'pageSizeLabel', type: 'string', defaultValue: 'locale', note: 'Label beside the page-size select.' },
-    { name: 'currentPageLabel', type: 'string', defaultValue: 'locale', note: 'Accessible name for the page jump input.' },
+    {
+      name: 'currentPageLabel',
+      type: 'string',
+      defaultValue: 'locale',
+      note: 'Accessible name for the page jump input.',
+    },
     { name: 'paginationLabel', type: 'string', defaultValue: 'locale', note: 'Accessible name for the nav.' },
     { name: 'trailing', type: 'Snippet', defaultValue: '—', note: 'Arbitrary content pinned to the row’s right edge.' },
   ]
@@ -96,9 +106,7 @@
 
 {#snippet settingsPanel()}
   <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
-      Reset
-    </Button>
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
   </Buttons>
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Size">
@@ -156,7 +164,7 @@
         id="pg-classname"
         bind:value={pgClassName}
         placeholder="(none)"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
   </div>
 {/snippet}
@@ -164,7 +172,7 @@
 <ShowcasePage name="Pagination" props={propsSnippet}>
   <ShowcaseSection
     title={sectionTitle}
-    code={code}
+    {code}
     footer={settingsPanel}
     scope={{ pageSize: pgPageSize, currentPage: pgCurrentPage, handlePageSizeChange }}>
     <Pagination

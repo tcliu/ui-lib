@@ -29,22 +29,9 @@
 
   const demoMaxWidth = $derived(
     (pgMaxWidth || undefined) as
-      | 'md'
-      | 'lg'
-      | 'xl'
-      | '2xl'
-      | '3xl'
-      | '4xl'
-      | '5xl'
-      | '6xl'
-      | '7xl'
-      | 'fit'
-      | 'wide'
-      | undefined
+      'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | '7xl' | 'fit' | 'wide' | undefined,
   )
-  const demoConfirmColor = $derived(
-    (pgConfirmColor || undefined) as 'rose' | 'amber' | 'emerald' | 'cyan' | undefined
-  )
+  const demoConfirmColor = $derived((pgConfirmColor || undefined) as 'rose' | 'amber' | 'emerald' | 'cyan' | undefined)
   const pending = $derived(flagOn(pgPending))
   const confirmOnDismiss = $derived(flagOn(pgConfirmOnDismiss))
 
@@ -60,7 +47,7 @@
   }
 
   const isCustomized = $derived(
-    pgMaxWidth !== '' || pgConfirmColor !== '' || pgPending !== '' || pgConfirmOnDismiss !== ''
+    pgMaxWidth !== '' || pgConfirmColor !== '' || pgPending !== '' || pgConfirmOnDismiss !== '',
   )
   const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
 
@@ -79,21 +66,46 @@
       confirmColor: pgConfirmColor,
       pending: pgPending,
       confirmOnDismiss: pgConfirmOnDismiss,
-    })
+    }),
   )
 
   const props: PropRow[] = [
     { name: 'title', type: 'string', defaultValue: '—', note: 'Dialog heading.' },
     { name: 'message', type: 'string', defaultValue: '—', note: 'Body copy explaining the action.' },
     { name: 'confirmLabel', type: 'string', defaultValue: '—', note: 'Confirm button text.' },
-    { name: 'closeLabel', type: 'string', defaultValue: 'locale', note: 'Accessible name for the dismiss affordances.' },
+    {
+      name: 'closeLabel',
+      type: 'string',
+      defaultValue: 'locale',
+      note: 'Accessible name for the dismiss affordances.',
+    },
     { name: 'className', type: 'string', defaultValue: "''", note: 'Extra classes for the dialog panel.' },
     { name: 'maxWidth', type: "'md' | … | '7xl' | 'fit' | 'wide'", defaultValue: "'md'", note: 'Panel width variant.' },
-    { name: 'confirmColor', type: "'rose' | 'amber' | 'emerald' | 'cyan'", defaultValue: "'rose'", note: 'Confirm button accent.' },
-    { name: 'pending', type: 'boolean', defaultValue: 'false', note: 'Disables dismissal and marks the confirm button pending.' },
-    { name: 'confirmOnDismiss', type: 'boolean', defaultValue: 'false', note: 'Routes Escape, overlay click, and the close icon to onConfirm instead of onCancel.' },
+    {
+      name: 'confirmColor',
+      type: "'rose' | 'amber' | 'emerald' | 'cyan'",
+      defaultValue: "'rose'",
+      note: 'Confirm button accent.',
+    },
+    {
+      name: 'pending',
+      type: 'boolean',
+      defaultValue: 'false',
+      note: 'Disables dismissal and marks the confirm button pending.',
+    },
+    {
+      name: 'confirmOnDismiss',
+      type: 'boolean',
+      defaultValue: 'false',
+      note: 'Routes Escape, overlay click, and the close icon to onConfirm instead of onCancel.',
+    },
     { name: 'onConfirm', type: '() => void', defaultValue: '—', note: 'Confirm handler.' },
-    { name: 'onCancel', type: '() => void', defaultValue: 'onConfirm', note: 'Dismiss handler; falls back to onConfirm when omitted.' },
+    {
+      name: 'onCancel',
+      type: '() => void',
+      defaultValue: 'onConfirm',
+      note: 'Dismiss handler; falls back to onConfirm when omitted.',
+    },
   ]
 </script>
 
@@ -107,9 +119,7 @@
 
 {#snippet settingsPanel()}
   <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
-      Reset
-    </Button>
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
   </Buttons>
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Max width">
@@ -162,7 +172,7 @@
 <ShowcasePage name="ConfirmDialog" props={propsSnippet}>
   <ShowcaseSection
     title={sectionTitle}
-    code={code}
+    {code}
     footer={settingsPanel}
     scope={{
       open: pgOpen,
@@ -182,8 +192,8 @@
         closeLabel={i18n.t('common.close')}
         maxWidth={demoMaxWidth}
         confirmColor={demoConfirmColor}
-        pending={pending}
-        confirmOnDismiss={confirmOnDismiss}
+        {pending}
+        {confirmOnDismiss}
         onConfirm={() => {
           pgResult = 'confirmed'
           pgOpen = false

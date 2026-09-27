@@ -55,7 +55,7 @@
       pgStyled !== '' ||
       pgLabelClass !== '' ||
       pgWrapperClass !== '' ||
-      pgBoxClass !== ''
+      pgBoxClass !== '',
   )
   const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
 
@@ -81,7 +81,7 @@
       labelClass: pgLabelClass,
       wrapperClass: pgWrapperClass,
       boxClass: pgBoxClass,
-    })
+    }),
   )
 
   const props: PropRow[] = [
@@ -91,13 +91,23 @@
     { name: 'name', type: 'string', defaultValue: '—', note: 'Native input name.' },
     { name: 'disabled', type: 'boolean', defaultValue: 'false', note: 'Disables the input.' },
     { name: 'indeterminate', type: 'boolean', defaultValue: 'false', note: 'Mixed state glyph.' },
-    { name: 'stopPropagation', type: 'boolean', defaultValue: 'true', note: 'Stops the click bubbling to clickable rows.' },
+    {
+      name: 'stopPropagation',
+      type: 'boolean',
+      defaultValue: 'true',
+      note: 'Stops the click bubbling to clickable rows.',
+    },
     { name: 'size', type: "'sm' | 'md'", defaultValue: "'md'", note: 'Box and label size.' },
     { name: 'labelClass', type: 'string', defaultValue: '—', note: 'Extra classes for the label text.' },
     { name: 'wrapperClass', type: 'string', defaultValue: "''", note: 'Extra classes for the wrapping label.' },
     { name: 'boxClass', type: 'string', defaultValue: "''", note: 'Extra classes for the box span.' },
     { name: 'inputRef', type: 'HTMLInputElement | null', defaultValue: 'null', note: 'Bindable native input element.' },
-    { name: 'onChange', type: '(checked: boolean) => void', defaultValue: '—', note: 'Called with the next checked value.' },
+    {
+      name: 'onChange',
+      type: '(checked: boolean) => void',
+      defaultValue: '—',
+      note: 'Called with the next checked value.',
+    },
   ]
 </script>
 
@@ -111,9 +121,7 @@
 
 {#snippet settingsPanel()}
   <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
-      Reset
-    </Button>
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
   </Buttons>
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Label" htmlFor="pg-label">
@@ -121,7 +129,7 @@
         id="pg-label"
         bind:value={pgLabel}
         placeholder="Apply"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
     <FormField label="Size">
       <SelectDropdown
@@ -182,21 +190,21 @@
         id="pg-labelclass"
         bind:value={pgLabelClass}
         placeholder="(none)"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
     <FormField label="Wrapper class" htmlFor="pg-wrapperclass">
       <input
         id="pg-wrapperclass"
         bind:value={pgWrapperClass}
         placeholder="(none)"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
     <FormField label="Box class" htmlFor="pg-boxclass">
       <input
         id="pg-boxclass"
         bind:value={pgBoxClass}
         placeholder="(none)"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
   </div>
 {/snippet}
@@ -204,15 +212,15 @@
 <ShowcasePage name="Checkbox" props={propsSnippet}>
   <ShowcaseSection
     title={sectionTitle}
-    code={code}
+    {code}
     footer={settingsPanel}
     scope={{ checked: pgChecked, lastChange: pgLastChange, applyLabel: i18n.t('common.apply') }}>
     <Checkbox
       bind:checked={pgChecked}
       label={pgLabel || i18n.t('common.apply')}
       size={demoSize}
-      disabled={disabled}
-      indeterminate={indeterminate}
+      {disabled}
+      {indeterminate}
       labelClass={pgLabelClass || undefined}
       wrapperClass={pgWrapperClass || undefined}
       boxClass={pgBoxClass || undefined}

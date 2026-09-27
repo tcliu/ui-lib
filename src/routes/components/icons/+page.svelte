@@ -70,8 +70,18 @@
   const code = $derived.by(() => buildIconsSnippet({ size: pgSize, tint: pgTint, className: pgClassName }))
 
   const props: PropRow[] = [
-    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", defaultValue: "'md'", note: 'Width/height attributes (12/16/20/24px); composes with className.' },
-    { name: 'className', type: 'string', defaultValue: "''", note: 'Color and extra classes; explicit size classes win over the size attributes.' },
+    {
+      name: 'size',
+      type: "'xs' | 'sm' | 'md' | 'lg'",
+      defaultValue: "'md'",
+      note: 'Width/height attributes (12/16/20/24px); composes with className.',
+    },
+    {
+      name: 'className',
+      type: 'string',
+      defaultValue: "''",
+      note: 'Color and extra classes; explicit size classes win over the size attributes.',
+    },
   ]
 </script>
 
@@ -85,9 +95,7 @@
 
 {#snippet settingsPanel()}
   <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
-      Reset
-    </Button>
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
   </Buttons>
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Size">
@@ -117,39 +125,64 @@
         id="pg-classname"
         bind:value={pgClassName}
         placeholder="(none)"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
   </div>
 {/snippet}
 
 <ShowcasePage name="Icons" props={propsSnippet}>
-  <ShowcaseSection title={sectionTitle} code={code} footer={settingsPanel}>
+  <ShowcaseSection title={sectionTitle} {code} footer={settingsPanel}>
     <div class="grid grid-cols-4 gap-3 sm:grid-cols-8">
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"><CheckIcon size={demoSize} className={galleryClass} />Check</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"><ChevronDownIcon size={demoSize} className={galleryClass} />ChevronDown</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"><ChevronDownSmallIcon size={demoSize} className={galleryClass} />ChevronDownSmall</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"><ChevronLeftIcon size={demoSize} className={galleryClass} />ChevronLeft</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"><ChevronRightIcon size={demoSize} className={galleryClass} />ChevronRight</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"><ChevronUpSmallIcon size={demoSize} className={galleryClass} />ChevronUpSmall</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"><CloseIcon size={demoSize} className={galleryClass} />Close</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"><CodeIcon size={demoSize} className={galleryClass} />Code</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"><CopyIcon size={demoSize} className={galleryClass} />Copy</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"><DeleteIcon size={demoSize} className={galleryClass} />Delete</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"><EyeIcon size={demoSize} className={galleryClass} />Eye</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"><EyeSlashIcon size={demoSize} className={galleryClass} />EyeSlash</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"><ForestIcon size={demoSize} className={galleryClass} />Forest</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"><GlobeIcon size={demoSize} className={galleryClass} />Globe</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"><KebabIcon size={demoSize} className={galleryClass} />Kebab</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"><MenuIcon size={demoSize} className={galleryClass} />Menu</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"><PaletteIcon size={demoSize} className={galleryClass} />Palette</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"><PlusIcon size={demoSize} className={galleryClass} />Plus</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"><RefreshIcon size={demoSize} className={galleryClass} />Refresh</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"><ResetIcon size={demoSize} className={galleryClass} />Reset</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"><SaveIcon size={demoSize} className={galleryClass} />Save</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"><SearchIcon size={demoSize} className={galleryClass} />Search</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"><SettingsIcon size={demoSize} className={galleryClass} />Settings</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"><SortAscIcon size={demoSize} className={galleryClass} />SortAsc</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"><SortDescIcon size={demoSize} className={galleryClass} />SortDesc</span>
+      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
+        ><CheckIcon size={demoSize} className={galleryClass} />Check</span>
+      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
+        ><ChevronDownIcon size={demoSize} className={galleryClass} />ChevronDown</span>
+      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
+        ><ChevronDownSmallIcon size={demoSize} className={galleryClass} />ChevronDownSmall</span>
+      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
+        ><ChevronLeftIcon size={demoSize} className={galleryClass} />ChevronLeft</span>
+      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
+        ><ChevronRightIcon size={demoSize} className={galleryClass} />ChevronRight</span>
+      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
+        ><ChevronUpSmallIcon size={demoSize} className={galleryClass} />ChevronUpSmall</span>
+      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
+        ><CloseIcon size={demoSize} className={galleryClass} />Close</span>
+      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
+        ><CodeIcon size={demoSize} className={galleryClass} />Code</span>
+      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
+        ><CopyIcon size={demoSize} className={galleryClass} />Copy</span>
+      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
+        ><DeleteIcon size={demoSize} className={galleryClass} />Delete</span>
+      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
+        ><EyeIcon size={demoSize} className={galleryClass} />Eye</span>
+      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
+        ><EyeSlashIcon size={demoSize} className={galleryClass} />EyeSlash</span>
+      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
+        ><ForestIcon size={demoSize} className={galleryClass} />Forest</span>
+      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
+        ><GlobeIcon size={demoSize} className={galleryClass} />Globe</span>
+      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
+        ><KebabIcon size={demoSize} className={galleryClass} />Kebab</span>
+      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
+        ><MenuIcon size={demoSize} className={galleryClass} />Menu</span>
+      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
+        ><PaletteIcon size={demoSize} className={galleryClass} />Palette</span>
+      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
+        ><PlusIcon size={demoSize} className={galleryClass} />Plus</span>
+      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
+        ><RefreshIcon size={demoSize} className={galleryClass} />Refresh</span>
+      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
+        ><ResetIcon size={demoSize} className={galleryClass} />Reset</span>
+      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
+        ><SaveIcon size={demoSize} className={galleryClass} />Save</span>
+      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
+        ><SearchIcon size={demoSize} className={galleryClass} />Search</span>
+      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
+        ><SettingsIcon size={demoSize} className={galleryClass} />Settings</span>
+      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
+        ><SortAscIcon size={demoSize} className={galleryClass} />SortAsc</span>
+      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
+        ><SortDescIcon size={demoSize} className={galleryClass} />SortDesc</span>
     </div>
   </ShowcaseSection>
 </ShowcasePage>

@@ -12,7 +12,12 @@ describe('buildPaginationSnippet', () => {
   })
 
   it('emits size, custom options, labels, and the styled wrapper', () => {
-    const source = buildPaginationSnippet({ size: 'lg', customOptions: 'yes', customLabels: 'yes', className: STYLED_CLASS })
+    const source = buildPaginationSnippet({
+      size: 'lg',
+      customOptions: 'yes',
+      customLabels: 'yes',
+      className: STYLED_CLASS,
+    })
     expect(source).toContain('size="lg"')
     expect(source).toContain('pageSizeOptions={[5, 10, 25, 100]}')
     expect(source).toContain('previousLabel="Go back"')

@@ -36,7 +36,9 @@
     return value === '' ? undefined : value === 'yes'
   }
 
-  const demoVariant = $derived((pgVariant || undefined) as 'primary' | 'secondary' | 'danger' | 'outline' | 'ghost' | undefined)
+  const demoVariant = $derived(
+    (pgVariant || undefined) as 'primary' | 'secondary' | 'danger' | 'outline' | 'ghost' | undefined,
+  )
   const demoAccent = $derived((pgAccent || undefined) as 'cyan' | 'emerald' | 'amber' | 'violet' | 'rose' | undefined)
   const demoSize = $derived((pgSize || undefined) as 'xs' | 'sm' | 'md' | 'lg' | undefined)
   const disabled = $derived(flagOn(pgDisabled))
@@ -61,7 +63,7 @@
       pgIcon !== '' ||
       pgBadge !== '' ||
       pgLabel !== '' ||
-      pgClassName !== ''
+      pgClassName !== '',
   )
   const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
 
@@ -88,12 +90,22 @@
       icon: pgIcon,
       badge: pgBadge,
       className: pgClassName,
-    })
+    }),
   )
 
   const props: PropRow[] = [
-    { name: 'variant', type: "'primary' | 'secondary' | 'danger' | 'outline' | 'ghost'", defaultValue: "'secondary'", note: 'Visual treatment.' },
-    { name: 'accent', type: "'cyan' | 'emerald' | 'amber' | 'violet' | 'rose'", defaultValue: "'cyan'", note: 'Tint for primary, outline, and badge.' },
+    {
+      name: 'variant',
+      type: "'primary' | 'secondary' | 'danger' | 'outline' | 'ghost'",
+      defaultValue: "'secondary'",
+      note: 'Visual treatment.',
+    },
+    {
+      name: 'accent',
+      type: "'cyan' | 'emerald' | 'amber' | 'violet' | 'rose'",
+      defaultValue: "'cyan'",
+      note: 'Tint for primary, outline, and badge.',
+    },
     { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", defaultValue: "'md'", note: 'Control size.' },
     { name: 'disabled', type: 'boolean', defaultValue: 'false', note: 'Native disabled + reduced opacity.' },
     { name: 'pending', type: 'boolean', defaultValue: 'false', note: 'Disabled state with a spinner slot.' },
@@ -104,14 +116,24 @@
     { name: 'ariaLabel', type: 'string', defaultValue: '—', note: 'Accessible name for icon-only buttons.' },
     { name: 'onClick', type: '(event: MouseEvent) => void', defaultValue: '—', note: 'Click handler.' },
     { name: 'onKeyDown', type: '(event: KeyboardEvent) => void', defaultValue: '—', note: 'Keydown handler.' },
-    { name: 'preventFocusSteal', type: 'boolean', defaultValue: 'false', note: 'Keeps focus on the current element when clicked.' },
+    {
+      name: 'preventFocusSteal',
+      type: 'boolean',
+      defaultValue: 'false',
+      note: 'Keeps focus on the current element when clicked.',
+    },
     { name: 'dataTip', type: 'string', defaultValue: '—', note: 'data-tip attribute for the host tooltip engine.' },
     { name: 'tooltip', type: 'string', defaultValue: '—', note: 'Wraps the button with the positioned Tooltip.' },
     { name: 'tooltipAlign', type: "'center' | 'left' | 'right'", defaultValue: "'center'", note: 'Tooltip alignment.' },
     { name: 'badge', type: 'string | number', defaultValue: '—', note: 'Count pill overhanging the top-right corner.' },
     { name: 'icon', type: 'Snippet', defaultValue: '—', note: 'Leading icon; icon-only when no children.' },
     { name: 'children', type: 'Snippet', defaultValue: '—', note: 'Button label/content.' },
-    { name: 'buttonEl', type: 'HTMLButtonElement | null', defaultValue: 'null', note: 'Bindable native button element.' },
+    {
+      name: 'buttonEl',
+      type: 'HTMLButtonElement | null',
+      defaultValue: 'null',
+      note: 'Bindable native button element.',
+    },
   ]
 </script>
 
@@ -129,9 +151,7 @@
 
 {#snippet settingsPanel()}
   <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>
-      Reset
-    </Button>
+    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
   </Buttons>
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Variant">
@@ -205,21 +225,21 @@
         id="pg-badge"
         bind:value={pgBadge}
         placeholder="new"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
     <FormField label="Label" htmlFor="pg-label">
       <input
         id="pg-label"
         bind:value={pgLabel}
         placeholder="Apply"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
     <FormField label="Class name" htmlFor="pg-classname">
       <input
         id="pg-classname"
         bind:value={pgClassName}
         placeholder="(none)"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition focus-visible:border-cyan-500 motion-reduce:transition-none" />
+        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
     </FormField>
   </div>
 {/snippet}
@@ -227,15 +247,15 @@
 <ShowcasePage name="Button" props={propsSnippet}>
   <ShowcaseSection
     title={sectionTitle}
-    code={code}
+    {code}
     footer={settingsPanel}
     scope={{ clicks: pgClicks, label: demoLabel, checkIcon }}>
     <Button
       variant={demoVariant}
       accent={demoAccent}
       size={demoSize}
-      disabled={disabled}
-      pending={pending}
+      {disabled}
+      {pending}
       icon={pgIcon ? checkIcon : undefined}
       badge={pgBadge || undefined}
       className={pgClassName || undefined}

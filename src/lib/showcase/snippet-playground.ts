@@ -150,24 +150,18 @@ const MODULE_REGISTRY: Record<string, unknown> = {
 // Compile the snippet and evaluate the resulting factory. Throws with a concise
 // message (no stack) so the caller can show it inline and keep the previous
 // render.
-export async function createSnippetComponent(
-  snippet: string,
-  scope: Record<string, unknown>,
-): Promise<Component> {
+export async function createSnippetComponent(snippet: string, scope: Record<string, unknown>): Promise<Component> {
   const { compile, parse } = await import('svelte/compiler')
   let compiled: string
   try {
     const { declarations, markup } = splitLeadingScript(snippet)
     const ast = parse(`<script>${declarations}</script>`, { modern: true })
     const declaredNames = ast.instance ? collectDeclaredNames(ast.instance.content) : new Set<string>()
-    compiled = compile(
-      buildSource({ markup, declarations, scopeKeys: Object.keys(scope), declaredNames }),
-      {
-        generate: 'client',
-        dev: false,
-        filename: 'ShowcaseSnippet.svelte',
-      },
-    ).js.code
+    compiled = compile(buildSource({ markup, declarations, scopeKeys: Object.keys(scope), declaredNames }), {
+      generate: 'client',
+      dev: false,
+      filename: 'ShowcaseSnippet.svelte',
+    }).js.code
   } catch (error) {
     throw new Error(snippetErrorMessage(error))
   }
