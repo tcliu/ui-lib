@@ -248,3 +248,8 @@ npm run check
 npm run build
 npm test
 ```
+
+- TypeScript rides dual installs: `typescript@~6` stays the main package because
+  `svelte-check` peers only on 5/6, while `@typescript/native` (TS 7) performs
+  the check via the `--tsgo` flag in `npm run check`. Keep both and the flag;
+  promoting `typescript` to 7 breaks the check gate.
