@@ -26,11 +26,11 @@ ui-lib/
 │   │   │   ├── +layout.svelte    # Two-pane showcase: searchable list + splitter
 │   │   │   └── <slug>/+page.svelte # One showcase page per component
 │   │   └── api/
-│   │       └── catalog/+server.ts # GET /api/catalog — project self-card for discovery
+│   │       └── info/+server.ts    # GET /api/info — project self-card for discovery
 │   └── lib/
 │       ├── components/           # Presentational UI components (seeded from the reference)
 │       ├── server/
-│       │   └── catalog-card.ts   # Shared catalog-card contract (normalize + resolve)
+│       │   └── card.ts   # Shared card contract (normalize + resolve)
 │       └── use-*.svelte.ts       # Composable factories (domain state, added per feature)
 ├── scripts/
 │   ├── deploy.mjs                # Deploy entry (config -> interview -> plugin pipeline)
@@ -104,3 +104,20 @@ Server endpoints (+server.ts)
 - **Theme system** — themes are CSS variable overrides in `src/styles.css`
   under `[data-theme='…']`. A pre-paint inline script in `app.html` applies
   the stored theme before first paint.
+- **AppShell responsive presentation** — one `floating` boolean, measured from
+  the shell's own container via a `ResizeObserver` against
+  `APP_SHELL_DESKTOP_BREAKPOINT`, drives every pane decision: flex direction,
+  aside borders, which splitters render, the overlay/backdrop, `inert` on the
+  main column, Escape dismissal, and the slide axis. There is no viewport
+  breakpoint class and no stacked docked state; one wrapper per pane keeps the
+  pane mounted across the docked/floating switch — the opaque surface and the
+  explicit `w-[var(--pane-w)]` (capped at `max-w-[calc(100%-3rem)]`) live on the
+  wrapper, the aside yields (`min-w-0`, no `shrink-0`) so it can never overflow
+  it, and the content row keeps a `min-width` floor from `min` so a narrow
+  container squeezes the pane instead of clipping or overlapping it. Rail
+  collapse docks while wide and floats as an open-or-closed overlay (no rail
+  strip) below the breakpoint. Both panes share one per-side controller
+  (`use-app-shell-drawer.svelte.ts`). Nested shells publish an `AppShellNesting`
+  context callback and visibility-hide their own floating panes (kept mounted,
+  `open` preserved) while an ancestor overlay is open, so an outer overlay
+  always covers an inner one.

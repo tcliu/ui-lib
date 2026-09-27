@@ -36,7 +36,7 @@ your domain tables and list them in `SCHEMA_VERIFY_TABLES`.
 
 ## API routes
 
-### `GET /api/catalog`
+### `GET /api/info`
 
 Public, no auth. Returns this project's catalog self-card: a flat card
 (`{ id, name, icon?, description?, branch?, repo?, status, url?, tags }`) that
@@ -45,7 +45,7 @@ are required; `branch` is the runtime ref (worktree `DEV_TAG` in dev, commit ref
 on Vercel); absent fields normalize to `null`, and a missing/unknown `status`
 defaults to `Active`. Responses carry `cache-control: no-store`.
 
-Normalization lives in `src/lib/server/catalog-card.ts`. A project may also
+Normalization lives in `src/lib/server/card.ts`. A project may also
 answer with an envelope carrying the card under `self` (`{ ..., self: {...} }`);
 consumers resolve `self` when present and the whole body otherwise. Keep that
 module's shape identical across projects so any scanner can parse any of them.
@@ -59,6 +59,11 @@ Request/response contracts go here.
 - Theme palettes live only in `src/styles.css`
 - Component attributes stay camelCase
 - Z-index ladder: sticky `z-10`, drawer `z-20`, overlays `z-40`, dev tag `z-50`
+- AppShell presentation follows one ruler: the shell container width against
+  the 768px breakpoint (`auto` docks at/above, overlays below;
+  `docked`/`floating` pin one behavior; rail always docks). No viewport
+  breakpoint class takes part in pane layout, so measurement and layout agree
+  at every width.
 
 ## Error handling
 

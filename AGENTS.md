@@ -66,13 +66,16 @@ Project-specific development conventions for the UI Library web app.
   (`flex w-full … justify-end`) instead.
 - The `AppShell` aside carries no padding: left-pane content owns its own
   spacing, so shell and pane padding never need compensating values.
-- `AppShell` presents each pane docked beside the content while its own
-  container is wide and as an overlay drawer when narrow (`mode="auto"`,
-  measured on the shell container with `ResizeObserver`, not the viewport);
-  rail-collapse panes always dock, and both panes share one per-side controller
-  (`use-app-shell-drawer.svelte.ts`). A floating overlay marks the main column
-  `inert` so focus stays in the drawer, and every floating dismissal
-  (backdrop, Escape) is gated to overlay mode.
+- `AppShell` pane presentation derives from one `floating` boolean measured on
+  the shell's own container (`ResizeObserver` at `APP_SHELL_DESKTOP_BREAKPOINT`),
+  never from viewport breakpoint classes; docked and floating are the only two
+  presentations, and direction, borders, splitters, backdrop, `inert`, Escape,
+  and the slide axis all follow it. Docked wrappers keep an explicit pane width
+  and the content row a `min-width` floor so a narrow container squeezes the pane
+  instead of clipping or overlapping it. Rail collapse docks while wide and
+  floats as a plain overlay when narrow; a nested shell visibility-hides its own
+  floating panes while an ancestor overlay is open. Mechanics in
+  `ARCHITECTURE.md`.
 - The shared primitives resolve labels as `$derived(prop ?? i18n.t('key'))` and
   fall back to the locales in `src/lib/locales/` (nested `as const` trees with a
   dotted-path `MessageKey`; every other locale is typed `LocaleMessages<typeof en>`
@@ -179,7 +182,10 @@ Project-specific development conventions for the UI Library web app.
   `overflow-hidden`, or chase mobile keyboard gaps — those differences are
   owned by the browser (see `cross-browser.md`).
 - Icon-only `Button` uses uniform padding (`p-1` for `xs`, `p-1.5` for `sm`, `p-2.5` for `md`, `p-3` for `lg`);
-  text buttons keep `px`/`py` distinction.
+  text buttons keep `px`/`py` distinction. The `ghost` variant deliberately
+  carries no padding for icons or text, so it stays compact; a ghost text button
+  restores breathing room through `className`, and a ghost on a touch surface
+  still owes the mobile target per `~/.agents/references/responsive-design.md`.
 - `ConfirmDialog` routes its dismiss affordances to a separate `onCancel` when
   one is passed; a discard confirm passes `confirmOnDismiss` so Escape, overlay
   click, and the close icon perform the confirm (the discard) instead of
