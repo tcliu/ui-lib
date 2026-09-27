@@ -30,6 +30,7 @@ const SHARED_DIRS = [
 // subdirectories, locales, and tests, so only these files are gated.
 const SHARED_FILES = [
   'src/lib/app-shell.ts',
+  'src/lib/cn.ts',
   'src/lib/dropdown-chrome.ts',
   'src/lib/position-panel.svelte.ts',
   'src/lib/text-size.ts',
