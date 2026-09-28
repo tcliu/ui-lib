@@ -42,6 +42,11 @@ Project-specific development conventions for the UI Library web app.
   import paths and per-app storage keys. Fix a shared component here first, then
   port it; never fork one in a consuming app without syncing the change back, or
   `npm run check`'s parity gate will fail.
+- Shared components never traverse or manipulate the DOM: render `$state`,
+  reach an owned node through `bind:this` or a Svelte action, and read an event
+  target's own attributes in place. Follow the imperative-DOM-access ban in
+  `~/.agents/references/svelte.md`; only isolated accessibility and
+  infrastructure helpers are exempt.
 - `scripts/check-shared-parity.mjs` (run by `npm run check`) byte-compares the
   shared directories (`src/lib/components/`, `src/lib/icons/`, `src/lib/actions/`,
   `src/lib/data-table/`, `scripts/`) plus the listed top-level `src/lib/*.ts`
