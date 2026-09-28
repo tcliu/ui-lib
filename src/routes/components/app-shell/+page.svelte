@@ -218,7 +218,7 @@
 </script>
 
 {#snippet resetIcon()}
-  <ResetIcon className="h-4 w-4" />
+  <ResetIcon size="sm" />
 {/snippet}
 
 {#snippet rightPaneContent()}
@@ -313,38 +313,38 @@
     }}>
     <!-- The stage is fluid: the shell measures its own container and floats
       the pane over the text when narrow, so shrinking the viewport never
-      needs horizontal scrolling. -->
-    <div class="flex h-80 w-full min-w-0 flex-col overflow-hidden rounded-lg border border-slate-800">
-      <AppShell
-        mode={demoDrawerMode}
-        collapseMode={demoMode}
-        open={demoOpen}
-        rightOpen={demoRightOpen}
-        rightPane={demoRightOpen ? rightPaneContent : undefined}
-        footer={demoFooterOpen ? footerContent : undefined}>
-        {#snippet header(api: AppShellHeaderApi)}
-          {@const toggleLabel = api.open ? i18n.t('appShell.hidePane') : i18n.t('appShell.showPane')}
-          <Button
-            variant="secondary"
-            size="sm"
-            className="-ml-1"
-            ariaLabel={toggleLabel}
-            ariaExpanded={api.open}
-            tooltip={toggleLabel}
-            tooltipAlign="left"
-            preventFocusSteal
-            onClick={api.toggleLeft}>
-            {#snippet icon()}
-              <MenuIcon className="h-4 w-4" />
-            {/snippet}
-          </Button>
-          <span class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-200">{i18n.t('showcase.title')}</span>
-        {/snippet}
-        {#snippet leftPane()}
-          <p class="px-3 py-2 text-sm text-slate-300">{i18n.t('showcase.components')}</p>
-        {/snippet}
-        <p class="p-4 text-sm text-slate-300">{i18n.t('showcase.intro')}</p>
-      </AppShell>
-    </div>
+      needs horizontal scrolling. The stage sizing lives on the shell's
+      className override (the default is viewport-height). -->
+    <AppShell
+      className="flex h-80 w-full min-w-0 flex-col overflow-hidden rounded-lg border border-slate-800"
+      mode={demoDrawerMode}
+      collapseMode={demoMode}
+      open={demoOpen}
+      rightOpen={demoRightOpen}
+      rightPane={demoRightOpen ? rightPaneContent : undefined}
+      footer={demoFooterOpen ? footerContent : undefined}>
+      {#snippet header(api: AppShellHeaderApi)}
+        {@const toggleLabel = api.open ? i18n.t('appShell.hidePane') : i18n.t('appShell.showPane')}
+        <Button
+          variant="secondary"
+          size="sm"
+          className="-ml-1"
+          ariaLabel={toggleLabel}
+          ariaExpanded={api.open}
+          tooltip={toggleLabel}
+          tooltipAlign="left"
+          preventFocusSteal
+          onClick={api.toggleLeft}>
+          {#snippet icon()}
+            <MenuIcon size="sm" />
+          {/snippet}
+        </Button>
+        <span class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-200">{i18n.t('showcase.title')}</span>
+      {/snippet}
+      {#snippet leftPane()}
+        <p class="px-3 py-2 text-sm text-slate-300">{i18n.t('showcase.components')}</p>
+      {/snippet}
+      <p class="p-4 text-sm text-slate-300">{i18n.t('showcase.intro')}</p>
+    </AppShell>
   </ShowcaseSection>
 </ShowcasePage>

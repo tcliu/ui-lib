@@ -15,7 +15,9 @@ describe('buildAppShellSnippet', () => {
 
   it('renders a bare AppShell while unset', () => {
     const source = buildAppShellSnippet(unset)
-    expect(source).toContain('<AppShell>')
+    expect(source).toContain(
+      '<AppShell className="flex h-80 w-full min-w-0 flex-col overflow-hidden rounded-lg border border-slate-800">',
+    )
     expect(source).not.toContain('collapseMode=')
     expect(source).not.toContain('open=')
     expect(source).not.toContain('mode=')
@@ -25,17 +27,17 @@ describe('buildAppShellSnippet', () => {
 
   it('emits collapseMode and closed state separately', () => {
     const source = buildAppShellSnippet({ ...unset, collapseMode: 'rail', visibility: 'closed' })
-    expect(source).toContain('<AppShell collapseMode="rail" open={false}>')
+    expect(source).toContain('collapseMode="rail" open={false}')
   })
 
   it('emits the drawer mode override', () => {
     const source = buildAppShellSnippet({ ...unset, mode: 'floating' })
-    expect(source).toContain('<AppShell mode="floating">')
+    expect(source).toContain('mode="floating"')
   })
 
   it('emits the right pane snippet with its open state', () => {
     const source = buildAppShellSnippet({ ...unset, rightPane: 'open' })
-    expect(source).toContain('<AppShell rightOpen={true}>')
+    expect(source).toContain('rightOpen={true}')
     expect(source).toContain('{#snippet rightPane()}')
     expect(source).toContain('{bodyText}')
   })

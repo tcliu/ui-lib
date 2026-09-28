@@ -34,14 +34,16 @@
   })
 </script>
 
-<div class="flex h-dvh flex-col bg-slate-950 text-slate-100">
-  <AppShell
-    open={pickerOpen}
-    {paneSize}
-    resizeLabel={i18n.t('splitter.resize')}
-    onOpenChange={setPickerOpen}
-    onPaneChange={value => (paneSize = value)}>
-    {#snippet header(api: AppShellHeaderApi)}
+<AppShell
+  open={pickerOpen}
+  {paneSize}
+  className="flex h-dvh flex-col overflow-hidden bg-slate-950 text-slate-100"
+  headerClassName="flex-wrap"
+  resizeLabel={i18n.t('splitter.resize')}
+  onOpenChange={setPickerOpen}
+  onPaneChange={value => (paneSize = value)}>
+  {#snippet header(api: AppShellHeaderApi)}
+    <div class="flex flex-none items-center gap-2">
       <Button
         variant="secondary"
         size="sm"
@@ -53,48 +55,43 @@
         preventFocusSteal
         onClick={api.toggleLeft}>
         {#snippet icon()}
-          <MenuIcon className="h-4 w-4" />
+          <MenuIcon size="sm" />
         {/snippet}
       </Button>
-      <div class="flex min-w-0 flex-1 items-center justify-between gap-4">
-        <h1 class="min-w-0 truncate text-base font-semibold tracking-tight text-slate-200 sm:text-lg">
-          {i18n.t('showcase.title')}
-        </h1>
-        <div class="flex items-center gap-2">
-          <ThemeMenu align="right" />
-          <LanguageMenu align="right" />
-        </div>
-      </div>
-    {/snippet}
-    {#snippet leftPane()}
-      <SearchInput
-        bind:value={query}
-        ariaLabel={i18n.t('showcase.searchComponents')}
-        wrapperClass="px-2 pt-3 sm:px-3" />
-      <nav
-        class="min-h-0 flex-1 overflow-y-auto px-2 pb-3 sm:px-3"
-        tabindex="-1"
-        aria-label={i18n.t('showcase.components')}>
-        <ul class="flex flex-col gap-1">
-          {#each filteredComponents as component (component.slug)}
-            {@const active = currentPath === `/components/${component.slug}`}
-            <li>
-              <a
-                href={`/components/${component.slug}`}
-                aria-current={active ? 'page' : undefined}
-                class={`block rounded-md px-3 py-2 text-sm transition outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40 motion-reduce:transition-none ${
-                  active ? 'bg-cyan-500/15 text-cyan-200' : 'text-slate-300 hover:bg-slate-800 hover:text-cyan-200'
-                }`}>
-                {component.name}
-              </a>
-            </li>
-          {/each}
-        </ul>
-      </nav>
-    {/snippet}
-    {@render children()}
-  </AppShell>
-</div>
+      <h1 class="flex-none text-base font-semibold tracking-tight whitespace-nowrap text-slate-200 sm:text-lg">
+        {i18n.t('showcase.title')}
+      </h1>
+    </div>
+    <div class="flex flex-none items-center gap-2">
+      <ThemeMenu align="right" />
+      <LanguageMenu align="right" />
+    </div>
+  {/snippet}
+  {#snippet leftPane()}
+    <SearchInput bind:value={query} ariaLabel={i18n.t('showcase.searchComponents')} wrapperClass="px-2 pt-3 sm:px-3" />
+    <nav
+      class="min-h-0 flex-1 overflow-y-auto px-2 pb-3 sm:px-3"
+      tabindex="-1"
+      aria-label={i18n.t('showcase.components')}>
+      <ul class="flex flex-col gap-1">
+        {#each filteredComponents as component (component.slug)}
+          {@const active = currentPath === `/components/${component.slug}`}
+          <li>
+            <a
+              href={`/components/${component.slug}`}
+              aria-current={active ? 'page' : undefined}
+              class={`block rounded-md px-3 py-2 text-sm transition outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40 motion-reduce:transition-none ${
+                active ? 'bg-cyan-500/15 text-cyan-200' : 'text-slate-300 hover:bg-slate-800 hover:text-cyan-200'
+              }`}>
+              {component.name}
+            </a>
+          </li>
+        {/each}
+      </ul>
+    </nav>
+  {/snippet}
+  {@render children()}
+</AppShell>
 
 {#if data?.devTag}
   <div

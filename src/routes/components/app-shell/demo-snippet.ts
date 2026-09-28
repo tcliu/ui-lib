@@ -20,13 +20,13 @@ export function buildAppShellSnippet({
   footer,
 }: AppShellSnippetState): string {
   const attrs = [
+    ' className="flex h-80 w-full min-w-0 flex-col overflow-hidden rounded-lg border border-slate-800"',
     ...(mode ? [` mode="${mode}"`] : []),
     ...(collapseMode ? [` collapseMode="${collapseMode}"`] : []),
     ...(visibility === 'closed' ? [' open={false}'] : []),
     ...(rightPane === 'open' ? [' rightOpen={true}'] : []),
   ].join('')
   return [
-    '<div class="flex h-80 w-full min-w-0 flex-col overflow-hidden rounded-lg border border-slate-800">',
     `  <AppShell${attrs}>`,
     '    {#snippet header(api)}',
     '      {@const toggleLabel = api.open ? hideLabel : showLabel}',
@@ -57,6 +57,5 @@ export function buildAppShellSnippet({
       : []),
     '    <p class="p-4 text-sm text-slate-300">{bodyText}</p>',
     '  </AppShell>',
-    '</div>',
   ].join('\n')
 }
