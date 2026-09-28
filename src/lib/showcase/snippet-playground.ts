@@ -41,10 +41,9 @@ import Toast from '$lib/components/Toast.svelte'
 import Tooltip from '$lib/components/Tooltip.svelte'
 import CheckIcon from '$lib/icons/CheckIcon.svelte'
 import ChevronDownIcon from '$lib/icons/ChevronDownIcon.svelte'
-import ChevronDownSmallIcon from '$lib/icons/ChevronDownSmallIcon.svelte'
 import ChevronLeftIcon from '$lib/icons/ChevronLeftIcon.svelte'
 import ChevronRightIcon from '$lib/icons/ChevronRightIcon.svelte'
-import ChevronUpSmallIcon from '$lib/icons/ChevronUpSmallIcon.svelte'
+import ChevronUpIcon from '$lib/icons/ChevronUpIcon.svelte'
 import CloseIcon from '$lib/icons/CloseIcon.svelte'
 import CodeIcon from '$lib/icons/CodeIcon.svelte'
 import CopyIcon from '$lib/icons/CopyIcon.svelte'
@@ -122,10 +121,9 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/Tooltip.svelte': { default: Tooltip },
   'ui/CheckIcon.svelte': { default: CheckIcon },
   'ui/ChevronDownIcon.svelte': { default: ChevronDownIcon },
-  'ui/ChevronDownSmallIcon.svelte': { default: ChevronDownSmallIcon },
   'ui/ChevronLeftIcon.svelte': { default: ChevronLeftIcon },
   'ui/ChevronRightIcon.svelte': { default: ChevronRightIcon },
-  'ui/ChevronUpSmallIcon.svelte': { default: ChevronUpSmallIcon },
+  'ui/ChevronUpIcon.svelte': { default: ChevronUpIcon },
   'ui/CloseIcon.svelte': { default: CloseIcon },
   'ui/CodeIcon.svelte': { default: CodeIcon },
   'ui/CopyIcon.svelte': { default: CopyIcon },

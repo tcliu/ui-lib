@@ -96,6 +96,9 @@ Project-specific development conventions for the UI Library web app.
   width/height attributes), never size classes: attributes compose with
   `className`, while explicit size classes in `className` still win because
   CSS beats attributes.
+- Express an icon glyph's alternate drawing styles as a `variant` prop on the
+  one component (`outline` stroke by default, `solid` fill) instead of adding a
+  second icon file, so one glyph stays one component.
 - Reuse this project's existing UI primitives and patterns when they fit,
   especially dialog, dropdown, editor, and icon components; do not build a
   parallel design system for equivalent controls.

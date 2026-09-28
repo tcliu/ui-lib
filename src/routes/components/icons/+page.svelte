@@ -5,10 +5,9 @@
   import SelectDropdown from '$lib/components/SelectDropdown.svelte'
   import CheckIcon from '$lib/icons/CheckIcon.svelte'
   import ChevronDownIcon from '$lib/icons/ChevronDownIcon.svelte'
-  import ChevronDownSmallIcon from '$lib/icons/ChevronDownSmallIcon.svelte'
   import ChevronLeftIcon from '$lib/icons/ChevronLeftIcon.svelte'
   import ChevronRightIcon from '$lib/icons/ChevronRightIcon.svelte'
-  import ChevronUpSmallIcon from '$lib/icons/ChevronUpSmallIcon.svelte'
+  import ChevronUpIcon from '$lib/icons/ChevronUpIcon.svelte'
   import CloseIcon from '$lib/icons/CloseIcon.svelte'
   import CodeIcon from '$lib/icons/CodeIcon.svelte'
   import CopyIcon from '$lib/icons/CopyIcon.svelte'
@@ -82,6 +81,12 @@
       defaultValue: "''",
       note: 'Color and extra classes; explicit size classes win over the size attributes.',
     },
+    {
+      name: 'variant',
+      type: "'outline' | 'solid'",
+      defaultValue: "'outline'",
+      note: 'ChevronUpIcon/ChevronDownIcon only: outline stroke or solid fill.',
+    },
   ]
 </script>
 
@@ -138,13 +143,15 @@
       <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
         ><ChevronDownIcon size={demoSize} className={galleryClass} />ChevronDown</span>
       <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
-        ><ChevronDownSmallIcon size={demoSize} className={galleryClass} />ChevronDownSmall</span>
+        ><ChevronDownIcon variant="solid" size={demoSize} className={galleryClass} />ChevronDownSolid</span>
       <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
         ><ChevronLeftIcon size={demoSize} className={galleryClass} />ChevronLeft</span>
       <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
         ><ChevronRightIcon size={demoSize} className={galleryClass} />ChevronRight</span>
       <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
-        ><ChevronUpSmallIcon size={demoSize} className={galleryClass} />ChevronUpSmall</span>
+        ><ChevronUpIcon size={demoSize} className={galleryClass} />ChevronUp</span>
+      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
+        ><ChevronUpIcon variant="solid" size={demoSize} className={galleryClass} />ChevronUpSolid</span>
       <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
         ><CloseIcon size={demoSize} className={galleryClass} />Close</span>
       <span class="flex flex-col items-center gap-1 text-xs text-slate-400"

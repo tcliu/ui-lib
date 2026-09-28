@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { buildIconsSnippet, ICON_NAMES } from './demo-snippet'
+import { buildIconsSnippet, ICON_ENTRIES, iconLabel } from './demo-snippet'
 
 describe('buildIconsSnippet', () => {
   it('renders bare icons while unset', () => {
     const source = buildIconsSnippet({ size: '', tint: '', className: '' })
-    for (const name of ICON_NAMES) {
-      expect(source).toContain(`<${name}Icon />${name}`)
+    for (const entry of ICON_ENTRIES) {
+      const variant = entry.variant ? ` variant="${entry.variant}"` : ''
+      expect(source).toContain(`<${entry.name}Icon${variant} />${iconLabel(entry)}`)
     }
     expect(source).not.toContain('className=')
   })
@@ -13,6 +14,11 @@ describe('buildIconsSnippet', () => {
   it('applies the chosen size and tint', () => {
     const source = buildIconsSnippet({ size: 'lg', tint: 'text-cyan-400', className: '' })
     expect(source).toContain('<CheckIcon size="lg" className="text-cyan-400" />Check')
+  })
+
+  it('renders the solid chevron variant', () => {
+    const source = buildIconsSnippet({ size: '', tint: '', className: '' })
+    expect(source).toContain('<ChevronDownIcon variant="solid" />ChevronDownSolid')
   })
 
   it('appends a custom className', () => {
