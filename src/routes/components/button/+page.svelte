@@ -138,11 +138,11 @@
 </script>
 
 {#snippet checkIcon()}
-  <CheckIcon className="h-4 w-4" />
+  <CheckIcon size="sm" />
 {/snippet}
 
 {#snippet resetIcon()}
-  <ResetIcon className="h-4 w-4" />
+  <ResetIcon size="sm" />
 {/snippet}
 
 {#snippet propsSnippet()}
