@@ -301,6 +301,7 @@ npm run build
 npm test
 ```
 
+- Measure unit coverage with `npm run test:coverage` (vitest v8 provider); use the summary as evidence for test-coverage findings, never as a percentage target.
 - e2e specs live one-per-component/concern under `e2e/` (showcase,
   components, snippets, data-table, resizable-stage, app-shell, base-dialog),
   with shared snippet helpers in `e2e/helpers.ts` rather than one growing spec.
