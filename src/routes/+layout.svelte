@@ -13,6 +13,7 @@
   import { createAppI18n, setI18nContext } from '$lib/i18n.svelte'
   import { SHOWCASE_COMPONENTS } from '$lib/showcase-components'
   import { getPickerOpen, setPickerOpen } from '$lib/showcase-picker.svelte'
+  import { setTipBox, tipState } from '$lib/actions/tooltip.svelte'
   import type { LayoutData } from './$types'
 
   // One i18n store per app instance; children read it through the context.
@@ -25,6 +26,13 @@
 
   let query = $state('')
   let paneSize = $state(APP_SHELL_DEFAULT_WIDTH)
+
+  // Register the shared tooltip box (the host half of `use:tooltip`).
+  let tipBoxEl = $state<HTMLElement | null>(null)
+  $effect(() => {
+    setTipBox(tipBoxEl)
+    return () => setTipBox(null)
+  })
 
   const currentPath = $derived(page.url.pathname)
   const filteredComponents = $derived.by(() => {
@@ -92,6 +100,15 @@
   {/snippet}
   {@render children()}
 </AppShell>
+
+<div
+  id="tip"
+  bind:this={tipBoxEl}
+  class="fixed z-[80] pointer-events-none max-w-[320px] rounded-lg border border-slate-700 bg-slate-800 px-[9px] py-1.5 text-[11.5px] leading-[1.5] text-slate-200 whitespace-pre-line shadow-[0_10px_26px_rgba(2,6,23,0.75)]"
+  style:left="{tipState.left}px"
+  style:top="{tipState.top}px"
+  style:max-width="{tipState.maxWidth}px"
+  hidden={!tipState.visible}>{tipState.text}</div>
 
 {#if data?.devTag}
   <div

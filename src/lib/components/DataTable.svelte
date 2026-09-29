@@ -10,6 +10,7 @@
   import { createColumnResize } from './use-column-resize.svelte'
   import { createTableScrollSync } from './use-table-scroll-sync.svelte'
   import { realignColumnWidths, resolveColumnWidths } from '$lib/data-table/column-helpers'
+  import { tooltip } from '$lib/actions/tooltip.svelte'
 
   export type SortDirection = 'asc' | 'desc'
 
@@ -249,6 +250,11 @@
   let tableContainer = $state<HTMLElement | null>(null)
   let headerEls = $state<(HTMLElement | null)[]>([])
 
+  /** Scroll the body scrollport (used by scroll-chevron controls above the table). */
+  export function scrollBodyTo(options: ScrollToOptions): void {
+    tableContainer?.scrollTo(options)
+  }
+
   const managedWidths = $derived(resizable && columnWidths.length > 0)
 
   const totalWidth = $derived.by(() => {
@@ -483,7 +489,7 @@
             .filter(Boolean)
             .join('; ')}
           data-col-index={i}
-          data-tip={column.headerTip ?? undefined}
+          use:tooltip data-tip={column.headerTip ?? undefined}
           data-tip-place={column.headerTip ? (headerTipPlace ?? undefined) : undefined}
           aria-sort={isActive ? (isAsc ? 'ascending' : 'descending') : undefined}>
           {#if column.sortable}
