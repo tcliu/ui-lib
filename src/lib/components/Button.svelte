@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
   import Tooltip from './Tooltip.svelte'
+  import { tooltip as tooltipAction } from '$lib/actions/tooltip.svelte'
 
   interface Props {
     variant?: 'primary' | 'secondary' | 'danger' | 'outline' | 'ghost'
@@ -215,7 +216,7 @@
     aria-label={ariaLabel}
     aria-pressed={ariaPressed}
     aria-expanded={ariaExpanded}
-    data-tip={dataTip}
+    use:tooltipAction data-tip={dataTip}
     onclick={onClick}
     onkeydown={onKeyDown}
     onpointerdown={preventFocusSteal ? handlePreventFocusSteal : undefined}
