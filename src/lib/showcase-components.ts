@@ -30,6 +30,7 @@ export const SHOWCASE_COMPONENTS: ShowcaseComponent[] = [
   { slug: 'number-input', name: 'NumberInput' },
   { slug: 'pagination', name: 'Pagination' },
   { slug: 'password-input', name: 'PasswordInput' },
+  { slug: 'resizable', name: 'Resizable' },
   { slug: 'search-input', name: 'SearchInput' },
   { slug: 'select-dropdown', name: 'SelectDropdown' },
   { slug: 'spinner', name: 'Spinner' },

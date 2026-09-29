@@ -11,11 +11,16 @@
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
   import ShowcaseStage from '$lib/showcase/ShowcaseStage.svelte'
-  import { STAGE_RESIZE_DEFAULT } from '$lib/showcase/resizable-stage'
-  import { buildDataTableSnippet, type DemoRow, type TriState } from './demo-snippet'
+  import {
+    buildDataTableSnippet,
+    PAGE_SIZE_OPTIONS,
+    TABLE_STAGE_PANE,
+    TABLE_STAGE_PANE_FILL,
+    type DemoRow,
+    type TriState,
+  } from './demo-snippet'
 
   const i18n = getI18nContext()
-  const stageResizeLabel = i18n.t('showcase.resizeDemo')
 
   const rows: DemoRow[] = [
     { id: 'p1', name: 'Catalog', status: 'Active' },
@@ -45,6 +50,8 @@
   let pgDense = $state<TriState>('')
   let pgResizable = $state<TriState>('')
   let pgLoading = $state<TriState>('')
+  let pgFillHeight = $state<TriState>('')
+  let pgBodyScroll = $state<TriState>('')
   let pgPlaceholder = $state('')
   let pgEmptyMessage = $state('')
   let pgPageSizeText = $state('')
@@ -53,10 +60,6 @@
   let pgSortKey = $state<string | null>(null)
   let pgSortDirection = $state<'asc' | 'desc'>('asc')
   let pgSelected = $state(new Set<string>())
-  // Stage width is interaction state, not a curated option, so it stays out of
-  // isCustomized and Reset only restores it to the full-width default.
-  let pgStageWidth = $state(STAGE_RESIZE_DEFAULT)
-
   const pgPageSize = $derived.by(() => {
     const parsed = Number.parseInt(pgPageSizeText, 10)
     return Number.isInteger(parsed) && parsed > 0 ? parsed : 10
@@ -73,6 +76,9 @@
   const dense = $derived(flagOn(pgDense))
   const resizable = $derived(flagOn(pgResizable))
   const loading = $derived(flagOn(pgLoading))
+  const fillHeight = $derived(flagOn(pgFillHeight))
+  const bodyScroll = $derived(flagOn(pgBodyScroll))
+  const stagePaneClass = $derived(pgFillHeight === 'yes' ? TABLE_STAGE_PANE_FILL : TABLE_STAGE_PANE)
 
   const yesNoOptions = [
     { value: 'yes', label: 'Yes' },
@@ -90,6 +96,8 @@
       pgDense !== '' ||
       pgResizable !== '' ||
       pgLoading !== '' ||
+      pgFillHeight !== '' ||
+      pgBodyScroll !== '' ||
       pgPlaceholder !== '' ||
       pgEmptyMessage !== '' ||
       pgPageSizeText !== '',
@@ -103,6 +111,8 @@
     pgDense = ''
     pgResizable = ''
     pgLoading = ''
+    pgFillHeight = ''
+    pgBodyScroll = ''
     pgPlaceholder = ''
     pgEmptyMessage = ''
     pgPageSizeText = ''
@@ -111,7 +121,6 @@
     pgSortKey = null
     pgSortDirection = 'asc'
     pgSelected = new Set<string>()
-    pgStageWidth = STAGE_RESIZE_DEFAULT
   }
 
   function matches(row: DemoRow, text: string): boolean {
@@ -230,6 +239,8 @@
       dense: pgDense,
       resizable: pgResizable,
       loading: pgLoading,
+      fillHeight: pgFillHeight,
+      bodyScroll: pgBodyScroll,
       placeholder: pgPlaceholder,
       emptyMessage: pgEmptyMessage,
     }),
@@ -306,6 +317,12 @@
     { name: 'onPageChange', type: '(page: number) => void', defaultValue: '—', note: 'Page navigation handler.' },
     { name: 'onPageSizeChange', type: '(size: number) => void', defaultValue: '—', note: 'Page-size handler.' },
     {
+      name: 'pageSizeOptions',
+      type: 'number[]',
+      defaultValue: '[10, 20, 50]',
+      note: 'Page-size choices offered by the pagination dropdown.',
+    },
+    {
       name: 'tableClass',
       type: 'string',
       defaultValue: "'min-w-0'",
@@ -334,7 +351,7 @@
 </script>
 
 {#snippet resetIcon()}
-  <ResetIcon className="h-4 w-4" />
+  <ResetIcon size="sm" />
 {/snippet}
 
 {#snippet nameCell(row: DemoRow)}
@@ -428,6 +445,39 @@
         clearLabel="Clear loading"
         onClear={() => (pgLoading = '')} />
     </FormField>
+    <FormField label="Fill height">
+      <SelectDropdown
+        buttonLabel={triLabel(pgFillHeight)}
+        activeValue={pgFillHeight}
+        ariaLabel="Fill height"
+        options={yesNoOptions}
+        onSelect={value => {
+          pgFillHeight = value as TriState
+          // The pinned-pagination fill also needs the fixed header band, so
+          // enabling Fill height fills the visible Body scroll field too.
+          pgBodyScroll = value === 'yes' ? 'yes' : ''
+        }}
+        clearable
+        clearLabel="Clear fill height"
+        onClear={() => {
+          pgFillHeight = ''
+          pgBodyScroll = ''
+        }} />
+    </FormField>
+    <FormField label="Body scroll">
+      <SelectDropdown
+        buttonLabel={triLabel(pgBodyScroll)}
+        activeValue={pgBodyScroll}
+        ariaLabel="Body scroll"
+        options={yesNoOptions}
+        onSelect={value => {
+          pgBodyScroll = value as TriState
+          if (value === 'yes') pgFillHeight = 'yes'
+        }}
+        clearable
+        clearLabel="Clear body scroll"
+        onClear={() => (pgBodyScroll = '')} />
+    </FormField>
     <FormField label="Search placeholder" htmlFor="pg-placeholder">
       <input
         id="pg-placeholder"
@@ -484,13 +534,8 @@
       handleResetColumns,
       handlePageChange,
       handlePageSizeChange,
-      resizeLabel: stageResizeLabel,
     }}>
-    <ShowcaseStage
-      value={pgStageWidth}
-      onChange={next => (pgStageWidth = next)}
-      paneClass="w-full"
-      resizeLabel={stageResizeLabel}>
+    <ShowcaseStage paneClass={stagePaneClass} showHandle={false}>
       <DataTable
         rows={pageRows}
         columns={visibleColumns}
@@ -513,6 +558,7 @@
         currentPage={pgPage}
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
+        pageSizeOptions={PAGE_SIZE_OPTIONS}
         {selectable}
         selectedIds={pgSelected}
         onToggleSelection={handleToggleSelection}
@@ -522,6 +568,8 @@
         selectAllAriaLabel="Select all rows"
         rowSelectAriaLabel={row => `Select ${row.name}`}
         {dense}
+        {fillHeight}
+        {bodyScroll}
         {resizable}
         resizeAriaLabel={column => `Resize ${column.header}`}
         {loading} />

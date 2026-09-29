@@ -72,8 +72,9 @@ const EXCEPTIONS = [
   ['tts', 'scripts/sync-cloudflare-env.mjs', 'Neon backend: keeps DATABASE_URL on Cloudflare, forbids Vercel creds only'],
   ['session-catalog', 'scripts/sync-cloudflare-env.mjs', 'Neon backend: keeps DATABASE_URL on Cloudflare, forbids Vercel creds only'],
   ['project-catalog', 'scripts/sync-cloudflare-env.mjs', 'D1 backend: keeps the D1 binding path on Cloudflare, forbids the Neon URL only'],
-  ['share-text', 'src/lib/components/Combobox.svelte', 'per-app listbox id prefix'],
   ['session-catalog', 'src/lib/components/DateRangePicker.svelte', 'themed fork: prop-injected i18n and CSS-var palette'],
+  ['session-catalog', 'src/lib/components/Button.svelte', 'host tooltip action: data-tip is driven by the app tooltip engine, not a global handler'],
+  ['session-catalog', 'src/lib/components/DataTable.svelte', 'host tooltip action: header data-tip is driven by the app tooltip engine'],
 ]
 const globalExceptions = new Set(EXCEPTIONS.filter(entry => entry.length === 2).map(([p]) => p))
 const appExceptions = EXCEPTIONS.filter(entry => entry.length === 3)

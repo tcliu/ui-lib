@@ -9,8 +9,8 @@ describe('buildSplitterSnippet', () => {
     const source = buildSplitterSnippet(unset)
     expect(source).toContain(`<div class="${SPLITTER_WRAPPER}">`)
     expect(source).not.toContain('flex-col')
-    // The stage's own Splitter always carries orientation/unit/ariaLabel; the
-    // demo Splitter omits them while unset, so only its overrides must be absent.
+    // The demo Splitter omits orientation/unit/ariaLabel while unset, so only
+    // its overrides must be absent.
     expect(source).not.toContain('orientation="horizontal"')
     expect(source).not.toContain('unit="px"')
     expect(source).not.toContain('ariaLabel="')
@@ -58,14 +58,13 @@ describe('buildSplitterSnippet', () => {
     expect(source).toContain(SPLITTER_MAIN)
   })
 
-  it('wraps the stage in the resizable container the page renders', () => {
+  it('wraps the stage in the handle-less static container the page renders', () => {
     const source = buildSplitterSnippet(unset)
-    expect(source).toContain('let stageWidth = $state(100)')
     expect(source).toContain(`<div class="${STAGE_ROW}">`)
-    expect(source).toContain(`<div class="${STAGE_PANE} w-full" style={\`flex-basis:\${stageWidth}%\`}>`)
-    expect(source).toContain('value={stageWidth}')
-    expect(source).toContain('onChange={next => (stageWidth = next)}')
-    expect(source).toContain('ariaLabel={resizeLabel}')
+    expect(source).toContain(`<div class="${STAGE_PANE} w-full">`)
+    expect(source).not.toContain('stageWidth')
+    expect(source).not.toContain('value={stageWidth}')
+    expect(source).not.toContain('ariaLabel={resizeLabel}')
   })
 
   it('matches the preset helper', () => {

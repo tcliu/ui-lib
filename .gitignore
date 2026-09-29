@@ -5,6 +5,7 @@ log/
 node_modules/
 .history/
 .worktrees/
+coverage/
 .svelte-kit/
 .tmp/
 .data/

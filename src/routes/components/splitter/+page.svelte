@@ -10,7 +10,6 @@
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
   import ShowcaseStage from '$lib/showcase/ShowcaseStage.svelte'
-  import { STAGE_RESIZE_DEFAULT } from '$lib/showcase/resizable-stage'
   import {
     SPLITTER_MAIN,
     SPLITTER_PANE,
@@ -22,7 +21,6 @@
   } from './demo-snippet'
 
   const i18n = getI18nContext()
-  const stageResizeLabel = i18n.t('showcase.resizeDemo')
 
   // Customizer playground state. Every curated option starts unset (the
   // component default renders), so the cleared form applies no overrides.
@@ -32,8 +30,6 @@
   // Divider position: interaction state, not a curated option, so it stays out
   // of isCustomized.
   let pgSplit = $state(160)
-  // Stage width: same, and Reset restores it to the full-width default.
-  let pgStageWidth = $state(STAGE_RESIZE_DEFAULT)
 
   const orientationOptions = [
     { value: 'vertical', label: 'Vertical' },
@@ -72,7 +68,6 @@
     pgUnit = ''
     pgAriaLabel = ''
     pgSplit = 160
-    pgStageWidth = STAGE_RESIZE_DEFAULT
   }
 
   const code = $derived.by(() =>
@@ -124,11 +119,17 @@
       defaultValue: "'vertical'",
       note: 'Vertical splits left/right; horizontal splits top/bottom.',
     },
+    {
+      name: 'invert',
+      type: 'boolean',
+      defaultValue: 'false',
+      note: 'Flips drag and arrow-key deltas for a pane anchored on the far side of the handle (right or bottom panes).',
+    },
   ]
 </script>
 
 {#snippet resetIcon()}
-  <ResetIcon className="h-4 w-4" />
+  <ResetIcon size="sm" />
 {/snippet}
 
 {#snippet propsSnippet()}
@@ -181,13 +182,8 @@
       initialSplit: pgSplit,
       leftLabel: i18n.t('appShell.leftPane'),
       rightLabel: i18n.t('appShell.rightPane'),
-      resizeLabel: stageResizeLabel,
     }}>
-    <ShowcaseStage
-      value={pgStageWidth}
-      onChange={next => (pgStageWidth = next)}
-      paneClass="w-full"
-      resizeLabel={stageResizeLabel}>
+    <ShowcaseStage paneClass="w-full" showHandle={false}>
       <div class={orientation === 'horizontal' ? `${SPLITTER_WRAPPER} flex-col` : SPLITTER_WRAPPER}>
         <div
           class={SPLITTER_PANE}

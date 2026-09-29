@@ -122,6 +122,12 @@
       defaultValue: 'false',
       note: 'Keeps focus on the current element when clicked.',
     },
+    {
+      name: 'focusRing',
+      type: 'boolean',
+      defaultValue: 'true',
+      note: 'Keyboard focus ring; disable only when focus stays visible another way.',
+    },
     { name: 'dataTip', type: 'string', defaultValue: '—', note: 'data-tip attribute for the host tooltip engine.' },
     { name: 'tooltip', type: 'string', defaultValue: '—', note: 'Wraps the button with the positioned Tooltip.' },
     { name: 'tooltipAlign', type: "'center' | 'left' | 'right'", defaultValue: "'center'", note: 'Tooltip alignment.' },
@@ -138,11 +144,11 @@
 </script>
 
 {#snippet checkIcon()}
-  <CheckIcon className="h-4 w-4" />
+  <CheckIcon size="sm" />
 {/snippet}
 
 {#snippet resetIcon()}
-  <ResetIcon className="h-4 w-4" />
+  <ResetIcon size="sm" />
 {/snippet}
 
 {#snippet propsSnippet()}

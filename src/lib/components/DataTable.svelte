@@ -8,6 +8,7 @@
   import SortAscIcon from '$lib/icons/SortAscIcon.svelte'
   import SortDescIcon from '$lib/icons/SortDescIcon.svelte'
   import { createColumnResize } from './use-column-resize.svelte'
+  import { createTableScrollSync } from './use-table-scroll-sync.svelte'
   import { realignColumnWidths, resolveColumnWidths } from '$lib/data-table/column-helpers'
 
   export type SortDirection = 'asc' | 'desc'
@@ -79,6 +80,9 @@
     currentPage: number
     onPageChange: (page: number) => void
     onPageSizeChange: (size: number) => void
+    // Page-size choices offered by the pagination dropdown, forwarded to
+    // Pagination; omitted leaves Pagination's own default.
+    pageSizeOptions?: number[]
     containerClass?: string
     tableClass?: string
     fillHeight?: boolean
@@ -115,9 +119,6 @@
     // drops managed widths (and their persisted copy) so the table falls
     // back to the percentage layout.
     resetWidthsSignal?: number
-    // Escape-hatch renderer for callers that own cell HTML as strings (adapted
-    // from the legacy viewer); used only when a column supplies no `cell`.
-    renderCellHtml?: (columnKey: string, row: T) => string
     // Preferred placement for the header tooltip (`data-tip-place` on the
     // header cell, read by the tooltip engine). Defaults to below; pass
     // 'above' where a below-placed tip would cover content (e.g. data rows).
@@ -155,6 +156,7 @@
     currentPage,
     onPageChange,
     onPageSizeChange,
+    pageSizeOptions,
     containerClass = 'max-h-[min(70vh,44rem)] overflow-auto rounded-xl border border-slate-800 bg-slate-950/50 contain-layout',
     tableClass = 'min-w-0',
     fillHeight = false,
@@ -175,7 +177,6 @@
     resizable = false,
     storageKey,
     resetWidthsSignal = 0,
-    renderCellHtml,
     headerTipPlace,
   }: Props<T> = $props()
 
@@ -201,45 +202,14 @@
 
   let headerWrapper = $state<HTMLElement | null>(null)
 
-  // The header band never scrolls on its own (its wrapper clips with
-  // overflow-hidden): mirror the body wrapper's horizontal scroll into it and
-  // forward wheel events so scrolling still works while the pointer is over
-  // the header.
-  $effect(() => {
-    if (!splitHeader) return
-    const body = tableContainer
-    const header = headerWrapper
-    if (!body || !header) return
-    const onScroll = () => {
-      header.scrollLeft = body.scrollLeft
-    }
-    const onWheel = (event: WheelEvent) => {
-      if (event.deltaY !== 0) body.scrollTop += event.deltaY
-      if (event.deltaX !== 0) body.scrollLeft += event.deltaX
-    }
-    body.addEventListener('scroll', onScroll, { passive: true })
-    header.addEventListener('wheel', onWheel, { passive: true })
-    return () => {
-      body.removeEventListener('scroll', onScroll)
-      header.removeEventListener('wheel', onWheel)
-    }
-  })
-
-  // The body wrapper's vertical scrollbar narrows its visible width; pad the
-  // header wrapper by the same amount so the header table keeps the body's
-  // width once columns overflow.
-  $effect(() => {
-    if (!splitHeader) return
-    const body = tableContainer
-    const header = headerWrapper
-    if (!body || !header) return
-    if (typeof ResizeObserver === 'undefined') return
-    const observer = new ResizeObserver(() => {
-      const scrollbarWidth = body.offsetWidth - body.clientWidth
-      header.style.paddingRight = scrollbarWidth > 0 ? `${scrollbarWidth}px` : ''
-    })
-    observer.observe(body)
-    return () => observer.disconnect()
+  // Mirror the body wrapper's scroll into the header band, forward header wheel
+  // events, and pad the header by the body's scrollbar width. The getters
+  // return null while the split-header layout is off, so the effects stay inert
+  // until it turns on (and re-run when it changes).
+  createTableScrollSync({
+    getBody: () => (splitHeader ? tableContainer : null),
+    getHeader: () => (splitHeader ? headerWrapper : null),
+    padHeaderForScrollbar: true,
   })
 
   const resolvedColumns = $derived.by(() => resolveColumnWidths(columns))
@@ -465,7 +435,6 @@
                 .filter(Boolean)
                 .join('; ')}>
               {@render column.cell?.(row)}
-              {#if !column.cell && renderCellHtml}{@html renderCellHtml(column.key, row)}{/if}
             </td>
           {/each}
         </tr>
@@ -534,7 +503,7 @@
                     : 'hover:text-cyan-300 focus:text-cyan-300'}"
                   aria-label={sortAriaLabel?.(column, 'asc') ?? `Sort ${column.header} ascending`}
                   onclick={() => handleSortClick(column, 'asc')}>
-                  <SortAscIcon className="h-2.5 w-2.5" />
+                  <SortAscIcon size="xs" />
                 </button>
                 <button
                   type="button"
@@ -543,7 +512,7 @@
                     : 'hover:text-cyan-300 focus:text-cyan-300'}"
                   aria-label={sortAriaLabel?.(column, 'desc') ?? `Sort ${column.header} descending`}
                   onclick={() => handleSortClick(column, 'desc')}>
-                  <SortDescIcon className="h-2.5 w-2.5" />
+                  <SortDescIcon size="xs" />
                 </button>
               </span>
             </span>
@@ -616,6 +585,7 @@
         {currentPage}
         {onPageChange}
         {onPageSizeChange}
+        {pageSizeOptions}
         previousLabel={paginationPreviousLabel}
         nextLabel={paginationNextLabel}
         pageSizeLabel={paginationPageSizeLabel}

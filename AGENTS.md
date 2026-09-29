@@ -42,6 +42,11 @@ Project-specific development conventions for the UI Library web app.
   import paths and per-app storage keys. Fix a shared component here first, then
   port it; never fork one in a consuming app without syncing the change back, or
   `npm run check`'s parity gate will fail.
+- Shared components never traverse or manipulate the DOM: render `$state`,
+  reach an owned node through `bind:this` or a Svelte action, and read an event
+  target's own attributes in place. Follow the imperative-DOM-access ban in
+  `~/.agents/references/svelte.md`; only isolated accessibility and
+  infrastructure helpers are exempt.
 - `scripts/check-shared-parity.mjs` (run by `npm run check`) byte-compares the
   shared directories (`src/lib/components/`, `src/lib/icons/`, `src/lib/actions/`,
   `src/lib/data-table/`, `scripts/`) plus the listed top-level `src/lib/*.ts`
@@ -61,6 +66,23 @@ Project-specific development conventions for the UI Library web app.
   `editable`, `storageKey`), together with its `use-grid-*` hooks and grid
   icons, so an app needing a CSV or key/value editor reuses it instead of
   forking a grid.
+- Two-axis container resizing stays one shared control: `Resizable` takes
+  `width`/`height` numbers plus `onResize(width, height)`, bounds them through
+  `minWidth`/`minHeight`/`maxWidth`/`maxHeight`, and renders three invisible
+  handles (right, bottom, corner) that show only a resize cursor, so an app
+  needing a drag-resizable box reuses it instead of reimplementing pointer
+  capture and keyboard nudges. A maximum may be the string `'parent'`, which
+  bounds the frame to the parent's content box: the box is capped in CSS
+  (`max-w-full`/`max-h-full`, so a requested size can never overflow the
+  container) and the drag, key nudge, and Home/End clamps measure the parent at
+  interaction time. Use it to keep a frame inside a non-scrolling container so
+  no scrollbar can ever cover a handle.
+- Resize handles are focusable `role="separator"` widgets carrying
+  `aria-valuenow`/`aria-valuemin`/`aria-valuemax`; the two
+  `svelte-ignore a11y_no_noninteractive_*` comments above a handle are the
+  documented false positive for Svelte misclassifying a focusable separator as
+  non-interactive, scoped to the handle subtree — not a general licence for
+  suppressing a11y warnings elsewhere.
 - Never combine `align` with `className` on `Buttons`: a custom `className`
   replaces the default row and silently drops `align`; spell the row out
   (`flex w-full … justify-end`) instead.
@@ -70,7 +92,10 @@ Project-specific development conventions for the UI Library web app.
   the shell's own container (`ResizeObserver` at `APP_SHELL_DESKTOP_BREAKPOINT`),
   never from viewport breakpoint classes; docked and floating are the only two
   presentations, and direction, borders, splitters, backdrop, `inert`, Escape,
-  and the slide axis all follow it. Docked wrappers keep an explicit pane width
+  and the slide axis all follow it. A pane anchored on the far side of its
+  splitter (the right pane) passes `invert` so the handle follows the pointer
+  while widening the pane instead of running away from it. Docked wrappers keep
+  an explicit pane width
   and the content row a `min-width` floor so a narrow container squeezes the pane
   instead of clipping or overlapping it. Rail collapse docks while wide and
   floats as a plain overlay when narrow; a nested shell visibility-hides its own
@@ -82,7 +107,8 @@ Project-specific development conventions for the UI Library web app.
   so a missing key fails the build). A consuming app's locale
   dictionaries must define the shared keys (`common.*`, `number.*`, `dropdown.*`,
   `pagination.*`, `tabs.label`, `search.placeholder`, `splitter.*`, `password.*`,
-  `combobox.*`, `tagInput.*`, `kebab.*`, `range.*`, `grid.*`, and `appShell.*`).
+  `combobox.*`, `tagInput.*`, `kebab.*`, `range.*`, `grid.*`, `resizable.*`, and
+  `appShell.*`).
 - Component attributes stay camelCase.
 - New sized components support the full `xs`–`lg` scale from the start (literal
   per-size classes, never interpolated) instead of growing sizes one use case
@@ -91,6 +117,9 @@ Project-specific development conventions for the UI Library web app.
   width/height attributes), never size classes: attributes compose with
   `className`, while explicit size classes in `className` still win because
   CSS beats attributes.
+- Express an icon glyph's alternate drawing styles as a `variant` prop on the
+  one component (`outline` stroke by default, `solid` fill) instead of adding a
+  second icon file, so one glyph stays one component.
 - Reuse this project's existing UI primitives and patterns when they fit,
   especially dialog, dropdown, editor, and icon components; do not build a
   parallel design system for equivalent controls.
@@ -167,7 +196,30 @@ Project-specific development conventions for the UI Library web app.
   `Reset`; the page passes the handle label through the section `scope` as
   `resizeLabel`, and the `demo-snippet` builder emits the same stage from the
   shared literals in `resizable-stage.ts` (including the snippet's local
-  `stageWidth` state) so static demo and Show-code stay identical.
+  `stageWidth` state) so static demo and Show-code stay identical. A demo passes
+  `showHandle={false}` when its pane owns a bounded height or its own separator
+  is the only handle — `ShowcaseStage` then renders the pane with no inline width
+  and no handle (the width comes from `paneClass`), and its builder uses the
+  handle-less `stageStaticOpenLines`/`stageStaticCloseLines` literals instead of
+  the `stageWidth` state; the DataTable demo is always handle-less (its
+  `fillHeight` pane owns a bounded height), and the Splitter demo is always
+  handle-less (its own separator is the only handle).
+- The AppShell demo is the one container-responsive demo that needs a
+  `Resizable` frame instead of `ShowcaseStage`: the shell measures its own
+  container to choose between docked and floating, so the container itself must
+  be resizable. Its stage is a non-scrolling `w-full overflow-hidden` host
+  wrapping a `Resizable` at a fixed px default (840×420, min 320×240) with
+  `maxWidth="parent"` — the frame is bounded by the host and capped in CSS, so it
+  can never overflow it and no scrollbar can appear over a frame handle — and
+  `maxHeight={SHELL_STAGE_MAX_HEIGHT}` (the host hugs the frame, so the parent's
+  height is not a usable bound). Its pane carries no padding, so the shell lines
+  up with the settings panel below it. Those literals live in the app-shell
+  `demo-snippet` (the `SHELL_STAGE_*` constants and its stage line helpers) and
+  the snippet emits the same stage, so static demo and Show-code stay identical.
+- Showcase demo frames line up with the section chrome: a demo wrapper carries
+  no inline-start or top padding, only the padding its own scrollbars need on the
+  axes where they render, so the frame's left edge matches the settings panel
+  below it.
 
 ## UI behavior
 
@@ -249,6 +301,10 @@ npm run build
 npm test
 ```
 
+- Measure unit coverage with `npm run test:coverage` (vitest v8 provider); use the summary as evidence for test-coverage findings, never as a percentage target.
+- e2e specs live one-per-component/concern under `e2e/` (showcase,
+  components, snippets, data-table, resizable-stage, app-shell, base-dialog),
+  with shared snippet helpers in `e2e/helpers.ts` rather than one growing spec.
 - TypeScript rides dual installs: `typescript@~6` stays the main package because
   `svelte-check` peers only on 5/6, while `@typescript/native` (TS 7) performs
   the check via the `--tsgo` flag in `npm run check`. Keep both and the flag;

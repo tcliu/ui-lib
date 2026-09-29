@@ -89,11 +89,11 @@
 </script>
 
 {#snippet resetIcon()}
-  <ResetIcon className="h-4 w-4" />
+  <ResetIcon size="sm" />
 {/snippet}
 
 {#snippet menuTriggerIcon()}
-  <KebabIcon className="h-4 w-4" />
+  <KebabIcon size="sm" />
 {/snippet}
 
 {#snippet menuRow(item: DemoItem, _state: MenuItemState)}

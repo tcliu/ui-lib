@@ -32,6 +32,12 @@ export const zhTW = {
   splitter: {
     resize: '調整大小',
   },
+  resizable: {
+    resizeWidth: '調整寬度',
+    resizeHeight: '調整高度',
+    resizeBoth: '調整寬度和高度',
+    resizeValue: '寬 {width} × 高 {height} 像素',
+  },
   appShell: {
     showPane: '顯示面板',
     hidePane: '隱藏面板',

@@ -8,7 +8,7 @@
   import PropsTable, { type PropRow } from '$lib/showcase/PropsTable.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
-  import { FILTERABLE_CONTROL, buildSelectDropdownSnippet, type TriState } from './demo-snippet'
+  import { buildSelectDropdownSnippet, type TriState } from './demo-snippet'
 
   const i18n = getI18nContext()
 
@@ -98,8 +98,18 @@
     { name: 'filterable', type: 'boolean', defaultValue: 'false', note: 'Renders a combobox input with filtering.' },
     { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", defaultValue: "'sm'", note: 'Control scale.' },
     { name: 'onSelect', type: '(value: string) => void', defaultValue: '—', note: 'Called with the chosen value.' },
-    { name: 'buttonClass', type: 'string', defaultValue: 'built-in', note: 'Replaces the trigger button classes.' },
-    { name: 'controlClass', type: 'string', defaultValue: 'built-in', note: 'Replaces the filterable input classes.' },
+    {
+      name: 'buttonClass',
+      type: 'string',
+      defaultValue: 'built-in',
+      note: 'Replaces the trigger button box classes.',
+    },
+    {
+      name: 'controlClass',
+      type: 'string',
+      defaultValue: 'built-in',
+      note: 'Replaces the filterable trigger box classes.',
+    },
     { name: 'optionClass', type: 'string', defaultValue: 'built-in', note: 'Replaces the option row classes.' },
     { name: 'emptyLabel', type: 'string', defaultValue: '—', note: 'Shown when the filtered list is empty.' },
     {
@@ -127,7 +137,7 @@
 </script>
 
 {#snippet resetIcon()}
-  <ResetIcon className="h-4 w-4" />
+  <ResetIcon size="sm" />
 {/snippet}
 
 {#snippet propsSnippet()}
@@ -156,12 +166,7 @@
         activeValue={pgFilterable}
         ariaLabel="Filterable"
         options={yesNoOptions}
-        onSelect={value => {
-          pgFilterable = value as TriState
-          if (value === 'yes' && pgControlClass === '') {
-            pgControlClass = FILTERABLE_CONTROL
-          }
-        }}
+        onSelect={value => (pgFilterable = value as TriState)}
         clearable
         clearLabel="Clear filterable"
         onClear={() => (pgFilterable = '')} />

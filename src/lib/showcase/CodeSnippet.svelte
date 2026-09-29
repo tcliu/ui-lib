@@ -51,11 +51,11 @@
 </script>
 
 {#snippet resetIcon()}
-  <ResetIcon className="h-4 w-4" />
+  <ResetIcon size="sm" />
 {/snippet}
 
 {#snippet copyIcon()}
-  <CopyIcon className="h-4 w-4" />
+  <CopyIcon size="sm" />
 {/snippet}
 
 <section aria-label={i18n.t('showcase.code')}>

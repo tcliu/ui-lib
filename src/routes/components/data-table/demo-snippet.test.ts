@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { STAGE_PANE, STAGE_ROW } from '$lib/showcase/resizable-stage'
-import { buildDataTableSnippet, type DataTableSnippetState } from './demo-snippet'
+import {
+  buildDataTableSnippet,
+  PAGE_SIZE_OPTIONS,
+  TABLE_STAGE_PANE,
+  TABLE_STAGE_PANE_FILL,
+  type DataTableSnippetState,
+} from './demo-snippet'
 
 const base: DataTableSnippetState = {
   rows: [
@@ -13,6 +19,8 @@ const base: DataTableSnippetState = {
   dense: '',
   resizable: '',
   loading: '',
+  fillHeight: '',
+  bodyScroll: '',
   placeholder: '',
   emptyMessage: '',
 }
@@ -29,7 +37,16 @@ describe('buildDataTableSnippet', () => {
 
   it('omits every tri-state flag while unset', () => {
     const source = buildDataTableSnippet(base)
-    for (const flag of ['showSearch', 'showPagination', 'selectable', 'dense', 'resizable', 'loading']) {
+    for (const flag of [
+      'showSearch',
+      'showPagination',
+      'selectable',
+      'dense',
+      'resizable',
+      'loading',
+      'fillHeight',
+      'bodyScroll',
+    ]) {
       expect(source).not.toContain(`\n      ${flag}`)
     }
     expect(source).not.toContain('selectedIds=')
@@ -50,15 +67,32 @@ describe('buildDataTableSnippet', () => {
     expect(explicit).not.toContain('selectedIds=')
   })
 
-  it('wraps the table in the resizable stage the page renders', () => {
+  it('wraps the table in the handle-less static stage the page renders', () => {
     const source = buildDataTableSnippet(base)
-    expect(source).toContain('let stageWidth = $state(100)')
     expect(source).toContain(`<div class="${STAGE_ROW}">`)
-    expect(source).toContain(`<div class="${STAGE_PANE} w-full" style={\`flex-basis:\${stageWidth}%\`}>`)
-    expect(source).toContain('value={stageWidth}')
-    expect(source).toContain('onChange={next => (stageWidth = next)}')
-    expect(source).toContain('ariaLabel={resizeLabel}')
-    expect(source.indexOf('</script>')).toBeLessThan(source.indexOf('stageWidth}%'))
+    expect(source).toContain(`<div class="${STAGE_PANE} ${TABLE_STAGE_PANE}">`)
+    expect(source).not.toContain('stageWidth')
+    expect(source).not.toContain('role="separator"')
+  })
+
+  it('always offers the demo page-size options including 5', () => {
+    const source = buildDataTableSnippet(base)
+    expect(source).toContain(`pageSizeOptions={[${PAGE_SIZE_OPTIONS.join(', ')}]}`)
+  })
+
+  it('bounds the stage and emits the flag only while fillHeight is on', () => {
+    const off = buildDataTableSnippet(base)
+    expect(off).not.toContain('\n      fillHeight')
+    expect(off).toContain(`<div class="${STAGE_PANE} ${TABLE_STAGE_PANE}"`)
+
+    const on = buildDataTableSnippet({ ...base, fillHeight: 'yes' })
+    expect(on).toContain('\n      fillHeight\n')
+    expect(on).toContain(`<div class="${STAGE_PANE} ${TABLE_STAGE_PANE_FILL}"`)
+  })
+
+  it('emits the bodyScroll flag when set', () => {
+    const source = buildDataTableSnippet({ ...base, bodyScroll: 'yes' })
+    expect(source).toContain('\n      bodyScroll\n')
   })
 
   it('escapes placeholder quotes for the attribute', () => {

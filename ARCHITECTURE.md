@@ -107,8 +107,10 @@ Server endpoints (+server.ts)
 - **AppShell responsive presentation** — one `floating` boolean, measured from
   the shell's own container via a `ResizeObserver` against
   `APP_SHELL_DESKTOP_BREAKPOINT`, drives every pane decision: flex direction,
-  aside borders, which splitters render, the overlay/backdrop, `inert` on the
-  main column, Escape dismissal, and the slide axis. There is no viewport
+  aside borders, which splitters render (the far-side right-pane splitter is
+  `invert`ed so its handle tracks the cursor while the pane widens), the
+  overlay/backdrop, `inert` on the main column, Escape dismissal, and the slide
+  axis. There is no viewport
   breakpoint class and no stacked docked state; one wrapper per pane keeps the
   pane mounted across the docked/floating switch — the opaque surface and the
   explicit `w-[var(--pane-w)]` (capped at `max-w-[calc(100%-3rem)]`) live on the

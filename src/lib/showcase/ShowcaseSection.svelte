@@ -24,7 +24,7 @@
 </script>
 
 {#snippet codeIcon()}
-  <CodeIcon className="h-4 w-4" />
+  <CodeIcon size="sm" />
 {/snippet}
 
 <section aria-label={title} class="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
