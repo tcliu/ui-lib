@@ -5,13 +5,23 @@
   import type { AppShellHeaderApi } from '$lib/app-shell'
   import Buttons from '$lib/components/Buttons.svelte'
   import FormField from '$lib/components/FormField.svelte'
+  import Resizable from '$lib/components/Resizable.svelte'
   import SelectDropdown from '$lib/components/SelectDropdown.svelte'
   import ResetIcon from '$lib/icons/ResetIcon.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import PropsTable, { type PropRow } from '$lib/showcase/PropsTable.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
-  import { buildAppShellSnippet } from './demo-snippet'
+  import {
+    buildAppShellSnippet,
+    SHELL_STAGE_DEFAULT_HEIGHT,
+    SHELL_STAGE_DEFAULT_WIDTH,
+    SHELL_STAGE_HOST,
+    SHELL_STAGE_MAX_HEIGHT,
+    SHELL_STAGE_MIN_HEIGHT,
+    SHELL_STAGE_MIN_WIDTH,
+    SHELL_STAGE_PANE,
+  } from './demo-snippet'
 
   const i18n = getI18nContext()
 
@@ -22,6 +32,10 @@
   let pgVisibility = $state('')
   let pgRightPane = $state('')
   let pgFooter = $state('')
+  // Stage size is interaction state, not a curated option, so it stays out of
+  // isCustomized; Reset restores the default.
+  let pgStageWidth = $state(SHELL_STAGE_DEFAULT_WIDTH)
+  let pgStageHeight = $state(SHELL_STAGE_DEFAULT_HEIGHT)
 
   const modeOptions = [
     { value: 'docked', label: 'Docked' },
@@ -52,6 +66,8 @@
     pgVisibility = ''
     pgRightPane = ''
     pgFooter = ''
+    pgStageWidth = SHELL_STAGE_DEFAULT_WIDTH
+    pgStageHeight = SHELL_STAGE_DEFAULT_HEIGHT
   }
 
   const code = $derived.by(() =>
@@ -311,40 +327,56 @@
       showLabel: i18n.t('appShell.showPane'),
       hideLabel: i18n.t('appShell.hidePane'),
     }}>
-    <!-- The stage is fluid: the shell measures its own container and floats
-      the pane over the text when narrow, so shrinking the viewport never
-      needs horizontal scrolling. The stage sizing lives on the shell's
-      className override (the default is viewport-height). -->
-    <AppShell
-      className="flex h-80 w-full min-w-0 flex-col overflow-hidden rounded-lg border border-slate-800"
-      mode={demoDrawerMode}
-      collapseMode={demoMode}
-      open={demoOpen}
-      rightOpen={demoRightOpen}
-      rightPane={demoRightOpen ? rightPaneContent : undefined}
-      footer={demoFooterOpen ? footerContent : undefined}>
-      {#snippet header(api: AppShellHeaderApi)}
-        {@const toggleLabel = api.open ? i18n.t('appShell.hidePane') : i18n.t('appShell.showPane')}
-        <Button
-          variant="secondary"
-          size="sm"
-          className="-ml-1"
-          ariaLabel={toggleLabel}
-          ariaExpanded={api.open}
-          tooltip={toggleLabel}
-          tooltipAlign="left"
-          preventFocusSteal
-          onClick={api.toggleLeft}>
-          {#snippet icon()}
-            <MenuIcon size="sm" />
-          {/snippet}
-        </Button>
-        <span class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-200">{i18n.t('showcase.title')}</span>
-      {/snippet}
-      {#snippet leftPane()}
-        <p class="px-3 py-2 text-sm text-slate-300">{i18n.t('showcase.components')}</p>
-      {/snippet}
-      <p class="p-4 text-sm text-slate-300">{i18n.t('showcase.intro')}</p>
-    </AppShell>
+    <!-- The demo is wrapped in `Resizable`: shrinking the stage floats the
+      pane over the text when narrow, so the responsive behavior can be
+      inspected in place without resizing the window. The pane carries no
+      padding, so the shell lines up with the settings panel below it. -->
+    <div class={SHELL_STAGE_HOST}>
+      <Resizable
+        width={pgStageWidth}
+        height={pgStageHeight}
+        minWidth={SHELL_STAGE_MIN_WIDTH}
+        minHeight={SHELL_STAGE_MIN_HEIGHT}
+        maxWidth="parent"
+        maxHeight={SHELL_STAGE_MAX_HEIGHT}
+        onResize={(nextWidth, nextHeight) => {
+          pgStageWidth = nextWidth
+          pgStageHeight = nextHeight
+        }}>
+        <div class={SHELL_STAGE_PANE}>
+          <AppShell
+            className="flex h-full w-full min-w-0 flex-col overflow-hidden rounded-lg border border-slate-800"
+            mode={demoDrawerMode}
+            collapseMode={demoMode}
+            open={demoOpen}
+            rightOpen={demoRightOpen}
+            rightPane={demoRightOpen ? rightPaneContent : undefined}
+            footer={demoFooterOpen ? footerContent : undefined}>
+            {#snippet header(api: AppShellHeaderApi)}
+              {@const toggleLabel = api.open ? i18n.t('appShell.hidePane') : i18n.t('appShell.showPane')}
+              <Button
+                variant="secondary"
+                size="sm"
+                className="-ml-1"
+                ariaLabel={toggleLabel}
+                ariaExpanded={api.open}
+                tooltip={toggleLabel}
+                tooltipAlign="left"
+                preventFocusSteal
+                onClick={api.toggleLeft}>
+                {#snippet icon()}
+                  <MenuIcon size="sm" />
+                {/snippet}
+              </Button>
+              <span class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-200">{i18n.t('showcase.title')}</span>
+            {/snippet}
+            {#snippet leftPane()}
+              <p class="px-3 py-2 text-sm text-slate-300">{i18n.t('showcase.components')}</p>
+            {/snippet}
+            <p class="p-4 text-sm text-slate-300">{i18n.t('showcase.intro')}</p>
+          </AppShell>
+        </div>
+      </Resizable>
+    </div>
   </ShowcaseSection>
 </ShowcasePage>
