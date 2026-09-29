@@ -12,9 +12,6 @@ export interface SelectDropdownSnippetState {
   align: string
 }
 
-export const FILTERABLE_CONTROL =
-  'w-40 rounded-md border border-slate-700 bg-slate-950 pl-3 pr-7 py-2 text-sm text-slate-100 outline-none transition motion-reduce:transition-none hover:border-cyan-500 focus-visible:border-cyan-500'
-
 // A tri-state line: omitted while unset, bare while Yes, ={false} while No.
 function flagLine(name: string, value: TriState): string[] {
   if (value === '') {
