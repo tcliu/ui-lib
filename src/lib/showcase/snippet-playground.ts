@@ -31,6 +31,7 @@ import Menu from '$lib/components/Menu.svelte'
 import NumberInput from '$lib/components/NumberInput.svelte'
 import Pagination from '$lib/components/Pagination.svelte'
 import PasswordInput from '$lib/components/PasswordInput.svelte'
+import Resizable from '$lib/components/Resizable.svelte'
 import SearchInput from '$lib/components/SearchInput.svelte'
 import SelectDropdown from '$lib/components/SelectDropdown.svelte'
 import Spinner from '$lib/components/Spinner.svelte'
@@ -111,6 +112,7 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/NumberInput.svelte': { default: NumberInput },
   'ui/Pagination.svelte': { default: Pagination },
   'ui/PasswordInput.svelte': { default: PasswordInput },
+  'ui/Resizable.svelte': { default: Resizable },
   'ui/SearchInput.svelte': { default: SearchInput },
   'ui/SelectDropdown.svelte': { default: SelectDropdown },
   'ui/Spinner.svelte': { default: Spinner },

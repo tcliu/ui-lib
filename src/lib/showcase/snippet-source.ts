@@ -32,6 +32,7 @@ const COMPONENT_IMPORTS = [
   '  import NumberInput from "ui/NumberInput.svelte"',
   '  import Pagination from "ui/Pagination.svelte"',
   '  import PasswordInput from "ui/PasswordInput.svelte"',
+  '  import Resizable from "ui/Resizable.svelte"',
   '  import SearchInput from "ui/SearchInput.svelte"',
   '  import SelectDropdown from "ui/SelectDropdown.svelte"',
   '  import Spinner from "ui/Spinner.svelte"',
