@@ -5,7 +5,17 @@
 // Single-quoted lines throughout: backticks and ${} inside them stay literal,
 // so no escaping.
 
-import { stageCloseLines, stageOpenLines, stageStateLine } from '$lib/showcase/resizable-stage'
+import { stageStaticCloseLines, stageStaticOpenLines } from '$lib/showcase/resizable-stage'
+
+// Page-size choices demonstrated by the demo's pagination dropdown; the small 5
+// keeps several pages visible so the placement is easy to see.
+export const PAGE_SIZE_OPTIONS = [5, 10, 20, 50]
+
+// Stage pane classes: `fillHeight` needs a bounded flex column so the table
+// fills it and its pagination pins to the bottom; otherwise the pane is a plain
+// full-width block.
+export const TABLE_STAGE_PANE = 'w-full'
+export const TABLE_STAGE_PANE_FILL = 'flex h-[28rem] w-full flex-col'
 
 export interface DemoRow {
   id: string
@@ -26,6 +36,8 @@ export interface DataTableSnippetState {
   dense: TriState
   resizable: TriState
   loading: TriState
+  fillHeight: TriState
+  bodyScroll: TriState
   placeholder: string
   emptyMessage: string
 }
@@ -51,9 +63,12 @@ export function buildDataTableSnippet({
   dense,
   resizable,
   loading,
+  fillHeight,
+  bodyScroll,
   placeholder,
   emptyMessage,
 }: DataTableSnippetState): string {
+  const paneClass = fillHeight === 'yes' ? TABLE_STAGE_PANE_FILL : TABLE_STAGE_PANE
   const lines = [
     '<script>',
     '  const rows = [',
@@ -64,7 +79,6 @@ export function buildDataTableSnippet({
     "    { key: 'name', header: 'Name', sortable: true, searchable: true, cell: nameCell },",
     "    { key: 'status', header: 'Status', searchable: true, cell: statusCell },",
     '  ]',
-    stageStateLine('  '),
     '</script>',
     '{#snippet nameCell(row)}',
     '  <strong class="font-medium text-slate-100">{row.name}</strong>',
@@ -78,7 +92,7 @@ export function buildDataTableSnippet({
     '{#snippet tableTrailing()}',
     '  <span class="text-xs text-slate-400">{visibleTotal(rows, pgQuery)} rows</span>',
     '{/snippet}',
-    ...stageOpenLines('', 'w-full'),
+    ...stageStaticOpenLines('', paneClass),
     '    <DataTable',
     '      rows={visibleRows(rows, pgQuery, pgSortKey, pgSortDirection, pgPage, pgPageSize)}',
     '      columns={columns.filter(column => !hidden.has(column.key))}',
@@ -105,6 +119,7 @@ export function buildDataTableSnippet({
     '      currentPage={pgPage}',
     '      onPageChange={handlePageChange}',
     '      onPageSizeChange={handlePageSizeChange}',
+    `      pageSizeOptions={[${PAGE_SIZE_OPTIONS.join(', ')}]}`,
     ...flagLine('selectable', selectable),
     ...(selectable === 'yes'
       ? [
@@ -118,11 +133,13 @@ export function buildDataTableSnippet({
         ]
       : []),
     ...flagLine('dense', dense),
+    ...flagLine('fillHeight', fillHeight),
+    ...flagLine('bodyScroll', bodyScroll),
     ...flagLine('resizable', resizable),
     ...(resizable === 'yes' ? ['      resizeAriaLabel={column => `Resize ${column.header}`}'] : []),
     ...flagLine('loading', loading),
     '    />',
-    ...stageCloseLines(''),
+    ...stageStaticCloseLines(''),
   ]
   return lines.join('\n')
 }

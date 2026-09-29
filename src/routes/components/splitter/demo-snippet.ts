@@ -4,7 +4,7 @@
 // local $state in the snippet (seeded from scope) so the live instance is
 // draggable, matching the static demo.
 
-import { stageCloseLines, stageOpenLines, stageStateLine } from '$lib/showcase/resizable-stage'
+import { stageStaticCloseLines, stageStaticOpenLines } from '$lib/showcase/resizable-stage'
 
 export type SplitterOrientation = 'vertical' | 'horizontal'
 export type SplitterUnit = 'px' | '%'
@@ -17,7 +17,8 @@ export interface SplitterSnippetState {
 
 // Bounded stage the demo renders into: the splitter can only clamp against a
 // parent with a definite size. The snippet emits this same wrapper so the static
-// demo and Show-code match; the resizable stage around it supplies the width.
+// demo and Show-code match; the handle-less stage around it supplies no trailing
+// handle, so the demo's own separator is the only one.
 export const SPLITTER_WRAPPER = 'flex h-64 w-full overflow-hidden rounded-lg border border-slate-800'
 export const SPLITTER_PANE = 'shrink-0 overflow-auto bg-slate-950/50 p-3 text-sm text-slate-300'
 export const SPLITTER_MAIN = 'min-w-0 flex-1 overflow-auto bg-slate-900/40 p-3 text-sm text-slate-300'
@@ -53,9 +54,8 @@ export function buildSplitterSnippet({ orientation, unit, ariaLabel }: SplitterS
   return [
     '<script>',
     '  let split = $state(initialSplit)',
-    stageStateLine('  '),
     '</script>',
-    ...stageOpenLines('', 'w-full'),
+    ...stageStaticOpenLines('', 'w-full'),
     `    <div class="${wrapperClass}">`,
     paneLine,
     '      <Splitter',
@@ -69,6 +69,6 @@ export function buildSplitterSnippet({ orientation, unit, ariaLabel }: SplitterS
     '      />',
     `      <div class="${SPLITTER_MAIN}">{rightLabel}</div>`,
     '    </div>',
-    ...stageCloseLines(''),
+    ...stageStaticCloseLines(''),
   ].join('\n')
 }
