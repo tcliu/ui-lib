@@ -32,6 +32,12 @@ export const en = {
   splitter: {
     resize: 'Resize',
   },
+  resizable: {
+    resizeWidth: 'Resize width',
+    resizeHeight: 'Resize height',
+    resizeBoth: 'Resize width and height',
+    resizeValue: '{width} by {height} pixels',
+  },
   appShell: {
     showPane: 'Show pane',
     hidePane: 'Hide pane',
