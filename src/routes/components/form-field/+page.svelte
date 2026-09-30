@@ -20,14 +20,19 @@
   let pgHtmlFor = $state('')
   let pgStyled = $state('')
   let pgClassName = $state('')
+  let pgLayout = $state('')
 
   const styledOptions = [{ value: 'yes', label: 'Styled wrapper' }]
+  const layoutOptions = [{ value: 'inline', label: 'Inline' }]
 
   const demoLabel = $derived(pgLabel || i18n.t('showcase.default'))
   const demoHtmlFor = $derived(pgHtmlFor || undefined)
   const demoClassName = $derived(pgClassName || undefined)
+  const demoLayout = $derived(pgLayout === 'inline' ? 'inline' : undefined)
 
-  const isCustomized = $derived(pgLabel !== '' || pgHtmlFor !== '' || pgStyled !== '' || pgClassName !== '')
+  const isCustomized = $derived(
+    pgLabel !== '' || pgHtmlFor !== '' || pgStyled !== '' || pgClassName !== '' || pgLayout !== '',
+  )
   const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
 
   function clearPlayground() {
@@ -36,14 +41,23 @@
     pgHtmlFor = ''
     pgStyled = ''
     pgClassName = ''
+    pgLayout = ''
   }
 
-  const code = $derived.by(() => buildFormFieldSnippet({ label: pgLabel, htmlFor: pgHtmlFor, className: pgClassName }))
+  const code = $derived.by(() =>
+    buildFormFieldSnippet({ label: pgLabel, htmlFor: pgHtmlFor, className: pgClassName, layout: pgLayout }),
+  )
 
   const props: PropRow[] = [
     { name: 'label', type: 'string', defaultValue: '—', note: 'Visible field label.' },
     { name: 'htmlFor', type: 'string', defaultValue: '—', note: 'Associates the label with a control id.' },
     { name: 'className', type: 'string', defaultValue: "''", note: 'Extra classes for the field wrapper.' },
+    {
+      name: 'layout',
+      type: "'stacked' | 'inline'",
+      defaultValue: "'stacked'",
+      note: 'Stacked puts the label above the control; inline puts it in a 6rem column beside it.',
+    },
     { name: 'children', type: 'Snippet', defaultValue: '—', note: 'The control(s) under the label.' },
   ]
 </script>
@@ -92,6 +106,17 @@
           pgClassName = ''
         }} />
     </FormField>
+    <FormField label="Layout">
+      <SelectDropdown
+        buttonLabel={pgLayout ? 'Inline' : 'Default'}
+        activeValue={pgLayout}
+        ariaLabel="Layout"
+        options={layoutOptions}
+        onSelect={value => (pgLayout = value)}
+        clearable
+        clearLabel="Clear layout"
+        onClear={() => (pgLayout = '')} />
+    </FormField>
     <FormField label="Class name" htmlFor="pg-classname">
       <input
         id="pg-classname"
@@ -108,7 +133,7 @@
     {code}
     footer={settingsPanel}
     scope={{ value: pgValue, defaultLabel: i18n.t('showcase.default') }}>
-    <FormField label={demoLabel} htmlFor={demoHtmlFor} className={demoClassName}>
+    <FormField label={demoLabel} htmlFor={demoHtmlFor} className={demoClassName} layout={demoLayout}>
       <input
         id={demoHtmlFor}
         type="text"

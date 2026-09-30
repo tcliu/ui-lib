@@ -6,6 +6,7 @@ export interface FormFieldSnippetState {
   label: string
   htmlFor: string
   className: string
+  layout: string
 }
 
 export const STYLED_CLASS = 'rounded-md border border-cyan-500/40 p-3'
@@ -16,13 +17,14 @@ function escapeAttr(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 }
 
-export function buildFormFieldSnippet({ label, htmlFor, className }: FormFieldSnippetState): string {
+export function buildFormFieldSnippet({ label, htmlFor, className, layout }: FormFieldSnippetState): string {
   const labelAttr = label ? ` label="${escapeAttr(label)}"` : ' label={defaultLabel}'
   const forAttr = htmlFor ? ` htmlFor="${escapeAttr(htmlFor)}"` : ''
+  const layoutAttr = layout ? ` layout="${escapeAttr(layout)}"` : ''
   const classAttr = className ? ` className="${escapeAttr(className)}"` : ''
   const idAttr = htmlFor ? `    id="${escapeAttr(htmlFor)}"\n` : ''
   return [
-    `<FormField${labelAttr}${forAttr}${classAttr}>`,
+    `<FormField${labelAttr}${forAttr}${layoutAttr}${classAttr}>`,
     '  <input',
     '    type="text"',
     '    bind:value',
