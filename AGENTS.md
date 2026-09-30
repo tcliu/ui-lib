@@ -126,7 +126,10 @@ Project-specific development conventions for the UI Library web app.
   the shell's own container (`ResizeObserver` at `APP_SHELL_DESKTOP_BREAKPOINT`),
   never from viewport breakpoint classes; docked and floating are the only two
   presentations, and direction, borders, splitters, backdrop, `inert`, Escape,
-  and the slide axis all follow it. A pane anchored on the far side of its
+  and the slide axis all follow it. The slide is armed only after the first
+  pointer/key interaction, so a pane that mounts as the page settles (the docked
+  pane once the container measures desktop) appears in place instead of sweeping
+  in on load; an explicit reduced-motion preference still zeroes the duration. A pane anchored on the far side of its
   splitter (the right pane) passes `invert` so the handle follows the pointer
   while widening the pane instead of running away from it. Docked wrappers keep
   an explicit pane width
