@@ -15,6 +15,8 @@ export function GET(): Response {
       id: 'ui-lib',
       name: 'UI Library',
       branch,
+      // `APP_ACTIVE=false` opts this instance out of catalog scans.
+      active: env.APP_ACTIVE,
     }),
     { headers: NO_STORE },
   )

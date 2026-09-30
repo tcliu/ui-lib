@@ -13,6 +13,7 @@ export interface CardPayload {
   status?: unknown
   url?: unknown
   tags?: unknown
+  active?: unknown
 }
 
 export interface NormalizedCard {
@@ -25,6 +26,7 @@ export interface NormalizedCard {
   status: 'Active' | 'Inactive'
   url: string | null
   tags: string[]
+  active: boolean
 }
 const VALID_STATUSES: Record<string, 'Active' | 'Inactive'> = { Active: 'Active', Inactive: 'Inactive' }
 
@@ -32,6 +34,19 @@ function trimToNull(value: unknown): string | null {
   if (value === undefined || value === null) return null
   const trimmed = String(value).trim()
   return trimmed ? trimmed : null
+}
+
+// `active` is an operator opt-out carried through `/api/info`: absent/true
+// keeps the project discoverable, an explicit false makes a catalog scan skip
+// it. Only recognized false spellings opt out, so a typo never hides a project.
+const CARD_FALSE_VALUES = new Set(['0', 'false', 'no', 'off'])
+
+function normalizeCardBoolean(value: unknown): boolean {
+  if (typeof value === 'boolean') return value
+  if (typeof value === 'number') return value !== 0
+  const text = trimToNull(value)
+  if (text === null) return true
+  return !CARD_FALSE_VALUES.has(text.toLowerCase())
 }
 
 // Lightweight tag coercion only (trim, drop empties, dedupe). This file stays
@@ -81,6 +96,7 @@ export function normalizeCard(payload: CardPayload): NormalizedCard {
     status: (status && VALID_STATUSES[status]) || 'Active',
     url: trimToNull(payload.url),
     tags: normalizeCardTags(payload.tags),
+    active: normalizeCardBoolean(payload.active),
   }
 }
 

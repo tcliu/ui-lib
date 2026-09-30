@@ -39,11 +39,13 @@ your domain tables and list them in `SCHEMA_VERIFY_TABLES`.
 ### `GET /api/info`
 
 Public, no auth. Returns this project's catalog self-card: a flat card
-(`{ id, name, icon?, description?, branch?, repo?, status, url?, tags }`) that
-a catalog scanner reads to discover and identify the project. `id` and `name`
-are required; `branch` is the runtime ref (worktree `DEV_TAG` in dev, commit ref
-on Vercel); absent fields normalize to `null`, and a missing/unknown `status`
-defaults to `Active`. Responses carry `cache-control: no-store`.
+(`{ id, name, icon?, description?, branch?, repo?, status, url?, tags, active? }`)
+that a catalog scanner reads to discover and identify the project. `id` and
+`name` are required; `branch` is the runtime ref (worktree `DEV_TAG` in dev,
+commit ref on Vercel); absent fields normalize to `null`, a missing/unknown
+`status` defaults to `Active`, and `active` defaults to `true`
+(`APP_ACTIVE=false` opts the instance out of catalog scans). Responses carry
+`cache-control: no-store`.
 
 Normalization lives in `src/lib/server/card.ts`. A project may also
 answer with an envelope carrying the card under `self` (`{ ..., self: {...} }`);
