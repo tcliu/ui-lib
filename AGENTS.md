@@ -98,7 +98,10 @@ Project-specific development conventions for the UI Library web app.
 - `FormField` carries a `layout` prop: `stacked` (default) renders the label
   above the control; `inline` renders the label in a 6rem column beside the
   control at >=sm and stacks below sm, so a form row aligns its labels without
-  forking the wrapper.
+  forking the wrapper. The inline track stays a literal arbitrary value
+  (`sm:grid-cols-[6rem_minmax(0,1fr)]`) rather than a theme token, because a
+  token would force every consuming app to define an app-private
+  `--grid-template-columns-*` entry for a shared component.
 - Resize handles are focusable `role="separator"` widgets carrying
   `aria-valuenow`/`aria-valuemin`/`aria-valuemax`; the two
   `svelte-ignore a11y_no_noninteractive_*` comments above a handle are the
