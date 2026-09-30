@@ -1,7 +1,7 @@
 // @vitest-environment node
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
-import { formatCommand, maskCommandLine } from './_run.mjs'
+import { echoCommand, formatCommand, maskCommandLine } from './_run.mjs'
 
 const argvWithValue = (key, value = 's3cr3t', extra = []) => ['env', 'add', key, 'production', '--value', value, ...extra]
 
@@ -93,5 +93,19 @@ describe('maskCommandLine', () => {
 
   it('keeps a boundary-scoped non-secret flag visible', () => {
     expect(maskCommandLine('--MONKEY=visible --api-key=hidden')).toBe('--MONKEY=visible --api-key=***')
+  })
+
+  it('masks a secret-named assignment but leaves an ordinary one visible', () => {
+    expect(maskCommandLine('ADMIN_PASSWORD=abc vercel deploy')).toBe('ADMIN_PASSWORD=*** vercel deploy')
+    expect(maskCommandLine('PROFILE=dev vercel deploy')).toBe('PROFILE=dev vercel deploy')
+  })
+})
+
+describe('echoCommand', () => {
+  it('writes the masked command to stderr', () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    echoCommand('vercel', ['env', 'add', 'SESSION_SECRET', 'production', '--value', 's3cr3t'])
+    expect(spy).toHaveBeenCalledWith('$ vercel env add SESSION_SECRET production --value ***')
+    spy.mockRestore()
   })
 })
