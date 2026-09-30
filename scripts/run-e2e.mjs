@@ -2,6 +2,9 @@
 
 // Unified e2e entry point: `npm run e2e [-- [project] [branch] [-- <playwright args>]]`
 //
+// Arguments after `--` pass through to Playwright unchanged. A flag placed
+// before the separator, or without one, is rejected as an unknown option.
+//
 // 1. Scan for a running dev server via find-running-apps.mjs (identity + branch).
 // 2. If none matches, start `npm run dev` on the first free port in range and
 //    wait until its /api/info answers.
@@ -14,8 +17,10 @@
 import { execFileSync, spawn } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import net from 'node:net'
+import { parseArgs as parseCliArgs } from 'node:util'
 import { pathToFileURL } from 'node:url'
 import { findRunningApps } from './find-running-apps.mjs'
+import { echoCommand } from './_run.mjs'
 
 const START_TIMEOUT_MS = 120_000
 const POLL_MS = 500
@@ -142,14 +147,24 @@ async function resolveBaseUrl({ project, branch, host }) {
 }
 
 async function main() {
+  // `--` separates this script's own arguments from the Playwright passthrough,
+  // so split on it first, then parse the head with the stdlib parser.
   const sep = process.argv.indexOf('--')
-  const ownArgs = (sep === -1 ? process.argv.slice(2) : process.argv.slice(2, sep)).filter(a => !a.startsWith('-'))
+  const ownArgv = sep === -1 ? process.argv.slice(2) : process.argv.slice(2, sep)
   const playArgs = sep === -1 ? [] : process.argv.slice(sep + 1)
-  const project = ownArgs[0] ?? defaultProject
-  const branch = ownArgs[1] ?? currentBranch()
+  let positionals
+  try {
+    ;({ positionals } = parseCliArgs({ args: ownArgv, options: {}, allowPositionals: true, strict: true }))
+  } catch (error) {
+    console.error(error.message)
+    process.exit(1)
+  }
+  const project = positionals[0] ?? defaultProject
+  const branch = positionals[1] ?? currentBranch()
   const host = '127.0.0.1'
 
   const resolved = await resolveBaseUrl({ project, branch, host })
+  echoCommand('npx', ['playwright', 'test', ...playArgs])
   const child = spawn('npx', ['playwright', 'test', ...playArgs], {
     stdio: 'inherit',
     env: { ...process.env, E2E_BASE_URL: resolved.url },

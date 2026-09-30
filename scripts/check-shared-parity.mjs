@@ -1,5 +1,7 @@
+#!/usr/bin/env node
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { createHash } from 'node:crypto'
+import { createRequire } from 'node:module'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -13,7 +15,10 @@ import { fileURLToPath } from 'node:url'
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
 const SELF = 'ui-lib'
-const REGISTRY = join(process.env.HOME ?? '', '.agents', '.metadata', 'projects.yml')
+// Config root: the `~/.agents` checkout that carries the project registry and
+// the parser dependency.
+const CONFIG_ROOT = process.env.AI_CONFIG_DIR ?? join(process.env.HOME ?? '', '.agents')
+const REGISTRY = join(CONFIG_ROOT, '.metadata', 'projects.yml')
 
 // Shared surface, by convention: every file under these directories is
 // canonical. App-private code stays out of them (ui-lib's own chrome lives
@@ -80,13 +85,57 @@ const globalExceptions = new Set(EXCEPTIONS.filter(entry => entry.length === 2).
 const appExceptions = EXCEPTIONS.filter(entry => entry.length === 3)
 const isAppExcepted = (app, rel) => appExceptions.some(([name, p]) => name === app && p === rel)
 
+// The registry is YAML: parse it with the `yaml` package resolved from the
+// config root, and fail fast (with the file and location) on malformed content.
+// Only an absent registry means "no data" and yields no siblings.
+function readRegistry() {
+  if (!existsSync(REGISTRY)) return null
+  let parseYaml
+  let resolveError
+  // Prefer the config root; fall back to the project's own install so the gate
+  // keeps working when the config root carries the registry but not the parser.
+  for (const base of [CONFIG_ROOT, ROOT]) {
+    try {
+      parseYaml = createRequire(join(base, 'package.json'))('yaml').parse
+      break
+    } catch (error) {
+      // Record the failure so the hard error below can name the cause, then try
+      // the next resolution base.
+      resolveError = error
+    }
+  }
+  if (!parseYaml) {
+    console.error(`shared-parity: the \`yaml\` package is required to read ${REGISTRY}`)
+    console.error(`shared-parity: install it beside the config root: (cd ${CONFIG_ROOT} && npm install yaml)`)
+    if (resolveError) console.error(`shared-parity: last resolution error: ${resolveError.message}`)
+    process.exit(2)
+  }
+  let document
+  try {
+    document = parseYaml(readFileSync(REGISTRY, 'utf8'))
+  } catch (error) {
+    console.error(`shared-parity: failed to parse ${REGISTRY}: ${error.message}`)
+    process.exit(2)
+  }
+  const entries = document?.projects
+  if (!Array.isArray(entries)) {
+    console.error(`shared-parity: ${REGISTRY} must carry a top-level \`projects\` list`)
+    process.exit(2)
+  }
+  return entries.map((entry, index) => {
+    const name = entry?.name
+    const path = entry?.path
+    if (typeof name !== 'string' || !name || typeof path !== 'string' || !path) {
+      console.error(`shared-parity: ${REGISTRY}:projects[${index}] must carry string \`name\` and \`path\``)
+      process.exit(2)
+    }
+    return { name, path }
+  })
+}
+
 function projectPaths() {
-  if (!existsSync(REGISTRY)) return []
-  const body = readFileSync(REGISTRY, 'utf8')
-  const entries = []
-  const re = /- name:\s*(\S+)\s*\n\s*path:\s*(\S+)/g
-  let m
-  while ((m = re.exec(body))) entries.push({ name: m[1], path: m[2] })
+  const entries = readRegistry()
+  if (entries === null) return []
   return entries.filter(e => e.name !== SELF && !isExceptedName(e.name))
 }
 

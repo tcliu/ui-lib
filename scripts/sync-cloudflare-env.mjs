@@ -28,6 +28,7 @@
 import { spawn } from 'node:child_process'
 import { existsSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
+import { parseArgs as parseCliArgs } from 'node:util'
 import { fileURLToPath } from 'node:url'
 import { parseEnvFile } from './env-file.mjs'
 import { logEvent } from './log-event.mjs'
@@ -69,25 +70,31 @@ function fail(message) {
 }
 
 function parseFlags(argv) {
-  const dryRun = argv.includes('--dry-run')
-  const prune = argv.includes('--prune')
-  const secretFlags = argv.filter(arg => arg.startsWith('--secrets='))
-  const unknown = argv.filter(
-    arg => arg !== '--dry-run' && arg !== '--prune' && !arg.startsWith('--secrets='),
-  )
-  if (unknown.length > 0) {
-    fail(`Unknown option: ${unknown.join(', ')} (expected --dry-run, --prune, --secrets=always|missing).`)
+  let cli
+  try {
+    cli = parseCliArgs({
+      args: argv,
+      options: {
+        'dry-run': { type: 'boolean' },
+        prune: { type: 'boolean' },
+        secrets: { type: 'string', multiple: true },
+      },
+      strict: true,
+    })
+  } catch (error) {
+    fail(error.message)
   }
+  const { values } = cli
+  const modes = new Set(values.secrets ?? [])
   // A repeated flag with conflicting values is a mistake, not last-wins.
-  const modes = new Set(secretFlags.map(arg => arg.slice('--secrets='.length)))
   if (modes.size > 1) {
     fail(`Conflicting --secrets values: ${[...modes].join(', ')}.`)
   }
-  const secrets = secretFlags.length > 0 ? secretFlags[0].slice('--secrets='.length) : 'always'
+  const secrets = modes.size === 1 ? [...modes][0] : 'always'
   if (!SECRET_MODES.includes(secrets)) {
     fail(`Unknown --secrets mode: ${secrets} (expected ${SECRET_MODES.join('|')}).`)
   }
-  return { dryRun, prune, secrets }
+  return { dryRun: Boolean(values['dry-run']), prune: Boolean(values.prune), secrets }
 }
 
 function runWranglerAsync(args, { input } = {}) {
