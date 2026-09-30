@@ -103,8 +103,9 @@
 
 <div
   id="tip"
+  role="tooltip"
   bind:this={tipBoxEl}
-  class="fixed z-[80] pointer-events-none max-w-[320px] rounded-lg border border-slate-700 bg-slate-800 px-[9px] py-1.5 text-[11.5px] leading-[1.5] text-slate-200 whitespace-pre-line shadow-[0_10px_26px_rgba(2,6,23,0.75)]"
+  class="fixed z-tooltip pointer-events-none rounded-lg border border-slate-700 bg-slate-800 px-2 py-1.5 text-xs leading-normal text-slate-200 whitespace-pre-line shadow-lg"
   style:left="{tipState.left}px"
   style:top="{tipState.top}px"
   style:max-width="{tipState.maxWidth}px"

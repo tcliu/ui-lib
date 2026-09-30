@@ -114,17 +114,17 @@ export const tooltip: Action<HTMLElement> = node => {
       showTipFor(node)
     }
   }
-  node.addEventListener('mouseenter', show)
-  node.addEventListener('mouseleave', hide)
-  node.addEventListener('mousemove', reshow)
+  node.addEventListener('pointerenter', show)
+  node.addEventListener('pointerleave', hide)
+  node.addEventListener('pointermove', reshow)
   node.addEventListener('focus', show)
   node.addEventListener('blur', hide)
   ensureScrollListener()
   return {
     destroy() {
-      node.removeEventListener('mouseenter', show)
-      node.removeEventListener('mouseleave', hide)
-      node.removeEventListener('mousemove', reshow)
+      node.removeEventListener('pointerenter', show)
+      node.removeEventListener('pointerleave', hide)
+      node.removeEventListener('pointermove', reshow)
       node.removeEventListener('focus', show)
       node.removeEventListener('blur', hide)
       releaseScrollListener()
