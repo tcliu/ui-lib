@@ -45,8 +45,26 @@ Project-specific development conventions for the UI Library web app.
 - Shared components never traverse or manipulate the DOM: render `$state`,
   reach an owned node through `bind:this` or a Svelte action, and read an event
   target's own attributes in place. Follow the imperative-DOM-access ban in
-  `~/.agents/references/svelte.md`; only isolated accessibility and
-  infrastructure helpers are exempt.
+  `~/.agents/references/svelte.md`; only these isolated accessibility and
+  infrastructure helpers are exempt: `position-panel.svelte.ts` (portal
+  attach/detach and placement), `BaseDialog` + `use-app-shell-drawer.svelte.ts`
+  (focus trap and `document.activeElement` restore), `use-dropdown.svelte.ts`,
+  `click-outside.ts`, `use-focusout-close.ts`, `drag-close-down.ts`,
+  `Tooltip.svelte`, and `AppShell.svelte` (outside-click and popup focus
+  containment, Escape routing through their own element refs),
+  `use-grid-autoscroll.svelte.ts` (grid hit-testing through
+  `elementFromPoint`/`closest`/`dataset`), `grid-cell-refs.ts` (owned-node
+  registry: cells, editors, and selectors register their own nodes through
+  actions so grid focus and edit transitions never query the DOM),
+  `use-table-scroll-sync.svelte.ts`
+  (header padding measured from the body scrollbar), `tooltip.svelte.ts`
+  (action reads its own element's `dataset` + geometry), and `theme.svelte.ts` +
+  `i18n.svelte.ts` (root `data-theme`/`lang` attributes). Keep each in its own
+  focused module and never copy the pattern into feature code.
+- Plain-text hints use `data-tip` with the shared `use:tooltip` engine (route
+  layout hosts the `#tip` box via `setTipBox`); rich positioned content keeps
+  the `Tooltip` component. A `dataTip` on a disabled `Button` rides on a
+  non-disabled wrapper, since disabled triggers fire no mouse events.
 - `scripts/check-shared-parity.mjs` (run by `npm run check`) byte-compares the
   shared directories (`src/lib/components/`, `src/lib/icons/`, `src/lib/actions/`,
   `src/lib/data-table/`, `scripts/`) plus the listed top-level `src/lib/*.ts`
@@ -77,12 +95,25 @@ Project-specific development conventions for the UI Library web app.
   container) and the drag, key nudge, and Home/End clamps measure the parent at
   interaction time. Use it to keep a frame inside a non-scrolling container so
   no scrollbar can ever cover a handle.
+- `FormField` carries a `layout` prop: `stacked` (default) renders the label
+  above the control; `inline` renders the label in a 6rem column beside the
+  control at >=sm and stacks below sm, so a form row aligns its labels without
+  forking the wrapper.
 - Resize handles are focusable `role="separator"` widgets carrying
   `aria-valuenow`/`aria-valuemin`/`aria-valuemax`; the two
   `svelte-ignore a11y_no_noninteractive_*` comments above a handle are the
   documented false positive for Svelte misclassifying a focusable separator as
-  non-interactive, scoped to the handle subtree — not a general licence for
-  suppressing a11y warnings elsewhere.
+  non-interactive, scoped to the handle subtree.
+- `DataGrid` implements the ARIA grid pattern — a `role="grid"` table whose
+  `role="columnheader"`/`role="rowheader"`/`role="gridcell"` cells carry
+  `tabindex="-1"` plus pointer and keyboard handlers, with the container
+  capturing the Ctrl+Z/Ctrl+Y history shortcuts; the `svelte-ignore
+  a11y_no_static_element_interactions` comments on those elements are the
+  documented false positive for Svelte misclassifying ARIA-defined grid roles as
+  static elements, scoped to the grid subtree. These two scoped exceptions are
+  the only sanctioned a11y suppressions: never suppress another `a11y_*` warning,
+  and never suppress `state_referenced_locally` (read the value through an
+  accessor or `untrack` instead).
 - Never combine `align` with `className` on `Buttons`: a custom `className`
   replaces the default row and silently drops `align`; spell the row out
   (`flex w-full … justify-end`) instead.
@@ -140,6 +171,10 @@ Project-specific development conventions for the UI Library web app.
   individual PIDs only, never the invoker's own process chain.
 - Z ladder: sticky content `z-10`, drawer `z-20`, overlays `z-40`, dev tag
   `z-50` — keep overlays at or below `z-40` so the tag is never covered.
+  Exception: the transient `use:tooltip` hint host uses the `--z-index-tooltip`
+  token (45, Tailwind's `--z-index-*` namespace → the `z-tooltip` utility),
+  above portalled `z-40` dialogs that paint after it in body order, still below
+  the dev tag.
 - Portal dialogs to `document.body` through `positionPanel` sheet mode so no
   ancestor stacking context (including the showcase's paint-contained demo row)
   can clip or trap them.
