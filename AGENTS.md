@@ -159,7 +159,11 @@ Project-specific development conventions for the UI Library web app.
   second icon file, so one glyph stays one component.
 - Reuse this project's existing UI primitives and patterns when they fit,
   especially dialog, dropdown, editor, and icon components; do not build a
-  parallel design system for equivalent controls.
+  parallel design system for equivalent controls. Every button is the shared
+  `Button` component (icon-only through its `icon` snippet) per
+  `~/.agents/references/ui-patterns.md` (Shared components), never a raw
+  `<button>`; skin-carrying buttons keep raw markup per that reference's
+  documented exceptions.
 - Apply code changes in a separate git branch and worktree under `.worktrees/`
   per the shared `git.md` worktree practice (branch `<type>/<change-name>`,
   path mirrors branch); create worktrees with
