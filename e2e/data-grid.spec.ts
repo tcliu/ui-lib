@@ -40,6 +40,31 @@ test('showcase: DataGrid edits a cell and undoes the edit', async ({ page }) => 
   await expect(cell).toHaveValue('Ada Lovelace')
 })
 
+test('showcase: DataGrid keeps grid focus when pasting into an appended row', async ({ page }) => {
+  await page.goto('/components/data-grid')
+  await page.waitForLoadState('networkidle')
+  const root = page.locator('[data-testid="data-grid"]')
+  // B4 is the last data row; copy it, then ArrowDown appends and focuses B5.
+  await root.locator('textarea[data-row="4"][data-col="1"]').click()
+  await page.keyboard.press('ControlOrMeta+c')
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('ControlOrMeta+v')
+  await expect(root.locator('textarea[data-row="5"][data-col="1"]')).toHaveValue('Analyst')
+
+  // Focus must stay on a grid cell (not fall to <body>), so arrow navigation
+  // still reaches the grid's keydown handler after the paste.
+  const pastedBox = root.locator('td[role="gridcell"]:has(textarea[data-row="5"][data-col="1"])')
+  await expect(pastedBox).toBeFocused()
+  await page.keyboard.press('ArrowUp')
+  await expect(root.locator('td[role="gridcell"]:has(textarea[data-row="4"][data-col="1"])')).toBeFocused()
+
+  // Undo reverts the paste and removes the appended row, keeping focus in-grid.
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('ControlOrMeta+z')
+  await expect(root.locator('textarea[data-row="5"]')).toHaveCount(0)
+  await expect(root.locator('td[role="gridcell"]:has(textarea[data-row="4"][data-col="1"])')).toBeFocused()
+})
+
 test('showcase: DataGrid settings panel drives editability and headers', async ({ page }) => {
   await page.goto('/components/data-grid')
   await page.waitForLoadState('networkidle')
