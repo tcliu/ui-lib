@@ -41,6 +41,11 @@ const SHARED_FILES = [
   'src/lib/text-size.ts',
 ]
 
+// Shared server utilities carried byte-identically by the consuming apps.
+const SHARED_SERVER_FILES = [
+  'src/lib/server/cron-expression.ts',
+]
+
 // Never gated: colocated tests, test directories, and this gate itself
 // (siblings do not carry it).
 const SKIP_BASENAMES = new Set(['check-shared-parity.mjs'])
@@ -61,7 +66,7 @@ function walk(dir) {
   return out
 }
 
-const SHARED = [...SHARED_DIRS.flatMap(walk), ...SHARED_FILES].sort()
+const SHARED = [...SHARED_DIRS.flatMap(walk), ...SHARED_FILES, ...SHARED_SERVER_FILES].sort()
 
 // Per-project exceptions with the reason each may legitimately differ. A
 // two-element entry exempts the file for every app; a three-element entry
@@ -76,6 +81,7 @@ const EXCEPTIONS = [
   ['session-catalog', 'src/lib/components/DateRangePicker.svelte', 'themed fork: prop-injected i18n and CSS-var palette'],
   ['session-catalog', 'src/lib/components/Button.svelte', 'host tooltip action: data-tip is driven by the app tooltip engine, not a global handler'],
   ['session-catalog', 'src/lib/components/DataTable.svelte', 'host tooltip action: header data-tip is driven by the app tooltip engine'],
+  ['session-catalog', 'src/lib/server/cron-expression.ts', 'session-catalog has no scheduler; the cron parser is unused'],
 ]
 const globalExceptions = new Set(EXCEPTIONS.filter(entry => entry.length === 2).map(([p]) => p))
 const appExceptions = EXCEPTIONS.filter(entry => entry.length === 3)
