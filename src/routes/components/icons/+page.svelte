@@ -1,72 +1,16 @@
 <script lang="ts">
-  import type { Component } from 'svelte'
   import Button from '$lib/components/Button.svelte'
   import Buttons from '$lib/components/Buttons.svelte'
   import FormField from '$lib/components/FormField.svelte'
   import SelectDropdown from '$lib/components/SelectDropdown.svelte'
-  import CheckIcon from '$lib/icons/CheckIcon.svelte'
-  import ChevronDownIcon from '$lib/icons/ChevronDownIcon.svelte'
-  import ChevronLeftIcon from '$lib/icons/ChevronLeftIcon.svelte'
-  import ChevronRightIcon from '$lib/icons/ChevronRightIcon.svelte'
-  import ChevronUpIcon from '$lib/icons/ChevronUpIcon.svelte'
-  import CloseIcon from '$lib/icons/CloseIcon.svelte'
-  import CodeIcon from '$lib/icons/CodeIcon.svelte'
-  import ColumnsIcon from '$lib/icons/ColumnsIcon.svelte'
-  import CopyIcon from '$lib/icons/CopyIcon.svelte'
-  import DeleteIcon from '$lib/icons/DeleteIcon.svelte'
-  import EyeIcon from '$lib/icons/EyeIcon.svelte'
-  import EyeSlashIcon from '$lib/icons/EyeSlashIcon.svelte'
-  import ForestIcon from '$lib/icons/ForestIcon.svelte'
-  import GlobeIcon from '$lib/icons/GlobeIcon.svelte'
-  import KebabIcon from '$lib/icons/KebabIcon.svelte'
-  import MenuIcon from '$lib/icons/MenuIcon.svelte'
-  import PaletteIcon from '$lib/icons/PaletteIcon.svelte'
-  import PlusIcon from '$lib/icons/PlusIcon.svelte'
-  import RefreshIcon from '$lib/icons/RefreshIcon.svelte'
   import ResetIcon from '$lib/icons/ResetIcon.svelte'
-  import SaveIcon from '$lib/icons/SaveIcon.svelte'
-  import SearchIcon from '$lib/icons/SearchIcon.svelte'
-  import SettingsIcon from '$lib/icons/SettingsIcon.svelte'
-  import SortAscIcon from '$lib/icons/SortAscIcon.svelte'
-  import SortDescIcon from '$lib/icons/SortDescIcon.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import PropsTable, { type PropRow } from '$lib/showcase/PropsTable.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
-  import { buildIconsSnippet, ICON_ENTRIES, iconClassFor, iconLabel } from './demo-snippet'
+  import { buildIconsSnippet, ICON_COMPONENTS, ICON_ENTRIES, iconClassFor, iconLabel } from './demo-snippet'
 
   const i18n = getI18nContext()
-
-  // One component per `ICON_ENTRIES` name; the gallery renders from that single
-  // list instead of a hand-written copy that can drift from the generated
-  // snippet.
-  const ICON_COMPONENTS: Record<string, Component> = {
-    Check: CheckIcon,
-    ChevronDown: ChevronDownIcon,
-    ChevronLeft: ChevronLeftIcon,
-    ChevronRight: ChevronRightIcon,
-    ChevronUp: ChevronUpIcon,
-    Close: CloseIcon,
-    Code: CodeIcon,
-    Columns: ColumnsIcon,
-    Copy: CopyIcon,
-    Delete: DeleteIcon,
-    Eye: EyeIcon,
-    EyeSlash: EyeSlashIcon,
-    Forest: ForestIcon,
-    Globe: GlobeIcon,
-    Kebab: KebabIcon,
-    Menu: MenuIcon,
-    Palette: PaletteIcon,
-    Plus: PlusIcon,
-    Refresh: RefreshIcon,
-    Reset: ResetIcon,
-    Save: SaveIcon,
-    Search: SearchIcon,
-    Settings: SettingsIcon,
-    SortAsc: SortAscIcon,
-    SortDesc: SortDescIcon,
-  }
 
   // Customizer playground state. Every option starts unset (the component
   // default renders), so the cleared form applies no overrides.
