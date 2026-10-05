@@ -37,7 +37,7 @@ export default defineConfig(async ({ command, mode }) => {
     test: {
       environment: 'jsdom',
       globals: true,
-      include: ['src/**/*.{test,spec}.{js,ts}', 'scripts/**/*.test.mjs'],
+      include: ['src/**/*.{test,spec}.{js,ts}', 'scripts/**/*.test.mjs', 'test/**/*.test.ts'],
     },
   }
 })

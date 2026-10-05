@@ -47,6 +47,7 @@ import ChevronRightIcon from '$lib/icons/ChevronRightIcon.svelte'
 import ChevronUpIcon from '$lib/icons/ChevronUpIcon.svelte'
 import CloseIcon from '$lib/icons/CloseIcon.svelte'
 import CodeIcon from '$lib/icons/CodeIcon.svelte'
+import ColumnsIcon from '$lib/icons/ColumnsIcon.svelte'
 import CopyIcon from '$lib/icons/CopyIcon.svelte'
 import DeleteIcon from '$lib/icons/DeleteIcon.svelte'
 import EyeIcon from '$lib/icons/EyeIcon.svelte'
@@ -128,6 +129,7 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/ChevronUpIcon.svelte': { default: ChevronUpIcon },
   'ui/CloseIcon.svelte': { default: CloseIcon },
   'ui/CodeIcon.svelte': { default: CodeIcon },
+  'ui/ColumnsIcon.svelte': { default: ColumnsIcon },
   'ui/CopyIcon.svelte': { default: CopyIcon },
   'ui/DeleteIcon.svelte': { default: DeleteIcon },
   'ui/EyeIcon.svelte': { default: EyeIcon },
