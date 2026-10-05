@@ -35,7 +35,7 @@ describe('FormField', () => {
   it('places the label beside the control in the inline layout', () => {
     const wrapper = render('inline')
     expect(wrapper.classList.contains('grid')).toBe(true)
-    expect(wrapper.classList.contains('sm:grid-cols-[6rem_minmax(0,1fr)]')).toBe(true)
+    expect(wrapper.classList.contains('sm:grid-cols-form-inline')).toBe(true)
     expect(wrapper.children).toHaveLength(2)
     expect(wrapper.firstElementChild?.tagName).toBe('LABEL')
     expect(wrapper.lastElementChild?.tagName).toBe('INPUT')
