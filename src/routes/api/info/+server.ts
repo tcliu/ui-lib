@@ -15,6 +15,9 @@ export function GET(): Response {
       id: 'ui-lib',
       name: 'UI Library',
       branch,
+      // Runtime profile authority: `PROFILE` (`dev`/`prod`), absent in apps with
+      // no runtime profile (the card normalizes it to `null`).
+      profile: env.PROFILE,
       // `APP_ACTIVE=false` opts this instance out of catalog scans.
       active: env.APP_ACTIVE,
     }),

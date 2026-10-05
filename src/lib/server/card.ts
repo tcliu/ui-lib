@@ -12,6 +12,10 @@ export interface CardPayload {
   repo?: unknown
   status?: unknown
   url?: unknown
+  // `profile` is the app's runtime profile (`dev`/`prod`), supplied by each
+  // project's `/api/info` from its runtime profile env var; apps without one
+  // leave it absent and it normalizes to `null`.
+  profile?: unknown
   tags?: unknown
   active?: unknown
 }
@@ -25,6 +29,8 @@ export interface NormalizedCard {
   repo: string | null
   status: 'Active' | 'Inactive'
   url: string | null
+  // Runtime profile (`dev`/`prod`) or `null`; see CardPayload.profile.
+  profile: string | null
   tags: string[]
   active: boolean
 }
@@ -95,6 +101,7 @@ export function normalizeCard(payload: CardPayload): NormalizedCard {
     repo: trimToNull(payload.repo),
     status: (status && VALID_STATUSES[status]) || 'Active',
     url: trimToNull(payload.url),
+    profile: trimToNull(payload.profile),
     tags: normalizeCardTags(payload.tags),
     active: normalizeCardBoolean(payload.active),
   }
