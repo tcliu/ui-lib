@@ -32,6 +32,7 @@ export const ICON_ENTRIES: IconEntry[] = [
   { name: 'ChevronUp', variant: 'solid' },
   { name: 'Close' },
   { name: 'Code' },
+  { name: 'Columns' },
   { name: 'Copy' },
   { name: 'Delete' },
   { name: 'Eye' },

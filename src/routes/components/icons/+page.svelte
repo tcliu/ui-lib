@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Component } from 'svelte'
   import Button from '$lib/components/Button.svelte'
   import Buttons from '$lib/components/Buttons.svelte'
   import FormField from '$lib/components/FormField.svelte'
@@ -10,6 +11,7 @@
   import ChevronUpIcon from '$lib/icons/ChevronUpIcon.svelte'
   import CloseIcon from '$lib/icons/CloseIcon.svelte'
   import CodeIcon from '$lib/icons/CodeIcon.svelte'
+  import ColumnsIcon from '$lib/icons/ColumnsIcon.svelte'
   import CopyIcon from '$lib/icons/CopyIcon.svelte'
   import DeleteIcon from '$lib/icons/DeleteIcon.svelte'
   import EyeIcon from '$lib/icons/EyeIcon.svelte'
@@ -31,9 +33,40 @@
   import PropsTable, { type PropRow } from '$lib/showcase/PropsTable.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
-  import { buildIconsSnippet, iconClassFor } from './demo-snippet'
+  import { buildIconsSnippet, ICON_ENTRIES, iconClassFor, iconLabel } from './demo-snippet'
 
   const i18n = getI18nContext()
+
+  // One component per `ICON_ENTRIES` name; the gallery renders from that single
+  // list instead of a hand-written copy that can drift from the generated
+  // snippet.
+  const ICON_COMPONENTS: Record<string, Component> = {
+    Check: CheckIcon,
+    ChevronDown: ChevronDownIcon,
+    ChevronLeft: ChevronLeftIcon,
+    ChevronRight: ChevronRightIcon,
+    ChevronUp: ChevronUpIcon,
+    Close: CloseIcon,
+    Code: CodeIcon,
+    Columns: ColumnsIcon,
+    Copy: CopyIcon,
+    Delete: DeleteIcon,
+    Eye: EyeIcon,
+    EyeSlash: EyeSlashIcon,
+    Forest: ForestIcon,
+    Globe: GlobeIcon,
+    Kebab: KebabIcon,
+    Menu: MenuIcon,
+    Palette: PaletteIcon,
+    Plus: PlusIcon,
+    Refresh: RefreshIcon,
+    Reset: ResetIcon,
+    Save: SaveIcon,
+    Search: SearchIcon,
+    Settings: SettingsIcon,
+    SortAsc: SortAscIcon,
+    SortDesc: SortDescIcon,
+  }
 
   // Customizer playground state. Every option starts unset (the component
   // default renders), so the cleared form applies no overrides.
@@ -138,58 +171,11 @@
 <ShowcasePage name="Icons" props={propsSnippet}>
   <ShowcaseSection title={sectionTitle} {code} footer={settingsPanel}>
     <div class="grid grid-cols-4 gap-3 sm:grid-cols-8">
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
-        ><CheckIcon size={demoSize} className={galleryClass} />Check</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
-        ><ChevronDownIcon size={demoSize} className={galleryClass} />ChevronDown</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
-        ><ChevronDownIcon variant="solid" size={demoSize} className={galleryClass} />ChevronDownSolid</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
-        ><ChevronLeftIcon size={demoSize} className={galleryClass} />ChevronLeft</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
-        ><ChevronRightIcon size={demoSize} className={galleryClass} />ChevronRight</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
-        ><ChevronUpIcon size={demoSize} className={galleryClass} />ChevronUp</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
-        ><ChevronUpIcon variant="solid" size={demoSize} className={galleryClass} />ChevronUpSolid</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
-        ><CloseIcon size={demoSize} className={galleryClass} />Close</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
-        ><CodeIcon size={demoSize} className={galleryClass} />Code</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
-        ><CopyIcon size={demoSize} className={galleryClass} />Copy</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
-        ><DeleteIcon size={demoSize} className={galleryClass} />Delete</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
-        ><EyeIcon size={demoSize} className={galleryClass} />Eye</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
-        ><EyeSlashIcon size={demoSize} className={galleryClass} />EyeSlash</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
-        ><ForestIcon size={demoSize} className={galleryClass} />Forest</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
-        ><GlobeIcon size={demoSize} className={galleryClass} />Globe</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
-        ><KebabIcon size={demoSize} className={galleryClass} />Kebab</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
-        ><MenuIcon size={demoSize} className={galleryClass} />Menu</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
-        ><PaletteIcon size={demoSize} className={galleryClass} />Palette</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
-        ><PlusIcon size={demoSize} className={galleryClass} />Plus</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
-        ><RefreshIcon size={demoSize} className={galleryClass} />Refresh</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
-        ><ResetIcon size={demoSize} className={galleryClass} />Reset</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
-        ><SaveIcon size={demoSize} className={galleryClass} />Save</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
-        ><SearchIcon size={demoSize} className={galleryClass} />Search</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
-        ><SettingsIcon size={demoSize} className={galleryClass} />Settings</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
-        ><SortAscIcon size={demoSize} className={galleryClass} />SortAsc</span>
-      <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
-        ><SortDescIcon size={demoSize} className={galleryClass} />SortDesc</span>
+      {#each ICON_ENTRIES as entry (iconLabel(entry))}
+        {@const Icon = ICON_COMPONENTS[entry.name]}
+        <span class="flex flex-col items-center gap-1 text-xs text-slate-400"
+          ><Icon size={demoSize} className={galleryClass} {...entry.variant ? { variant: entry.variant } : {}} />{iconLabel(entry)}</span>{' '}
+      {/each}
     </div>
   </ShowcaseSection>
 </ShowcasePage>
