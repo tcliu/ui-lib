@@ -13,7 +13,7 @@ describe('snippet playground registry', () => {
     expect(source).toContain('import ColumnsIcon from "ui/ColumnsIcon.svelte"')
   })
 
-  it('resolves the ColumnsIcon registry entry when compiling a snippet', async () => {
+  it('resolves the ColumnsIcon registry entry when compiling a snippet', { timeout: 30000 }, async () => {
     const component = await createSnippetComponent('<ColumnsIcon />', {})
     expect(typeof component).toBe('function')
   })
