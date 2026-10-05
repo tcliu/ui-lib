@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildIconsSnippet, ICON_ENTRIES, iconLabel } from './demo-snippet'
+import { buildIconsSnippet, ICON_COMPONENTS, ICON_ENTRIES, iconLabel } from './demo-snippet'
 
 describe('buildIconsSnippet', () => {
   it('renders bare icons while unset', () => {
@@ -24,5 +24,18 @@ describe('buildIconsSnippet', () => {
   it('appends a custom className', () => {
     const source = buildIconsSnippet({ size: '', tint: '', className: 'shrink-0' })
     expect(source).toContain('<CheckIcon className="shrink-0" />Check')
+  })
+})
+
+describe('ICON_COMPONENTS parity', () => {
+  it('maps a component for every ICON_ENTRIES name', () => {
+    const missing = [...new Set(ICON_ENTRIES.map(entry => entry.name))].filter(name => !ICON_COMPONENTS[name])
+    expect(missing).toEqual([])
+  })
+
+  it('carries no component for a name outside ICON_ENTRIES', () => {
+    const known = new Set(ICON_ENTRIES.map(entry => entry.name))
+    const extra = Object.keys(ICON_COMPONENTS).filter(name => !known.has(name))
+    expect(extra).toEqual([])
   })
 })
