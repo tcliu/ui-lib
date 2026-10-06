@@ -33,6 +33,7 @@ import { parseEnvFile } from './env-file.mjs'
 import { parseFlags } from './lib/cloudflare-env-flags.mjs'
 import { logEvent } from './log-event.mjs'
 import { echoCommand } from './_run.mjs'
+import { resolveDeployBackend } from './_deploy/backend.mjs'
 import {
   CLOUDFLARE_LOCAL_ONLY_KEYS,
   cloudflareForbiddenKeys,
@@ -41,7 +42,6 @@ import {
   GENERATED_WRANGLER_CONFIG,
   generatedWranglerProjectName,
   renderWranglerConfig,
-  resolveD1DatabaseName,
   splitCloudflareEnv,
   wranglerBin,
 } from './lib/cloudflare.mjs'
@@ -53,14 +53,14 @@ import {
   patchPagesEnvVars,
 } from './lib/cloudflare-pages-env.mjs'
 import { runWithConcurrency } from './lib/concurrency.mjs'
-import { loadTargetEnv, loadTargetFileEnv } from './lib/target-env.mjs'
+import { loadTargetFileEnv, targetSourceFiles } from './lib/target-env.mjs'
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
 const ROOT_DIR = join(SCRIPT_DIR, '..')
 // Shared prod values (.env.prod) overlaid by Cloudflare-only values
 // (.env.cloudflare); the overlay wins on conflict. Files-only merge: shell
 // never invents synced keys (see loadTargetFileEnv).
-const SOURCE_FILES = ['.env.prod', '.env.cloudflare']
+const SOURCE_FILES = targetSourceFiles('cloudflare')
 const GENERATED_FILE = join(ROOT_DIR, GENERATED_WRANGLER_CONFIG)
 const SECRET_CONCURRENCY = 4
 
@@ -104,27 +104,34 @@ async function main() {
   const { dryRun, prune, secrets: secretsMode } = parseFlags(process.argv.slice(2))
   const missing = SOURCE_FILES.filter(file => !existsSync(join(ROOT_DIR, file)))
   if (missing.length > 0) {
-    fail(`Missing ${missing.join(', ')}: shared prod values live in .env.prod, Cloudflare-only values in .env.cloudflare.`)
+    fail(
+      `Missing ${missing.join(', ')}: shared prod values live in .env.prod, Cloudflare-only values in .env.cloudflare.`,
+    )
   }
   // Files-only merge for the key universe (shell never invents synced keys);
   // shell still seeds auth below via process.env.
   const raw = loadTargetFileEnv('cloudflare', ROOT_DIR)
   // Wrangler authenticates from the process env; the operator token lives in
-  // `.env.local` (never synced — outside the file universe above). Seed it so
-  // `secret put` and the remote read work standalone; shell always wins.
+  // `.env.local`/shell only, while the account id may also come from the synced
+  // overlay — the same layers the deploy target and preflight accept. Seed both
+  // so `secret put` and the remote read work standalone; shell always wins.
   const local = parseEnvFile(join(ROOT_DIR, '.env.local'))
-  for (const key of ['CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID']) {
-    if (!process.env[key] && String(local[key] || '').trim()) {
-      process.env[key] = String(local[key]).trim()
+  const accountIdEnv = { ...raw, ...local }
+  for (const [key, source] of [
+    ['CLOUDFLARE_API_TOKEN', local],
+    ['CLOUDFLARE_ACCOUNT_ID', accountIdEnv],
+  ]) {
+    if (!process.env[key] && String(source[key] || '').trim()) {
+      process.env[key] = String(source[key]).trim()
     }
   }
-  // Isolation policy follows the backend, matching the deploy flow: a D1-backed
-  // target forbids the Neon URL (it would silently win over the binding); a
-  // Neon-backed target keeps DATABASE_URL in sync and forbids only Vercel
-  // creds. Detection uses the shell-aware merge so a shell override agrees with
-  // what the deploy sees.
-  const d1Mode = resolveD1DatabaseName(loadTargetEnv('cloudflare', ROOT_DIR)) !== ''
-  const forbiddenKeys = cloudflareForbiddenKeys(d1Mode)
+  // Isolation policy follows the resolved backend, matching the deploy flow: a
+  // D1-backed target forbids the Neon URL (it would silently win over the
+  // binding); a Neon-backed target keeps DATABASE_URL in sync and forbids only
+  // Vercel creds. Detection uses the shared resolver over the same files-only
+  // push universe the deploy reads, so both agree.
+  const backend = resolveDeployBackend('cloudflare', raw)
+  const forbiddenKeys = cloudflareForbiddenKeys(backend === 'd1')
   // Split shared with deploy.mjs (splitCloudflareEnv): local-only keys log as
   // skipped, empty values keep the remote value, secrets go to the store.
   const { project: overlayProject, vars, secrets } = splitCloudflareEnv(raw, { forbidden: forbiddenKeys })
@@ -224,13 +231,10 @@ async function main() {
     }
   } else {
     await runWithConcurrency(
-      pendingSecrets.map(
-        ([key, value]) =>
-          async () => {
-            await putSecret(project, key, value)
-            return key
-          },
-      ),
+      pendingSecrets.map(([key, value]) => async () => {
+        await putSecret(project, key, value)
+        return key
+      }),
       SECRET_CONCURRENCY,
     )
   }
@@ -249,7 +253,10 @@ async function main() {
     logEvent({ action: 'cloudflare_env_forbidden_remove', details: { keys: forbidden, dry_run: dryRun } })
   }
   if (unmanaged.length > 0 && !prune) {
-    logEvent({ action: 'cloudflare_env_prune_skip', details: { keys: unmanaged, hint: 're-run with --prune to remove them' } })
+    logEvent({
+      action: 'cloudflare_env_prune_skip',
+      details: { keys: unmanaged, hint: 're-run with --prune to remove them' },
+    })
   }
   // One PATCH carries both deletions so the config hash is read once and the
   // forbidden-key removal cannot race the prune's stale hash.

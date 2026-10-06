@@ -4,23 +4,29 @@
 // the CREATE SCHEMA line, strips the caller's schema qualifier when one is
 // passed (D1 has no ATTACH alias), maps `timestamptz` to TEXT (ISO-8601 strings
 // sort lexicographically, which is what `max(updated_at)` and the history
-// ordering rely on) and `now()` to CURRENT_TIMESTAMP. Prints to stdout; pipe into
+// ordering rely on), then applies the shared `toSqliteSql` rewrite so
+// `bigserial` and `current_timestamp` match the dev SQLite adapter. Prints to
+// stdout; pipe into
 // `wrangler d1 execute <database> --remote --file schema.sql` or save the output for review.
 // Schemas with a qualifier (e.g. `"myapp".`) pass D1_SCHEMA_QUALIFIER in the
 // environment so the standalone output matches what planD1Bootstrap applies;
 // apply-d1-schema.mjs passes its qualifier explicitly instead.
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import { toSqliteSql } from '../src/lib/sql-rewrite.mjs'
 
 export function translateSchemaForD1(schema, qualifier = '') {
   const unqualified = qualifier ? String(schema).split(qualifier).join('') : String(schema)
-  return unqualified
+  const sqliteCompatible = unqualified
     .split('\n')
     .filter(line => !/^\s*create\s+schema\b/i.test(line))
     .join('\n')
     .replace(/\btimestamptz\b/gi, 'TEXT')
-    .replace(/now\(\)/gi, 'CURRENT_TIMESTAMP')
+  // Reuse the shared rewrite so D1 defaults (`current_timestamp` → the same UTC
+  // ISO strftime expression the runtime adapter writes) and `bigserial` match
+  // the dev SQLite adapter exactly.
+  return toSqliteSql(sqliteCompatible)
 }
 
 // Tables that must exist for the app to serve. A D1 database missing any is
@@ -54,7 +60,7 @@ export function parseD1TableNames(output) {
 
 const ROOT_DIR = join(dirname(fileURLToPath(import.meta.url)), '..')
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const translated = translateSchemaForD1(
     readFileSync(join(ROOT_DIR, 'sql', 'schema.sql'), 'utf8'),
     process.env.D1_SCHEMA_QUALIFIER || '',
