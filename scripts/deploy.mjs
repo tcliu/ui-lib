@@ -15,17 +15,15 @@ import { ROOT_DIR, fail, runScript } from './_deploy/core.mjs'
 import { runDeployInterview } from './_deploy/interview.mjs'
 import {
   DEFAULT_TARGET,
-  TARGETS,
-  describeNoAvailableTargets,
   linkableTargetValues,
+  planTargetSelection,
   requiredEnvFromConfig,
   resolveConfiguredPlugins,
-  resolveRunTargets,
   selectDefaultTargets,
 } from './_deploy/registry.mjs'
 import { HEARTBEAT_PROVIDERS, shouldAskHeartbeat } from './lib/heartbeat.mjs'
 import { preflightDeploy, targetAvailability } from './_deploy/preflight.mjs'
-import { resolveDeployBackend } from './_deploy/backend.mjs'
+import { planDeployBackends } from './_deploy/backend.mjs'
 import { runCloudflareFlow } from './_deploy/targets/cloudflare.mjs'
 import { runVercelFlow } from './_deploy/targets/vercel.mjs'
 import { loadTargetFileEnv } from './lib/target-env.mjs'
@@ -158,9 +156,13 @@ function parseArgs(argv) {
 
 async function main() {
   const options = parseArgs(process.argv.slice(2))
-  // `dev` has no deploy target: report that before probing availability, so a
-  // missing link/token cannot mask the real reason.
+  // Validate the profile before probing availability: an invalid value or `dev`
+  // (which has no deploy target) must report its own reason, not a missing link
+  // or token.
   const seededProfile = options.profileFlag || process.env.PROFILE || ''
+  if (seededProfile && seededProfile !== 'dev' && seededProfile !== 'prod') {
+    fail('PROFILE is mandatory: pass --profile dev|prod, set $PROFILE, or run interactively.')
+  }
   if (seededProfile === 'dev') {
     const label = options.targetRaws.length ? options.targetRaws.join(',') : DEFAULT_TARGET
     fail(`Target '${label}' supports only the prod profile; dev has no deploy target.`)
@@ -172,28 +174,14 @@ async function main() {
   // A target is available only when its required config resolves here, so the
   // picker and `--target` never offer a target this checkout cannot deploy.
   const availability = targetAvailability({ requiredEnv, projectFlag: options.projectFlag, linkTargets })
-  const availableValues = availability.filter(entry => entry.available).map(entry => entry.value)
-  // Reject an unknown or unavailable explicit target first — its message names
-  // the specific problem — then a run that names no deployable target at all.
-  options.targetFlags = resolveRunTargets({ raws: options.targetRaws, availableValues, availability })
-  if (availableValues.length === 0) {
-    fail(describeNoAvailableTargets(availability))
-  }
-  const availableEntries = TARGETS.filter(entry => availableValues.includes(entry.value))
-  await deployWithTarget(options, { availableEntries, availableValues, config, plugins, linkTargets })
+  const { flags, availableValues, entries } = planTargetSelection({ raws: options.targetRaws, availability })
+  options.targetFlags = flags
+  await deployWithTarget(options, { availableEntries: entries, availableValues, config, plugins, linkTargets })
 }
 
 async function deployWithTarget(options, { availableEntries, availableValues, config, plugins, linkTargets }) {
   const seeded = [...options.targetFlags]
   const targets = selectDefaultTargets(seeded, availableValues)
-  // Explicit invalid sources fail fast; the interview only fills gaps.
-  if (options.profileFlag && options.profileFlag !== 'dev' && options.profileFlag !== 'prod') {
-    fail('PROFILE is mandatory: pass --profile dev|prod, set $PROFILE, or run interactively.')
-  }
-  const envProfile = options.profileFlag ? '' : process.env.PROFILE || ''
-  if (envProfile && envProfile !== 'dev' && envProfile !== 'prod') {
-    fail('PROFILE is mandatory: pass --profile dev|prod, set $PROFILE, or run interactively.')
-  }
   if (options.heartbeatFlag && !HEARTBEAT_PROVIDERS.includes(options.heartbeatFlag)) {
     fail(`Unknown heartbeat: ${options.heartbeatFlag} (expected ${HEARTBEAT_PROVIDERS.join('|')}).`)
   }
@@ -221,9 +209,6 @@ async function deployWithTarget(options, { availableEntries, availableValues, co
     return
   }
   const profileValue = resolveProfileSync(options.profileFlag)
-  if (profileValue !== 'prod') {
-    fail(`Target '${targets.join(',')}' supports only the prod profile; dev has no deploy target.`)
-  }
   const syncEnv = resolveProdConfirmSync(
     profileValue,
     options.syncEnvFlag,
@@ -276,9 +261,8 @@ async function runDeployTargets(
   for (const target of targets) {
     preflightDeploy({ target, requiredEnv, projectFlag, linkTargets })
   }
-  const backends = new Map(targets.map(target => [target, resolveDeployBackend(target, loadTargetFileEnv(target))]))
+  const { backends, needsNeonSchema } = planDeployBackends(targets, target => loadTargetFileEnv(target))
   let schema = applySchema
-  const needsNeonSchema = targets.some(target => backends.get(target) === 'neon')
   if (applySchema === 'yes' && needsNeonSchema) {
     logEvent({ action: 'neon_schema_apply' })
     runScript('apply-schema.mjs', { ...process.env, PROFILE: 'prod' })
