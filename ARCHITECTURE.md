@@ -33,9 +33,9 @@ ui-lib/
 │       │   └── card.ts   # Shared card contract (normalize + resolve)
 │       └── use-*.svelte.ts       # Composable factories (domain state, added per feature)
 ├── scripts/
-│   ├── deploy.mjs                # Deploy entry (config -> interview -> plugin pipeline)
-│   ├── deploy.config.mjs         # Deploy-plugin selection (project-owned)
-│   ├── _deploy/                  # Pipeline core + targets/{vercel,cloudflare} + plugins
+│   ├── deploy.mjs                # Deploy entry (availability/preflight -> interview -> plugin pipeline)
+│   ├── deploy.config.mjs         # Deploy plugin + required-env selection (project-owned)
+│   ├── _deploy/                  # Pipeline core + backend selection + targets/{vercel,cloudflare} + plugins
 │   ├── sync-vercel-env.mjs       # Push .env.vercel values to the Vercel project
 │   ├── create-worktree.mjs       # Worktree creation
 │   ├── worktree-manager.mjs      # TUI worktree manager
