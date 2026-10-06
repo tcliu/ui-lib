@@ -164,6 +164,28 @@
     selection.clamp(filteredOptions.length)
   })
 
+  // Per-row highlight flags, updated incrementally: moving the highlight then
+  // touches only the row leaving and the row entering, instead of re-running
+  // every row's class effect. Keeps held-key navigation O(1) in the number of
+  // rendered options rather than O(rows).
+  let activeFlags = $state<boolean[]>([])
+  let lastActiveIndex = -1
+  $effect(() => {
+    const count = filteredOptions.length
+    const active = selection.index
+    if (activeFlags.length !== count) {
+      activeFlags = new Array(count).fill(false)
+      lastActiveIndex = -1
+    }
+    if (lastActiveIndex >= 0 && lastActiveIndex < activeFlags.length && lastActiveIndex !== active) {
+      activeFlags[lastActiveIndex] = false
+    }
+    if (active >= 0 && active < activeFlags.length) {
+      activeFlags[active] = true
+    }
+    lastActiveIndex = active
+  })
+
   function close() {
     open = false
   }
@@ -522,7 +544,7 @@
           onfocus={() => selection.set(index)}
           onmouseenter={() => selection.set(index)}
           class={`${resolvedOptionRowClass} ${
-            index === selection.index
+            activeFlags[index]
               ? 'bg-slate-800 text-cyan-200'
               : 'text-slate-300 hover:bg-slate-800 hover:text-cyan-200'
           }`}>
