@@ -8,7 +8,7 @@
 // compared case-insensitively so `BIGSERIAL` maps like `bigserial`. The zero-arg
 // `now()` call maps to the same UTC ISO expression as `current_timestamp`, so the
 // two default spellings agree.
-const SQLITE_NOW = "(strftime('%Y-%m-%dT%H:%M:%fZ','now'))"
+export const SQLITE_NOW = "(strftime('%Y-%m-%dT%H:%M:%fZ','now'))"
 const SQLITE_REWRITES = new Map([
   ['bigserial', 'integer'],
   ['current_timestamp', SQLITE_NOW],
