@@ -82,7 +82,6 @@ const EXCEPTIONS = [
   ['scripts/deploy.config.mjs', 'project-owned plugin/target-availability/required-env selection'],
   ['scripts/lib/cron-job.mjs', 'per-app scan job title'],
   ['session-catalog', 'src/lib/components/DateRangePicker.svelte', 'themed fork: prop-injected i18n and CSS-var palette'],
-  ['session-catalog', 'src/lib/components/DataTable.svelte', 'viewer fork: exposes scrollBodyTo for scroll controls and keeps inline scroll sync'],
   ['session-catalog', 'src/lib/server/cron-expression.ts', 'session-catalog has no scheduler; the cron parser is unused'],
   ['oms', 'src/lib/components/BaseDialog.svelte', 'oms adoption pending its in-flight full implementation'],
   ['oms', 'src/lib/components/SelectDropdown.svelte', 'oms adoption pending its in-flight full implementation'],
