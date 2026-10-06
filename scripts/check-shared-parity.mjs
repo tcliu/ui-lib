@@ -85,6 +85,8 @@ const EXCEPTIONS = [
   ['session-catalog', 'src/lib/components/Button.svelte', 'host tooltip action: data-tip is driven by the app tooltip engine, not a global handler'],
   ['session-catalog', 'src/lib/components/DataTable.svelte', 'host tooltip action: header data-tip is driven by the app tooltip engine'],
   ['session-catalog', 'src/lib/server/cron-expression.ts', 'session-catalog has no scheduler; the cron parser is unused'],
+  ['oms', 'src/lib/components/BaseDialog.svelte', 'oms adoption pending its in-flight full implementation'],
+  ['oms', 'src/lib/components/SelectDropdown.svelte', 'oms adoption pending its in-flight full implementation'],
 ]
 const globalExceptions = new Set(EXCEPTIONS.filter(entry => entry.length === 2).map(([p]) => p))
 const appExceptions = EXCEPTIONS.filter(entry => entry.length === 3)
