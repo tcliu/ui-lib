@@ -85,6 +85,11 @@ const EXCEPTIONS = [
   ['session-catalog', 'src/lib/server/cron-expression.ts', 'session-catalog has no scheduler; the cron parser is unused'],
   ['oms', 'src/lib/components/BaseDialog.svelte', 'oms adoption pending its in-flight full implementation'],
   ['oms', 'src/lib/components/SelectDropdown.svelte', 'oms adoption pending its in-flight full implementation'],
+  [
+    'oms',
+    'src/lib/components/select-dropdown-styles.ts',
+    'oms adoption pending its in-flight full implementation',
+  ],
 ]
 const globalExceptions = new Set(EXCEPTIONS.filter(entry => entry.length === 2).map(([p]) => p))
 const appExceptions = EXCEPTIONS.filter(entry => entry.length === 3)
