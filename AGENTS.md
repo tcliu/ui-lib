@@ -67,8 +67,8 @@ Project-specific development conventions for the UI Library web app.
   non-disabled wrapper, since disabled triggers fire no mouse events.
 - `scripts/check-shared-parity.mjs` (run by `npm run check`) byte-compares the
   shared directories (`src/lib/components/`, `src/lib/icons/`, `src/lib/actions/`,
-  `src/lib/data-table/`, `scripts/`) plus the listed top-level `src/lib/*.ts`
-  files against each registered sibling app. Keep app-private UI out of the
+  `src/lib/data-table/`, `scripts/`) plus the listed top-level `src/lib/*.ts` and
+  `*.mjs` files against each registered sibling app. Keep app-private UI out of the
   shared directories (this app's own chrome lives under `src/routes/_chrome/`);
   a change to a shared file is not complete until the sibling copies are
   re-ported or the divergence is added to that script's documented exception

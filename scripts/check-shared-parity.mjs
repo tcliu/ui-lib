@@ -36,8 +36,10 @@ const SHARED_DIRS = [
 const SHARED_FILES = [
   'src/lib/app-shell.ts',
   'src/lib/cn.ts',
+  'src/lib/d1-binding.mjs',
   'src/lib/dropdown-chrome.ts',
   'src/lib/position-panel.svelte.ts',
+  'src/lib/sql-rewrite.mjs',
   'src/lib/text-size.ts',
 ]
 
@@ -77,6 +79,7 @@ const EXCEPTIONS = [
   ['src/lib/i18n.svelte.ts', 'per-app locale dictionaries'],
   ['scripts/apply-schema.mjs', 'per-project schema fork'],
   ['scripts/db-config.mjs', 'per-project database configuration fork'],
+  ['scripts/deploy.config.mjs', 'project-owned plugin/target-availability/required-env selection'],
   ['scripts/lib/cron-job.mjs', 'per-app scan job title'],
   ['session-catalog', 'src/lib/components/DateRangePicker.svelte', 'themed fork: prop-injected i18n and CSS-var palette'],
   ['session-catalog', 'src/lib/components/Button.svelte', 'host tooltip action: data-tip is driven by the app tooltip engine, not a global handler'],
