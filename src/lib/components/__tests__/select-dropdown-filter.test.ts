@@ -58,6 +58,15 @@ function optionLabels(): string[] {
   return [...document.querySelectorAll('[role=listbox] [role=option]')].map(el => el.textContent?.trim() ?? '')
 }
 
+// The emphasized match inside each option label, or null when nothing is
+// highlighted.
+function optionMatches(): { label: string; match: string | null }[] {
+  return [...document.querySelectorAll('[role=listbox] [role=option]')].map(el => ({
+    label: el.textContent?.trim() ?? '',
+    match: el.querySelector('span.font-semibold')?.textContent ?? null,
+  }))
+}
+
 // Mounts the harness and focuses the combobox so the panel opens with every
 // option (the pre-filled value strips to an empty query).
 function openPanel(): void {
@@ -125,6 +134,23 @@ describe('SelectDropdown filterable filtering', () => {
     expect(optionLabels()).toEqual(['Two', 'Three'])
   })
 
+  it('emphasizes the typed part in every label when several options match', () => {
+    openPanel()
+    setFilter('o')
+    expect(optionLabels()).toEqual(['One', 'Two'])
+    expect(optionMatches()).toEqual([
+      { label: 'One', match: 'O' },
+      { label: 'Two', match: 'o' },
+    ])
+  })
+
+  it('does not emphasize anything when only one option matches', () => {
+    openPanel()
+    setFilter('Three')
+    expect(optionLabels()).toEqual(['Three'])
+    expect(optionMatches()).toEqual([{ label: 'Three', match: null }])
+  })
+
   it('narrows when the query matches an option value', () => {
     openPanel()
     setFilter('one')
@@ -137,7 +163,7 @@ describe('SelectDropdown filterable filtering', () => {
     expect(optionLabels()).toEqual(['One', 'Two', 'Three'])
   })
 
-  it('restores the typed filter when reopening after selecting with Enter', () => {
+  it('keeps the confirmed value and filters by it when reopening after Enter', () => {
     openPanel()
     setFilter('T')
     expect(optionLabels()).toEqual(['Two', 'Three'])
@@ -147,8 +173,11 @@ describe('SelectDropdown filterable filtering', () => {
     expect(filterInput().value).toBe('Two')
     expect(optionLabels()).toEqual([])
 
+    // Reopening filters by the confirmed value, so the input keeps showing it
+    // instead of reverting to the typed query it replaced.
     expect(pressKey('Enter')).toBe(true)
-    expect(optionLabels()).toEqual(['Two', 'Three'])
+    expect(filterInput().value).toBe('Two')
+    expect(optionLabels()).toEqual(['Two'])
   })
 })
 

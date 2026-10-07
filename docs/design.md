@@ -28,11 +28,28 @@ view:
 - **Left pane**: a search box (case-insensitive name filter) above the list of
   components; selecting one routes to its page and marks it active.
 - **Right pane**: the selected component's showcase page, which scrolls.
+- **Component page**: the page title is followed by a **Related** row of tag
+  chips linking to components that share a browsing group (for example, the
+  dropdown selectors link to one another).
 
 On narrow viewports the list becomes an overlay drawer above the dimmed
 content (below the 768px shell-container breakpoint in `auto` mode) instead
 of stacking; a pinned `docked` pane stays an in-flow row at every width and
 the content scrolls beside it.
+
+## Component interaction
+
+Shared dropdown-style listboxes follow the native control's type-ahead: typing
+a printable key jumps to the next option whose label starts with it, wrapping
+around, and repeating the key cycles the same-letter options; holding Shift
+jumps to the previous match instead. Type-ahead only moves the highlight and
+opens the panel — it never commits a value.
+
+A filterable dropdown narrows its list as you type. While a query matches more
+than one option the matched part of each label is emphasized, while a lone match
+is left plain. Confirming an option writes the confirmed label back into the
+input, and reopening the panel filters by that label, so the typed query does not
+reappear after a selection.
 
 ## Theming
 

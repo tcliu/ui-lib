@@ -32,6 +32,7 @@ export function buildMenuSnippet({ align, triggerLabel, firstLabel, secondLabel 
     '  triggerClass="p-2"',
     '  panelClass="w-44"',
     '  itemClass={menuItemClass}',
+    '  itemLabel={item => item.label}',
     '  itemDisabled={item => item.disabled ?? false}>',
     '  {#snippet icon()}',
     '    <KebabIcon className="h-4 w-4" />',

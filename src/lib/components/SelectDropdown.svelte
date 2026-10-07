@@ -3,6 +3,10 @@
   import { createFocusoutClose } from '$lib/actions/use-focusout-close'
   import { useDropdown } from '$lib/actions/use-dropdown.svelte'
   import { useListSelection, revealInScrollport } from '$lib/actions/use-list-selection.svelte'
+  import { useActiveHighlight } from '$lib/actions/use-active-highlight.svelte'
+  import { createOptionIndex, matchesOption, matchLabelParts } from '$lib/actions/option-index'
+  import { isModifiedNavKey, moveListSelection } from '$lib/actions/listbox-keynav'
+  import { createTypeahead } from '$lib/actions/typeahead'
   import { positionPanel } from '$lib/position-panel.svelte'
   import Button from '$lib/components/Button.svelte'
   import ChevronDownIcon from '$lib/icons/ChevronDownIcon.svelte'
@@ -91,29 +95,24 @@
   // shows every option; once edited, the text is a real query — including one
   // that happens to equal the current label.
   let filterDirty = $state(false)
-  // The query the user typed, kept across select-and-close so reopening the
-  // panel restores the filtered list. While the panel is closed the input
-  // shows the selected value; `activeQuery` is what filters again on reopen.
+  // The query restored when the panel reopens with focus retained. While the
+  // user types it is the typed text; once a value is confirmed it becomes that
+  // value's label, so reopening filters by the confirmed value shown in the
+  // input instead of reverting it to the raw typed query. While the panel is
+  // closed the input shows the selected value.
   let activeQuery = $state('')
   let suppressOpenOnFocus = false
 
-  // Lowercased once per options array so typing does not re-lowercase every
-  // label/value on every keystroke (a full extra pass plus per-option garbage
-  // that shows up as GC pauses while filtering large lists).
-  const optionIndex = $derived(
-    options.map(option => ({
-      option,
-      label: option.label.toLowerCase(),
-      value: option.value.toLowerCase(),
-    })),
-  )
+  // Lowercased once per options array (shared helper) so filtering does not
+  // re-lowercase every label/value on every keystroke.
+  const optionIndex = $derived(createOptionIndex(options))
 
-  const filteredOptions = $derived.by(() => {
-    if (!filterable) {
-      return options
-    }
-    if (!filterDirty) {
-      return options
+  // The lowercased filter needle, empty when filtering is off or the text is
+  // just the echoed value. The option list and the match highlight read the
+  // same value so they can never disagree.
+  const filterQuery = $derived.by(() => {
+    if (!filterable || !filterDirty) {
+      return ''
     }
     // Strip the prefilled label only when text was appended to it; a query
     // that merely equals the label is filtered as-is so an exact match
@@ -122,22 +121,36 @@
       filterText.length > buttonLabel.length && filterText.startsWith(buttonLabel)
         ? filterText.slice(buttonLabel.length)
         : filterText
-    const needle = query.trim().toLowerCase()
+    return query.trim().toLowerCase()
+  })
+
+  const filteredOptions = $derived.by(() => {
     // An empty query shows every option; any other query narrows the list to
     // the options whose label or value contains it, including an exact match.
     // A query that matches nothing falls back to the full list so the panel
     // never goes empty while typing.
-    if (needle === '') {
+    if (filterQuery === '') {
       return options
     }
     const matched: Option[] = []
     for (const entry of optionIndex) {
-      if (entry.label.includes(needle) || entry.value.includes(needle)) {
+      if (matchesOption(entry, filterQuery)) {
         matched.push(entry.option)
       }
     }
     return matched.length > 0 ? matched : options
   })
+
+  // Emphasize the typed part of each label only while the query is ambiguous:
+  // with two or more matches the user needs to see which part matched, while a
+  // lone match is already the only row and needs no extra emphasis.
+  const highlightMatches = $derived(filterQuery !== '' && filteredOptions.length > 1)
+
+  // Split a label around its matched span (shared helper), or return null when
+  // highlighting is off for an unambiguous single match.
+  function labelParts(label: string) {
+    return highlightMatches ? matchLabelParts(label, filterQuery) : null
+  }
 
   $effect(() => {
     if (!open && !filterDirty) {
@@ -162,31 +175,34 @@
     selection.clamp(filteredOptions.length)
   })
 
-  // Per-row highlight flags, updated incrementally: moving the highlight then
-  // touches only the row leaving and the row entering, instead of re-running
-  // every row's class effect. Keeps held-key navigation O(1) in the number of
-  // rendered options rather than O(rows).
-  let activeFlags = $state<boolean[]>([])
-  let lastActiveIndex = -1
-  $effect(() => {
-    const count = filteredOptions.length
-    const active = selection.index
-    if (activeFlags.length !== count) {
-      activeFlags = new Array(count).fill(false)
-      lastActiveIndex = -1
-    }
-    if (lastActiveIndex >= 0 && lastActiveIndex < activeFlags.length && lastActiveIndex !== active) {
-      activeFlags[lastActiveIndex] = false
-    }
-    if (active >= 0 && active < activeFlags.length) {
-      activeFlags[active] = true
-    }
-    lastActiveIndex = active
-  })
+  // Per-row highlight flags (shared helper): moving the highlight touches only
+  // the row leaving and the row entering, so held-key navigation is O(1).
+  const highlight = useActiveHighlight(
+    () => filteredOptions.length,
+    () => selection.index,
+  )
 
   function close() {
     open = false
   }
+
+  // Native-select type-ahead for the non-filterable trigger: typing moves the
+  // active item (opening the panel to show it) without confirming the value;
+  // the same letter again cycles through same-prefix options.
+  const typeahead = createTypeahead(
+    () => options,
+    option => option.label,
+    (_option, index) => {
+      if (!open) {
+        flushSync(() => openPanel())
+      }
+      flushSync(() => {
+        selection.set(index)
+        revealActive()
+      })
+    },
+    () => selection.peek(),
+  )
 
   // Escape drops focus the way moving away does: blur the trigger and let
   // the existing focusout path close the panel, so focus never lingers on a
@@ -328,7 +344,11 @@
     const needsFocusRestore = filterable && inputRef !== null
     onSelect(value)
     if (filterable && selectedOption) {
+      // A confirmed value spends the typed query: store the confirmed label as
+      // the query so reopening filters by the value shown in the input rather
+      // than reverting it to what was typed.
       filterText = selectedOption.label
+      activeQuery = selectedOption.label
     }
     close()
     if (needsFocusRestore) {
@@ -343,6 +363,13 @@
   }
 
   function handleControlKeydown(event: KeyboardEvent) {
+    // The non-filterable trigger has no text field: a printable key runs
+    // type-ahead (commit the first label match) and consuming it here keeps
+    // the rest of the navigation below untouched.
+    if (!filterable && typeahead.handle(event)) {
+      event.preventDefault()
+      return
+    }
     // A text-editing combo is starting: drop any pending caret fix so it
     // cannot collapse the selection the user is about to make.
     if (event.shiftKey || event.ctrlKey || event.metaKey || event.altKey) {
@@ -370,9 +397,7 @@
     // Other modified navigation keys (Shift+Arrow, Ctrl/Meta+Arrow/Home/End)
     // belong to the text field; let the browser handle them. Plain keys still
     // drive the listbox.
-    const navKey =
-      event.key === 'ArrowDown' || event.key === 'ArrowUp' || event.key === 'Home' || event.key === 'End'
-    if (navKey && (event.shiftKey || event.ctrlKey || event.metaKey || event.altKey)) {
+    if (isModifiedNavKey(event)) {
       return
     }
     if (event.key === 'ArrowDown') {
@@ -383,10 +408,7 @@
         })
         return
       }
-      flushSync(() => {
-        selection.move('down', filteredOptions.length)
-        revealActive()
-      })
+      moveListSelection(selection, 'down', filteredOptions.length, revealActive)
     } else if (event.key === 'ArrowUp') {
       event.preventDefault()
       if (!open) {
@@ -396,17 +418,16 @@
         })
         return
       }
-      flushSync(() => {
-        selection.move('up', filteredOptions.length)
-        revealActive()
-      })
+      moveListSelection(selection, 'up', filteredOptions.length, revealActive)
     } else if (event.key === 'Home' || event.key === 'End') {
       if (open && filteredOptions.length > 0) {
         event.preventDefault()
-        flushSync(() => {
-          selection.move(event.key === 'Home' ? 'first' : 'last', filteredOptions.length)
-          revealActive()
-        })
+        moveListSelection(
+          selection,
+          event.key === 'Home' ? 'first' : 'last',
+          filteredOptions.length,
+          revealActive,
+        )
       }
     } else if (event.key === 'Escape') {
       // A focused but closed control owns no window-level Escape listener
@@ -530,6 +551,7 @@
         <div role="presentation" class={resolvedEmptyClass}>{emptyLabel}</div>
       {/if}
       {#each filteredOptions as option, index}
+        {@const parts = labelParts(option.label)}
         <button
           type="button"
           bind:this={optionEls[index]}
@@ -540,13 +562,21 @@
           onpointerdown={event => event.preventDefault()}
           onclick={() => void select(option.value)}
           onfocus={() => selection.set(index)}
-          onmouseenter={() => selection.set(index)}
+          onmousemove={() => {
+            if (selection.peek() !== index) selection.set(index)
+          }}
           class={`${resolvedOptionRowClass} ${
-            activeFlags[index]
+            highlight.flags[index]
               ? 'bg-slate-800 text-cyan-200'
-              : 'text-slate-300 hover:bg-slate-800 hover:text-cyan-200'
+              : 'text-slate-300'
           }`}>
-          <span class="min-w-0 truncate">{option.label}</span>
+          <span class="min-w-0 truncate">
+            {#if parts}
+              {parts.before}<span class="font-semibold text-cyan-300">{parts.match}</span>{parts.after}
+            {:else}
+              {option.label}
+            {/if}
+          </span>
         </button>
       {/each}
     </div>

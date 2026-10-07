@@ -15,6 +15,7 @@
   import { createFocusoutClose } from '$lib/actions/use-focusout-close'
   import { useDropdown } from '$lib/actions/use-dropdown.svelte'
   import { useListSelection } from '$lib/actions/use-list-selection.svelte'
+  import { createTypeahead } from '$lib/actions/typeahead'
   import { PHONE_SHEET_QUERY, type DropdownPanelProps } from '$lib/dropdown-chrome'
   import Tooltip from './Tooltip.svelte'
   import MenuSheet from './MenuSheet.svelte'
@@ -34,6 +35,8 @@
     itemRole?: 'menuitem' | 'menuitemradio'
     itemChecked?: (item: T) => boolean
     itemDisabled?: (item: T) => boolean
+    // Searchable text for type-ahead; when omitted, typing does nothing.
+    itemLabel?: (item: T) => string
   }
 
   // A sheet title opts into the phone bottom-sheet presentation and must
@@ -60,6 +63,7 @@
     itemRole = 'menuitem',
     itemChecked,
     itemDisabled = () => false,
+    itemLabel,
     phoneSheetTitle,
     closeLabel,
   }: Props = $props()
@@ -211,12 +215,36 @@
     itemRefs[index]?.focus()
   }
 
+  // Native-menu type-ahead: typing a letter focuses the first non-disabled
+  // item whose label starts with the typed prefix. Items are actions, so
+  // type-ahead only moves focus — it never activates an item.
+  function focusTypeaheadMatch(matched: T) {
+    const index = items.indexOf(matched)
+    if (index < 0) return
+    if (open) {
+      setActive(index)
+    } else {
+      flushSync(() => openWithSelection(index))
+    }
+  }
+
+  const typeahead = createTypeahead(
+    () => items,
+    entry => (isDisabled(entry) ? '' : (itemLabel?.(entry) ?? '')),
+    focusTypeaheadMatch,
+    () => selection.peek(),
+  )
+
   function itemButtonClass(itemValue: T, state: MenuItemState): string | undefined {
     const classes = itemClass ? itemClass(itemValue, state) : ''
     return usePhoneSheet ? `${classes} min-h-11`.trim() : classes || undefined
   }
 
   function handleTriggerKeydown(event: KeyboardEvent) {
+    if (itemLabel && typeahead.handle(event)) {
+      event.preventDefault()
+      return
+    }
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault()
       openFromTrigger(event.key === 'ArrowDown' ? 'down' : 'up')
@@ -224,6 +252,10 @@
   }
 
   function handlePanelKeydown(event: KeyboardEvent) {
+    if (itemLabel && typeahead.handle(event)) {
+      event.preventDefault()
+      return
+    }
     if (event.key === 'ArrowDown') {
       event.preventDefault()
       moveFocus('down')
@@ -313,7 +345,9 @@
       tabindex={index === selection.index ? 0 : -1}
       onclick={() => handleItemClick(index)}
       onfocus={() => selection.set(index)}
-      onmouseenter={() => setActive(index)}
+      onmousemove={() => {
+        if (selection.peek() !== index) setActive(index)
+      }}
       disabled={state.disabled}
       class={itemButtonClass(itemValue, state)}>
       {@render item(itemValue, state)}

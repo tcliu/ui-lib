@@ -3,6 +3,10 @@
   import { createFocusoutClose } from '$lib/actions/use-focusout-close'
   import { useDropdown } from '$lib/actions/use-dropdown.svelte'
   import { useListSelection, revealInScrollport } from '$lib/actions/use-list-selection.svelte'
+  import { useActiveHighlight } from '$lib/actions/use-active-highlight.svelte'
+  import { createOptionIndex, matchesOption, matchLabelParts } from '$lib/actions/option-index'
+  import { isModifiedNavKey, moveListSelection } from '$lib/actions/listbox-keynav'
+  import { createTypeahead } from '$lib/actions/typeahead'
   import { positionPanel } from '$lib/position-panel.svelte'
   import ChevronDownIcon from '$lib/icons/ChevronDownIcon.svelte'
   import type { DropdownPanelProps } from '$lib/dropdown-chrome'
@@ -88,14 +92,36 @@
   let optionEls = $state<(HTMLElement | null)[]>([])
   let filterText = $state('')
 
+  // Lowercased once per options array (shared helper) so filtering does not
+  // re-lowercase every label/value on every keystroke.
+  const optionIndex = $derived(createOptionIndex(options))
+
+  // The lowercased filter needle, empty when filtering is off or the search is
+  // blank. The option list and the match highlight read the same value so they
+  // can never disagree.
+  const filterQuery = $derived(filterable ? filterText.trim().toLowerCase() : '')
+
   const filteredOptions = $derived.by(() => {
-    if (!filterable) return options
-    const needle = filterText.trim().toLowerCase()
-    if (!needle) return options
-    return options.filter(
-      option => option.label.toLowerCase().includes(needle) || option.value.toLowerCase().includes(needle),
-    )
+    if (filterQuery === '') return options
+    const matched: Option[] = []
+    for (const entry of optionIndex) {
+      if (matchesOption(entry, filterQuery)) {
+        matched.push(entry.option)
+      }
+    }
+    return matched
   })
+
+  // Emphasize the typed part of each label only while the query is ambiguous:
+  // with two or more matches the user needs to see which part matched, while a
+  // lone match is already the only row and needs no extra emphasis.
+  const highlightMatches = $derived(filterQuery !== '' && filteredOptions.length > 1)
+
+  // Split a label around its matched span (shared helper), or return null when
+  // highlighting is off for an unambiguous single match.
+  function labelParts(label: string) {
+    return highlightMatches ? matchLabelParts(label, filterQuery) : null
+  }
 
   // In filterable mode, keep the highlight anchored on the active value
   // whenever the visible list changes so a typed search that still includes
@@ -116,6 +142,13 @@
     selection.clamp(filteredOptions.length)
   })
 
+  // Per-row highlight flags (shared helper): moving the highlight touches only
+  // the row leaving and the row entering, so held-key navigation is O(1).
+  const highlight = useActiveHighlight(
+    () => filteredOptions.length,
+    () => selection.index,
+  )
+
   $effect(() => {
     if (!open && filterable) {
       filterText = ''
@@ -131,6 +164,24 @@
   function close() {
     open = false
   }
+
+  // Native-select type-ahead for the non-filterable trigger: typing moves the
+  // active item (opening the panel to show it) without confirming the value;
+  // the same letter again cycles through same-prefix options.
+  const typeahead = createTypeahead(
+    () => options,
+    option => option.label,
+    (_option, index) => {
+      if (!open) {
+        flushSync(() => openPanel())
+      }
+      flushSync(() => {
+        selection.set(index)
+        revealActive()
+      })
+    },
+    () => selection.peek(),
+  )
 
   // Keep the highlighted option visible while arrowing through a scrollable
   // panel: the option never receives focus (aria-activedescendant pattern),
@@ -168,16 +219,17 @@
       })
       return
     }
-    // OS key auto-repeat fires back-to-back keydowns; Svelte batches $state
-    // until the next microtask, so the active highlight would only appear
-    // on keyup. Flush synchronously so each repeat paints immediately.
-    flushSync(() => {
-      selection.move(direction, filteredOptions.length)
-      revealActive()
-    })
+    // OS key auto-repeat fires back-to-back keydowns; flush synchronously so
+    // each repeat paints the newly active row immediately.
+    moveListSelection(selection, direction, filteredOptions.length, revealActive)
   }
 
   function handleButtonKeydown(event: KeyboardEvent) {
+    // Non-filterable trigger has no text field: printable keys run type-ahead.
+    if (!filterable && typeahead.handle(event)) {
+      event.preventDefault()
+      return
+    }
     if (event.key === 'ArrowDown') {
       event.preventDefault()
       moveHighlight('down')
@@ -187,18 +239,12 @@
     } else if (event.key === 'Home') {
       if (open && filteredOptions.length > 0) {
         event.preventDefault()
-        flushSync(() => {
-          selection.move('first', filteredOptions.length)
-          revealActive()
-        })
+        moveListSelection(selection, 'first', filteredOptions.length, revealActive)
       }
     } else if (event.key === 'End') {
       if (open && filteredOptions.length > 0) {
         event.preventDefault()
-        flushSync(() => {
-          selection.move('last', filteredOptions.length)
-          revealActive()
-        })
+        moveListSelection(selection, 'last', filteredOptions.length, revealActive)
       }
     } else if (event.key === 'Enter' || event.key === ' ') {
       if (!open) {
@@ -216,9 +262,7 @@
     // Modified navigation keys edit the search text (Shift+Home selects to the
     // start, Shift+Arrow extends the selection); let the browser handle them
     // instead of moving the list highlight. Plain keys still drive the listbox.
-    const navKey =
-      event.key === 'ArrowDown' || event.key === 'ArrowUp' || event.key === 'Home' || event.key === 'End'
-    if (navKey && (event.shiftKey || event.ctrlKey || event.metaKey || event.altKey)) {
+    if (isModifiedNavKey(event)) {
       return
     }
     if (event.key === 'ArrowDown') {
@@ -229,16 +273,10 @@
       moveHighlight('up')
     } else if (event.key === 'Home') {
       event.preventDefault()
-      flushSync(() => {
-        selection.move('first', filteredOptions.length)
-        revealActive()
-      })
+      moveListSelection(selection, 'first', filteredOptions.length, revealActive)
     } else if (event.key === 'End') {
       event.preventDefault()
-      flushSync(() => {
-        selection.move('last', filteredOptions.length)
-        revealActive()
-      })
+      moveListSelection(selection, 'last', filteredOptions.length, revealActive)
     } else if (event.key === 'Enter') {
       event.preventDefault()
       const option = filteredOptions[selection.index] ?? filteredOptions[0]
@@ -281,6 +319,7 @@
 
 {#snippet optionList()}
   {#each filteredOptions as option, index}
+    {@const parts = labelParts(option.label)}
     <button
       type="button"
       bind:this={optionEls[index]}
@@ -291,9 +330,17 @@
       onpointerdown={event => event.preventDefault()}
       onclick={() => select(option.value)}
       onfocus={() => selection.set(index)}
-      onmouseenter={() => selection.set(index)}
-      class={`flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-left text-xs transition-none outline-none ${index === selection.index ? 'bg-slate-800 text-slate-100' : 'text-slate-300'}`}>
-      <span class="min-w-0 truncate">{option.label}</span>
+      onmousemove={() => {
+        if (selection.peek() !== index) selection.set(index)
+      }}
+      class={`flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-left text-xs transition-none outline-none ${highlight.flags[index] ? 'bg-slate-800 text-slate-100' : 'text-slate-300'}`}>
+      <span class="min-w-0 truncate">
+        {#if parts}
+          {parts.before}<span class="font-semibold text-cyan-300">{parts.match}</span>{parts.after}
+        {:else}
+          {option.label}
+        {/if}
+      </span>
     </button>
   {:else}
     <div role="presentation" class="px-3 py-6 text-center text-xs text-slate-400">{emptyText}</div>
@@ -347,7 +394,11 @@
             onkeydown={handleFilterKeydown}
             class="w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-100 outline-none placeholder:text-slate-500 focus-visible:border-sky-500" />
         </div>
-        <div id={panelId} role="listbox" aria-label={ariaLabel} class="min-h-0 flex-1 overflow-y-auto p-1">
+        <div
+          id={panelId}
+          role="listbox"
+          aria-label={ariaLabel}
+          class="min-h-0 flex-1 overflow-y-auto p-1">
           {@render optionList()}
         </div>
       </div>
