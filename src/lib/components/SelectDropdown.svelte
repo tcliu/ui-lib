@@ -1,14 +1,10 @@
 <script lang="ts">
   import { flushSync, tick } from 'svelte'
-  import { createFocusoutClose } from '$lib/actions/use-focusout-close'
-  import { useDropdown } from '$lib/actions/use-dropdown.svelte'
-  import { useListSelection, revealInScrollport } from '$lib/actions/use-list-selection.svelte'
-  import { useActiveHighlight } from '$lib/actions/use-active-highlight.svelte'
+  import { useListbox } from '$lib/actions/use-listbox.svelte'
   import { createOptionIndex, matchesOption, matchLabelParts } from '$lib/actions/option-index'
-  import { isModifiedNavKey, moveListSelection } from '$lib/actions/listbox-keynav'
-  import { createTypeahead } from '$lib/actions/typeahead'
-  import { positionPanel } from '$lib/position-panel.svelte'
+  import { isModifiedNavKey } from '$lib/actions/listbox-keynav'
   import Button from '$lib/components/Button.svelte'
+  import ListboxPanel from '$lib/components/ListboxPanel.svelte'
   import ChevronDownIcon from '$lib/icons/ChevronDownIcon.svelte'
   import CloseIcon from '$lib/icons/CloseIcon.svelte'
   import type { DropdownPanelProps } from '$lib/dropdown-chrome'
@@ -79,13 +75,17 @@
   const resolvedEmptyClass = $derived(emptyClass(size))
   const resolvedClearLabel = $derived(clearLabel ?? 'Clear selection')
   let open = $state(false)
-  const selection = useListSelection()
   let containerRef = $state<HTMLDivElement | null>(null)
   let inputRef = $state<HTMLInputElement | null>(null)
   let controlRef = $state<HTMLButtonElement | null>(null)
   let panelRef = $state<HTMLDivElement | null>(null)
-  // Option elements by index (bound, never queried) for scrollport reveal.
+  // Option elements by index, registered by the shared panel so the listbox
+  // core can reveal the active row (never queried from the DOM).
   let optionEls = $state<(HTMLElement | null)[]>([])
+
+  function setOptionEl(index: number, el: HTMLElement | null): void {
+    optionEls[index] = el
+  }
   // Whether the filterable control input holds focus (bound from its events,
   // never read from `document.activeElement`).
   let inputFocused = $state(false)
@@ -158,6 +158,8 @@
     }
   })
 
+  // `listbox` is created below; these effects run after setup, so the forward
+  // reference is safe.
   // Reset the highlight to the top of the visible list whenever it changes
   // (filter typing, options prop swap) so the cursor does not stay stranded
   // on a row that has scrolled out of view.
@@ -166,43 +168,18 @@
     if (!open) return
     if (lastFilteredOptions !== filteredOptions) {
       lastFilteredOptions = filteredOptions
-      selection.reset()
+      listbox.selection.reset()
     }
   })
 
   $effect(() => {
     if (!open) return
-    selection.clamp(filteredOptions.length)
+    listbox.selection.clamp(filteredOptions.length)
   })
-
-  // Per-row highlight flags (shared helper): moving the highlight touches only
-  // the row leaving and the row entering, so held-key navigation is O(1).
-  const highlight = useActiveHighlight(
-    () => filteredOptions.length,
-    () => selection.index,
-  )
 
   function close() {
     open = false
   }
-
-  // Native-select type-ahead for the non-filterable trigger: typing moves the
-  // active item (opening the panel to show it) without confirming the value;
-  // the same letter again cycles through same-prefix options.
-  const typeahead = createTypeahead(
-    () => options,
-    option => option.label,
-    (_option, index) => {
-      if (!open) {
-        flushSync(() => openPanel())
-      }
-      flushSync(() => {
-        selection.set(index)
-        revealActive()
-      })
-    },
-    () => selection.peek(),
-  )
 
   // Escape drops focus the way moving away does: blur the trigger and let
   // the existing focusout path close the panel, so focus never lingers on a
@@ -210,13 +187,6 @@
   function blurControl() {
     const control = inputRef ?? controlRef
     control?.blur()
-  }
-
-  // Keep the highlighted option visible while arrowing through a scrollable
-  // panel: the option never receives focus (aria-activedescendant pattern),
-  // so the browser would otherwise let it drift out of the scrollport.
-  function revealActive() {
-    revealInScrollport(optionEls[selection.peek()])
   }
 
   function toggle() {
@@ -235,14 +205,14 @@
     }
     lastFilteredOptions = filteredOptions
     // Highlight the committed value on open; hover/arrows move from there.
-    selection.syncToActive(filteredOptions, option => option.value === activeValue)
+    listbox.selection.syncToActive(filteredOptions, option => option.value === activeValue)
     open = true
     // A long list would otherwise open with the highlighted row scrolled out of
     // sight: the option never receives focus (aria-activedescendant pattern), so
     // nothing else brings it into view, and a native select always shows the
     // selected row. Reveal after the flush, once `positionPanel` has portaled
     // and shown the panel — an effect here runs too early to scroll it.
-    void tick().then(() => revealActive())
+    void tick().then(() => listbox.revealActive())
   }
 
   // Tabbing (or clicking) into the prefilled combobox lands the caret after
@@ -366,7 +336,7 @@
     // The non-filterable trigger has no text field: a printable key runs
     // type-ahead (commit the first label match) and consuming it here keeps
     // the rest of the navigation below untouched.
-    if (!filterable && typeahead.handle(event)) {
+    if (!filterable && listbox.handleTypeahead(event)) {
       event.preventDefault()
       return
     }
@@ -408,26 +378,21 @@
         })
         return
       }
-      moveListSelection(selection, 'down', filteredOptions.length, revealActive)
+      listbox.moveHighlight('down')
     } else if (event.key === 'ArrowUp') {
       event.preventDefault()
       if (!open) {
         flushSync(() => {
           openPanel()
-          selection.move('last', filteredOptions.length)
+          listbox.selection.move('last', filteredOptions.length)
         })
         return
       }
-      moveListSelection(selection, 'up', filteredOptions.length, revealActive)
+      listbox.moveHighlight('up')
     } else if (event.key === 'Home' || event.key === 'End') {
       if (open && filteredOptions.length > 0) {
         event.preventDefault()
-        moveListSelection(
-          selection,
-          event.key === 'Home' ? 'first' : 'last',
-          filteredOptions.length,
-          revealActive,
-        )
+        listbox.moveHighlight(event.key === 'Home' ? 'first' : 'last')
       }
     } else if (event.key === 'Escape') {
       // A focused but closed control owns no window-level Escape listener
@@ -446,22 +411,23 @@
         return
       }
       event.preventDefault()
-      const option = filteredOptions[selection.index] ?? filteredOptions[0]
+      const option = filteredOptions[listbox.selection.index] ?? filteredOptions[0]
       if (option) {
         void select(option.value)
       }
     }
   }
-  const handleFocusOut = createFocusoutClose(
-    () => open,
-    () => ({ container: containerRef, panel: panelRef }),
-    () => close(),
-  )
-
-  useDropdown(() => ({
+  const listbox = useListbox({
     isOpen: () => open,
-    container: () => containerRef,
-    onOutsideClick: () => close(),
+    onClose: close,
+    openPanel,
+    options: () => filteredOptions,
+    optionLabel: option => option.label,
+    getContainer: () => containerRef,
+    getPanel: () => panelRef,
+    getOptionEl: index => optionEls[index],
+    typeahead: true,
+    onOutsideClick: close,
     onEscape: () => {
       // Blurring fires the focusout path, which closes the panel and resets
       // a dirty filter through the `!open` effect, so Escape both reverts
@@ -469,12 +435,11 @@
       close()
       blurControl()
     },
-    onScrollClose: () => close(),
-    panel: () => panelRef,
-  }))
+    onScrollClose: close,
+  })
 </script>
 
-<div class="relative" bind:this={containerRef} data-escape-capture={open ? '' : null} onfocusout={handleFocusOut}>
+<div class="relative" bind:this={containerRef} data-escape-capture={open ? '' : null} onfocusout={listbox.handleFocusOut}>
   {#snippet triggerChevron()}
     <ChevronDownIcon size={SIZE_CLASS[size].icon} variant="solid" className="-mr-1.5 shrink-0 text-slate-400" />
   {/snippet}
@@ -490,8 +455,8 @@
           aria-autocomplete="list"
           aria-expanded={open}
           aria-controls={open ? panelId : undefined}
-          aria-activedescendant={open && filteredOptions[selection.index]
-            ? `${panelId}-option-${selection.index}`
+          aria-activedescendant={open && filteredOptions[listbox.selection.index]
+            ? `${panelId}-option-${listbox.selection.index}`
             : undefined}
           onfocus={handleControlFocus}
           onblur={handleControlBlur}
@@ -510,8 +475,8 @@
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
-        aria-activedescendant={open && filteredOptions[selection.index]
-          ? `${panelId}-option-${selection.index}`
+        aria-activedescendant={open && filteredOptions[listbox.selection.index]
+          ? `${panelId}-option-${listbox.selection.index}`
           : undefined}
         onclick={toggle}
         onkeydown={handleControlKeydown}
@@ -540,45 +505,29 @@
     {@render triggerControl()}
   {/if}
   {#if open}
-    <div
-      bind:this={panelRef}
+    <ListboxPanel
+      bind:panelEl={panelRef}
       id={panelId}
-      role="listbox"
-      aria-label={ariaLabel}
-      use:positionPanel={() => ({ getTrigger: () => containerRef, getOpen: () => open, align, autoPlace })}
-      class={`fixed top-0 left-0 z-40 will-change-transform ${resolvedPanelClass}`}>
-      {#if emptyLabel && filteredOptions.length === 0}
-        <div role="presentation" class={resolvedEmptyClass}>{emptyLabel}</div>
-      {/if}
-      {#each filteredOptions as option, index}
-        {@const parts = labelParts(option.label)}
-        <button
-          type="button"
-          bind:this={optionEls[index]}
-          id={`${panelId}-option-${index}`}
-          role="option"
-          tabindex="-1"
-          aria-selected={option.value === activeValue}
-          onpointerdown={event => event.preventDefault()}
-          onclick={() => void select(option.value)}
-          onfocus={() => selection.set(index)}
-          onmousemove={() => {
-            if (selection.peek() !== index) selection.set(index)
-          }}
-          class={`${resolvedOptionRowClass} ${
-            highlight.flags[index]
-              ? 'bg-slate-800 text-cyan-200'
-              : 'text-slate-300'
-          }`}>
-          <span class="min-w-0 truncate">
-            {#if parts}
-              {parts.before}<span class="font-semibold text-cyan-300">{parts.match}</span>{parts.after}
-            {:else}
-              {option.label}
-            {/if}
-          </span>
-        </button>
-      {/each}
-    </div>
+      ariaLabel={ariaLabel}
+      panelClass={`fixed top-0 left-0 z-40 will-change-transform ${resolvedPanelClass}`}
+      optionRowClass={resolvedOptionRowClass}
+      options={filteredOptions}
+      highlightFlags={listbox.highlight.flags}
+      isActive={option => option.value === activeValue}
+      onSelect={option => void select(option.value)}
+      onActivate={index => {
+        if (listbox.selection.peek() !== index) listbox.selection.set(index)
+      }}
+      setOptionEl={setOptionEl}
+      getTrigger={() => containerRef}
+      getOpen={() => open}
+      align={align}
+      autoPlace={autoPlace}
+      emptyLabel={emptyLabel}
+      emptyClass={resolvedEmptyClass}
+      activeClass="bg-slate-800 text-cyan-200"
+      idleClass="text-slate-300"
+      labelOf={option => option.label}
+      matchParts={option => labelParts(option.label)} />
   {/if}
 </div>

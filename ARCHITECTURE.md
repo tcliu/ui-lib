@@ -105,8 +105,15 @@ Server endpoints (+server.ts)
   reverses), `option-index.ts` (lowercased option index, match test, and
   matched-label split), `listbox-keynav.ts` (modified-key test plus
   flush-on-move), and `use-active-highlight.svelte.ts` (O(1) per-row highlight
-  flags). SelectDropdown and ChipDropdown build on the full set; Menu uses the
-  type-ahead helper.
+  flags). `use-listbox.svelte.ts` composes them into the navigation and dismissal
+  core shared by `SelectDropdown`, `ChipDropdown`, `TagInput`, and `Menu` (active
+  index, held-key moves with optional disabled-skipping, type-ahead, focusout
+  close, and the `useDropdown` lifecycle); each surface keeps its own open state,
+  filtering, and value commit. The aria-activedescendant surfaces render
+  `use-active-highlight` flags; `Menu` focuses the active item instead.
+  `SelectDropdown` and `TagInput` share the panel chrome through
+  `ListboxPanel.svelte` (positioning, option rows, empty row, and the `option`
+  snippet for row content).
 - **Thin routes** — `+page.svelte` is mostly declarative markup; all logic
   lives in composables and `page/` helpers.
 - **Theme system** — themes are CSS variable overrides in `src/styles.css`

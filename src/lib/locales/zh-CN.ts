@@ -51,9 +51,8 @@ export const zhCN = {
     show: '显示密码',
     hide: '隐藏密码',
   },
-  combobox: {
+  chip: {
     remove: '移除 {name}',
-    placeholder: '选择或输入...',
   },
   tagInput: {
     suggestions: '标签建议',

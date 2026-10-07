@@ -73,11 +73,27 @@ Project-specific development conventions for the UI Library web app.
   a change to a shared file is not complete until the sibling copies are
   re-ported or the divergence is added to that script's documented exception
   list with a reason.
-- Tag editing stays one shared control: `TagInput` models `string[]` and covers
-  per-tag coloring through its optional `chipClassFor` hook plus `chip`/`option`
-  snippets, so an app whose tags carry extra data (e.g. `{ name, color }`) maps
-  that object model to `string[]` at the call site instead of forking a second
-  tag-input component. It exports `focus()` for dialog autofocus.
+- Tag editing stays one shared control: `TagInput` models `string[]` and colours
+  tags from a built-in per-tag palette by default (a deterministic hash over a
+  six-colour set), so tags read distinctly with zero config. Override the colours
+  with the `palette` prop (replaces the set), or per chip with the `chipClassFor`
+  hook (per tag) / `chipClass` (uniform), plus `chip`/`option` snippets, so an app
+  whose tags carry extra data (e.g. `{ name, color }`) maps that object model to
+  `string[]` at the call site instead of forking a second tag-input component. It
+  reports the typed draft through `onQueryChange` so a caller can supply
+  externally filtered (e.g. async) `availableTags`, renders its chips through the
+  shared `Chip`, and exports `focus()` for dialog autofocus.
+- The dropdown and menu surfaces (`SelectDropdown`, `ChipDropdown`, `TagInput`,
+  `Menu`) share one navigation core, `use-listbox.svelte.ts`: it owns the active
+  index, held-key moves (skipping disabled rows when a surface declares them),
+  type-ahead, focusout close, and the `useDropdown` dismissal lifecycle, while
+  each surface keeps its own open state, filtering, and value commit. The
+  aria-activedescendant surfaces render the shared `highlight.flags` over
+  never-focused rows; `Menu` instead focuses the active item. `SelectDropdown`
+  and `TagInput` render their option panel through the shared `ListboxPanel.svelte`
+  (positioning, option rows, the empty row, and the `option` snippet for row
+  content). Compose `useListbox` — and `ListboxPanel` where the panel shape fits —
+  for a new listbox surface instead of re-wiring those helpers by hand.
 - Spreadsheet editing stays one shared control: `DataGrid` models `string[][]`
   and covers header/column-label, fixed-column, resize-persistence, and
   read-only variants through props (`showHeaders`, `columnLabels`, `maxColumns`,
@@ -144,7 +160,7 @@ Project-specific development conventions for the UI Library web app.
   so a missing key fails the build). A consuming app's locale
   dictionaries must define the shared keys (`common.*`, `number.*`, `dropdown.*`,
   `pagination.*`, `tabs.label`, `search.placeholder`, `splitter.*`, `password.*`,
-  `combobox.*`, `tagInput.*`, `kebab.*`, `range.*`, `grid.*`, `resizable.*`, and
+  `chip.remove`, `tagInput.*`, `kebab.*`, `range.*`, `grid.*`, `resizable.*`, and
   `appShell.*`).
 - Component attributes stay camelCase.
 - New sized components support the full `xs`–`lg` scale from the start (literal

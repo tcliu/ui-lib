@@ -24,7 +24,7 @@ describe('getRelatedComponents', () => {
   it('returns the components sharing any of the slug groups', () => {
     const slugs = getRelatedComponents('select-dropdown').map(component => component.slug)
     expect(slugs).toContain('menu')
-    expect(slugs).toContain('combobox')
+    expect(slugs).toContain('chip-dropdown')
     expect(slugs).not.toContain('select-dropdown')
   })
 
@@ -39,7 +39,7 @@ describe('getRelatedComponents', () => {
     const selectSlugs = getRelatedComponents('select-dropdown').map(component => component.slug)
     expect(selectSlugs).toContain('tag-input')
     const tagSlugs = getRelatedComponents('tag-input').map(component => component.slug)
-    expect(tagSlugs).toEqual(expect.arrayContaining(['select-dropdown', 'combobox']))
+    expect(tagSlugs).toEqual(expect.arrayContaining(['select-dropdown']))
   })
 
   it('is symmetric for every component', () => {

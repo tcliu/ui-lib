@@ -16,7 +16,7 @@ export const LOCALES: { code: Locale; label: string }[] = [
 ]
 
 // Dotted-path key union over the nested source dictionary
-// ('appShell.showPane', 'combobox.remove', ...). Call sites keep using the same
+// ('appShell.showPane', 'chip.remove', ...). Call sites keep using the same
 // strings; only the dictionary shape changed.
 export type MessageKey = DottedKey<typeof en>
 
