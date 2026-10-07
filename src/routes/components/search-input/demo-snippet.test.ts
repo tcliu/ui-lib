@@ -25,4 +25,11 @@ describe('buildSearchInputSnippet', () => {
       'inputClass="w-56 rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 pl-7 text-sm text-cyan-200 outline-none focus-visible:border-cyan-500"',
     )
   })
+
+  it('emits a numeric size as an expression and omits invalid sizes', () => {
+    const numeric = buildSearchInputSnippet({ placeholder: '', size: '14', wrapperClass: '', inputClass: '' })
+    expect(numeric).toContain('size={14}')
+    const invalid = buildSearchInputSnippet({ placeholder: '', size: 'huge', wrapperClass: '', inputClass: '' })
+    expect(invalid).not.toContain('size=')
+  })
 })

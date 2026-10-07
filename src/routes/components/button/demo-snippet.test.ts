@@ -41,4 +41,29 @@ describe('buildButtonSnippet', () => {
     expect(source).toContain('badge="new"')
     expect(source).toContain('className="ml-2"')
   })
+
+  it('emits a numeric size as an expression and omits invalid sizes', () => {
+    const numeric = buildButtonSnippet({
+      variant: '',
+      accent: '',
+      size: '14',
+      disabled: '',
+      pending: '',
+      icon: '',
+      badge: '',
+      className: '',
+    })
+    expect(numeric).toContain('size={14}')
+    const invalid = buildButtonSnippet({
+      variant: '',
+      accent: '',
+      size: 'huge',
+      disabled: '',
+      pending: '',
+      icon: '',
+      badge: '',
+      className: '',
+    })
+    expect(invalid).not.toContain('size=')
+  })
 })

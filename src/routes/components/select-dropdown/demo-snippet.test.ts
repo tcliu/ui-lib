@@ -26,4 +26,11 @@ describe('buildSelectDropdownSnippet', () => {
     expect(source).toContain('  clearable\n')
     expect(source).toContain('align="right"')
   })
+
+  it('emits a numeric size as an expression and omits invalid sizes', () => {
+    const numeric = buildSelectDropdownSnippet({ size: '14', filterable: '', controlClass: '', clearable: '', align: '' })
+    expect(numeric).toContain('size={14}')
+    const invalid = buildSelectDropdownSnippet({ size: 'huge', filterable: '', controlClass: '', clearable: '', align: '' })
+    expect(invalid).not.toContain('size=')
+  })
 })

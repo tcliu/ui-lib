@@ -13,6 +13,11 @@ describe('buildSpinnerSnippet', () => {
     expect(source).toContain('<Spinner size="md" className="text-cyan-400" />')
   })
 
+  it('emits a numeric size as an expression and omits invalid sizes', () => {
+    expect(buildSpinnerSnippet({ size: '20', tint: '' })).toContain('size={20}')
+    expect(buildSpinnerSnippet({ size: 'huge', tint: '' })).not.toContain('size=')
+  })
+
   it('keeps size when only tint is set', () => {
     const source = buildSpinnerSnippet({ size: '', tint: 'text-cyan-400' })
     expect(source).toContain('<Spinner className="text-cyan-400" />')

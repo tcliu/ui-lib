@@ -26,4 +26,11 @@ describe('buildToastSnippet', () => {
     expect(source).toContain('actionLabel="Undo"')
     expect(source).toContain('onAction={() => (actionTaken = actionLabel)}')
   })
+
+  it('emits a numeric size as an expression and omits invalid sizes', () => {
+    const numeric = buildToastSnippet({ message: '', toastType: '', position: '', size: '14', action: '' })
+    expect(numeric).toContain('size={14}')
+    const invalid = buildToastSnippet({ message: '', toastType: '', position: '', size: 'huge', action: '' })
+    expect(invalid).not.toContain('size=')
+  })
 })

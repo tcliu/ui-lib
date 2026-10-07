@@ -23,4 +23,11 @@ describe('buildPaginationSnippet', () => {
     expect(source).toContain('previousLabel="Go back"')
     expect(source).toContain('className="rounded-lg border border-cyan-500/40 p-2"')
   })
+
+  it('emits a numeric size as an expression and omits invalid sizes', () => {
+    const numeric = buildPaginationSnippet({ size: '14', customOptions: '', customLabels: '', className: '' })
+    expect(numeric).toContain('size={14}')
+    const invalid = buildPaginationSnippet({ size: 'huge', customOptions: '', customLabels: '', className: '' })
+    expect(invalid).not.toContain('size=')
+  })
 })

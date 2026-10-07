@@ -41,4 +41,11 @@ describe('buildEditableTextSnippet', () => {
     expect(source).toContain('size="lg"')
     expect(source).toContain('className="text-cyan-200"')
   })
+
+  it('emits a numeric size as an expression and omits invalid sizes', () => {
+    const numeric = buildEditableTextSnippet({ ...base, size: '14' })
+    expect(numeric).toContain('size={14}')
+    const invalid = buildEditableTextSnippet({ ...base, size: 'huge' })
+    expect(invalid).not.toContain('size=')
+  })
 })

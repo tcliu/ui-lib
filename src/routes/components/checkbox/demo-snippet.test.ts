@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { STYLED_BOX, STYLED_LABEL, STYLED_WRAPPER, buildCheckboxSnippet } from './demo-snippet'
+import { STYLED_BOX, STYLED_LABEL, STYLED_WRAPPER, buildCheckboxSnippet, type CheckboxSnippetState } from './demo-snippet'
 
 describe('buildCheckboxSnippet', () => {
   it('uses the scoped label while unset', () => {
@@ -37,5 +37,20 @@ describe('buildCheckboxSnippet', () => {
     expect(source).toContain('labelClass="text-cyan-300"')
     expect(source).toContain('wrapperClass="rounded-md border border-slate-700 px-3 py-2"')
     expect(source).toContain('boxClass="rounded-full"')
+  })
+
+  it('emits a numeric size as an expression and omits invalid sizes', () => {
+    const base: Omit<CheckboxSnippetState, 'size'> = {
+      label: '',
+      disabled: '',
+      indeterminate: '',
+      labelClass: '',
+      wrapperClass: '',
+      boxClass: '',
+    }
+    const numeric = buildCheckboxSnippet({ ...base, size: '14' })
+    expect(numeric).toContain('size={14}')
+    const invalid = buildCheckboxSnippet({ ...base, size: 'huge' })
+    expect(invalid).not.toContain('size=')
   })
 })

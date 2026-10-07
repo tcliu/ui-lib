@@ -16,6 +16,13 @@ describe('buildIconsSnippet', () => {
     expect(source).toContain('<CheckIcon size="lg" className="text-cyan-400" />Check')
   })
 
+  it('emits a numeric size as an expression and omits invalid sizes', () => {
+    const numeric = buildIconsSnippet({ size: '14', tint: '', className: '' })
+    expect(numeric).toContain('<CheckIcon size={14} />Check')
+    const invalid = buildIconsSnippet({ size: 'huge', tint: '', className: '' })
+    expect(invalid).not.toContain('size=')
+  })
+
   it('renders the solid chevron variant', () => {
     const source = buildIconsSnippet({ size: '', tint: '', className: '' })
     expect(source).toContain('<ChevronDownIcon variant="solid" />ChevronDownSolid')
