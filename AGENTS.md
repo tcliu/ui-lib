@@ -322,6 +322,7 @@ Project-specific development conventions for the UI Library web app.
 - When a code change establishes or revises a generic reusable convention, update
   the appropriate file under `$AI_CONFIG_DIR/references/` in the same change rather
   than duplicating it here.
+- After a behavior-affecting change, invoke the `doc` skill to reconcile the managed docs (`README.md`, `ARCHITECTURE.md`, `docs/design.md`, `docs/spec.md`) in the same change, per `~/.agents/references/conventions-extraction.md` (Document roles).
 - Shared reference files under `$AI_CONFIG_DIR/references/` must stay generic and
   implementation-agnostic: no project-specific paths, component names, routes, or
   internal identifiers. Put project-level details in this `AGENTS.md` instead.
