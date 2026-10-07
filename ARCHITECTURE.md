@@ -29,6 +29,7 @@ ui-lib/
 │   │       └── info/+server.ts    # GET /api/info — project self-card for discovery
 │   └── lib/
 │       ├── components/           # Presentational UI components (seeded from the reference)
+│       ├── actions/              # Shared interaction helpers (type-ahead, option match, list key-nav)
 │       ├── server/
 │       │   └── card.ts   # Shared card contract (normalize + resolve)
 │       └── use-*.svelte.ts       # Composable factories (domain state, added per feature)
@@ -99,6 +100,13 @@ Server endpoints (+server.ts)
 - **Composable factories** — `useXxx()` functions returning reactive state
   via Svelte 5 runes. Each owns one domain concern. They accept dependencies
   as arguments to avoid circular imports.
+- **Shared listbox interactions** — the dropdown surfaces build on one set of
+  helpers in `src/lib/actions/`: `typeahead.ts` (native type-ahead; Shift
+  reverses), `option-index.ts` (lowercased option index, match test, and
+  matched-label split), `listbox-keynav.ts` (modified-key test plus
+  flush-on-move), and `use-active-highlight.svelte.ts` (O(1) per-row highlight
+  flags). SelectDropdown and ChipDropdown build on the full set; Menu uses the
+  type-ahead helper.
 - **Thin routes** — `+page.svelte` is mostly declarative markup; all logic
   lives in composables and `page/` helpers.
 - **Theme system** — themes are CSS variable overrides in `src/styles.css`
