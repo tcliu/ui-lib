@@ -1,6 +1,7 @@
 // Show-code source for the Pagination demo section. Pure string building over
 // the playground form state: the section regenerates the editor text from
 // this, so the editor always shows the markup behind the demo above.
+import { sizeAttributeLine } from '$lib/showcase/size-input'
 
 export interface PaginationSnippetState {
   size: string
@@ -22,7 +23,7 @@ export function buildPaginationSnippet({
     '  total={200}',
     '  pageSize={pageSize}',
     '  currentPage={currentPage}',
-    ...(size ? [`  size="${size}"`] : []),
+    ...sizeAttributeLine(size),
     ...(customOptions ? ['  pageSizeOptions={[5, 10, 25, 100]}'] : []),
     ...(customLabels
       ? [

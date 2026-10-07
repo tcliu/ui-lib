@@ -1,6 +1,7 @@
 // Show-code source for the SearchInput demo section. Pure string building over
 // the playground form state: the section regenerates the editor text from
 // this, so the editor always shows the markup behind the demo above.
+import { sizeAttributeLine } from '$lib/showcase/size-input'
 
 export interface SearchInputSnippetState {
   placeholder: string
@@ -27,7 +28,7 @@ export function buildSearchInputSnippet({
     '<div class="flex flex-col gap-1">',
     '  <SearchInput bind:value={query} ariaLabel={applyLabel} onkeydown={handleKeydown}',
     ...(placeholder ? [`    placeholder="${escapeAttr(placeholder)}"`] : []),
-    ...(size ? [`    size="${size}"`] : []),
+    ...sizeAttributeLine(size, '    '),
     ...(wrapperClass ? [`    wrapperClass="${escapeAttr(wrapperClass)}"`] : []),
     ...(inputClass ? [`    inputClass="${escapeAttr(inputClass)}"`] : []),
     '  />',

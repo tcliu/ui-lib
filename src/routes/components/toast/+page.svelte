@@ -10,6 +10,7 @@
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
   import { buildToastSnippet } from './demo-snippet'
+  import { parseSizeValue } from '$lib/showcase/size-input'
 
   const i18n = getI18nContext()
 
@@ -37,7 +38,7 @@
   const demoPosition = $derived(
     (pgPosition || undefined) as 'top-right' | 'top-center' | 'bottom-right' | 'bottom-center' | undefined,
   )
-  const demoSize = $derived((pgSize || undefined) as 'sm' | 'md' | undefined)
+  const demoSize = $derived(parseSizeValue(pgSize))
 
   const isCustomized = $derived(
     pgMessage !== '' || pgType !== '' || pgPosition !== '' || pgSize !== '' || pgAction !== '',
@@ -73,7 +74,7 @@
       defaultValue: "'bottom-right'",
       note: 'Viewport edge the toast docks to.',
     },
-    { name: 'size', type: "'sm' | 'md'", defaultValue: "'sm'", note: 'Text scale.' },
+    { name: 'size', type: "'sm' | 'md' | number", defaultValue: "'sm'", note: 'Text scale; numbers settle on the nearest tier.' },
     {
       name: 'type',
       type: "'success' | 'info' | 'warning' | 'error'",
@@ -139,6 +140,8 @@
         activeValue={pgSize}
         ariaLabel="Size"
         options={sizeOptions}
+        filterable
+        allowCustomValue
         onSelect={value => (pgSize = value)}
         clearable
         clearLabel="Clear size"

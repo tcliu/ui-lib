@@ -10,6 +10,7 @@
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
   import { buildSpinnerSnippet } from './demo-snippet'
+  import { parseSizeValue } from '$lib/showcase/size-input'
 
   const i18n = getI18nContext()
 
@@ -30,7 +31,7 @@
     { value: 'text-emerald-400', label: 'emerald' },
   ]
 
-  const demoSize = $derived((pgSize || undefined) as 'xs' | 'sm' | 'md' | 'lg' | undefined)
+  const demoSize = $derived(parseSizeValue(pgSize))
   const demoTint = $derived(pgTint || undefined)
 
   const isCustomized = $derived(pgSize !== '' || pgTint !== '')
@@ -46,9 +47,9 @@
   const props: PropRow[] = [
     {
       name: 'size',
-      type: "'xs' | 'sm' | 'md' | 'lg'",
+      type: "'xs' | 'sm' | 'md' | 'lg' | number",
       defaultValue: "'xs'",
-      note: 'Width/height attributes (16/24/32/40px); composes with className.',
+      note: 'Width/height attributes (16/24/32/40px for names, passthrough for numbers); composes with className.',
     },
     {
       name: 'className',
@@ -78,6 +79,8 @@
         activeValue={pgSize}
         ariaLabel="Size"
         options={sizeOptions}
+        filterable
+        allowCustomValue
         onSelect={value => (pgSize = value)}
         clearable
         clearLabel="Clear size"

@@ -4,6 +4,7 @@
 // value lives in a local `$state` so the live snippet keeps its own edits and
 // still starts from the demo's displayed text.
 
+import { sizeAttributeLine } from '$lib/showcase/size-input'
 export type TriState = '' | 'yes' | 'no'
 
 // Default value shared by the page and the snippet so the static demo and the
@@ -44,7 +45,7 @@ export function buildEditableTextSnippet({ value, size, copyable, className }: E
     '  <EditableText',
     '    text={value}',
     '    onChange={next => { value = next }}',
-    ...(size ? [`    size="${size}"`] : []),
+    ...sizeAttributeLine(size, '    '),
     ...flagLine('copyable', copyable),
     ...(className ? [`    className="${escapeAttr(className)}"`] : []),
     '  />',

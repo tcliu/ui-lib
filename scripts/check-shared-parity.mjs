@@ -39,6 +39,7 @@ const SHARED_FILES = [
   'src/lib/d1-binding.mjs',
   'src/lib/dropdown-chrome.ts',
   'src/lib/position-panel.svelte.ts',
+  'src/lib/size-scale.ts',
   'src/lib/sql-rewrite.mjs',
   'src/lib/text-size.ts',
 ]

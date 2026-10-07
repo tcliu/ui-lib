@@ -10,6 +10,7 @@
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
   import { DEFAULT_TEXT, buildEditableTextSnippet, type TriState } from './demo-snippet'
+  import { parseSizeValue } from '$lib/showcase/size-input'
 
   const i18n = getI18nContext()
 
@@ -34,7 +35,7 @@
     return value === '' ? undefined : value === 'yes'
   }
 
-  const demoSize = $derived((pgSize || undefined) as 'xs' | 'sm' | 'md' | 'lg' | undefined)
+  const demoSize = $derived(parseSizeValue(pgSize))
   const copyable = $derived(flagOn(pgCopyable))
   const demoClassName = $derived(pgClassName || undefined)
 
@@ -76,7 +77,7 @@
     },
     {
       name: 'size',
-      type: "'xs' | 'sm' | 'md' | 'lg'",
+      type: "'xs' | 'sm' | 'md' | 'lg' | number",
       defaultValue: "'md'",
       note: 'Text size for the label and the input.',
     },
@@ -116,6 +117,8 @@
         activeValue={pgSize}
         ariaLabel="Size"
         options={sizeOptions}
+        filterable
+        allowCustomValue
         onSelect={value => (pgSize = value)}
         clearable
         clearLabel="Clear size"

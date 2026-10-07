@@ -2,6 +2,7 @@
 // playground form state: the section regenerates the editor text from this, so
 // the editor always shows the markup behind the demo above.
 
+import { sizeAttributeLine } from '$lib/showcase/size-input'
 export interface ToastSnippetState {
   message: string
   toastType: string
@@ -24,7 +25,7 @@ export function buildToastSnippet({ message, toastType, position, size, action }
     '    closeLabel={closeLabel}',
     ...(toastType ? [`    type="${toastType}"`] : []),
     ...(position ? [`    position="${position}"`] : []),
-    ...(size ? [`    size="${size}"`] : []),
+    ...sizeAttributeLine(size, '    '),
     ...(action ? [`    actionLabel="${escapeAttr(action)}"`, '    onAction={() => (actionTaken = actionLabel)}'] : []),
     '    onClose={() => (open = false)} />',
     '{/if}',

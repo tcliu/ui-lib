@@ -10,6 +10,7 @@
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
   import { STYLED_CLASS, buildPaginationSnippet } from './demo-snippet'
+  import { parseSizeValue } from '$lib/showcase/size-input'
 
   const i18n = getI18nContext()
 
@@ -35,7 +36,7 @@
   const customLabels = [{ value: 'yes', label: 'Custom' }]
   const styledOptions = [{ value: 'yes', label: 'Styled' }]
 
-  const demoSize = $derived((pgSize || undefined) as 'xs' | 'sm' | 'md' | 'lg' | undefined)
+  const demoSize = $derived(parseSizeValue(pgSize))
   const demoPageSizeOptions = $derived(pgCustomOptions ? [5, 10, 25, 100] : undefined)
   const demoClassName = $derived(pgClassName || undefined)
 
@@ -72,7 +73,7 @@
     { name: 'total', type: 'number', defaultValue: '—', note: 'Total item count.' },
     { name: 'pageSize', type: 'number', defaultValue: '—', note: 'Items per page.' },
     { name: 'currentPage', type: 'number', defaultValue: '—', note: 'Active page (1-based).' },
-    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", defaultValue: "'sm'", note: 'Control scale.' },
+    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | number", defaultValue: "'sm'", note: 'Control scale; numbers flow to the page-size dropdown interpolated between the steps.' },
     { name: 'className', type: 'string', defaultValue: "''", note: 'Extra classes for the nav.' },
     { name: 'pageSizeOptions', type: 'number[]', defaultValue: '[10, 20, 50]', note: 'Page-size choices.' },
     { name: 'onPageChange', type: '(page: number) => void', defaultValue: '—', note: 'Called on page change.' },
@@ -115,6 +116,8 @@
         activeValue={pgSize}
         ariaLabel="Size"
         options={sizeOptions}
+        filterable
+        allowCustomValue
         onSelect={value => (pgSize = value)}
         clearable
         clearLabel="Clear size"

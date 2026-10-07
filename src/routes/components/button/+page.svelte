@@ -10,6 +10,7 @@
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
   import { buildButtonSnippet, type TriState } from './demo-snippet'
+  import { parseSizeValue } from '$lib/showcase/size-input'
 
   const i18n = getI18nContext()
 
@@ -40,7 +41,7 @@
     (pgVariant || undefined) as 'primary' | 'secondary' | 'danger' | 'outline' | 'ghost' | undefined,
   )
   const demoAccent = $derived((pgAccent || undefined) as 'cyan' | 'emerald' | 'amber' | 'violet' | 'rose' | undefined)
-  const demoSize = $derived((pgSize || undefined) as 'xs' | 'sm' | 'md' | 'lg' | undefined)
+  const demoSize = $derived(parseSizeValue(pgSize))
   const disabled = $derived(flagOn(pgDisabled))
   const pending = $derived(flagOn(pgPending))
   const demoLabel = $derived(pgLabel || i18n.t('common.apply'))
@@ -106,7 +107,7 @@
       defaultValue: "'cyan'",
       note: 'Tint for primary, outline, and badge.',
     },
-    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", defaultValue: "'md'", note: 'Control size.' },
+    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | number", defaultValue: "'md'", note: 'Control size; numbers resolve to the nearest step.' },
     { name: 'disabled', type: 'boolean', defaultValue: 'false', note: 'Native disabled + reduced opacity.' },
     { name: 'pending', type: 'boolean', defaultValue: 'false', note: 'Disabled state with a spinner slot.' },
     { name: 'type', type: "'button' | 'submit' | 'reset'", defaultValue: "'button'", note: 'Native button type.' },
@@ -188,6 +189,8 @@
         activeValue={pgSize}
         ariaLabel="Size"
         options={sizes.map(value => ({ value, label: value }))}
+        filterable
+        allowCustomValue
         onSelect={value => (pgSize = value)}
         clearable
         clearLabel="Clear size"

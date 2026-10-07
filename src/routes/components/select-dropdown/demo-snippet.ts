@@ -1,6 +1,7 @@
 // Show-code source for the SelectDropdown demo section. Pure string building
 // over the playground form state: the section regenerates the editor text from
 // this, so the editor always shows the markup behind the demo above.
+import { sizeAttributeLine } from '$lib/showcase/size-input'
 
 export type TriState = '' | 'yes' | 'no'
 
@@ -32,7 +33,7 @@ export function buildSelectDropdownSnippet({
     '  buttonLabel={labelFor(options, value)}',
     '  activeValue={value}',
     '  ariaLabel="default"',
-    ...(size ? [`  size="${size}"`] : []),
+    ...sizeAttributeLine(size),
     ...flagLine('filterable', filterable),
     ...(controlClass ? [`  controlClass="${controlClass}"`] : []),
     ...flagLine('clearable', clearable),

@@ -3,6 +3,7 @@
 // the editor always shows the markup behind the demo above.
 
 import type { Component } from 'svelte'
+import { sizeAttributeFragment } from '$lib/showcase/size-input'
 import CheckIcon from '$lib/icons/CheckIcon.svelte'
 import ChevronDownIcon from '$lib/icons/ChevronDownIcon.svelte'
 import ChevronLeftIcon from '$lib/icons/ChevronLeftIcon.svelte'
@@ -119,7 +120,7 @@ export const ICON_COMPONENTS: Record<string, Component> = {
 
 export function buildIconsSnippet({ size, tint, className }: IconsSnippetState): string {
   const classes = iconClassFor(tint, className)
-  const attrs = [...(size ? [` size="${size}"`] : []), ...(classes ? [` className="${classes}"`] : [])].join('')
+  const attrs = [sizeAttributeFragment(size), ...(classes ? [` className="${classes}"`] : [])].join('')
   const lines = [
     '<div class="grid grid-cols-4 gap-3 sm:grid-cols-8">',
     ...ICON_ENTRIES.map(entry => {

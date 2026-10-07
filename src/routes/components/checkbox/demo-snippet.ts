@@ -2,6 +2,7 @@
 // the playground form state: the section regenerates the editor text from
 // this, so the editor always shows the markup behind the demo above.
 
+import { sizeAttributeLine } from '$lib/showcase/size-input'
 export type TriState = '' | 'yes' | 'no'
 
 export interface CheckboxSnippetState {
@@ -43,7 +44,7 @@ export function buildCheckboxSnippet({
     '<Checkbox',
     '  bind:checked={checked}',
     ...(label ? [`  label="${escapeAttr(label)}"`] : ['  label={applyLabel}']),
-    ...(size ? [`  size="${size}"`] : []),
+    ...sizeAttributeLine(size),
     ...flagLine('disabled', disabled),
     ...flagLine('indeterminate', indeterminate),
     ...(labelClass ? [`  labelClass="${escapeAttr(labelClass)}"`] : []),

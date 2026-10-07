@@ -10,6 +10,7 @@
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
   import { STYLED_INPUT, STYLED_WRAPPER, buildSearchInputSnippet } from './demo-snippet'
+  import { parseSizeValue } from '$lib/showcase/size-input'
 
   const i18n = getI18nContext()
 
@@ -31,7 +32,7 @@
   ]
 
   const demoPlaceholder = $derived(pgPlaceholder || undefined)
-  const demoSize = $derived((pgSize || undefined) as 'sm' | 'md' | 'lg' | undefined)
+  const demoSize = $derived(parseSizeValue(pgSize))
   const demoWrapperClass = $derived(pgWrapperClass || undefined)
   const demoInputClass = $derived(pgInputClass || undefined)
 
@@ -68,7 +69,7 @@
     { name: 'value', type: 'string', defaultValue: '—', note: 'Bindable search text.' },
     { name: 'ariaLabel', type: 'string', defaultValue: '—', note: 'Required accessible name.' },
     { name: 'placeholder', type: 'string', defaultValue: "'Search...'", note: 'Native placeholder.' },
-    { name: 'size', type: "'sm' | 'md' | 'lg'", defaultValue: "'sm'", note: 'Input and icon scale.' },
+    { name: 'size', type: "'sm' | 'md' | 'lg' | number", defaultValue: "'sm'", note: 'Input and icon scale; the icon takes numbers continuously while the box steps.' },
     { name: 'wrapperClass', type: 'string', defaultValue: "''", note: 'Extra classes for the outer wrapper.' },
     { name: 'inputClass', type: 'string', defaultValue: 'built-in', note: 'Replaces the default input classes.' },
     { name: 'inputRef', type: 'HTMLInputElement | null', defaultValue: 'null', note: 'Bindable native input.' },
@@ -108,6 +109,8 @@
         activeValue={pgSize}
         ariaLabel="Size"
         options={sizeOptions}
+        filterable
+        allowCustomValue
         onSelect={value => (pgSize = value)}
         clearable
         clearLabel="Clear size"

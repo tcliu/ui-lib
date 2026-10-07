@@ -9,6 +9,7 @@
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
   import { buildSelectDropdownSnippet, type TriState } from './demo-snippet'
+  import { parseSizeValue } from '$lib/showcase/size-input'
 
   const i18n = getI18nContext()
 
@@ -58,7 +59,7 @@
     return value === '' ? undefined : value === 'yes'
   }
 
-  const demoSize = $derived((pgSize || undefined) as 'xs' | 'sm' | 'md' | 'lg' | undefined)
+  const demoSize = $derived(parseSizeValue(pgSize))
   const filterable = $derived(flagOn(pgFilterable))
   const clearable = $derived(flagOn(pgClearable))
   const demoAlign = $derived((pgAlign || undefined) as 'left' | 'right' | undefined)
@@ -113,7 +114,13 @@
     { name: 'activeValue', type: 'string', defaultValue: "''", note: 'Committed value; marked in the panel.' },
     { name: 'ariaLabel', type: 'string', defaultValue: '—', note: 'Accessible name for the control.' },
     { name: 'filterable', type: 'boolean', defaultValue: 'false', note: 'Renders a combobox input with filtering.' },
-    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg'", defaultValue: "'sm'", note: 'Control scale.' },
+    {
+      name: 'allowCustomValue',
+      type: 'boolean',
+      defaultValue: 'false',
+      note: 'Enter commits typed text that matches no option (filterable only).',
+    },
+    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | number", defaultValue: "'sm'", note: 'Control scale; numbers are icon-scale pixels interpolated between the steps.' },
     { name: 'onSelect', type: '(value: string) => void', defaultValue: '—', note: 'Called with the chosen value.' },
     {
       name: 'buttonClass',
@@ -172,6 +179,8 @@
         activeValue={pgSize}
         ariaLabel="Size"
         options={sizeOptions}
+        filterable
+        allowCustomValue
         onSelect={value => (pgSize = value)}
         clearable
         clearLabel="Clear size"

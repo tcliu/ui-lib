@@ -1,6 +1,7 @@
 // Show-code source for the Button demo section. Pure string building over the
 // playground form state: the section regenerates the editor text from this, so
 // the editor always shows the markup behind the demo above.
+import { sizeAttributeLine } from '$lib/showcase/size-input'
 
 export type TriState = '' | 'yes' | 'no'
 
@@ -41,7 +42,7 @@ export function buildButtonSnippet({
     '<Button',
     ...(variant ? [`  variant="${variant}"`] : []),
     ...(accent ? [`  accent="${accent}"`] : []),
-    ...(size ? [`  size="${size}"`] : []),
+    ...sizeAttributeLine(size),
     ...flagLine('disabled', disabled),
     ...flagLine('pending', pending),
     ...(icon ? ['  icon={checkIcon}'] : []),

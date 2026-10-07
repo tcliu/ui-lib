@@ -10,6 +10,7 @@
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
   import { STYLED_BOX, STYLED_LABEL, STYLED_WRAPPER, buildCheckboxSnippet, type TriState } from './demo-snippet'
+  import { parseSizeValue } from '$lib/showcase/size-input'
 
   const i18n = getI18nContext()
 
@@ -32,7 +33,7 @@
     return value === '' ? undefined : value === 'yes'
   }
 
-  const demoSize = $derived((pgSize || undefined) as 'sm' | 'md' | undefined)
+  const demoSize = $derived(parseSizeValue(pgSize))
   const disabled = $derived(flagOn(pgDisabled))
   const indeterminate = $derived(flagOn(pgIndeterminate))
 
@@ -97,7 +98,7 @@
       defaultValue: 'true',
       note: 'Stops the click bubbling to clickable rows.',
     },
-    { name: 'size', type: "'sm' | 'md'", defaultValue: "'md'", note: 'Box and label size.' },
+    { name: 'size', type: "'sm' | 'md' | number", defaultValue: "'md'", note: 'Box and label size; numbers settle on the nearest tier.' },
     { name: 'labelClass', type: 'string', defaultValue: '—', note: 'Extra classes for the label text.' },
     { name: 'wrapperClass', type: 'string', defaultValue: "''", note: 'Extra classes for the wrapping label.' },
     { name: 'boxClass', type: 'string', defaultValue: "''", note: 'Extra classes for the box span.' },
@@ -137,6 +138,8 @@
         activeValue={pgSize}
         ariaLabel="Size"
         options={sizeOptions}
+        filterable
+        allowCustomValue
         onSelect={value => (pgSize = value)}
         clearable
         clearLabel="Clear size"
