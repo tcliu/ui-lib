@@ -14,7 +14,6 @@ export const SHOWCASE_COMPONENTS: ShowcaseComponent[] = [
   { slug: 'chip-dropdown', name: 'ChipDropdown' },
   { slug: 'code-editor', name: 'CodeEditor' },
   { slug: 'column-chooser', name: 'ColumnChooser' },
-  { slug: 'combobox', name: 'Combobox' },
   { slug: 'confirm-dialog', name: 'ConfirmDialog' },
   { slug: 'copy-button', name: 'CopyButton' },
   { slug: 'copyable', name: 'Copyable' },
@@ -47,9 +46,9 @@ export const SHOWCASE_COMPONENTS: ShowcaseComponent[] = [
 // together, which makes the relation symmetric by construction.
 export const SHOWCASE_COMPONENT_GROUPS: Record<string, readonly string[]> = {
   // Overlay selectors built on the shared dropdown engine.
-  selectors: ['select-dropdown', 'chip-dropdown', 'menu', 'combobox', 'column-chooser', 'date-range-picker'],
+  selectors: ['select-dropdown', 'chip-dropdown', 'menu', 'column-chooser', 'date-range-picker'],
   // Surfaces where typing filters the option list.
-  textFilter: ['select-dropdown', 'combobox', 'tag-input'],
+  textFilter: ['select-dropdown', 'tag-input'],
   // Chip and tag editing surfaces.
   tags: ['chip', 'tag-input', 'chip-dropdown'],
   // Modal dialogs.

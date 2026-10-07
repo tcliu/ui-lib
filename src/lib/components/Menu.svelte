@@ -10,12 +10,9 @@
 
 <script lang="ts" generics="T">
   // Menu owns the icon-trigger dropdown (desktop popover, phone bottom sheet).
-  import { flushSync, onMount, tick } from 'svelte'
+  import { flushSync, onMount, tick, untrack } from 'svelte'
   import { positionPanel } from '$lib/position-panel.svelte'
-  import { createFocusoutClose } from '$lib/actions/use-focusout-close'
-  import { useDropdown } from '$lib/actions/use-dropdown.svelte'
-  import { useListSelection } from '$lib/actions/use-list-selection.svelte'
-  import { createTypeahead } from '$lib/actions/typeahead'
+  import { useListbox } from '$lib/actions/use-listbox.svelte'
   import { PHONE_SHEET_QUERY, type DropdownPanelProps } from '$lib/dropdown-chrome'
   import Tooltip from './Tooltip.svelte'
   import MenuSheet from './MenuSheet.svelte'
@@ -77,7 +74,6 @@
   const sheetCloseLabel = $derived(closeLabel ?? ariaLabel)
 
   let open = $state(false)
-  const selection = useListSelection()
   let containerRef = $state<HTMLDivElement | null>(null)
   let triggerRef = $state<HTMLButtonElement | null>(null)
   let tooltipTriggerEl = $state<HTMLElement | null>(null)
@@ -129,7 +125,7 @@
   }
 
   function openWithSelection(index: number) {
-    selection.set(index >= 0 ? index : 0)
+    listbox.selection.set(index >= 0 ? index : 0)
     open = true
   }
 
@@ -143,23 +139,12 @@
 
   function openFromTrigger(direction: 'down' | 'up') {
     if (open) {
-      moveFocus(direction)
+      listbox.moveHighlight(direction)
       return
     }
     flushSync(() => {
-      openWithSelection(direction === 'up' ? lastEnabledIndex() : initialActiveIndex())
+      openWithSelection(direction === 'up' ? listbox.lastEnabled() : initialActiveIndex())
     })
-  }
-
-  function firstEnabledIndex(): number {
-    return items.findIndex(item => !isDisabled(item))
-  }
-
-  function lastEnabledIndex(): number {
-    for (let i = items.length - 1; i >= 0; i--) {
-      if (!isDisabled(items[i])) return i
-    }
-    return -1
   }
 
   function initialActiveIndex(): number {
@@ -167,73 +152,9 @@
       const checkedIndex = items.findIndex(item => itemChecked(item) && !isDisabled(item))
       if (checkedIndex >= 0) return checkedIndex
     }
-    const fallback = firstEnabledIndex()
+    const fallback = listbox.firstEnabled()
     return fallback >= 0 ? fallback : 0
   }
-
-  function moveFocus(direction: 'down' | 'up' | 'first' | 'last') {
-    const count = items.length
-    if (count === 0) return
-    if (direction === 'first') {
-      const index = firstEnabledIndex()
-      if (index === -1) return
-      flushSync(() => {
-        selection.set(index)
-        itemRefs[index]?.focus()
-      })
-      return
-    }
-    if (direction === 'last') {
-      const index = lastEnabledIndex()
-      if (index === -1) return
-      flushSync(() => {
-        selection.set(index)
-        itemRefs[index]?.focus()
-      })
-      return
-    }
-    const delta = direction === 'down' ? 1 : -1
-    let idx = selection.peek()
-    for (let step = 0; step < count; step++) {
-      idx = (idx + delta + count) % count
-      if (!isDisabled(items[idx])) {
-        // OS key auto-repeat fires back-to-back keydowns; Svelte batches
-        // $state until the next microtask, so the active highlight would
-        // only appear on keyup. Flush synchronously so each repeat paints
-        // the newly active item immediately.
-        flushSync(() => {
-          selection.set(idx)
-          itemRefs[idx]?.focus()
-        })
-        return
-      }
-    }
-  }
-
-  function setActive(index: number) {
-    selection.set(index)
-    itemRefs[index]?.focus()
-  }
-
-  // Native-menu type-ahead: typing a letter focuses the first non-disabled
-  // item whose label starts with the typed prefix. Items are actions, so
-  // type-ahead only moves focus — it never activates an item.
-  function focusTypeaheadMatch(matched: T) {
-    const index = items.indexOf(matched)
-    if (index < 0) return
-    if (open) {
-      setActive(index)
-    } else {
-      flushSync(() => openWithSelection(index))
-    }
-  }
-
-  const typeahead = createTypeahead(
-    () => items,
-    entry => (isDisabled(entry) ? '' : (itemLabel?.(entry) ?? '')),
-    focusTypeaheadMatch,
-    () => selection.peek(),
-  )
 
   function itemButtonClass(itemValue: T, state: MenuItemState): string | undefined {
     const classes = itemClass ? itemClass(itemValue, state) : ''
@@ -241,7 +162,7 @@
   }
 
   function handleTriggerKeydown(event: KeyboardEvent) {
-    if (itemLabel && typeahead.handle(event)) {
+    if (listbox.handleTypeahead(event)) {
       event.preventDefault()
       return
     }
@@ -252,22 +173,22 @@
   }
 
   function handlePanelKeydown(event: KeyboardEvent) {
-    if (itemLabel && typeahead.handle(event)) {
+    if (listbox.handleTypeahead(event)) {
       event.preventDefault()
       return
     }
     if (event.key === 'ArrowDown') {
       event.preventDefault()
-      moveFocus('down')
+      listbox.moveHighlight('down')
     } else if (event.key === 'ArrowUp') {
       event.preventDefault()
-      moveFocus('up')
+      listbox.moveHighlight('up')
     } else if (event.key === 'Home') {
       event.preventDefault()
-      moveFocus('first')
+      listbox.moveHighlight('first')
     } else if (event.key === 'End') {
       event.preventDefault()
-      moveFocus('last')
+      listbox.moveHighlight('last')
     }
   }
 
@@ -286,7 +207,7 @@
     const sheet = usePhoneSheet
     void sheet
     tick().then(() => {
-      itemRefs[selection.index]?.focus()
+      itemRefs[listbox.selection.index]?.focus()
     })
   })
 
@@ -295,28 +216,37 @@
     // so a shrinking item list can't focus a detached button.
     if (itemRefs.length > items.length) itemRefs = itemRefs.slice(0, items.length)
     if (!open) return
-    selection.clamp(items.length)
+    listbox.selection.clamp(items.length)
   })
 
-  const handleFocusOut = createFocusoutClose(
-    () => open,
-    // Intentionally the dialog panel, not the overlay: keyboard focus never
-    // lands on the tabindex=-1 backdrop, while outside-click must include
-    // the whole overlay so backdrop taps use the explicit close-with-return.
-    () => ({ container: containerRef, panel: usePhoneSheet ? dialogRef : panelRef }),
-    () => close(false),
-  )
-
-  useDropdown(() => ({
+  const listbox = useListbox({
     isOpen: () => open,
-    container: () => containerRef,
-    onOutsideClick: () => close(false),
+    onClose: () => close(false),
+    openPanel: () => openWithSelection(initialActiveIndex()),
+    options: () => items,
+    optionLabel: entry => (isDisabled(entry) ? '' : (itemLabel?.(entry) ?? '')),
+    isDisabled: index => isDisabled(items[index]),
+    // Menu items take focus (role="menu"), unlike the never-focused listbox
+    // rows, so reflect the active row by focusing it and skip the scroll reveal.
+    onActiveChange: index => itemRefs[index]?.focus(),
+    revealOnActive: false,
+    getContainer: () => containerRef,
+    getPanel: () => (usePhoneSheet ? overlayRef : panelRef),
+    getFocusOutPanel: () => (usePhoneSheet ? dialogRef : panelRef),
+    getOptionEl: index => itemRefs[index],
+    // Read untracked: the type-ahead handle is created once at setup, and
+    // `itemLabel` is a stable prop, so no reactive re-read is needed.
+    typeahead: untrack(() => itemLabel !== undefined),
     onEscape: () => {
       close()
     },
-    onScrollClose: usePhoneSheet ? undefined : () => close(false),
-    panel: () => (usePhoneSheet ? overlayRef : panelRef),
-  }))
+    onOutsideClick: () => close(false),
+    onScrollClose: () => {
+      // The phone sheet has no scroll-close (it is an overlay, not an
+      // anchored panel); keep it open until an explicit dismissal.
+      if (!usePhoneSheet) close(false)
+    },
+  })
 </script>
 
 {#snippet triggerButton()}
@@ -336,17 +266,17 @@
 
 {#snippet menuOptions()}
   {#each items as itemValue, index (itemKey(itemValue))}
-    {@const state = { index, active: index === selection.index, disabled: isDisabled(itemValue) }}
+    {@const state = { index, active: index === listbox.selection.index, disabled: isDisabled(itemValue) }}
     <button
       type="button"
       role={itemRole}
       aria-checked={itemRole === 'menuitemradio' && itemChecked ? itemChecked(itemValue) : undefined}
       bind:this={itemRefs[index]}
-      tabindex={index === selection.index ? 0 : -1}
+      tabindex={index === listbox.selection.index ? 0 : -1}
       onclick={() => handleItemClick(index)}
-      onfocus={() => selection.set(index)}
+      onfocus={() => listbox.selection.set(index)}
       onmousemove={() => {
-        if (selection.peek() !== index) setActive(index)
+        if (listbox.selection.peek() !== index) listbox.setActive(index)
       }}
       disabled={state.disabled}
       class={itemButtonClass(itemValue, state)}>
@@ -359,7 +289,7 @@
   class="relative inline-flex"
   bind:this={containerRef}
   data-escape-capture={open ? '' : null}
-  onfocusout={handleFocusOut}>
+  onfocusout={listbox.handleFocusOut}>
   {#if triggerTooltip}
     <span bind:this={tooltipTriggerEl} class="group relative inline-flex">
       {@render triggerButton()}
@@ -388,7 +318,7 @@
           sheetDragging = active
         }}
         onPanelKeydown={handlePanelKeydown}
-        onFocusOut={handleFocusOut}
+        onFocusOut={listbox.handleFocusOut}
         options={menuOptions} />
     {:else}
       <div
@@ -397,7 +327,7 @@
         role="menu"
         tabindex="-1"
         aria-label={ariaLabel}
-        onfocusout={handleFocusOut}
+        onfocusout={listbox.handleFocusOut}
         onkeydown={handlePanelKeydown}
         use:positionPanel={() => ({ getTrigger: () => containerRef, getOpen: () => open, align, autoPlace })}
         class={`fixed top-0 left-0 z-40 overflow-hidden rounded-lg border border-slate-700 bg-slate-900/95 p-1 shadow-2xl shadow-slate-950/60 backdrop-blur will-change-transform ${panelClass}`}>

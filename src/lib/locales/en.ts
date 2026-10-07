@@ -51,9 +51,8 @@ export const en = {
     show: 'Show password',
     hide: 'Hide password',
   },
-  combobox: {
+  chip: {
     remove: 'Remove {name}',
-    placeholder: 'Select or type...',
   },
   tagInput: {
     suggestions: 'Tag suggestions',

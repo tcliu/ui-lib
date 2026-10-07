@@ -1,12 +1,8 @@
 <script lang="ts">
   import { flushSync, tick } from 'svelte'
-  import { createFocusoutClose } from '$lib/actions/use-focusout-close'
-  import { useDropdown } from '$lib/actions/use-dropdown.svelte'
-  import { useListSelection, revealInScrollport } from '$lib/actions/use-list-selection.svelte'
-  import { useActiveHighlight } from '$lib/actions/use-active-highlight.svelte'
+  import { useListbox } from '$lib/actions/use-listbox.svelte'
   import { createOptionIndex, matchesOption, matchLabelParts } from '$lib/actions/option-index'
-  import { isModifiedNavKey, moveListSelection } from '$lib/actions/listbox-keynav'
-  import { createTypeahead } from '$lib/actions/typeahead'
+  import { isModifiedNavKey } from '$lib/actions/listbox-keynav'
   import { positionPanel } from '$lib/position-panel.svelte'
   import ChevronDownIcon from '$lib/icons/ChevronDownIcon.svelte'
   import type { DropdownPanelProps } from '$lib/dropdown-chrome'
@@ -83,7 +79,6 @@
   const resolvedPanelClass = $derived(filterable ? `${CHIP_PANEL_BASE} overflow-hidden flex flex-col` : panelClass)
 
   let open = $state(false)
-  const selection = useListSelection()
   let containerRef = $state<HTMLDivElement | null>(null)
   let buttonRef = $state<HTMLButtonElement | null>(null)
   let panelRef = $state<HTMLDivElement | null>(null)
@@ -131,7 +126,7 @@
     if (!open || !filterable) return
     if (lastFiltered !== filteredOptions) {
       lastFiltered = filteredOptions
-      selection.syncToActive(filteredOptions, option => option.value === activeValue)
+      listbox.selection.syncToActive(filteredOptions, option => option.value === activeValue)
     }
   })
 
@@ -139,15 +134,8 @@
     if (!open) return
     // Clamp when the filtered list shrinks without a syncToActive run (e.g.
     // non-filterable options swap) so aria-activedescendant never dangles.
-    selection.clamp(filteredOptions.length)
+    listbox.selection.clamp(filteredOptions.length)
   })
-
-  // Per-row highlight flags (shared helper): moving the highlight touches only
-  // the row leaving and the row entering, so held-key navigation is O(1).
-  const highlight = useActiveHighlight(
-    () => filteredOptions.length,
-    () => selection.index,
-  )
 
   $effect(() => {
     if (!open && filterable) {
@@ -165,31 +153,6 @@
     open = false
   }
 
-  // Native-select type-ahead for the non-filterable trigger: typing moves the
-  // active item (opening the panel to show it) without confirming the value;
-  // the same letter again cycles through same-prefix options.
-  const typeahead = createTypeahead(
-    () => options,
-    option => option.label,
-    (_option, index) => {
-      if (!open) {
-        flushSync(() => openPanel())
-      }
-      flushSync(() => {
-        selection.set(index)
-        revealActive()
-      })
-    },
-    () => selection.peek(),
-  )
-
-  // Keep the highlighted option visible while arrowing through a scrollable
-  // panel: the option never receives focus (aria-activedescendant pattern),
-  // so the browser would otherwise let it drift out of the scrollport.
-  function revealActive() {
-    revealInScrollport(optionEls[selection.peek()])
-  }
-
   function toggle() {
     if (disabled) return
     if (open) close()
@@ -199,7 +162,7 @@
   function openPanel() {
     if (disabled) return
     // Highlight the active value when opening so keyboard and mouse share the same start.
-    selection.syncToActive(filteredOptions, option => option.value === activeValue)
+    listbox.selection.syncToActive(filteredOptions, option => option.value === activeValue)
     if (filterable) filterText = ''
     open = true
   }
@@ -215,18 +178,18 @@
     if (!open) {
       flushSync(() => {
         openPanel()
-        if (direction === 'up') selection.move('last', filteredOptions.length)
+        if (direction === 'up') listbox.selection.move('last', filteredOptions.length)
       })
       return
     }
     // OS key auto-repeat fires back-to-back keydowns; flush synchronously so
     // each repeat paints the newly active row immediately.
-    moveListSelection(selection, direction, filteredOptions.length, revealActive)
+    listbox.moveHighlight(direction)
   }
 
   function handleButtonKeydown(event: KeyboardEvent) {
     // Non-filterable trigger has no text field: printable keys run type-ahead.
-    if (!filterable && typeahead.handle(event)) {
+    if (!filterable && listbox.handleTypeahead(event)) {
       event.preventDefault()
       return
     }
@@ -239,12 +202,12 @@
     } else if (event.key === 'Home') {
       if (open && filteredOptions.length > 0) {
         event.preventDefault()
-        moveListSelection(selection, 'first', filteredOptions.length, revealActive)
+        listbox.moveHighlight('first')
       }
     } else if (event.key === 'End') {
       if (open && filteredOptions.length > 0) {
         event.preventDefault()
-        moveListSelection(selection, 'last', filteredOptions.length, revealActive)
+        listbox.moveHighlight('last')
       }
     } else if (event.key === 'Enter' || event.key === ' ') {
       if (!open) {
@@ -253,7 +216,7 @@
         return
       }
       event.preventDefault()
-      const option = filteredOptions[selection.index]
+      const option = filteredOptions[listbox.selection.index]
       if (option) select(option.value)
     }
   }
@@ -273,13 +236,13 @@
       moveHighlight('up')
     } else if (event.key === 'Home') {
       event.preventDefault()
-      moveListSelection(selection, 'first', filteredOptions.length, revealActive)
+      listbox.moveHighlight('first')
     } else if (event.key === 'End') {
       event.preventDefault()
-      moveListSelection(selection, 'last', filteredOptions.length, revealActive)
+      listbox.moveHighlight('last')
     } else if (event.key === 'Enter') {
       event.preventDefault()
-      const option = filteredOptions[selection.index] ?? filteredOptions[0]
+      const option = filteredOptions[listbox.selection.index] ?? filteredOptions[0]
       if (option) select(option.value)
     } else if (event.key === 'Tab') {
       // Close on Tab so the listbox does not linger while focus continues
@@ -295,16 +258,17 @@
     }
   }
 
-  const handleFocusOut = createFocusoutClose(
-    () => open,
-    () => ({ container: containerRef, panel: panelRef }),
-    () => close(),
-  )
-
-  useDropdown(() => ({
+  const listbox = useListbox({
     isOpen: () => open,
-    container: () => containerRef,
-    onOutsideClick: () => close(),
+    onClose: close,
+    openPanel,
+    options: () => filteredOptions,
+    optionLabel: option => option.label,
+    getContainer: () => containerRef,
+    getPanel: () => panelRef,
+    getOptionEl: index => optionEls[index],
+    typeahead: true,
+    onOutsideClick: close,
     onEscape: () => {
       // If the filterable input has text, let its handler clear it first.
       if (filterable && filterText) return true
@@ -312,9 +276,8 @@
       buttonRef?.focus()
       return false
     },
-    onScrollClose: () => close(),
-    panel: () => panelRef,
-  }))
+    onScrollClose: close,
+  })
 </script>
 
 {#snippet optionList()}
@@ -329,11 +292,11 @@
       aria-selected={option.value === activeValue}
       onpointerdown={event => event.preventDefault()}
       onclick={() => select(option.value)}
-      onfocus={() => selection.set(index)}
+      onfocus={() => listbox.selection.set(index)}
       onmousemove={() => {
-        if (selection.peek() !== index) selection.set(index)
+        if (listbox.selection.peek() !== index) listbox.selection.set(index)
       }}
-      class={`flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-left text-xs transition-none outline-none ${highlight.flags[index] ? 'bg-slate-800 text-slate-100' : 'text-slate-300'}`}>
+      class={`flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-left text-xs transition-none outline-none ${listbox.highlight.flags[index] ? 'bg-slate-800 text-slate-100' : 'text-slate-300'}`}>
       <span class="min-w-0 truncate">
         {#if parts}
           {parts.before}<span class="font-semibold text-cyan-300">{parts.match}</span>{parts.after}
@@ -351,7 +314,7 @@
   class="relative inline-flex"
   bind:this={containerRef}
   data-escape-capture={open ? '' : null}
-  onfocusout={handleFocusOut}>
+  onfocusout={listbox.handleFocusOut}>
   <button
     type="button"
     bind:this={buttonRef}
@@ -360,8 +323,8 @@
     aria-haspopup={filterable ? undefined : 'listbox'}
     aria-expanded={filterable ? undefined : open}
     aria-controls={!filterable && open ? panelId : undefined}
-    aria-activedescendant={!filterable && open && filteredOptions[selection.index]
-      ? `${panelId}-option-${selection.index}`
+    aria-activedescendant={!filterable && open && filteredOptions[listbox.selection.index]
+      ? `${panelId}-option-${listbox.selection.index}`
       : undefined}
     {disabled}
     onclick={toggle}
@@ -388,8 +351,8 @@
             aria-haspopup="listbox"
             aria-expanded={open}
             aria-controls={open ? panelId : undefined}
-            aria-activedescendant={open && filteredOptions[selection.index]
-              ? `${panelId}-option-${selection.index}`
+            aria-activedescendant={open && filteredOptions[listbox.selection.index]
+              ? `${panelId}-option-${listbox.selection.index}`
               : undefined}
             onkeydown={handleFilterKeydown}
             class="w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-100 outline-none placeholder:text-slate-500 focus-visible:border-sky-500" />

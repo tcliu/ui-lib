@@ -16,7 +16,6 @@ import Chip from '$lib/components/Chip.svelte'
 import ChipDropdown from '$lib/components/ChipDropdown.svelte'
 import CodeEditor from '$lib/components/CodeEditor.svelte'
 import ColumnChooser from '$lib/components/ColumnChooser.svelte'
-import Combobox from '$lib/components/Combobox.svelte'
 import ConfirmDialog from '$lib/components/ConfirmDialog.svelte'
 import Copyable from '$lib/components/Copyable.svelte'
 import CopyButton from '$lib/components/CopyButton.svelte'
@@ -98,7 +97,6 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/ChipDropdown.svelte': { default: ChipDropdown },
   'ui/CodeEditor.svelte': { default: CodeEditor },
   'ui/ColumnChooser.svelte': { default: ColumnChooser },
-  'ui/Combobox.svelte': { default: Combobox },
   'ui/ConfirmDialog.svelte': { default: ConfirmDialog },
   'ui/Copyable.svelte': { default: Copyable },
   'ui/CopyButton.svelte': { default: CopyButton },

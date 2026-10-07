@@ -17,7 +17,6 @@ const COMPONENT_IMPORTS = [
   '  import ChipDropdown from "ui/ChipDropdown.svelte"',
   '  import CodeEditor from "ui/CodeEditor.svelte"',
   '  import ColumnChooser from "ui/ColumnChooser.svelte"',
-  '  import Combobox from "ui/Combobox.svelte"',
   '  import ConfirmDialog from "ui/ConfirmDialog.svelte"',
   '  import Copyable from "ui/Copyable.svelte"',
   '  import CopyButton from "ui/CopyButton.svelte"',
