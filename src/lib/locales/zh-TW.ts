@@ -112,6 +112,7 @@ export const zhTW = {
     language: '語言',
     searchComponents: '搜尋元件',
     props: '屬性',
+    related: '相關元件',
     default: '預設',
     customized: '自訂',
     iconsBadgeTooltip: '圖示、徽章、提示',

@@ -36,3 +36,14 @@ test('showcase: an unknown slug renders the localized not-found state', async ({
   await page.goto('/components/nope')
   await expect(page.getByRole('heading', { level: 1, name: 'Component not found' })).toBeVisible()
 })
+
+test('showcase: a component page links to related components as chips', async ({ page }) => {
+  await page.goto('/components/select-dropdown')
+  const related = page.getByRole('navigation', { name: 'Related' })
+  await expect(related).toBeVisible()
+  await expect(related.getByRole('link', { name: 'ChipDropdown' })).toBeVisible()
+  await expect(related.getByRole('link', { name: 'SelectDropdown' })).toHaveCount(0)
+  await related.getByRole('link', { name: 'Menu' }).click()
+  await expect(page).toHaveURL(/\/components\/menu$/)
+  await expect(page.getByRole('heading', { level: 1, name: 'Menu' })).toBeVisible()
+})

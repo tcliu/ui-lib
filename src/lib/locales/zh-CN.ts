@@ -112,6 +112,7 @@ export const zhCN = {
     language: '语言',
     searchComponents: '搜索组件',
     props: '属性',
+    related: '相关组件',
     default: '默认',
     customized: '自定义',
     iconsBadgeTooltip: '图标、徽标、提示',

@@ -113,6 +113,7 @@ export const en = {
     language: 'Language',
     searchComponents: 'Search components',
     props: 'Props',
+    related: 'Related',
     default: 'Default',
     customized: 'Customized',
     iconsBadgeTooltip: 'Icons, badge, tooltip',
