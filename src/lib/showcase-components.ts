@@ -48,6 +48,8 @@ export const SHOWCASE_COMPONENTS: ShowcaseComponent[] = [
 export const SHOWCASE_COMPONENT_GROUPS: Record<string, readonly string[]> = {
   // Overlay selectors built on the shared dropdown engine.
   selectors: ['select-dropdown', 'chip-dropdown', 'menu', 'combobox', 'column-chooser', 'date-range-picker'],
+  // Surfaces where typing filters the option list.
+  textFilter: ['select-dropdown', 'combobox', 'tag-input'],
   // Chip and tag editing surfaces.
   tags: ['chip', 'tag-input', 'chip-dropdown'],
   // Modal dialogs.

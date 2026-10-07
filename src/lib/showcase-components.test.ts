@@ -35,6 +35,13 @@ describe('getRelatedComponents', () => {
     expect(new Set(slugs).size).toBe(slugs.length)
   })
 
+  it('links the typing-to-filter surfaces through the textFilter group', () => {
+    const selectSlugs = getRelatedComponents('select-dropdown').map(component => component.slug)
+    expect(selectSlugs).toContain('tag-input')
+    const tagSlugs = getRelatedComponents('tag-input').map(component => component.slug)
+    expect(tagSlugs).toEqual(expect.arrayContaining(['select-dropdown', 'combobox']))
+  })
+
   it('is symmetric for every component', () => {
     for (const component of SHOWCASE_COMPONENTS) {
       for (const related of getRelatedComponents(component.slug)) {
