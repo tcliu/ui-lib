@@ -1,35 +1,56 @@
 import { describe, expect, it } from 'vitest'
-import { STYLED_INPUT, STYLED_WRAPPER, buildSearchInputSnippet } from './demo-snippet'
+import { createSnippetComponent } from '$lib/showcase/snippet-playground'
+import { buildSearchInputSnippet, type SearchInputSnippetState } from './demo-snippet'
+
+function state(overrides: Partial<SearchInputSnippetState> = {}): SearchInputSnippetState {
+  return {
+    ariaLabel: '',
+    query: '',
+    placeholder: '',
+    size: '',
+    wrapperClass: '',
+    inputClass: '',
+    ...overrides,
+  }
+}
 
 describe('buildSearchInputSnippet', () => {
-  it('omits placeholder, size, and classes while unset', () => {
-    const source = buildSearchInputSnippet({ placeholder: '', size: '', wrapperClass: '', inputClass: '' })
-    expect(source).toContain('onkeydown={handleKeydown}')
+  it('reads the scope label while unset and omits every other override', () => {
+    const source = buildSearchInputSnippet(state())
+    expect(source).toContain('ariaLabel={applyLabel}')
     expect(source).not.toContain('placeholder=')
-    expect(source).not.toContain('size=')
+    // `onResize={` also contains "size=", so match the attribute at line start.
+    expect(source).not.toMatch(/^\s*size=/m)
     expect(source).not.toContain('wrapperClass=')
     expect(source).not.toContain('inputClass=')
   })
 
-  it('emits placeholder, size, and styled classes when set', () => {
-    const source = buildSearchInputSnippet({
-      placeholder: 'Filter sessions',
-      size: 'md',
-      wrapperClass: STYLED_WRAPPER,
-      inputClass: STYLED_INPUT,
-    })
-    expect(source).toContain('placeholder="Filter sessions"')
-    expect(source).toContain('size="md"')
-    expect(source).toContain('wrapperClass="rounded-lg border border-cyan-500/40 p-2"')
-    expect(source).toContain(
-      'inputClass="w-56 rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 pl-7 text-sm text-cyan-200 outline-none focus-visible:border-cyan-500"',
+  it('emits a custom ariaLabel literal and text overrides while set', () => {
+    const source = buildSearchInputSnippet(
+      state({ ariaLabel: 'Site search', placeholder: 'Search...', size: 'lg', wrapperClass: 'w-64', inputClass: 'italic' }),
     )
+    expect(source).toContain('ariaLabel="Site search"')
+    expect(source).toContain('placeholder="Search..."')
+    expect(source).toContain('size="lg"')
+    expect(source).toContain('wrapperClass="w-64"')
+    expect(source).toContain('inputClass="italic"')
   })
 
   it('emits a numeric size as an expression and omits invalid sizes', () => {
-    const numeric = buildSearchInputSnippet({ placeholder: '', size: '14', wrapperClass: '', inputClass: '' })
-    expect(numeric).toContain('size={14}')
-    const invalid = buildSearchInputSnippet({ placeholder: '', size: 'huge', wrapperClass: '', inputClass: '' })
-    expect(invalid).not.toContain('size=')
+    expect(buildSearchInputSnippet(state({ size: '14' }))).toContain('size={14}')
+    expect(buildSearchInputSnippet(state({ size: 'huge' }))).not.toMatch(/^\s*size=/m)
+  })
+
+  it('seeds the bound query as script-local state', () => {
+    const source = buildSearchInputSnippet(state({ query: 'he"llo' }))
+    expect(source).toContain('let query = $state("he\\"llo")')
+  })
+
+  it('compiles the generated snippet', { timeout: 30000 }, async () => {
+    const component = await createSnippetComponent(buildSearchInputSnippet(state()), {
+      applyLabel: 'Search',
+      handleKeydown: () => {},
+    })
+    expect(typeof component).toBe('function')
   })
 })

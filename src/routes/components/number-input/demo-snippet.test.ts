@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
+import { createSnippetComponent } from '$lib/showcase/snippet-playground'
 import { STEPLESS_CLASS, buildNumberInputSnippet } from './demo-snippet'
 
 describe('buildNumberInputSnippet', () => {
   it('omits numeric bounds and flags while unset', () => {
     const source = buildNumberInputSnippet({
+      value: '5',
       min: '',
       max: '',
       step: '',
@@ -12,7 +14,8 @@ describe('buildNumberInputSnippet', () => {
       showControls: '',
       className: '',
     })
-    expect(source).toContain('<NumberInput bind:value ariaLabel={applyLabel}')
+    expect(source).toContain('let value = $state("5")')
+    expect(source).toContain('<NumberInput bind:value={value} ariaLabel={applyLabel}')
     expect(source).not.toContain('min=')
     expect(source).not.toContain('disabled')
     expect(source).not.toContain('showControls=')
@@ -21,6 +24,7 @@ describe('buildNumberInputSnippet', () => {
 
   it('emits bounds, placeholder, disabled, and the stepless treatment', () => {
     const source = buildNumberInputSnippet({
+      value: '5',
       min: '0',
       max: '10',
       step: '0.5',
@@ -40,6 +44,7 @@ describe('buildNumberInputSnippet', () => {
 
   it('ignores non-numeric bounds', () => {
     const source = buildNumberInputSnippet({
+      value: '5',
       min: 'abc',
       max: '',
       step: '',
@@ -49,5 +54,20 @@ describe('buildNumberInputSnippet', () => {
       className: '',
     })
     expect(source).not.toContain('min=')
+  })
+
+  it('compiles the generated snippet', { timeout: 30000 }, async () => {
+    const source = buildNumberInputSnippet({
+      value: '5',
+      min: '',
+      max: '',
+      step: '',
+      placeholder: '',
+      disabled: '',
+      showControls: '',
+      className: '',
+    })
+    const component = await createSnippetComponent(source, { applyLabel: 'Quantity' })
+    expect(typeof component).toBe('function')
   })
 })

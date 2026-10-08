@@ -36,6 +36,7 @@ export const SHOWCASE_COMPONENTS: ShowcaseComponent[] = [
   { slug: 'splitter', name: 'Splitter' },
   { slug: 'tabs', name: 'Tabs' },
   { slug: 'tag-input', name: 'TagInput' },
+  { slug: 'text-input', name: 'TextInput' },
   { slug: 'toast', name: 'Toast' },
   { slug: 'tooltip', name: 'Tooltip' },
 ]
@@ -54,7 +55,7 @@ export const SHOWCASE_COMPONENT_GROUPS: Record<string, readonly string[]> = {
   // Modal dialogs.
   dialogs: ['base-dialog', 'confirm-dialog', 'edit-dialog'],
   // Form inputs.
-  inputs: ['number-input', 'search-input', 'password-input', 'editable-text', 'form-field', 'tag-input', 'checkbox'],
+  inputs: ['number-input', 'search-input', 'text-input', 'password-input', 'editable-text', 'form-field', 'tag-input', 'checkbox'],
   // Click/action affordances.
   actions: ['button', 'buttons', 'copy-button', 'copyable'],
   // Tabular data display.
