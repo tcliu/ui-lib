@@ -11,12 +11,15 @@
 
   interface Props {
     width: number
-    height: number
+    // Omitted height means auto height: the frame hugs its content and only
+    // the right-edge width handle renders (no bottom or corner handles).
+    height?: number
     minWidth?: number
     minHeight?: number
     maxWidth?: ResizeBound
     maxHeight?: ResizeBound
-    onResize: (width: number, height: number) => void
+    // `height` is `undefined` while the frame runs width-only.
+    onResize: (width: number, height: number | undefined) => void
     onResizeEnd?: () => void
     resizeWidthLabel?: string
     resizeHeightLabel?: string
@@ -44,7 +47,7 @@
   const widthLabel = $derived(resizeWidthLabel ?? i18n.t('resizable.resizeWidth'))
   const heightLabel = $derived(resizeHeightLabel ?? i18n.t('resizable.resizeHeight'))
   const bothLabel = $derived(resizeBothLabel ?? i18n.t('resizable.resizeBoth'))
-  const valueText = $derived(i18n.t('resizable.resizeValue', { width, height }))
+  const valueText = $derived(i18n.t('resizable.resizeValue', { width, height: height ?? 0 }))
 
   // A `'parent'` bound has no fixed number to announce; the pixel bounds do.
   const maxWidthValue = $derived(typeof maxWidth === 'number' && Number.isFinite(maxWidth) ? maxWidth : undefined)
@@ -70,12 +73,12 @@
 
   function captureBounds() {
     startWidth = width
-    startHeight = height
+    startHeight = height ?? 0
     const parent = rootEl?.parentElement
-    availableWidth = maxWidth === 'parent' ? (parent?.clientWidth ?? Number.POSITIVE_INFINITY) : Number.POSITIVE_INFINITY
-    availableHeight = maxHeight === 'parent'
-      ? (parent?.clientHeight ?? Number.POSITIVE_INFINITY)
-      : Number.POSITIVE_INFINITY
+    availableWidth =
+      maxWidth === 'parent' ? (parent?.clientWidth ?? Number.POSITIVE_INFINITY) : Number.POSITIVE_INFINITY
+    availableHeight =
+      maxHeight === 'parent' ? (parent?.clientHeight ?? Number.POSITIVE_INFINITY) : Number.POSITIVE_INFINITY
   }
 
   function clampWidth(next: number) {
@@ -100,7 +103,7 @@
     if (edge === 'min') {
       return minHeight
     }
-    return typeof maxHeight === 'number' && Number.isFinite(maxHeight) ? maxHeight : height
+    return typeof maxHeight === 'number' && Number.isFinite(maxHeight) ? maxHeight : (height ?? 0)
   }
 
   // One drag handle per axis set: the right edge moves width, the bottom edge
@@ -114,7 +117,7 @@
       measure: captureBounds,
       onMove(deltaX, deltaY, phase) {
         const baseWidth = phase === 'drag' ? startWidth : width
-        const baseHeight = phase === 'drag' ? startHeight : height
+        const baseHeight = phase === 'drag' ? startHeight : (height ?? 0)
         onResize(
           horizontal ? clampWidth(baseWidth + deltaX) : width,
           vertical ? clampHeight(baseHeight + deltaY) : height,
@@ -147,7 +150,7 @@
 <div
   bind:this={rootEl}
   class={`relative ${className}${boundClass}`}
-  style={`width:${width}px;height:${height}px`}>
+  style={height === undefined ? `width:${width}px` : `width:${width}px;height:${height}px`}>
   {@render children()}
   <div
     role="separator"
@@ -168,43 +171,45 @@
       widthDrag.handleKeydown(event)
     }}>
   </div>
-  <div
-    role="separator"
-    aria-orientation="horizontal"
-    aria-label={heightLabel}
-    aria-valuenow={height}
-    aria-valuemin={minHeight}
-    aria-valuemax={maxHeightValue}
-    tabindex="0"
-    class="absolute inset-x-0 bottom-0 z-40 h-3 cursor-s-resize touch-none outline-none select-none focus-visible:ring-2 focus-visible:ring-cyan-500"
-    onpointerdown={heightDrag.handlePointerDown}
-    onpointermove={heightDrag.handlePointerMove}
-    onpointerup={heightDrag.handlePointerUp}
-    onpointercancel={heightDrag.handlePointerCancel}
-    onlostpointercapture={heightDrag.handleLostPointerCapture}
-    onkeydown={event => {
-      captureBounds()
-      heightDrag.handleKeydown(event)
-    }}>
-  </div>
-  <div
-    role="separator"
-    aria-orientation="vertical"
-    aria-label={bothLabel}
-    aria-valuenow={width}
-    aria-valuemin={minWidth}
-    aria-valuemax={maxWidthValue}
-    aria-valuetext={valueText}
-    tabindex="0"
-    class="absolute right-0 bottom-0 z-40 h-4 w-4 cursor-nwse-resize touch-none outline-none select-none focus-visible:ring-2 focus-visible:ring-cyan-500"
-    onpointerdown={bothDrag.handlePointerDown}
-    onpointermove={bothDrag.handlePointerMove}
-    onpointerup={bothDrag.handlePointerUp}
-    onpointercancel={bothDrag.handlePointerCancel}
-    onlostpointercapture={bothDrag.handleLostPointerCapture}
-    onkeydown={event => {
-      captureBounds()
-      bothDrag.handleKeydown(event)
-    }}>
-  </div>
+  {#if height !== undefined}
+    <div
+      role="separator"
+      aria-orientation="horizontal"
+      aria-label={heightLabel}
+      aria-valuenow={height}
+      aria-valuemin={minHeight}
+      aria-valuemax={maxHeightValue}
+      tabindex="0"
+      class="absolute inset-x-0 bottom-0 z-40 h-3 cursor-s-resize touch-none outline-none select-none focus-visible:ring-2 focus-visible:ring-cyan-500"
+      onpointerdown={heightDrag.handlePointerDown}
+      onpointermove={heightDrag.handlePointerMove}
+      onpointerup={heightDrag.handlePointerUp}
+      onpointercancel={heightDrag.handlePointerCancel}
+      onlostpointercapture={heightDrag.handleLostPointerCapture}
+      onkeydown={event => {
+        captureBounds()
+        heightDrag.handleKeydown(event)
+      }}>
+    </div>
+    <div
+      role="separator"
+      aria-orientation="vertical"
+      aria-label={bothLabel}
+      aria-valuenow={width}
+      aria-valuemin={minWidth}
+      aria-valuemax={maxWidthValue}
+      aria-valuetext={valueText}
+      tabindex="0"
+      class="absolute right-0 bottom-0 z-40 h-4 w-4 cursor-nwse-resize touch-none outline-none select-none focus-visible:ring-2 focus-visible:ring-cyan-500"
+      onpointerdown={bothDrag.handlePointerDown}
+      onpointermove={bothDrag.handlePointerMove}
+      onpointerup={bothDrag.handlePointerUp}
+      onpointercancel={bothDrag.handlePointerCancel}
+      onlostpointercapture={bothDrag.handleLostPointerCapture}
+      onkeydown={event => {
+        captureBounds()
+        bothDrag.handleKeydown(event)
+      }}>
+    </div>
+  {/if}
 </div>

@@ -37,6 +37,7 @@ import Spinner from '$lib/components/Spinner.svelte'
 import Splitter from '$lib/components/Splitter.svelte'
 import Tabs from '$lib/components/Tabs.svelte'
 import TagInput from '$lib/components/TagInput.svelte'
+import TextInput from '$lib/components/TextInput.svelte'
 import Toast from '$lib/components/Toast.svelte'
 import Tooltip from '$lib/components/Tooltip.svelte'
 import CheckIcon from '$lib/icons/CheckIcon.svelte'
@@ -119,6 +120,7 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/Splitter.svelte': { default: Splitter },
   'ui/Tabs.svelte': { default: Tabs },
   'ui/TagInput.svelte': { default: TagInput },
+  'ui/TextInput.svelte': { default: TextInput },
   'ui/Toast.svelte': { default: Toast },
   'ui/Tooltip.svelte': { default: Tooltip },
   'ui/CheckIcon.svelte': { default: CheckIcon },

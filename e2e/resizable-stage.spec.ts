@@ -11,7 +11,7 @@ for (const slug of ['data-grid']) {
     await page.goto(`/components/${slug}`)
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(400)
-    const section = page.locator('main > div > section').first()
+    const section = page.locator('[data-showcase-demo]').first()
     const row = section.locator('div.flex.w-full.min-w-0').first()
     const handle = row.locator(':scope > [role="separator"]')
     await expect(handle).toBeVisible()

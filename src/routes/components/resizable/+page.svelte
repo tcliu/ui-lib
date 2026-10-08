@@ -35,7 +35,8 @@
   const maxWidth = $derived(parseBound(pgMaxWidth) ?? undefined)
   const maxHeight = $derived(parseBound(pgMaxHeight) ?? undefined)
 
-  const sizeLabel = $derived(`${pgWidth} × ${pgHeight}`)
+  // Drag deltas are fractional, so round to the nearest pixel for display.
+  const sizeLabel = $derived(`${Math.round(pgWidth)} × ${Math.round(pgHeight)}`)
 
   // Customized only when a bound actually applies: invalid text parses to
   // undefined and leaves the demo at its defaults.
@@ -72,8 +73,8 @@
     {
       name: 'height',
       type: 'number',
-      defaultValue: '—',
-      note: 'Container height in pixels; drive it from onResize.',
+      defaultValue: 'auto',
+      note: 'Container height in pixels; drive it from onResize. Omitted, the frame hugs its content and only the width handle renders.',
     },
     {
       name: 'minWidth',
@@ -101,9 +102,9 @@
     },
     {
       name: 'onResize',
-      type: '(width: number, height: number) => void',
+      type: '(width: number, height: number | undefined) => void',
       defaultValue: '—',
-      note: 'Fires while dragging and on arrow-key nudges.',
+      note: 'Fires while dragging and on arrow-key nudges (`height` is `undefined` in width-only mode).',
     },
     {
       name: 'onResizeEnd',
@@ -198,7 +199,7 @@
         height={pgHeight}
         onResize={(nextWidth, nextHeight) => {
           pgWidth = nextWidth
-          pgHeight = nextHeight
+          if (nextHeight !== undefined) pgHeight = nextHeight
         }}
         {minWidth}
         {minHeight}

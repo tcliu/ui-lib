@@ -114,6 +114,7 @@ export const en = {
     props: 'Props',
     related: 'Related',
     default: 'Default',
+    value: 'Value',
     customized: 'Customized',
     iconsBadgeTooltip: 'Icons, badge, tooltip',
     interactive: 'Interactive',

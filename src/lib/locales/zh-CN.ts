@@ -113,6 +113,7 @@ export const zhCN = {
     props: '属性',
     related: '相关组件',
     default: '默认',
+    value: '值',
     customized: '自定义',
     iconsBadgeTooltip: '图标、徽标、提示',
     interactive: '交互',

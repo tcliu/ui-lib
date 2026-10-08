@@ -38,6 +38,7 @@ const COMPONENT_IMPORTS = [
   '  import Splitter from "ui/Splitter.svelte"',
   '  import Tabs from "ui/Tabs.svelte"',
   '  import TagInput from "ui/TagInput.svelte"',
+  '  import TextInput from "ui/TextInput.svelte"',
   '  import Toast from "ui/Toast.svelte"',
   '  import Tooltip from "ui/Tooltip.svelte"',
   '  import CheckIcon from "ui/CheckIcon.svelte"',
