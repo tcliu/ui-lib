@@ -229,7 +229,7 @@
       cellRefs.colSelector(ci)?.focus()
     },
     isCellInputFocused(ri: number, ci: number) {
-      return document.activeElement === cellRefs.cellInput(ri, ci)
+      return editingCell?.ri === ri && editingCell?.ci === ci
     },
   }
 
@@ -490,11 +490,9 @@
     const text = event.clipboardData?.getData('text') ?? ''
     if (!text) return
     event.preventDefault()
-    const cell = model.rows[ri]?.cells[ci]
-    if (!cell) return
-    model.setValue(ri, ci, text)
+    model.applyPastedText(ri, ci, text)
     sel.setActiveCell(ri, ci)
-    focus.cellInput(ri, ci)
+    tick().then(() => focus.cellBox(ri, ci))
   }
 
   function handleBodyBlur() {
