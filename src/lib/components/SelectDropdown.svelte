@@ -10,14 +10,22 @@
   import type { DropdownPanelProps } from '$lib/dropdown-chrome'
   import { DEFAULT_PANEL_CLASS, TRIGGER_BASE, OPTION_BASE, EMPTY_BASE, boxClass, optionRowClass, emptyClass, resolveSelectGeometry, selectGeometryStyle, type SelectSize } from './select-dropdown-styles'
 
-  interface Option {
+  // Accepted option shape: a bare string is its own label, and a missing
+  // label falls back to the value, so `'two'` and `{ value: 'two' }` both
+  // display as `two`.
+  export type SelectOption = string | { value: string; label?: string }
+
+  interface NormalizedOption {
     value: string
     label: string
   }
 
   interface Props extends DropdownPanelProps {
-    buttonLabel: string
-    options: Option[]
+    // Overrides the derived trigger label (the committed option's label, or
+    // the raw value when it matches nothing). Omit it and the trigger tracks
+    // the value on its own.
+    buttonLabel?: string
+    options: SelectOption[]
     activeValue?: string
     ariaLabel?: string
     filterable?: boolean
@@ -63,6 +71,21 @@
 
   let id = $props.id()
   const panelId = `${id}-panel`
+
+  // Normalize once per options array so every row below reads one shape.
+  const normalizedOptions = $derived(
+    options.map((option): NormalizedOption =>
+      typeof option === 'string'
+        ? { value: option, label: option }
+        : { value: option.value, label: option.label ?? option.value },
+    ),
+  )
+
+  // Trigger label: an explicit override wins; otherwise the committed option's
+  // label, falling back to the raw value when it matches nothing.
+  const resolvedButtonLabel = $derived(
+    buttonLabel ?? normalizedOptions.find(option => option.value === activeValue)?.label ?? activeValue,
+  )
 
   // Numeric sizes resolve to the shared named steps, so every `size` value
   // renders through the same classes a name would produce; interpolated
@@ -130,7 +153,7 @@
 
   // Lowercased once per options array (shared helper) so filtering does not
   // re-lowercase every label/value on every keystroke.
-  const optionIndex = $derived(createOptionIndex(options))
+  const optionIndex = $derived(createOptionIndex(normalizedOptions))
 
   // The lowercased filter needle, empty when filtering is off or the text is
   // just the echoed value. The option list and the match highlight read the
@@ -143,8 +166,8 @@
     // that merely equals the label is filtered as-is so an exact match
     // narrows instead of showing everything.
     const query =
-      filterText.length > buttonLabel.length && filterText.startsWith(buttonLabel)
-        ? filterText.slice(buttonLabel.length)
+      filterText.length > resolvedButtonLabel.length && filterText.startsWith(resolvedButtonLabel)
+        ? filterText.slice(resolvedButtonLabel.length)
         : filterText
     return query.trim().toLowerCase()
   })
@@ -155,15 +178,15 @@
     // A query that matches nothing falls back to the full list so the panel
     // never goes empty while typing.
     if (filterQuery === '') {
-      return options
+      return normalizedOptions
     }
-    const matched: Option[] = []
+    const matched: NormalizedOption[] = []
     for (const entry of optionIndex) {
       if (matchesOption(entry, filterQuery)) {
         matched.push(entry.option)
       }
     }
-    return matched.length > 0 ? matched : options
+    return matched.length > 0 ? matched : normalizedOptions
   })
 
   // Emphasize the typed part of each label only while the query is ambiguous:
@@ -179,7 +202,7 @@
 
   $effect(() => {
     if (!open && !filterDirty) {
-      filterText = buttonLabel
+      filterText = resolvedButtonLabel
     }
   })
 
@@ -188,7 +211,7 @@
   // Reset the highlight to the top of the visible list whenever it changes
   // (filter typing, options prop swap) so the cursor does not stay stranded
   // on a row that has scrolled out of view.
-  let lastFilteredOptions: Option[] | null = null
+  let lastFilteredOptions: NormalizedOption[] | null = null
   $effect(() => {
     if (!open) return
     if (lastFilteredOptions !== filteredOptions) {
@@ -311,7 +334,7 @@
     filterDirty = false
     activeQuery = ''
     if (filterable) {
-      filterText = buttonLabel
+      filterText = resolvedButtonLabel
     }
   }
 
@@ -350,7 +373,7 @@
   }
 
   async function select(value: string) {
-    const selectedOption = options.find(option => option.value === value)
+    const selectedOption = normalizedOptions.find(option => option.value === value)
     onSelect(value)
     if (filterable && selectedOption) {
       // A confirmed value spends the typed query: store the confirmed label as
@@ -461,7 +484,7 @@
       // opened panel would commit the current label as new.
       const customText = filterText.trim()
       const customLower = customText.toLowerCase()
-      const exactMatch = options.some(
+      const exactMatch = normalizedOptions.some(
         option => option.label.toLowerCase() === customLower || option.value.toLowerCase() === customLower,
       )
       if (allowCustomValue && filterable && filterDirty && customText !== '' && !exactMatch) {
@@ -539,7 +562,7 @@
         onkeydown={handleControlKeydown}
         class={resolvedButtonClass}
         style={resolvedButtonStyle}>
-        <span class="min-w-0 flex-1 truncate">{buttonLabel}</span>
+        <span class="min-w-0 flex-1 truncate">{resolvedButtonLabel}</span>
         {@render triggerChevron()}
       </button>
     {/if}
