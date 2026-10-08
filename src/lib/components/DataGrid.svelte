@@ -235,7 +235,7 @@
 
   const clipboard = createGridClipboard()
   const selState = $state(createInitialSelectionState())
-  const sel = createGridSelection({ model, focus, clipboard, state: selState })
+  const sel = createGridSelection({ model, focus, clipboard, state: selState, isEditable: () => editable })
 
   let historyState = $state({ canUndo: false, canRedo: false })
   $effect(() => {
@@ -261,6 +261,7 @@
   }
 
   function handleHistoryKeydown(event: KeyboardEvent) {
+    if (!editable) return
     if (!(event.ctrlKey || event.metaKey)) return
     const key = event.key.toLowerCase()
     if (key === 'z') {
@@ -484,6 +485,7 @@
   }
 
   function handleBoxPaste(event: ClipboardEvent, ri: number, ci: number) {
+    if (!editable) return
     if (event.target !== event.currentTarget) return
     const text = event.clipboardData?.getData('text') ?? ''
     if (!text) return
