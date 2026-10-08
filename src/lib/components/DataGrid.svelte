@@ -440,24 +440,26 @@
   }
 
   function handleInputKeydown(event: KeyboardEvent, ri: number, ci: number) {
-    if (event.key === 'Tab' && !event.shiftKey) {
-      event.preventDefault()
-      if (ci < model.columnCount - 1) {
-        focus.cellInput(ri, ci + 1)
-        return
+    if (event.key === 'Tab') {
+      let next: { ri: number; ci: number } | null = null
+      if (event.shiftKey) {
+        if (ci > 0) {
+          next = { ri, ci: ci - 1 }
+        } else if (ri > 0) {
+          next = { ri: ri - 1, ci: model.columnCount - 1 }
+        }
+      } else if (ci < model.columnCount - 1) {
+        next = { ri, ci: ci + 1 }
       } else if (ri < model.rowCount - 1) {
-        focus.cellInput(ri + 1, 0)
-        return
+        next = { ri: ri + 1, ci: 0 }
       }
-    } else if (event.key === 'Tab' && event.shiftKey) {
+      // No in-grid target at the boundary: leave the key alone so Tab carries
+      // focus out of the grid in natural document order instead of trapping it
+      // on the edge cell.
+      if (next === null) return
       event.preventDefault()
-      if (ci > 0) {
-        focus.cellInput(ri, ci - 1)
-        return
-      } else if (ri > 0) {
-        focus.cellInput(ri - 1, model.columnCount - 1)
-        return
-      }
+      focus.cellInput(next.ri, next.ci)
+      return
     } else if (event.key === 'Enter' && event.shiftKey) {
       // Insert a newline (default textarea behavior); the oninput handler
       // persists it and the cell grows to double height.

@@ -127,3 +127,29 @@ test('showcase: DataGrid cuts a cell with ControlOrMeta+x and pastes it elsewher
   await target.click()
   await page.keyboard.press('ControlOrMeta+v')
   await expect(target).toHaveValue('Ada Lovelace')
+})
+
+test('showcase: DataGrid lets Tab leave the grid at its boundary cells', async ({ page }) => {
+  await page.goto('/components/data-grid')
+  await page.waitForLoadState('networkidle')
+  const root = page.locator('[data-testid="data-grid"]')
+  const activeTagInGrid = () =>
+    page.evaluate(() => {
+      const el = document.activeElement
+      if (!el || el.closest('[data-testid="data-grid"]') === null) return 'outside'
+      return el.tagName
+    })
+
+  // Forward Tab from the last body cell exits the grid instead of trapping
+  // focus on the edge cell. Focus the editor directly: a click would land on
+  // the cell box, whose key handler ignores Tab.
+  await root.locator('textarea[data-row="4"][data-col="2"]').focus()
+  await page.keyboard.press('Tab')
+  await expect(await activeTagInGrid()).toBe('outside')
+
+  // Shift+Tab from the first header cell steps back into the toolbar above the
+  // cells (still in-grid UI, but tabbable, so focus can keep moving).
+  await root.locator('textarea[data-row="0"][data-col="0"]').focus()
+  await page.keyboard.press('Shift+Tab')
+  await expect(await activeTagInGrid()).toBe('BUTTON')
+})
