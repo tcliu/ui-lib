@@ -7,15 +7,11 @@
   import ChevronDownIcon from '$lib/icons/ChevronDownIcon.svelte'
   import type { DropdownPanelProps } from '$lib/dropdown-chrome'
   import { CHIP_PANEL_BASE, DEFAULT_CHIP_PANEL_CLASS } from '$lib/dropdown-chrome'
-
-  interface Option {
-    value: string
-    label: string
-  }
+  import type { SelectOption } from './SelectDropdown.svelte'
 
   interface Props extends DropdownPanelProps {
     label: string
-    options: Option[]
+    options: SelectOption[]
     activeValue?: string
     ariaLabel: string
     disabled?: boolean
@@ -46,6 +42,16 @@
 
   let id = $props.id()
   const panelId = `${id}-panel`
+
+  // Normalize once per options array so every row below reads one shape: a
+  // bare string is its own label and a missing label falls back to the value.
+  const normalizedOptions = $derived(
+    options.map(option =>
+      typeof option === 'string'
+        ? { value: option, label: option }
+        : { value: option.value, label: option.label ?? option.value },
+    ),
+  )
 
   const VARIANT_ACTIVE: Record<string, string> = {
     sky: 'bg-sky-500/15 text-sky-200',
@@ -89,7 +95,7 @@
 
   // Lowercased once per options array (shared helper) so filtering does not
   // re-lowercase every label/value on every keystroke.
-  const optionIndex = $derived(createOptionIndex(options))
+  const optionIndex = $derived(createOptionIndex(normalizedOptions))
 
   // The lowercased filter needle, empty when filtering is off or the search is
   // blank. The option list and the match highlight read the same value so they
@@ -97,8 +103,8 @@
   const filterQuery = $derived(filterable ? filterText.trim().toLowerCase() : '')
 
   const filteredOptions = $derived.by(() => {
-    if (filterQuery === '') return options
-    const matched: Option[] = []
+    if (filterQuery === '') return normalizedOptions
+    const matched: { value: string; label: string }[] = []
     for (const entry of optionIndex) {
       if (matchesOption(entry, filterQuery)) {
         matched.push(entry.option)
@@ -121,7 +127,7 @@
   // In filterable mode, keep the highlight anchored on the active value
   // whenever the visible list changes so a typed search that still includes
   // the active value leaves the cursor on it.
-  let lastFiltered: Option[] | null = null
+  let lastFiltered: { value: string; label: string }[] | null = null
   $effect(() => {
     if (!open || !filterable) return
     if (lastFiltered !== filteredOptions) {
@@ -357,11 +363,7 @@
             onkeydown={handleFilterKeydown}
             class="w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-100 outline-none placeholder:text-slate-500 focus-visible:border-sky-500" />
         </div>
-        <div
-          id={panelId}
-          role="listbox"
-          aria-label={ariaLabel}
-          class="min-h-0 flex-1 overflow-y-auto p-1">
+        <div id={panelId} role="listbox" aria-label={ariaLabel} class="min-h-0 flex-1 overflow-y-auto p-1">
           {@render optionList()}
         </div>
       </div>
