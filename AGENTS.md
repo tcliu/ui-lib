@@ -94,14 +94,19 @@ Project-specific development conventions for the UI Library web app.
   (positioning, option rows, the empty row, and the `option` snippet for row
   content). Compose `useListbox` — and `ListboxPanel` where the panel shape fits —
   for a new listbox surface instead of re-wiring those helpers by hand.
+- `SelectDropdown` derives its trigger label from the committed value, so callers
+  pass no `buttonLabel` unless they need an override; options take bare strings
+  or `{ value, label? }`, and a missing label displays as the value.
 - Spreadsheet editing stays one shared control: `DataGrid` models `string[][]`
   and covers header/column-label, fixed-column, resize-persistence, and
   read-only variants through props (`showHeaders`, `columnLabels`, `maxColumns`,
   `editable`, `storageKey`), together with its `use-grid-*` hooks and grid
   icons, so an app needing a CSV or key/value editor reuses it instead of
   forking a grid.
-- Two-axis container resizing stays one shared control: `Resizable` takes
-  `width`/`height` numbers plus `onResize(width, height)`, bounds them through
+- Two-axis container resizing stays one shared control: `Resizable` takes a
+  `width` number plus `onResize(width, height)`, with an optional `height`
+  (omitted, the frame hugs its content and only the right-edge width handle
+  renders), bounds them through
   `minWidth`/`minHeight`/`maxWidth`/`maxHeight`, and renders three invisible
   handles (right, bottom, corner) that show only a resize cursor, so an app
   needing a drag-resizable box reuses it instead of reimplementing pointer
@@ -244,6 +249,34 @@ Project-specific development conventions for the UI Library web app.
   builder (+ test) regenerates the Show-code source from that state, and the
   section title derives from `isCustomized` (`showcase.default` /
   `showcase.customized`).
+- The SelectDropdown page is the exception to that shell: it passes
+  `bordered={false}`/`showHeader={false}` to `ShowcaseSection`, owns the
+  `SnippetPreview`, and renders the code toggle in `ShowcasePage`'s `actions`
+  slot beside the component name (so it drops the Default/Customized title). Its
+  demo sits in a `Resizable` stage, and its props table appends an editable Value
+  column whose typed controls drive the same `pg*` state as the config panel.
+  Single-prop editing lives in that column, so the config footer keeps only
+  `Reset` (plus any future composite preset driving several props at once);
+  `options` (plain data, no functions) edits through an `EditDialog` hosting a
+  JSON `CodeEditor`, with `OK` applying the parsed array and `Reset` reverting
+  the draft.
+- Reusable showcase hooks backing that page: `ShowcasePage` takes an `actions`
+  snippet; `ShowcaseSection` takes a caller-owned `preview` (so a page can host
+  the toggle elsewhere), `showHeader`, and `bordered`, and tags its demo row
+  `data-showcase-demo`; `PropsTable` takes a `value` snippet rendered as a column
+  between Default and Note. A page whose snippet reads scope keys the seed does
+  not cover (the SelectDropdown options) calls `preview.refresh()` from an
+  effect over those keys while live, so scope edits recompile the instance
+  without touching the editor text. Conversely, a page can pass `onCompiled` to
+  write a compiled snippet's recognized demo-tag attributes back into playground
+  state (then `syncSeed`, so the reseed effect keeps the user's text), so snippet
+  edits surface in the Value column; unrecognized shapes and tag-less experiments
+  sync nothing. A value control uses `TextInput` for text,
+  `SelectDropdown` for enum and scale props (e.g. the `size` and `align` rows),
+  `NumberInput` for a bare number prop, and `Checkbox` for booleans, wireable to
+  the same `pg*` state the config panel drives (an unset text override falls
+  back to the derived value, as `buttonLabel` does to the committed label;
+  `activeValue` and function props stay read-only).
 - A playground preset that derives other props fills visible panel fields for
   them (shared builder constants as the single source), so static demo,
   Show-code, and live render stay identical; every `size` prop gets a panel
@@ -367,6 +400,9 @@ npm test
 - e2e specs live one-per-component/concern under `e2e/` (showcase,
   components, snippets, data-table, resizable-stage, app-shell, base-dialog),
   with shared snippet helpers in `e2e/helpers.ts` rather than one growing spec.
+  Anchor locators on roles, accessible names, or `data-*` hooks (e.g.
+  `data-showcase-demo`), never on DOM nesting, so layout restructures do not
+  silently retarget them.
 - TypeScript rides dual installs: `typescript@~6` stays the main package because
   `svelte-check` peers only on 5/6, while `@typescript/native` (TS 7) performs
   the check via the `--tsgo` flag in `npm run check`. Keep both and the flag;

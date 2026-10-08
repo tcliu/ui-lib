@@ -31,6 +31,12 @@ view:
 - **Component page**: the page title is followed by a **Related** row of tag
   chips linking to components that share a browsing group (for example, the
   dropdown selectors link to one another).
+- **SelectDropdown page**: unlike the standard demo-plus-settings page, its demo
+  renders inside a resizable frame, the Show-code toggle sits beside the page
+  title, and its props table adds an editable **Value** column that shows and
+  sets each prop's current value (`options` edits as JSON through an edit
+  dialog). Single-prop editing lives in that column, so its config panel keeps
+  only Reset.
 
 On narrow viewports the list becomes an overlay drawer above the dimmed
 content (below the 768px shell-container breakpoint in `auto` mode) instead
