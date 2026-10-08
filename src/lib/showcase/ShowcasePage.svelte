@@ -9,10 +9,13 @@
     name: string
     children: Snippet
     props?: Snippet
+    // Right-aligned controls on the component-name row (e.g. the code toggle
+    // when a page hosts it beside the title instead of in its section).
+    actions?: Snippet
     wide?: boolean
   }
 
-  let { name, children, props, wide = false }: Props = $props()
+  let { name, children, props, actions, wide = false }: Props = $props()
   const i18n = getI18nContext()
   // Unique per instance so two mounted pages never collide on the related
   // nav's label id.
@@ -47,7 +50,12 @@
 <div class={`mx-auto flex w-full flex-col gap-6 px-4 py-6 ${wide ? 'max-w-5xl' : 'max-w-3xl'}`}>
   <div class="flex flex-col gap-3">
     <header class="flex flex-col gap-3">
-      <h1 class="text-base font-semibold tracking-tight sm:text-lg">{name}</h1>
+      <div class="flex items-start justify-between gap-3">
+        <h1 class="text-base font-semibold tracking-tight sm:text-lg">{name}</h1>
+        {#if actions}
+          {@render actions()}
+        {/if}
+      </div>
       {#if related.length > 0}
         <nav aria-labelledby={relatedLabelId} class="flex flex-wrap items-center gap-2">
           <span id={relatedLabelId} class="text-xs text-slate-500">{i18n.t('showcase.related')}</span>

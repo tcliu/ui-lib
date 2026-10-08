@@ -9,6 +9,11 @@ interface SnippetPreviewOptions {
   // Values the snippet references besides the shared primitives. Read only
   // inside the debounced callback so scope changes never retrigger a compile.
   getScope: () => Record<string, unknown>
+  // Runs after a source compiles and swaps in. A page whose snippet reads
+  // scope keys the seed does not cover uses it to write parsed values back
+  // into page state (then calls `syncSeed`), so the panel stays coherent with
+  // snippet edits. Never runs on failure.
+  onCompiled?: (source: string) => void
 }
 
 // Live-playground state for one showcase section. The section renders its
@@ -69,6 +74,27 @@ export class SnippetPreview {
     else this.open = true
   }
 
+  // Recompile the current draft against fresh scope: page state backing scope
+  // keys can change without altering the seed (e.g. a value the snippet reads
+  // from scope), which otherwise leaves the live instance stale behind the
+  // open editor. Debounced like edits, and a no-op while closed.
+  refresh() {
+    if (!this.open) return
+    if (this.timer) clearTimeout(this.timer)
+    const next = this.draft
+    this.timer = setTimeout(() => {
+      this.timer = null
+      void this.compileAndRender(next, this.options.getScope())
+    }, 300)
+  }
+
+  // Mark the current seed as consumed without touching the draft: use after
+  // writing page state back from a compiled source, so the reseed effect does
+  // not overwrite the editor with the regenerated text.
+  syncSeed() {
+    this.lastSeed = this.options.getSeed()
+  }
+
   close() {
     this.open = false
     if (this.timer) {
@@ -127,6 +153,7 @@ export class SnippetPreview {
       this.instance = instance
       this.liveEl?.replaceChildren(...nodes)
       this.error = ''
+      this.options.onCompiled?.(source)
     } catch (failure) {
       if (generation !== this.generation || this.disposed) return
       this.error = snippetErrorMessage(failure)

@@ -113,6 +113,7 @@ export const zhTW = {
     props: '屬性',
     related: '相關元件',
     default: '預設',
+    value: '值',
     customized: '自訂',
     iconsBadgeTooltip: '圖示、徽章、提示',
     interactive: '互動',
