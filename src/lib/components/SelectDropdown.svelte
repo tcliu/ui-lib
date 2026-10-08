@@ -8,7 +8,16 @@
   import ChevronDownIcon from '$lib/icons/ChevronDownIcon.svelte'
   import CloseIcon from '$lib/icons/CloseIcon.svelte'
   import type { DropdownPanelProps } from '$lib/dropdown-chrome'
-  import { DEFAULT_PANEL_CLASS, TRIGGER_BASE, OPTION_BASE, EMPTY_BASE, boxClass, optionRowClass, emptyClass, resolveSelectGeometry, selectGeometryStyle, type SelectSize } from './select-dropdown-styles'
+  import {
+    DEFAULT_PANEL_CLASS,
+    SELECT_BOX_UTILITIES,
+    SELECT_RATIOS,
+    TRIGGER_BASE,
+    OPTION_BASE,
+    EMPTY_BASE,
+    type SelectSize,
+  } from './select-dropdown-styles'
+  import { dimensionMetrics, sizeVarStyle } from './size-metrics'
 
   // Accepted option shape: a bare string is its own label, and a missing
   // label falls back to the value, so `'two'` and `{ value: 'two' }` both
@@ -87,40 +96,38 @@
     buttonLabel ?? normalizedOptions.find(option => option.value === activeValue)?.label ?? activeValue,
   )
 
-  // Numeric sizes resolve to the shared named steps, so every `size` value
-  // renders through the same classes a name would produce; interpolated
-  // numbers additionally carry an inline geometry style (class overrides
-  // suppress it — the override owns the metrics).
-  const geometry = $derived(resolveSelectGeometry(size))
-  const triggerBoxClass = $derived(geometry.custom ? TRIGGER_BASE : boxClass(geometry.step))
-  const triggerBoxStyle = $derived(selectGeometryStyle(geometry))
+  // Every metric is a fixed ratio of the size dimension, so each keeps a
+  // constant metric:dimension ratio across the range; the icon is the dimension
+  // itself (ratio 1).
+  const metrics = $derived(dimensionMetrics(size, SELECT_RATIOS))
+  const style = $derived(sizeVarStyle('sel', metrics))
+
+  const triggerBoxClass = $derived(`${SELECT_BOX_UTILITIES} ${TRIGGER_BASE}`)
 
   const resolvedButtonClass = $derived(
     buttonClass ?? `${triggerBoxClass} focus-visible:border-transparent focus-visible:ring-2 focus-visible:ring-cyan-500`,
   )
 
-  const resolvedButtonStyle = $derived(buttonClass ? undefined : triggerBoxStyle)
+  const resolvedButtonStyle = $derived(buttonClass ? undefined : style)
 
   const resolvedControlClass = $derived(
     controlClass ?? `${triggerBoxClass} focus-within:border-transparent focus-within:ring-2 focus-within:ring-cyan-500`,
   )
 
-  const resolvedControlStyle = $derived(controlClass ? undefined : triggerBoxStyle)
+  const resolvedControlStyle = $derived(controlClass ? undefined : style)
 
   const resolvedPanelClass = $derived(panelClass ?? DEFAULT_PANEL_CLASS)
 
-  const resolvedOptionRowClass = $derived(
-    optionClass ?? (geometry.custom ? OPTION_BASE : optionRowClass(geometry.step)),
-  )
+  const resolvedOptionRowClass = $derived(optionClass ?? `${SELECT_BOX_UTILITIES} ${OPTION_BASE}`)
 
-  const resolvedOptionRowStyle = $derived(optionClass ? undefined : triggerBoxStyle)
+  const resolvedOptionRowStyle = $derived(optionClass ? undefined : style)
 
-  const resolvedEmptyClass = $derived(geometry.custom ? EMPTY_BASE : emptyClass(geometry.step))
+  const resolvedEmptyClass = $derived(`${SELECT_BOX_UTILITIES} ${EMPTY_BASE}`)
 
   // No override exists for the empty row (callers only supply its label), so
   // its class is always ours and the geometry style always applies with it —
   // unlike the option rows, where `optionClass` takes over both.
-  const resolvedEmptyStyle = $derived(triggerBoxStyle)
+  const resolvedEmptyStyle = $derived(style)
   const resolvedClearLabel = $derived(clearLabel ?? 'Clear selection')
   let open = $state(false)
   let containerRef = $state<HTMLDivElement | null>(null)
@@ -521,7 +528,7 @@
 
 <div class="relative" bind:this={containerRef} data-escape-capture={open ? '' : null} onfocusout={listbox.handleFocusOut}>
   {#snippet triggerChevron()}
-    <ChevronDownIcon size={geometry.iconPx} variant="solid" className="-mr-1.5 shrink-0 text-slate-400" />
+    <ChevronDownIcon size={metrics.icon} variant="solid" className="-mr-1.5 shrink-0 text-slate-400" />
   {/snippet}
   {#snippet triggerControl()}
     {#if filterable}
@@ -571,12 +578,14 @@
     <CloseIcon size="sm" />
   {/snippet}
   {#if clearable && activeValue !== ''}
-    <span class="inline-flex items-center gap-1">
+    <!-- The clear affordance scales with the control: its gap is a ratio of the
+      size and its icon box follows the same size. -->
+    <span class="inline-flex items-center" style={`gap:${metrics.gap}px`}>
       {@render triggerControl()}
       <!-- Tab focus tints the icon exactly like hover, with no ring. -->
       <Button
         variant="ghost"
-        size="xs"
+        size={size}
         icon={closeIcon}
         ariaLabel={resolvedClearLabel}
         onClick={handleClear}

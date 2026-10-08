@@ -49,11 +49,11 @@ describe('Pagination numeric size', () => {
     })
     flushSync()
     // 14 resolves to the xs step for Pagination's own chrome (tie keeps the
-    // smaller step), while the inner page-size dropdown carries the
-    // interpolated geometry.
+    // smaller step), while the inner page-size dropdown carries the resolved
+    // var-driven metrics.
     expect(target.querySelector('nav')?.className ?? target.innerHTML).toContain('text-xs')
     const trigger = target.querySelector('[aria-label="Page size"]')
-    expect(trigger?.getAttribute('style')).toContain('font-size: 12px')
+    expect(trigger?.getAttribute('style')).toContain('--sel-font: 11.375px')
   })
 
   it('renders named sizes exactly as before', () => {
@@ -63,6 +63,8 @@ describe('Pagination numeric size', () => {
     })
     flushSync()
     expect(target.innerHTML).toContain('text-sm')
-    expect(target.querySelector('[aria-label="Page size"]')?.getAttribute('style')).toBeNull()
+    // The inner dropdown resolves the sm anchor through the same var path.
+    const trigger = target.querySelector('[aria-label="Page size"]')
+    expect(trigger?.getAttribute('style')).toContain('--sel-font: 13px')
   })
 })

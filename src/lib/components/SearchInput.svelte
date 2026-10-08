@@ -1,13 +1,12 @@
 <script lang="ts">
-  import { cva } from 'class-variance-authority'
-
   import SearchIcon from '$lib/icons/SearchIcon.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import { resolveSizeStep, type SizeInput } from '$lib/size-scale'
+  import type { SizeInput } from '$lib/size-scale'
+  import { dimensionMetrics, sizeVarStyle } from './size-metrics'
 
   const i18n = getI18nContext()
 
-  export type SearchInputSize = 'sm' | 'md' | 'lg'
+  export type SearchInputSize = SizeInput
 
   interface Props {
     value: string
@@ -23,31 +22,6 @@
     onblur?: (event: FocusEvent) => void
   }
 
-  // Literal class variants (never interpolated) so the Tailwind scanner emits
-  // every size. sm stays compact for admin/table search; md gives card/list
-  // roomier icon padding; lg is browse-only and larger than md. cva holds the
-  // shared chrome once; each size carries only what differs.
-  const inputVariants = cva(
-    'w-full border border-slate-700 text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none',
-    {
-      variants: {
-        size: {
-          sm: 'rounded-md bg-slate-900 px-2 py-1.5 pl-7 text-sm',
-          md: 'rounded-xl bg-slate-900/90 px-4 py-2.5 pl-10 text-sm',
-          lg: 'rounded-xl bg-slate-900/90 px-4 py-3 pl-12 text-base',
-        },
-      },
-    },
-  )
-
-  const SIZE_ICON_CLASSES: Record<SearchInputSize, string> = {
-    sm: 'pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-slate-500',
-    md: 'pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500',
-    lg: 'pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500',
-  }
-
-  const SIZE_ICON_SIZE: Record<SearchInputSize, 'sm' | 'md'> = { sm: 'sm', md: 'md', lg: 'md' }
-
   let {
     value = $bindable(),
     ariaLabel,
@@ -62,25 +36,38 @@
     onblur,
   }: Props = $props()
 
-  // Derived (not a plain const) so locale switches re-resolve the placeholder.
-  const resolvedPlaceholder = $derived(placeholder ?? i18n.t('search.placeholder'))
-  // Stepped chrome for the input box (names render exactly as before; `xs`
-  // has no chrome tier and falls back to `sm`); the icon takes the raw
-  // number so it scales continuously.
-  const chromeStep = $derived.by(() => {
-    const step = resolveSizeStep(size)
-    return step === 'xs' ? 'sm' : step
-  })
-  const resolvedInputClass = $derived(inputClass ?? inputVariants({ size: chromeStep }))
-  const resolvedIconClass = $derived(SIZE_ICON_CLASSES[chromeStep])
-  const resolvedIconSize = $derived(
-    typeof size === 'number' && Number.isFinite(size) ? Math.max(1, size) : SIZE_ICON_SIZE[chromeStep],
+  // Every metric is a fixed ratio of the size dimension (the icon is the
+  // dimension itself), so each keeps a constant metric:dimension ratio across
+  // the range.
+  const SEARCH_RATIOS = {
+    font: 0.8125,
+    line: 1.1625,
+    radius: 0.375,
+    padY: 0.375,
+    padRight: 0.5,
+    padLeft: 1.75,
+    iconLeft: 0.5,
+    icon: 1,
+  }
+
+  const metrics = $derived(dimensionMetrics(size, SEARCH_RATIOS))
+  const style = $derived(sizeVarStyle('search', metrics))
+
+  const CHROME =
+    'w-full border border-slate-700 text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none'
+  const resolvedClass = $derived(
+    inputClass ??
+      `${CHROME} bg-slate-900 text-[length:var(--search-font)] leading-[var(--search-line)] rounded-[var(--search-radius)] py-[var(--search-pad-y)] pr-[var(--search-pad-right)] pl-[var(--search-pad-left)]`,
   )
+
+  const resolvedPlaceholder = $derived(placeholder ?? i18n.t('search.placeholder'))
 </script>
 
 <div class={wrapperClass}>
-  <div class="relative">
-    <SearchIcon size={resolvedIconSize} className={resolvedIconClass} />
+  <div class="relative" style={style}>
+    <SearchIcon
+      size={metrics.icon}
+      className="pointer-events-none absolute top-1/2 left-[var(--search-icon-left)] -translate-y-1/2 text-slate-500" />
     <input
       bind:this={inputRef}
       type="search"
@@ -91,7 +78,7 @@
       {onkeydown}
       {onfocus}
       {onblur}
-      class={resolvedInputClass} />
+      class={resolvedClass} />
   </div>
 </div>
 
