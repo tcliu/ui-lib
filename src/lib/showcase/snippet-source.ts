@@ -50,6 +50,7 @@ const COMPONENT_IMPORTS = [
   '  import ColumnsIcon from "ui/ColumnsIcon.svelte"',
   '  import CopyIcon from "ui/CopyIcon.svelte"',
   '  import DeleteIcon from "ui/DeleteIcon.svelte"',
+  '  import DownloadIcon from "ui/DownloadIcon.svelte"',
   '  import EyeIcon from "ui/EyeIcon.svelte"',
   '  import EyeSlashIcon from "ui/EyeSlashIcon.svelte"',
   '  import ForestIcon from "ui/ForestIcon.svelte"',

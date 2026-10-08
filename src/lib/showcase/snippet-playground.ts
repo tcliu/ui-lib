@@ -49,6 +49,7 @@ import CodeIcon from '$lib/icons/CodeIcon.svelte'
 import ColumnsIcon from '$lib/icons/ColumnsIcon.svelte'
 import CopyIcon from '$lib/icons/CopyIcon.svelte'
 import DeleteIcon from '$lib/icons/DeleteIcon.svelte'
+import DownloadIcon from '$lib/icons/DownloadIcon.svelte'
 import EyeIcon from '$lib/icons/EyeIcon.svelte'
 import EyeSlashIcon from '$lib/icons/EyeSlashIcon.svelte'
 import ForestIcon from '$lib/icons/ForestIcon.svelte'
@@ -130,6 +131,7 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/ColumnsIcon.svelte': { default: ColumnsIcon },
   'ui/CopyIcon.svelte': { default: CopyIcon },
   'ui/DeleteIcon.svelte': { default: DeleteIcon },
+  'ui/DownloadIcon.svelte': { default: DownloadIcon },
   'ui/EyeIcon.svelte': { default: EyeIcon },
   'ui/EyeSlashIcon.svelte': { default: EyeSlashIcon },
   'ui/ForestIcon.svelte': { default: ForestIcon },

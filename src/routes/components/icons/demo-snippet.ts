@@ -14,6 +14,7 @@ import CodeIcon from '$lib/icons/CodeIcon.svelte'
 import ColumnsIcon from '$lib/icons/ColumnsIcon.svelte'
 import CopyIcon from '$lib/icons/CopyIcon.svelte'
 import DeleteIcon from '$lib/icons/DeleteIcon.svelte'
+import DownloadIcon from '$lib/icons/DownloadIcon.svelte'
 import EyeIcon from '$lib/icons/EyeIcon.svelte'
 import EyeSlashIcon from '$lib/icons/EyeSlashIcon.svelte'
 import ForestIcon from '$lib/icons/ForestIcon.svelte'
@@ -63,6 +64,7 @@ export const ICON_ENTRIES: IconEntry[] = [
   { name: 'Columns' },
   { name: 'Copy' },
   { name: 'Delete' },
+  { name: 'Download' },
   { name: 'Eye' },
   { name: 'EyeSlash' },
   { name: 'Forest' },
@@ -101,6 +103,7 @@ export const ICON_COMPONENTS: Record<string, Component> = {
   Columns: ColumnsIcon,
   Copy: CopyIcon,
   Delete: DeleteIcon,
+  Download: DownloadIcon,
   Eye: EyeIcon,
   EyeSlash: EyeSlashIcon,
   Forest: ForestIcon,
