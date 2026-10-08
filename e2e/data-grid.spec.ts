@@ -112,3 +112,18 @@ test('showcase: DataGrid settings panel drives editability and headers', async (
   await page.getByRole('button', { name: 'Reset', exact: true }).click()
   await expect(demo('Default').locator('[data-testid="data-grid"] td[role="gridcell"] textarea')).toHaveCount(12)
 })
+
+test('showcase: DataGrid cuts a cell with ControlOrMeta+x and pastes it elsewhere', async ({ page }) => {
+  await page.goto('/components/data-grid')
+  await page.waitForLoadState('networkidle')
+  const root = page.locator('[data-testid="data-grid"]')
+  const source = root.locator('textarea[data-row="1"][data-col="0"]')
+  await source.click()
+  await page.keyboard.press('ControlOrMeta+x')
+  await expect(source).toHaveValue('')
+
+  // The cut value stays in the clipboard buffer: pasting elsewhere moves it.
+  const target = root.locator('textarea[data-row="2"][data-col="0"]')
+  await target.click()
+  await page.keyboard.press('ControlOrMeta+v')
+  await expect(target).toHaveValue('Ada Lovelace')

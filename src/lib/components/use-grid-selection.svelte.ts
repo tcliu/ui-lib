@@ -616,6 +616,10 @@ export function createGridSelection(opts: {
     } else if ((event.key === 'c' || event.key === 'C') && (event.ctrlKey || event.metaKey)) {
       event.preventDefault()
       copySelection()
+    } else if ((event.key === 'x' || event.key === 'X') && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault()
+      if (readOnly()) return
+      cutSelection()
     } else if ((event.key === 'a' || event.key === 'A') && (event.ctrlKey || event.metaKey)) {
       event.preventDefault()
       selectAllCells()
@@ -674,6 +678,14 @@ export function createGridSelection(opts: {
     }
     const text = lines.join('\n')
     if (text) clipboard.copy(text)
+  }
+
+  // Cut mirrors copy: the copied rectangle stays in the clipboard while the
+  // source cells are blanked. The selection is kept, matching copy.
+  function cutSelection() {
+    if (highlightKeys.size === 0) return
+    copySelection()
+    clearSelectedCellValues()
   }
 
   function pasteSelection() {
