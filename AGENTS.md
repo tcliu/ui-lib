@@ -249,17 +249,18 @@ Project-specific development conventions for the UI Library web app.
   builder (+ test) regenerates the Show-code source from that state, and the
   section title derives from `isCustomized` (`showcase.default` /
   `showcase.customized`).
-- The SelectDropdown page is the exception to that shell: it passes
-  `bordered={false}`/`showHeader={false}` to `ShowcaseSection`, owns the
-  `SnippetPreview`, and renders the code toggle in `ShowcasePage`'s `actions`
-  slot beside the component name (so it drops the Default/Customized title). Its
-  demo sits in a `Resizable` stage, and its props table appends an editable Value
-  column whose typed controls drive the same `pg*` state as the config panel.
-  Single-prop editing lives in that column, so the config footer keeps only
-  `Reset` (plus any future composite preset driving several props at once);
-  `options` (plain data, no functions) edits through an `EditDialog` hosting a
-  JSON `CodeEditor`, with `OK` applying the parsed array and `Reset` reverting
-  the draft.
+- Converted showcase pages (`select-dropdown`, `chip-dropdown`, `menu`,
+  `column-chooser`, `date-range-picker`, `tag-input`, and later siblings) depart from that shell: they pass `bordered={false}`/`showHeader={false}`
+  to `ShowcaseSection`, own the `SnippetPreview`, and render the code toggle in
+  `ShowcasePage`'s `actions` slot beside the component name (so they drop the
+  Default/Customized title). Their demo sits in a width-only `Resizable` stage,
+  and their props table appends an editable Value column whose typed controls
+  drive the same `pg*` state as the config panel. Single-prop editing lives in
+  that column, so the config footer keeps only `Reset` plus editors for demo
+  data no single prop covers (item labels) and any future composite preset
+  driving several props at once; `options` (plain data, no functions) edits
+  through an `EditDialog` hosting a JSON `CodeEditor`, with `OK` applying the
+  parsed array and `Reset` reverting the draft.
 - Reusable showcase hooks backing that page: `ShowcasePage` takes an `actions`
   snippet; `ShowcaseSection` takes a caller-owned `preview` (so a page can host
   the toggle elsewhere), `showHeader`, and `bordered`, and tags its demo row
@@ -271,7 +272,13 @@ Project-specific development conventions for the UI Library web app.
   write a compiled snippet's recognized demo-tag attributes back into playground
   state (then `syncSeed`, so the reseed effect keeps the user's text), so snippet
   edits surface in the Value column; unrecognized shapes and tag-less experiments
-  sync nothing. A value control uses `TextInput` for text,
+  sync nothing. Pure snippet helpers shared across demos live in
+  `$lib/showcase/` (`snippet-attributes.ts` for tag/script extraction,
+  `option-json.ts` for the options-editor parser); each page keeps only its
+  field mapping and stage literals. Converted pages list props-table rows with
+  the editable props first (primitives, plain data, and snippets, A–Z by code
+  unit), then the non-editable function props (A–Z): a prop is editable unless
+  it is a function or an object carrying functions. A value control uses `TextInput` for text,
   `SelectDropdown` for enum and scale props (e.g. the `size` and `align` rows),
   `NumberInput` for a bare number prop, and `Checkbox` for booleans, wireable to
   the same `pg*` state the config panel drives (an unset text override falls
