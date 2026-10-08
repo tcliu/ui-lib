@@ -5,6 +5,9 @@
 export type TriState = '' | 'yes' | 'no'
 
 export interface PasswordInputSnippetState {
+  // Bound value, seeded as script-local state (like the stage size) so the
+  // snippet text tracks value edits instead of hiding the value in scope.
+  value: string
   placeholder: string
   showLabel: string
   hideLabel: string
@@ -26,6 +29,7 @@ function flagLine(name: string, value: TriState): string[] {
 }
 
 export function buildPasswordInputSnippet({
+  value,
   placeholder,
   showLabel,
   hideLabel,
@@ -34,6 +38,10 @@ export function buildPasswordInputSnippet({
   className,
 }: PasswordInputSnippetState): string {
   const lines = [
+    '<script>',
+    // JSON.stringify keeps the literal valid no matter what the value holds.
+    `  let value = $state(${JSON.stringify(value)})`,
+    '</script>',
     '<PasswordInput',
     '  bind:value={value}',
     `  placeholder="${escapeAttr(placeholder || 'Password')}"`,

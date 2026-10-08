@@ -1,14 +1,18 @@
 <script lang="ts">
   import Button from '$lib/components/Button.svelte'
   import Buttons from '$lib/components/Buttons.svelte'
-  import FormField from '$lib/components/FormField.svelte'
-  import PasswordInput from '$lib/components/PasswordInput.svelte'
-  import SelectDropdown from '$lib/components/SelectDropdown.svelte'
+  import Checkbox from '$lib/components/Checkbox.svelte'
+  import TextInput from '$lib/components/TextInput.svelte'
+  import CodeIcon from '$lib/icons/CodeIcon.svelte'
   import ResetIcon from '$lib/icons/ResetIcon.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
+  import PasswordInput from '$lib/components/PasswordInput.svelte'
   import PropsTable, { type PropRow } from '$lib/showcase/PropsTable.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
+  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
+  import { extractComponentAttributes, extractScriptValue } from '$lib/showcase/snippet-attributes'
+  import { splitLeadingScript } from '$lib/showcase/snippet-source'
   import { buildPasswordInputSnippet, type TriState } from './demo-snippet'
 
   const i18n = getI18nContext()
@@ -31,25 +35,6 @@
   const disabled = $derived(flagOn(pgDisabled))
   const required = $derived(flagOn(pgRequired))
 
-  const yesNoOptions = [
-    { value: 'yes', label: 'Yes' },
-    { value: 'no', label: 'No' },
-  ]
-
-  function triLabel(value: TriState): string {
-    return value === '' ? 'Default' : value === 'yes' ? 'Yes' : 'No'
-  }
-
-  const isCustomized = $derived(
-    pgPlaceholder !== '' ||
-      pgShowLabel !== '' ||
-      pgHideLabel !== '' ||
-      pgDisabled !== '' ||
-      pgRequired !== '' ||
-      pgClassName !== '',
-  )
-  const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
-
   function clearPlayground() {
     pgValue = ''
     pgPlaceholder = ''
@@ -62,6 +47,7 @@
 
   const code = $derived.by(() =>
     buildPasswordInputSnippet({
+      value: pgValue,
       placeholder: pgPlaceholder,
       showLabel: pgShowLabel,
       hideLabel: pgHideLabel,
@@ -71,27 +57,87 @@
     }),
   )
 
+  // The page owns the preview so its code toggle can sit in the component-title
+  // row (ShowcasePage's `actions`) while the section renders the demo and the
+  // editor below.
+  const preview = new SnippetPreview({
+    getSeed: () => code,
+    getScope: () => ({}),
+    onCompiled: syncPlaygroundFromSnippet,
+  })
+
+  // Write a compiled snippet's recognized demo-tag attributes back into
+  // playground state, so snippet edits show up in the Value column. Only
+  // canonical shapes map (literals, bare flags, `{true}`/`{false}`); custom
+  // expressions are left alone, and a draft without a complete demo tag (a
+  // free-form experiment) touches nothing. Absent means unset, matching what
+  // the builder omits. `syncSeed` then holds the regenerated seed back so the
+  // editor keeps the user's text.
+  function syncPlaygroundFromSnippet(source: string) {
+    const attrs = extractComponentAttributes(source, 'PasswordInput')
+    if (!attrs) {
+      return
+    }
+    const text = (name: string): string | undefined => {
+      if (!attrs.has(name)) {
+        return ''
+      }
+      const attr = attrs.get(name)!
+      return attr.kind === 'string' ? attr.value : undefined
+    }
+    const tri = (name: string): TriState | undefined => {
+      if (!attrs.has(name)) {
+        return ''
+      }
+      const attr = attrs.get(name)!
+      if (attr.kind === 'bare') {
+        return 'yes'
+      }
+      if (attr.kind === 'expression' && (attr.value === 'true' || attr.value === 'false')) {
+        return attr.value === 'true' ? 'yes' : 'no'
+      }
+      return undefined
+    }
+    const applyText = (name: string, assign: (value: string) => void) => {
+      const next = text(name)
+      if (next !== undefined) {
+        assign(next)
+      }
+    }
+    const applyTri = (name: string, assign: (value: TriState) => void) => {
+      const next = tri(name)
+      if (next !== undefined) {
+        assign(next)
+      }
+    }
+    applyText('placeholder', value => (pgPlaceholder = value))
+    applyText('showLabel', value => (pgShowLabel = value))
+    applyText('hideLabel', value => (pgHideLabel = value))
+    applyText('className', value => (pgClassName = value))
+    applyTri('disabled', value => (pgDisabled = value))
+    applyTri('required', value => (pgRequired = value))
+    // The builder seeds the value as script-local state; a hand-written
+    // `bind:value={...}` shape leaves the playground alone.
+    const scriptValue = extractScriptValue(splitLeadingScript(source).declarations, 'value')
+    if (scriptValue !== null) {
+      pgValue = scriptValue
+    }
+    preview.syncSeed()
+  }
+
+  // Editable rows first (primitives and plain data, A–Z), then the function
+  // props (A–Z).
   const props: PropRow[] = [
-    { name: 'value', type: 'string', defaultValue: "''", note: 'Bindable field value.' },
+    { name: 'autocomplete', type: 'string', defaultValue: "'current-password'", note: 'Native autocomplete token.' },
+    { name: 'className', type: 'string', defaultValue: "''", note: 'Extra classes for the input.' },
+    { name: 'disabled', type: 'boolean', defaultValue: 'false', note: 'Disables the field and the toggle.' },
+    { name: 'hideLabel', type: 'string', defaultValue: '—', note: 'Toggle label when visible; falls back to the locale.' },
     { name: 'id', type: 'string', defaultValue: '—', note: 'Native input id.' },
     { name: 'name', type: 'string', defaultValue: '—', note: 'Native input name.' },
     { name: 'placeholder', type: 'string', defaultValue: '—', note: 'Placeholder text.' },
-    { name: 'autocomplete', type: 'string', defaultValue: "'current-password'", note: 'Native autocomplete token.' },
-    { name: 'disabled', type: 'boolean', defaultValue: 'false', note: 'Disables the field and the toggle.' },
     { name: 'required', type: 'boolean', defaultValue: 'false', note: 'Native required flag.' },
-    {
-      name: 'showLabel',
-      type: 'string',
-      defaultValue: '—',
-      note: 'Toggle label when hidden; falls back to the locale.',
-    },
-    {
-      name: 'hideLabel',
-      type: 'string',
-      defaultValue: '—',
-      note: 'Toggle label when visible; falls back to the locale.',
-    },
-    { name: 'className', type: 'string', defaultValue: "''", note: 'Extra classes for the input.' },
+    { name: 'showLabel', type: 'string', defaultValue: '—', note: 'Toggle label when hidden; falls back to the locale.' },
+    { name: 'value', type: 'string', defaultValue: "''", note: 'Bindable field value.' },
     { name: 'oninput', type: '(event: Event) => void', defaultValue: '—', note: 'Native input handler.' },
   ]
 </script>
@@ -100,70 +146,62 @@
   <ResetIcon size="sm" />
 {/snippet}
 
+{#snippet codeIcon()}
+  <CodeIcon size="sm" />
+{/snippet}
+
+{#snippet pageActions()}
+  <Button
+    variant="ghost"
+    size="sm"
+    icon={codeIcon}
+    ariaLabel={preview.open ? i18n.t('showcase.hideCode') : i18n.t('showcase.showCode')}
+    ariaExpanded={preview.open}
+    tooltip={preview.open ? i18n.t('showcase.hideCode') : i18n.t('showcase.showCode')}
+    onClick={() => preview.toggle()} />
+{/snippet}
+
+{#snippet propValue(row: PropRow)}
+  {#if row.name === 'value'}
+    <TextInput bind:value={pgValue} ariaLabel="value value" placeholder="(empty)" />
+  {:else if row.name === 'placeholder'}
+    <TextInput bind:value={pgPlaceholder} ariaLabel="placeholder value" placeholder="Password" />
+  {:else if row.name === 'showLabel'}
+    <TextInput bind:value={pgShowLabel} ariaLabel="showLabel value" placeholder="Show secret" />
+  {:else if row.name === 'hideLabel'}
+    <TextInput bind:value={pgHideLabel} ariaLabel="hideLabel value" placeholder="Hide secret" />
+  {:else if row.name === 'disabled'}
+    <Checkbox
+      checked={disabled ?? false}
+      ariaLabel="disabled value"
+      onChange={value => (pgDisabled = value ? 'yes' : 'no')} />
+  {:else if row.name === 'required'}
+    <Checkbox
+      checked={required ?? false}
+      ariaLabel="required value"
+      onChange={value => (pgRequired = value ? 'yes' : 'no')} />
+  {:else if row.name === 'className'}
+    <TextInput bind:value={pgClassName} ariaLabel="className value" placeholder="(none)" />
+  {:else}
+    <span class="text-slate-500">—</span>
+  {/if}
+{/snippet}
+
 {#snippet propsSnippet()}
-  <PropsTable rows={props} />
+  <PropsTable rows={props} value={propValue} />
 {/snippet}
 
 {#snippet settingsPanel()}
-  <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
+  <!-- Single-prop editing lives in the props table's Value column; this panel
+    keeps only Reset (and any future composite preset that drives several props
+    at once). -->
+  <Buttons className="flex shrink-0 flex-wrap items-center gap-3">
     <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
   </Buttons>
-  <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
-    <FormField label="Placeholder" htmlFor="pg-placeholder">
-      <input
-        id="pg-placeholder"
-        bind:value={pgPlaceholder}
-        placeholder="Password"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
-    </FormField>
-    <FormField label="Show label" htmlFor="pg-show">
-      <input
-        id="pg-show"
-        bind:value={pgShowLabel}
-        placeholder="Show secret"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
-    </FormField>
-    <FormField label="Hide label" htmlFor="pg-hide">
-      <input
-        id="pg-hide"
-        bind:value={pgHideLabel}
-        placeholder="Hide secret"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
-    </FormField>
-    <FormField label="Disabled">
-      <SelectDropdown
-        buttonLabel={triLabel(pgDisabled)}
-        activeValue={pgDisabled}
-        ariaLabel="Disabled"
-        options={yesNoOptions}
-        onSelect={value => (pgDisabled = value as TriState)}
-        clearable
-        clearLabel="Clear disabled"
-        onClear={() => (pgDisabled = '')} />
-    </FormField>
-    <FormField label="Required">
-      <SelectDropdown
-        buttonLabel={triLabel(pgRequired)}
-        activeValue={pgRequired}
-        ariaLabel="Required"
-        options={yesNoOptions}
-        onSelect={value => (pgRequired = value as TriState)}
-        clearable
-        clearLabel="Clear required"
-        onClear={() => (pgRequired = '')} />
-    </FormField>
-    <FormField label="Class name" htmlFor="pg-classname">
-      <input
-        id="pg-classname"
-        bind:value={pgClassName}
-        placeholder="(none)"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
-    </FormField>
-  </div>
 {/snippet}
 
-<ShowcasePage name="PasswordInput" props={propsSnippet}>
-  <ShowcaseSection title={sectionTitle} {code} footer={settingsPanel} scope={{ value: pgValue }}>
+<ShowcasePage name="PasswordInput" props={propsSnippet} actions={pageActions}>
+  <ShowcaseSection title="PasswordInput" {code} {preview} showHeader={false} bordered={false} footer={settingsPanel}>
     <PasswordInput
       bind:value={pgValue}
       placeholder={pgPlaceholder || 'Password'}

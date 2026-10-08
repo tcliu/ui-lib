@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { resolveSizeStep, type SizeInput } from '$lib/size-scale'
+  import type { SizeInput } from '$lib/size-scale'
+  import { dimensionMetrics, dimensionWeight, sizeVarStyle } from './size-metrics'
 
   interface Props {
     value: string
@@ -10,7 +11,7 @@
     readonly?: boolean
     id?: string
     inputRef?: HTMLInputElement | null
-    // Replaces the whole input class string (see SearchInput's `inputClass`).
+    // Replaces the whole input class string (the override owns the metrics).
     inputClass?: string
     oninput?: (event: Event) => void
     onkeydown?: (event: KeyboardEvent) => void
@@ -34,21 +35,18 @@
     onblur,
   }: Props = $props()
 
-  // Literal class variants (never interpolated) so the Tailwind scanner emits
-  // every size. The full xs–lg scale from the start, like the other sized
-  // primitives; a numeric size settles on its nearest step.
-  const inputVariants: Record<'xs' | 'sm' | 'md' | 'lg', string> = {
-    xs: 'rounded-md bg-slate-900 px-2 py-1 text-xs',
-    sm: 'rounded-md bg-slate-900 px-2 py-1.5 text-sm',
-    md: 'rounded-lg bg-slate-900 px-3 py-2 text-sm',
-    lg: 'rounded-lg bg-slate-900 px-4 py-2.5 text-base',
-  }
+  // Every metric is a fixed ratio of the size dimension, so each keeps a
+  // constant metric:dimension ratio across the whole range.
+  const INPUT_RATIOS = { font: 0.8125, line: 1.1625, radius: 0.375, padX: 0.5, padY: 0.375 }
 
-  const step = $derived(resolveSizeStep(size))
+  const metrics = $derived(dimensionMetrics(size, INPUT_RATIOS))
+  const style = $derived(sizeVarStyle('input', metrics))
 
+  const CHROME =
+    'w-full border border-slate-700 text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 disabled:opacity-40 read-only:cursor-default read-only:text-slate-400 motion-reduce:transition-none'
   const resolvedClass = $derived(
     inputClass ??
-      `w-full border border-slate-700 text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 disabled:opacity-40 read-only:cursor-default read-only:text-slate-400 motion-reduce:transition-none ${inputVariants[step]}`,
+      `${CHROME} bg-slate-900 text-[length:var(--input-font)] leading-[var(--input-line)] rounded-[var(--input-radius)] py-[var(--input-pad-y)] px-[var(--input-pad-x)]`,
   )
 </script>
 
@@ -65,7 +63,8 @@
   {onkeydown}
   {onfocus}
   {onblur}
-  class={resolvedClass} />
+  class={resolvedClass}
+  style={style} />
 
 <style>
   /* 16px on touch pointers so iOS Safari does not auto-zoom on focus. Plain

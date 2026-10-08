@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushSync, mount, unmount } from 'svelte'
+import SelectDropdown from '../SelectDropdown.svelte'
 import Harness from './select-dropdown-size.harness.svelte'
 
 // Same DOM stubs as the other dropdown tests: jsdom lacks ResizeObserver
@@ -41,23 +42,42 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 
-describe('SelectDropdown interpolated size', () => {
-  it('carries the interpolated geometry on the trigger and the option rows', () => {
+describe('SelectDropdown numeric size', () => {
+  it('carries the resolved metrics on the trigger and the option rows', () => {
     instance = mount(Harness, { target })
     flushSync()
+    // size 14 → font 0.8125 * 14.
     const trigger = document.querySelector('button[role=combobox]')
-    expect(trigger?.getAttribute('style')).toContain('font-size: 12px')
+    expect(trigger?.getAttribute('style')).toContain('--sel-font: 11.375px')
 
     trigger?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     flushSync()
     const row = document.querySelector('[role=listbox] [role=option]')
-    expect(row?.getAttribute('style')).toContain('font-size: 12px')
-    expect(row?.getAttribute('class')).not.toContain('min-w-')
+    expect(row?.getAttribute('style')).toContain('--sel-font: 11.375px')
+    // The row references the min-width var rather than a literal class.
+    expect(row?.getAttribute('class')).toContain('min-w-[var(--sel-min-w)]')
   })
 
   it('scales the chevron with the numeric size', () => {
     instance = mount(Harness, { target })
     flushSync()
     expect(document.querySelector('.relative svg')?.getAttribute('width')).toBe('14')
+  })
+})
+
+describe('SelectDropdown clearable sizing', () => {
+  it('scales the gap and the clear icon with the size', () => {
+    instance = mount(SelectDropdown, {
+      target,
+      props: { options: ['a', 'b'], activeValue: 'a', ariaLabel: 'Pick', clearable: true, size: 18, onSelect: () => {} },
+    })
+    flushSync()
+    // gap 0.375 * 18, and the clear icon box is the size dimension.
+    const wrapper = target.querySelector('div.relative > span.inline-flex')
+    expect(wrapper?.getAttribute('style')).toContain('gap: 6.75px')
+    const clear = target.querySelector('button[aria-label="Clear selection"]')
+    // The icon box is the dimension var (0.65 has no bearing; icon ratio is 1).
+    expect(clear?.getAttribute('style')).toContain('--btn-icon: 18px')
+    expect(clear?.innerHTML).toContain('h-[var(--btn-icon)]')
   })
 })

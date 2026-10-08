@@ -5,6 +5,9 @@
 export type TriState = '' | 'yes' | 'no'
 
 export interface NumberInputSnippetState {
+  // Bound value, seeded as script-local state (like the stage size) so the
+  // snippet text tracks value edits instead of hiding the value in scope.
+  value: string
   min: string
   max: string
   step: string
@@ -42,6 +45,7 @@ function numberLine(name: string, value: string): string[] {
 }
 
 export function buildNumberInputSnippet({
+  value,
   min,
   max,
   step,
@@ -51,8 +55,12 @@ export function buildNumberInputSnippet({
   className,
 }: NumberInputSnippetState): string {
   const lines = [
+    '<script>',
+    // JSON.stringify keeps the literal valid no matter what the value holds.
+    `  let value = $state(${JSON.stringify(value)})`,
+    '</script>',
     '<div class="flex flex-col gap-1">',
-    '  <NumberInput bind:value ariaLabel={applyLabel}',
+    '  <NumberInput bind:value={value} ariaLabel={applyLabel}',
     ...numberLine('min', min),
     ...numberLine('max', max),
     ...numberLine('step', step),
