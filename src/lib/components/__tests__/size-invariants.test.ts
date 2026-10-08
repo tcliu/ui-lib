@@ -52,12 +52,12 @@ function styleVars(style: string): Record<string, number> {
   return out
 }
 
-async function renderStyle(component: Parameters<typeof mount>[0], props: Record<string, unknown>): Promise<string> {
+async function renderStyle(component: unknown, props: Record<string, unknown>): Promise<string> {
   if (instance) {
     await unmount(instance)
     instance = null
   }
-  instance = mount(component, { target, props })
+  instance = mount(component as Parameters<typeof mount>[0], { target, props })
   flushSync()
   return (
     target.querySelector('button')?.getAttribute('style') ??
@@ -72,30 +72,25 @@ const NUMERIC_SIZES = [13, 14, 15, 17, 18, 19, 22, 40]
 
 interface ComponentCase {
   name: string
-  component: Parameters<typeof mount>[0]
-  props: Record<string, unknown>
   // The full set of dimension metrics the component must emit (font, line,
   // padding, gap, icon, radius, min-width); `-weight` is non-length chrome.
   keys: string[]
+  render: (size: number) => Promise<string>
 }
 
 const CASES: ComponentCase[] = [
   {
     name: 'Button',
-    component: Button,
-    props: { size: 16 },
     keys: ['btn-font', 'btn-line', 'btn-radius', 'btn-pad-x', 'btn-pad-y', 'btn-icon', 'btn-icon-pad', 'btn-weight'],
+    render: size => renderStyle(Button, { size }),
   },
   {
     name: 'TextInput',
-    component: TextInput,
-    props: { value: '', ariaLabel: 'x' },
     keys: ['input-font', 'input-line', 'input-radius', 'input-pad-x', 'input-pad-y'],
+    render: size => renderStyle(TextInput, { value: '', ariaLabel: 'x', size }),
   },
   {
     name: 'SearchInput',
-    component: SearchInput,
-    props: { value: '', ariaLabel: 'x' },
     keys: [
       'search-font',
       'search-line',
@@ -106,12 +101,12 @@ const CASES: ComponentCase[] = [
       'search-icon-left',
       'search-icon',
     ],
+    render: size => renderStyle(SearchInput, { value: '', ariaLabel: 'x', size }),
   },
   {
     name: 'SelectDropdown',
-    component: SelectDropdown,
-    props: { options: ['a', 'b'], activeValue: 'a', ariaLabel: 'x', onSelect: () => {} },
     keys: ['sel-font', 'sel-pad-x', 'sel-pad-y', 'sel-min-w', 'sel-gap', 'sel-icon'],
+    render: size => renderStyle(SelectDropdown, { options: ['a', 'b'], activeValue: 'a', ariaLabel: 'x', onSelect: () => {}, size }),
   },
 ]
 
@@ -142,10 +137,10 @@ describe('custom size invariants — pure', () => {
 // For every component, every emitted dimension metric must keep a constant
 // metric:dimension ratio across names and arbitrary numbers, be monotonic, and
 // never be NaN/undefined.
-describe.each(CASES)('$name — all metrics', ({ component, props, keys }) => {
+describe.each(CASES)('$name — all metrics', ({ keys, render }) => {
   it('emits exactly the declared metric set at every size', async () => {
     for (const size of [...AXIS_SIZES, ...NUMERIC_SIZES]) {
-      const vars = styleVars(await renderStyle(component, { ...props, size }))
+      const vars = styleVars(await render(size))
       expect(Object.keys(vars).sort()).toEqual([...keys].sort())
     }
   })
@@ -153,15 +148,15 @@ describe.each(CASES)('$name — all metrics', ({ component, props, keys }) => {
   it('keeps every length metric a constant ratio of the size (no metric drifts)', async () => {
     const lengthKeys = keys.filter(k => !k.endsWith('-weight'))
     // Reference ratio from the first size, then require it everywhere.
-    const ref = styleVars(await renderStyle(component, { ...props, size: AXIS_SIZES[0] }))
+    const ref = styleVars(await render(AXIS_SIZES[0]!))
     for (const size of [...AXIS_SIZES, ...NUMERIC_SIZES]) {
-      const vars = styleVars(await renderStyle(component, { ...props, size }))
+      const vars = styleVars(await render(size))
       for (const key of lengthKeys) {
         const value = vars[key]!
         expect(Number.isFinite(value)).toBe(true)
         expect(value).toBeGreaterThanOrEqual(0)
         // value / size equals the reference ratio (constant across the range).
-        expect(value / size).toBeCloseTo(ref[key]! / AXIS_SIZES[0], 5)
+        expect(value / size).toBeCloseTo(ref[key]! / AXIS_SIZES[0]!, 5)
       }
     }
   })
@@ -170,7 +165,7 @@ describe.each(CASES)('$name — all metrics', ({ component, props, keys }) => {
     const sizes = [...AXIS_SIZES, ...NUMERIC_SIZES].sort((a, b) => a - b)
     let previous: Record<string, number> = {}
     for (const size of sizes) {
-      const style = await renderStyle(component, { ...props, size })
+      const style = await render(size)
       expect(style).not.toMatch(/NaN|undefined/)
       const vars = styleVars(style)
       for (const key of keys) {
