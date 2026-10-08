@@ -37,6 +37,7 @@ import Spinner from '$lib/components/Spinner.svelte'
 import Splitter from '$lib/components/Splitter.svelte'
 import Tabs from '$lib/components/Tabs.svelte'
 import TagInput from '$lib/components/TagInput.svelte'
+import TextInput from '$lib/components/TextInput.svelte'
 import Toast from '$lib/components/Toast.svelte'
 import Tooltip from '$lib/components/Tooltip.svelte'
 import CheckIcon from '$lib/icons/CheckIcon.svelte'
@@ -49,6 +50,7 @@ import CodeIcon from '$lib/icons/CodeIcon.svelte'
 import ColumnsIcon from '$lib/icons/ColumnsIcon.svelte'
 import CopyIcon from '$lib/icons/CopyIcon.svelte'
 import DeleteIcon from '$lib/icons/DeleteIcon.svelte'
+import DownloadIcon from '$lib/icons/DownloadIcon.svelte'
 import EyeIcon from '$lib/icons/EyeIcon.svelte'
 import EyeSlashIcon from '$lib/icons/EyeSlashIcon.svelte'
 import ForestIcon from '$lib/icons/ForestIcon.svelte'
@@ -118,6 +120,7 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/Splitter.svelte': { default: Splitter },
   'ui/Tabs.svelte': { default: Tabs },
   'ui/TagInput.svelte': { default: TagInput },
+  'ui/TextInput.svelte': { default: TextInput },
   'ui/Toast.svelte': { default: Toast },
   'ui/Tooltip.svelte': { default: Tooltip },
   'ui/CheckIcon.svelte': { default: CheckIcon },
@@ -130,6 +133,7 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/ColumnsIcon.svelte': { default: ColumnsIcon },
   'ui/CopyIcon.svelte': { default: CopyIcon },
   'ui/DeleteIcon.svelte': { default: DeleteIcon },
+  'ui/DownloadIcon.svelte': { default: DownloadIcon },
   'ui/EyeIcon.svelte': { default: EyeIcon },
   'ui/EyeSlashIcon.svelte': { default: EyeSlashIcon },
   'ui/ForestIcon.svelte': { default: ForestIcon },
