@@ -16,12 +16,11 @@
   import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
   import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
   import { parseSizeValue } from '$lib/showcase/size-input'
+  import { extractComponentAttributes, extractScriptValue } from '$lib/showcase/snippet-attributes'
+  import { parseOptionArrayJson } from '$lib/showcase/option-json'
   import { splitLeadingScript } from '$lib/showcase/snippet-source'
   import {
     buildSelectDropdownSnippet,
-    extractScriptValue,
-    extractSelectDropdownAttributes,
-    parseSelectOptionsJson,
     SELECT_STAGE_DEFAULT_WIDTH,
     SELECT_STAGE_HOST,
     SELECT_STAGE_MIN_WIDTH,
@@ -142,7 +141,7 @@
   // on OK, so cancelling (or a dirty-dismiss) never touches the live options.
   let pgOptionsOpen = $state(false)
   let pgOptionsDraft = $state('')
-  const parsedOptions = $derived(parseSelectOptionsJson(pgOptionsDraft))
+  const parsedOptions = $derived(parseOptionArrayJson(pgOptionsDraft))
   const optionsDirty = $derived(pgOptionsDraft !== JSON.stringify(pgOptions, null, 2))
 
   function openOptionsEditor() {
@@ -193,7 +192,7 @@
   // the builder omits. `syncSeed` then holds the regenerated seed back so the
   // editor keeps the user's text.
   function syncPlaygroundFromSnippet(source: string) {
-    const attrs = extractSelectDropdownAttributes(source)
+    const attrs = extractComponentAttributes(source, 'SelectDropdown')
     if (!attrs) {
       return
     }
@@ -266,35 +265,19 @@
     if (preview.live) preview.refresh()
   })
 
+  // Editable rows first (primitives and plain data, A–Z), then the function
+  // props (A–Z). Snippet edits map the same way through `syncPlaygroundFromSnippet`.
   const props: PropRow[] = [
-    {
-      name: 'buttonLabel',
-      type: 'string',
-      defaultValue: 'derived',
-      note: "Overrides the trigger label; omit it and the trigger shows the committed option's label (or the raw value).",
-    },
-    {
-      name: 'options',
-      type: '(string | { value: string; label?: string })[]',
-      defaultValue: '—',
-      note: 'Selectable options; a bare string (or a missing label) displays as its own value.',
-    },
     { name: 'activeValue', type: 'string', defaultValue: "''", note: 'Committed value; marked in the panel.' },
-    { name: 'ariaLabel', type: 'string', defaultValue: '—', note: 'Accessible name for the control.' },
-    { name: 'filterable', type: 'boolean', defaultValue: 'false', note: 'Renders a combobox input with filtering.' },
+    { name: 'align', type: "'left' | 'right'", defaultValue: "'left'", note: 'Panel edge anchored to the trigger.' },
     {
       name: 'allowCustomValue',
       type: 'boolean',
       defaultValue: 'false',
       note: 'Enter commits typed text that matches no option (filterable only).',
     },
-    {
-      name: 'size',
-      type: "'xs' | 'sm' | 'md' | 'lg' | number",
-      defaultValue: "'sm'",
-      note: 'Control scale; numbers are icon-scale pixels interpolated between the steps.',
-    },
-    { name: 'onSelect', type: '(value: string) => void', defaultValue: '—', note: 'Called with the chosen value.' },
+    { name: 'ariaLabel', type: 'string', defaultValue: '—', note: 'Accessible name for the control.' },
+    { name: 'autoPlace', type: 'boolean', defaultValue: 'true', note: 'Flips the panel when crowded.' },
     {
       name: 'buttonClass',
       type: 'string',
@@ -302,18 +285,10 @@
       note: 'Replaces the trigger button box classes.',
     },
     {
-      name: 'controlClass',
+      name: 'buttonLabel',
       type: 'string',
-      defaultValue: 'built-in',
-      note: 'Replaces the filterable trigger box classes.',
-    },
-    { name: 'optionClass', type: 'string', defaultValue: 'built-in', note: 'Replaces the option row classes.' },
-    { name: 'emptyLabel', type: 'string', defaultValue: '—', note: 'Shown when the filtered list is empty.' },
-    {
-      name: 'clearable',
-      type: 'boolean',
-      defaultValue: 'false',
-      note: 'Appends a cross button that clears the value.',
+      defaultValue: 'derived',
+      note: "Overrides the trigger label; omit it and the trigger shows the committed option's label (or the raw value).",
     },
     {
       name: 'clearLabel',
@@ -322,14 +297,40 @@
       note: 'Accessible name for the clear button.',
     },
     {
+      name: 'clearable',
+      type: 'boolean',
+      defaultValue: 'false',
+      note: 'Appends a cross button that clears the value.',
+    },
+    {
+      name: 'controlClass',
+      type: 'string',
+      defaultValue: 'built-in',
+      note: 'Replaces the filterable trigger box classes.',
+    },
+    { name: 'emptyLabel', type: 'string', defaultValue: '—', note: 'Shown when the filtered list is empty.' },
+    { name: 'filterable', type: 'boolean', defaultValue: 'false', note: 'Renders a combobox input with filtering.' },
+    { name: 'optionClass', type: 'string', defaultValue: 'built-in', note: 'Replaces the option row classes.' },
+    {
+      name: 'options',
+      type: '(string | { value: string; label?: string })[]',
+      defaultValue: '—',
+      note: 'Selectable options; a bare string (or a missing label) displays as its own value.',
+    },
+    { name: 'panelClass', type: 'string', defaultValue: 'built-in', note: 'Replaces the floating panel classes.' },
+    {
+      name: 'size',
+      type: "'xs' | 'sm' | 'md' | 'lg' | number",
+      defaultValue: "'sm'",
+      note: 'Control scale; numbers are icon-scale pixels interpolated between the steps.',
+    },
+    {
       name: 'onClear',
       type: '() => void',
       defaultValue: "onSelect('')",
       note: 'Clear handler; selects empty when omitted.',
     },
-    { name: 'align', type: "'left' | 'right'", defaultValue: "'left'", note: 'Panel edge anchored to the trigger.' },
-    { name: 'autoPlace', type: 'boolean', defaultValue: 'true', note: 'Flips the panel when crowded.' },
-    { name: 'panelClass', type: 'string', defaultValue: 'built-in', note: 'Replaces the floating panel classes.' },
+    { name: 'onSelect', type: '(value: string) => void', defaultValue: '—', note: 'Called with the chosen value.' },
   ]
 </script>
 
