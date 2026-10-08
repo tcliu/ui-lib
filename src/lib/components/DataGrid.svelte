@@ -494,7 +494,7 @@
     event.preventDefault()
     model.applyPastedText(ri, ci, text)
     sel.setActiveCell(ri, ci)
-    tick().then(() => focus.cellBox(ri, ci))
+    focus.cellInput(ri, ci)
   }
 
   function handleBodyBlur() {
