@@ -92,6 +92,21 @@ describe('Resizable', () => {
     }
   })
 
+  it('renders only the width handle and hugs its content without a height', () => {
+    const onResize = vi.fn()
+    instance = mount(Harness, { target, props: { autoHeight: true, onResize } })
+    flushSync()
+    const container = target.firstElementChild as HTMLElement
+    expect(container.style.width).toBe('200px')
+    expect(container.style.height).toBe('')
+    const separators = [...target.querySelectorAll('[role="separator"]')] as HTMLElement[]
+    expect(separators).toHaveLength(1)
+    expect(separators[0].getAttribute('aria-label')).toBe('Resize width')
+    pointer(separators[0], 'pointerdown', 100, 50)
+    pointer(separators[0], 'pointermove', 150, 90)
+    expect(onResize).toHaveBeenLastCalledWith(250, undefined)
+  })
+
   it('drags the right edge to widen without changing the height', () => {
     const onResize = vi.fn()
     const onResizeEnd = vi.fn()
@@ -129,7 +144,7 @@ describe('Resizable', () => {
   })
 
   it('supports arrow keys and Home on the focused handles', () => {
-    const sizes: [number, number][] = []
+    const sizes: [number, number | undefined][] = []
     const onResizeEnd = vi.fn()
     instance = mount(Harness, {
       target,
