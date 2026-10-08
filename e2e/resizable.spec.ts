@@ -7,7 +7,7 @@ test('showcase: the resizable demo resizes from its cursor-only edges', async ({
   await page.setViewportSize({ width: 1400, height: 1000 })
   await page.goto('/components/resizable')
   await page.waitForLoadState('networkidle')
-  const section = page.locator('main > div > section').first()
+  const section = page.locator('[data-showcase-demo]').first()
   const widthHandle = section.getByRole('separator', { name: 'Resize width', exact: true })
   const bothHandle = section.getByRole('separator', { name: 'Resize width and height', exact: true })
   const container = widthHandle.locator('..')
