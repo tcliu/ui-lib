@@ -168,9 +168,18 @@ Project-specific development conventions for the UI Library web app.
   `chip.remove`, `tagInput.*`, `kebab.*`, `range.*`, `grid.*`, `resizable.*`, and
   `appShell.*`).
 - Component attributes stay camelCase.
-- New sized components support the full `xs`–`lg` scale from the start (literal
-  per-size classes, never interpolated) instead of growing sizes one use case
-  at a time.
+- A sized component exposes one numeric size dimension, and names (`xs`–`lg`)
+  are aliases to the shared `SIZE_PX` axis. Scale every dimension metric —
+  font, line-height, padding, gap, icon — as a fixed ratio of that dimension
+  (`metric = ratio × resolveSize(size)`), so each metric's ratio to the size is
+  constant across the whole range: no metric plateaus while another grows, and
+  none steps or jumps relative to the size. Non-length chrome (corner radius,
+  font weight) is not a dimension metric. Because the ratio is constant there
+  is nothing to interpolate, so a sized component keeps no per-step
+  anchor/class table and no geometry module; the shared helpers live in
+  `src/lib/components/size-metrics.ts` (`resolveSize`, `dimensionMetrics`,
+  `dimensionWeight`, `sizeVarStyle`) and the inline style carries the metric
+  custom properties while a static utility set consumes them.
 - Size svg primitives (icons, spinner) through the `size` prop (`xs`–`lg` as
   width/height attributes), never size classes: attributes compose with
   `className`, while explicit size classes in `className` still win because
@@ -250,10 +259,12 @@ Project-specific development conventions for the UI Library web app.
   section title derives from `isCustomized` (`showcase.default` /
   `showcase.customized`).
 - Converted showcase pages (`select-dropdown`, `chip-dropdown`, `menu`,
-  `column-chooser`, `date-range-picker`, `tag-input`, and later siblings) depart from that shell: they pass `bordered={false}`/`showHeader={false}`
+  `column-chooser`, `date-range-picker`, `tag-input`, `button`, `search-input`,
+  `text-input`, `number-input`, `password-input`, and later siblings) depart from that shell: they pass `bordered={false}`/`showHeader={false}`
   to `ShowcaseSection`, own the `SnippetPreview`, and render the code toggle in
   `ShowcasePage`'s `actions` slot beside the component name (so they drop the
-  Default/Customized title). Their demo sits in a width-only `Resizable` stage,
+  Default/Customized title). Overlay demos sit in a width-only `Resizable` stage
+  (non-overlay demos render unframed, since there is no placement to inspect),
   and their props table appends an editable Value column whose typed controls
   drive the same `pg*` state as the config panel. Single-prop editing lives in
   that column, so the config footer keeps only `Reset` plus editors for demo
