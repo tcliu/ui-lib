@@ -24,6 +24,14 @@ export function dimensionMetrics<R extends Record<string, number>>(
   return out
 }
 
+// An icon-only box stands in for the text row of the same control, so its box
+// must measure the same: icon + 2·iconPad == line + 2·padY, i.e.
+// iconPad = padY + (line - icon) / 2. Deriving the ratio keeps the two from
+// drifting when padY or line is tuned — a hand-copied iconPad goes stale.
+export function iconPadRatio(ratios: { padY: number; line: number; icon: number }): number {
+  return ratios.padY + (ratios.line - ratios.icon) / 2
+}
+
 // Render resolved metrics as prefixed CSS custom properties for an element's
 // inline `style`; the element's own static utility set consumes them. Prefixing
 // per component keeps nested instances from colliding. Every metric is a length,

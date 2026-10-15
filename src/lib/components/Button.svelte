@@ -2,7 +2,7 @@
   import type { ComponentProps, Snippet } from 'svelte'
   import Tooltip from './Tooltip.svelte'
   import type { SizeInput } from '$lib/size-scale'
-  import { dimensionMetrics, sizeVarStyle } from './size-metrics'
+  import { dimensionMetrics, iconPadRatio, sizeVarStyle } from './size-metrics'
 
   interface Props {
     variant?: 'primary' | 'secondary' | 'danger' | 'outline' | 'ghost'
@@ -83,12 +83,13 @@
   // constant metric:dimension ratio across the range; the icon is the dimension
   // itself (ratio 1). Font weight is an emphasis tier, not a length. The ratios
   // reproduce a compact 13px toolbar button at the default `md` dimension.
-  // `iconPad` is `padY + (line - icon) / 2`, so an icon-only button's box
-  // (`icon + 2·iconPad`) equals a text button's (`line + 2·padY`) and the glyph
-  // reads as a square at the text row height instead of a shorter box.
-  const BUTTON_RATIOS = { font: 0.8125, line: 1.1607, radius: 0.375, padX: 0.75, padY: 0.5, icon: 1, iconPad: 0.58035 }
+  // `iconPad` is derived so an icon-only button's box (`icon + 2·iconPad`)
+  // equals a text button's (`line + 2·padY`) and the glyph reads as a square at
+  // the text row height instead of a shorter box — see `iconPadRatio`.
+  const BUTTON_RATIOS = { font: 0.8125, line: 1.1607, radius: 0.375, padX: 0.65, padY: 0.45, icon: 1 }
+  const BUTTON_METRICS = { ...BUTTON_RATIOS, iconPad: iconPadRatio(BUTTON_RATIOS) }
 
-  const metrics = $derived({ ...dimensionMetrics(size, BUTTON_RATIOS) })
+  const metrics = $derived({ ...dimensionMetrics(size, BUTTON_METRICS) })
   const boxStyle = $derived(sizeVarStyle('btn', metrics))
 
   const disabledState = $derived(disabled || pending)

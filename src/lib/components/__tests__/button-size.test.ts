@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushSync, mount, unmount } from 'svelte'
 import Button from '../Button.svelte'
-import { dimensionMetrics, resolveSize } from '../size-metrics'
+import { dimensionMetrics, iconPadRatio, resolveSize } from '../size-metrics'
 
 function installDomStubs(): void {
   vi.stubGlobal('matchMedia', () => ({
@@ -47,6 +47,11 @@ describe('size-metrics', () => {
     expect(atLg.pad).toBe(12)
     expect(atLg.font).toBeCloseTo(15.6)
   })
+
+  it('derives the icon-only padding from the row geometry', () => {
+    expect(iconPadRatio({ padY: 0.5, line: 1.1607, icon: 1 })).toBeCloseTo(0.58035)
+    expect(iconPadRatio({ padY: 0.45, line: 1.1607, icon: 1 })).toBeCloseTo(0.53035)
+  })
 })
 
 describe('Button dimension ratios', () => {
@@ -61,8 +66,8 @@ describe('Button dimension ratios', () => {
       flushSync()
       const style = target.querySelector('button')?.getAttribute('style') ?? ''
       expect(num(style, 'font') / px).toBeCloseTo(0.8125)
-      expect(num(style, 'pad-x') / px).toBeCloseTo(0.75)
-      expect(num(style, 'pad-y') / px).toBeCloseTo(0.5)
+      expect(num(style, 'pad-x') / px).toBeCloseTo(0.65)
+      expect(num(style, 'pad-y') / px).toBeCloseTo(0.45)
       expect(num(style, 'radius') / px).toBeCloseTo(0.375)
       expect(num(style, 'icon') / px).toBeCloseTo(1)
       // Icon-only padding keeps its box the text row height: icon + 2·iconPad
