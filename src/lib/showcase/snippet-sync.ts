@@ -76,6 +76,10 @@ export interface SyncField {
     declarations: string,
   ) => string | null | undefined
   set?: (value: string) => void
+  // text/tri/number: the row's current value. An absent attribute writes this
+  // back (rather than resetting to the default) so compiling a snippet that
+  // omits an eye row's prop never stages the default into the form.
+  currentValue?: () => string
 }
 
 const NUMERIC_RE = /^-?\d+(\.\d+)?$/
@@ -117,7 +121,7 @@ export interface SyncOptions {
 // snippet-to-state write-back. `attr` defaults to the row name (override when
 // the snippet shape lives under another key, e.g. the label script-local
 // behind a `children` row); `set` defaults to the row's `onChange`.
-export type FieldSyncMeta = Omit<SyncField, 'attr' | 'set' | 'setJson'> & {
+export type FieldSyncMeta = Omit<SyncField, 'attr' | 'set' | 'setJson' | 'currentValue'> & {
   attr?: string
   set?: (value: string) => void
   setJson?: (value: unknown) => void
@@ -143,26 +147,42 @@ export function syncFieldsOf(fields: SyncableFieldConfig[]): SyncField[] {
     // with neither stays unset. Owning the restore here keeps a page from
     // dropping the fallback its hand-written setter used to carry; an explicit
     // `set` still keeps full control.
-    const resolvesEmpty =
+    // The row's literal (text/number/custom) or boolean (tri) default. Custom
+    // reads (e.g. `size`) carry theirs through `placeholder`/`editorDefaultValue`
+    // too, so one value covers every kind.
+    const literalDefault =
       shape.kind === 'tri'
         ? field.defaultValue === 'true'
           ? 'yes'
           : field.defaultValue === 'false'
             ? 'no'
             : ''
-        : shape.kind === 'text' || shape.kind === 'number'
-          ? (field.editorDefaultValue ?? field.placeholder ?? '')
-          : ''
+        : (field.editorDefaultValue ?? field.placeholder ?? '')
+    const resolvesEmpty =
+      shape.kind === 'tri' || shape.kind === 'text' || shape.kind === 'number' ? literalDefault : ''
+    // An eye row that prefills a literal default never stages it: an absent
+    // attribute writes the row's current value back, and a write that lands on
+    // the default unstages the eye.
+    const eyeDefault = Boolean(field.toggle) && literalDefault !== ''
+    const currentValue =
+      eyeDefault && (shape.kind === 'text' || shape.kind === 'tri' || shape.kind === 'number')
+        ? () => field.value ?? ''
+        : undefined
     const setter =
       set ??
       (field.onChange
-        ? (value: string) => field.onChange?.(value === '' ? resolvesEmpty : value)
+        ? (value: string) => {
+            const next = value === '' ? resolvesEmpty : value
+            field.onChange?.(next)
+            if (eyeDefault && next === literalDefault) field.toggle?.onToggle(false)
+          }
         : undefined)
     return [
       {
         ...shape,
         attr: attr ?? field.name,
         set: setter,
+        ...(currentValue ? { currentValue } : {}),
         ...(setJson ? { setJson } : {}),
       },
     ]
@@ -183,6 +203,11 @@ export function syncSnippetToState(source: string, { tag, fields, onDone }: Sync
     switch (field.kind) {
       case 'text': {
         if (!attrs) break
+        const cv = field.currentValue
+        if (!attrs.has(field.attr) && cv) {
+          field.set?.(cv())
+          break
+        }
         const next = readText(attrs, field.attr)
         if (next !== undefined) {
           field.set?.(field.unsetValues?.includes(next) ? '' : next)
@@ -191,6 +216,11 @@ export function syncSnippetToState(source: string, { tag, fields, onDone }: Sync
       }
       case 'tri': {
         if (!attrs) break
+        const cv = field.currentValue
+        if (!attrs.has(field.attr) && cv) {
+          field.set?.(cv())
+          break
+        }
         const next = readTri(attrs, field.attr)
         if (next !== undefined) {
           field.set?.(next)
@@ -200,7 +230,7 @@ export function syncSnippetToState(source: string, { tag, fields, onDone }: Sync
       case 'number': {
         if (!attrs) break
         if (!attrs.has(field.attr)) {
-          field.set?.('')
+          field.set?.(field.currentValue ? field.currentValue() : '')
           break
         }
         const attr = attrs.get(field.attr)!

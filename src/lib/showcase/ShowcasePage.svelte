@@ -14,6 +14,8 @@
   import RelatedNav from './RelatedNav.svelte'
   import { docsHeaders } from './docs-headers'
   import { SnippetPreview } from './use-snippet-preview.svelte'
+  import { syncFieldsOf, type SyncField } from './snippet-sync'
+  import { useScopeRefresh } from './use-scope-refresh.svelte'
 
   // Optional resizable demo stage. The page supplies only its demo content and
   // the frame bounds; the shell owns the host/Resizable/pane chrome, so the
@@ -47,6 +49,14 @@
     // The converted page's props-table rows; the shell renders them as the
     // shared FieldTable, so every page carries the same section chrome.
     fields?: FieldConfig[]
+    // Snippet write-back for the shell-owned preview: the tag whose
+    // attributes sync, plus an optional `getFields` when the page appends
+    // rows beyond `fields` (the shell derives `syncFieldsOf(fields)` else).
+    sync?: { tag: string | null; getFields?: () => SyncField[] }
+    // Recompile the live preview when a `scope` key the seed does not cover
+    // changes; `scopeRefreshWhen` optionally gates it.
+    scopeRefresh?: () => unknown
+    scopeRefreshWhen?: () => boolean
   }
 
   let {
@@ -60,6 +70,9 @@
     preview: externalPreview,
     onReset,
     fields,
+    sync,
+    scopeRefresh,
+    scopeRefreshWhen,
   }: Props = $props()
   const i18n = getI18nContext()
 
@@ -72,7 +85,21 @@
   // Only build an owned preview when the caller passes none. The preview prop
   // is read once at init (`untrack`), so no redundant preview registers effects.
   const preview =
-    untrack(() => externalPreview) ?? new SnippetPreview({ getSeed: () => code ?? '', getScope: () => scope ?? {} })
+    untrack(() => externalPreview) ??
+    untrack(
+      () =>
+        new SnippetPreview({
+          getSeed: () => code ?? '',
+          getScope: () => scope ?? {},
+          ...(sync
+            ? { sync: { tag: sync.tag, getFields: () => sync.getFields?.() ?? syncFieldsOf(fields ?? []) } }
+            : {}),
+        }),
+    )
+
+  // The shell owns the scope refresh so a page only declares the keys it
+  // reads; a no-op when the page passes no `scopeRefresh`.
+  useScopeRefresh(preview, () => scopeRefresh?.(), () => scopeRefreshWhen?.() ?? true)
 
   let feedback = $state('')
   let copyTimer: ReturnType<typeof setTimeout> | null = null

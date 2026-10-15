@@ -283,4 +283,37 @@ describe('syncFieldsOf', () => {
     syncSnippetToState('<Widget position="top-right" />', { tag: 'Widget', fields, onDone: () => {} })
     expect(seen).toEqual(['derived:top-right', 'explicit:'])
   })
+
+  it('keeps an eye row current on an absent attribute, never resetting or staging', () => {
+    const writes: string[] = []
+    const toggles: boolean[] = []
+    const fields = syncFieldsOf([
+      { name: 'size', type: "'md' | 'lg'", defaultValue: "'md'", placeholder: 'md', note: '', editor: 'size', value: 'lg', onChange: value => writes.push(`size:${value}`), toggle: { enabled: true, onToggle: enabled => toggles.push(enabled) }, sync: { kind: 'text' } },
+    ])
+    syncSnippetToState('<Widget />', { tag: 'Widget', fields, onDone: () => {} })
+    expect(writes).toEqual(['size:lg'])
+    expect(toggles).toEqual([])
+  })
+
+  it('unstages an eye row when the compiled value is its literal default', () => {
+    const writes: string[] = []
+    const toggles: boolean[] = []
+    const fields = syncFieldsOf([
+      { name: 'size', type: "'md' | 'lg'", defaultValue: "'md'", placeholder: 'md', note: '', editor: 'size', value: 'lg', onChange: value => writes.push(`size:${value}`), toggle: { enabled: true, onToggle: enabled => toggles.push(enabled) }, sync: { kind: 'text' } },
+    ])
+    syncSnippetToState('<Widget size="md" />', { tag: 'Widget', fields, onDone: () => {} })
+    expect(writes).toEqual(['size:md'])
+    expect(toggles).toEqual([false])
+  })
+
+  it('keeps an eye tri row current on an absent attribute', () => {
+    const writes: string[] = []
+    const toggles: boolean[] = []
+    const fields = syncFieldsOf([
+      { name: 'disabled', type: 'boolean', defaultValue: 'false', note: '', editor: 'boolean', value: 'yes', onChange: value => writes.push(`disabled:${value}`), toggle: { enabled: true, onToggle: enabled => toggles.push(enabled) }, sync: { kind: 'tri' } },
+    ])
+    syncSnippetToState('<Widget />', { tag: 'Widget', fields, onDone: () => {} })
+    expect(writes).toEqual(['disabled:yes'])
+    expect(toggles).toEqual([])
+  })
 })
