@@ -24,63 +24,56 @@
   // edited through the dialog below: raw markup while customized, empty for
   // the canonical TextInput. The eye toggle omits them from both the demo and
   // the seed when off.
-  let pgValue = $state('')
-  let pgLabel = $state('Default')
-  let pgLabelOn = $state(true)
-  let pgHtmlFor = $state('')
-  let pgHtmlForOn = $state(false)
-  let pgClassName = $state('')
-  let pgClassNameOn = $state(false)
-  let pgLayout = $state('stacked')
-  let pgLayoutOn = $state(false)
-  let pgChildren = $state('')
-  let pgChildrenOn = $state(true)
+  const INITIAL = {
+    value: '',
+    label: 'Default',
+    labelOn: true,
+    htmlFor: '',
+    htmlForOn: false,
+    className: '',
+    classNameOn: false,
+    layout: 'stacked',
+    layoutOn: false,
+    children: '',
+    childrenOn: true,
+  }
+  let pg = $state(structuredClone(INITIAL))
 
   const layoutOptions = [{ value: 'inline', label: 'Inline' }]
 
-  const demoLabel = $derived(pgLabelOn && pgLabel ? pgLabel : i18n.t('showcase.default'))
-  const demoHtmlFor = $derived(pgHtmlForOn && pgHtmlFor ? pgHtmlFor : undefined)
-  const demoClassName = $derived(pgClassNameOn && pgClassName ? pgClassName : undefined)
-  const demoLayout = $derived(pgLayoutOn && pgLayout === 'inline' ? 'inline' : undefined)
+  const demoLabel = $derived(pg.labelOn && pg.label ? pg.label : i18n.t('showcase.default'))
+  const demoHtmlFor = $derived(pg.htmlForOn && pg.htmlFor ? pg.htmlFor : undefined)
+  const demoClassName = $derived(pg.classNameOn && pg.className ? pg.className : undefined)
+  const demoLayout = $derived(pg.layoutOn && pg.layout === 'inline' ? 'inline' : undefined)
   // Custom markup renders as committed; unset, the canonical TextInput reads
   // the dynamic id. Stored drafts are always valid, so the fallback only
   // covers the empty state.
   const demoChildren = $derived<FormFieldChildSegment[]>(
-    parseFormFieldChildSegments(pgChildren || buildFormFieldChildrenMarkup({ htmlFor: pgHtmlForOn && pgHtmlFor ? pgHtmlFor : '' })) ?? [
-      { kind: 'textinput', id: pgHtmlForOn && pgHtmlFor ? pgHtmlFor : '' },
+    parseFormFieldChildSegments(pg.children || buildFormFieldChildrenMarkup({ htmlFor: pg.htmlForOn && pg.htmlFor ? pg.htmlFor : '' })) ?? [
+      { kind: 'textinput', id: pg.htmlForOn && pg.htmlFor ? pg.htmlFor : '' },
     ],
   )
   // The children row edits the markup under the label (demo data, so it has
   // no single prop). Committing the canonical TextInput resets to unset, so
   // the id keeps flowing from the htmlFor row.
-  const childrenSnippet = $derived(pgChildren || buildFormFieldChildrenMarkup({ htmlFor: pgHtmlForOn && pgHtmlFor ? pgHtmlFor : '' }))
+  const childrenSnippet = $derived(pg.children || buildFormFieldChildrenMarkup({ htmlFor: pg.htmlForOn && pg.htmlFor ? pg.htmlFor : '' }))
 
   function clearPlayground() {
-    pgValue = ''
-    pgLabel = 'Default'
-    pgLabelOn = true
-    pgHtmlFor = ''
-    pgHtmlForOn = false
-    pgClassName = ''
-    pgClassNameOn = false
-    pgLayout = 'stacked'
-    pgLayoutOn = false
-    pgChildren = ''
-    pgChildrenOn = true
+    pg = structuredClone(INITIAL)
   }
 
   const code = $derived.by(() =>
     buildFormFieldSnippet({
-      label: pgLabel,
-      labelOn: pgLabelOn,
-      htmlFor: pgHtmlFor,
-      htmlForOn: pgHtmlForOn,
-      className: pgClassName,
-      classNameOn: pgClassNameOn,
-      layout: pgLayout,
-      layoutOn: pgLayoutOn,
-      children: pgChildren,
-      childrenEnabled: pgChildrenOn,
+      label: pg.label,
+      labelOn: pg.labelOn,
+      htmlFor: pg.htmlFor,
+      htmlForOn: pg.htmlForOn,
+      className: pg.className,
+      classNameOn: pg.classNameOn,
+      layout: pg.layout,
+      layoutOn: pg.layoutOn,
+      children: pg.children,
+      childrenEnabled: pg.childrenOn,
     }),
   )
 
@@ -100,21 +93,20 @@
       onChange: (draft: string) => {
         if (!parseFormFieldChildrenMarkup(draft)) return
         const normalized = normalizeFormFieldChildrenDraft(draft)
-        pgChildren = normalized === buildFormFieldChildrenMarkup({ htmlFor: pgHtmlForOn && pgHtmlFor ? pgHtmlFor : '' }) ? '' : normalized
-        pgChildrenOn = true
+        pg.children = normalized === buildFormFieldChildrenMarkup({ htmlFor: pg.htmlForOn && pg.htmlFor ? pg.htmlFor : '' }) ? '' : normalized
+        pg.childrenOn = true
       },
       dialog: snippetDialog(
         parseFormFieldChildrenMarkup,
         'Use <TextInput bind:value ... /> lines and well-formed HTML elements only — no {…} expressions, components, or event handlers.',
       ),
-      toggle: snippetToggle(pgChildrenOn, enabled => (pgChildrenOn = enabled)),
+      toggle: snippetToggle(pg.childrenOn, enabled => (pg.childrenOn = enabled)),
     }),
-    textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes for the field wrapper.', value: pgClassName, onChange: v => (pgClassName = v), editorDefaultValue: '', clearable: true, enabled: pgClassNameOn, setEnabled: v => (pgClassNameOn = v) }),
-    textField({ name: 'htmlFor', type: 'string?', defaultValue: '—', note: 'Associates the label with a control id.', value: pgHtmlFor, onChange: v => (pgHtmlFor = v), clearable: true, enabled: pgHtmlForOn, setEnabled: v => (pgHtmlForOn = v) }),
-    { name: 'label', type: 'string', defaultValue: '—', note: 'Visible field label.', editor: 'text', clearable: true, value: pgLabel, onChange: value => { pgLabel = value; pgLabelOn = true; }, toggle: snippetToggle(pgLabelOn, enabled => (pgLabelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'defaultLabel' } },
-    enumField({ name: 'layout', type: "'stacked' | 'inline'", defaultValue: "'stacked'", note: 'Stacked puts the label above the control; inline puts it in a 6rem column beside it.', options: layoutOptions, value: pgLayout, onChange: v => (pgLayout = v), placeholder: 'stacked', clearLabel: 'Clear layout', enabled: pgLayoutOn, setEnabled: v => (pgLayoutOn = v) }),
+    textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes for the field wrapper.', value: pg.className, onChange: v => (pg.className = v), editorDefaultValue: '', clearable: true, enabled: pg.classNameOn, setEnabled: v => (pg.classNameOn = v) }),
+    textField({ name: 'htmlFor', type: 'string?', defaultValue: '—', note: 'Associates the label with a control id.', value: pg.htmlFor, onChange: v => (pg.htmlFor = v), clearable: true, enabled: pg.htmlForOn, setEnabled: v => (pg.htmlForOn = v) }),
+    { name: 'label', type: 'string', defaultValue: '—', note: 'Visible field label.', editor: 'text', clearable: true, value: pg.label, onChange: value => { pg.label = value; pg.labelOn = true; }, toggle: snippetToggle(pg.labelOn, enabled => (pg.labelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'defaultLabel' } },
+    enumField({ name: 'layout', type: "'stacked' | 'inline'", defaultValue: "'stacked'", note: 'Stacked puts the label above the control; inline puts it in a 6rem column beside it.', options: layoutOptions, value: pg.layout, onChange: v => (pg.layout = v), placeholder: 'stacked', clearLabel: 'Clear layout', enabled: pg.layoutOn, setEnabled: v => (pg.layoutOn = v) }),
   ])
-
 
   // With an unset label the demo reads the localized default from scope, which
   // reseeding never refreshes; recompile the draft on those scope changes
@@ -126,17 +118,17 @@
     title="FormField"
     {code}
     onReset={clearPlayground}
-    scope={{ value: pgValue, defaultLabel: i18n.t('showcase.default') }}
+    scope={{ value: pg.value, defaultLabel: i18n.t('showcase.default') }}
 
     sync={{ tag: 'FormField' }}
     scopeRefresh={() => [demoLabel]}
-    scopeRefreshWhen={() => !(pgLabelOn && pgLabel)}
+    scopeRefreshWhen={() => !(pg.labelOn && pg.label)}
   >
     <FormField label={demoLabel} htmlFor={demoHtmlFor} className={demoClassName} layout={demoLayout}>
-      {#if pgChildrenOn}
+      {#if pg.childrenOn}
         {#each demoChildren as segment}
           {#if segment.kind === 'textinput'}
-            <TextInput bind:value={pgValue} id={segment.id || undefined} />
+            <TextInput bind:value={pg.value} id={segment.id || undefined} />
           {:else}
             {@html segment.html}
           {/if}

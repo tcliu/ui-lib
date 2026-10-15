@@ -27,58 +27,54 @@
   // default (the Value column shows it), so the cleared form applies no
   // overrides and Show-code omits the defaults. Clearing a Value unsets it;
   // Reset restores the defaults below.
-  let pgValue = $state<unknown>(freshValue())
+  const INITIAL = {
+    value: freshValue() as unknown,
+    valueEnabled: true,
+    editable: 'yes' as TriState,
+    editableOn: true,
+    containerRowClass: '',
+    containerRowClassOn: false,
+    leafRowClass: '',
+    leafRowClassOn: false,
+  }
+  let pg = $state(structuredClone(INITIAL))
   // The component requires a tree value, so the eye resets to the default
   // instead of omitting; committing re-applies.
-  let pgValueEnabled = $state(true)
-  let pgEditable = $state<TriState>('yes')
-  let pgEditableOn = $state(true)
   // Row class overrides start unset (the built-ins render); non-empty text
   // applies live, clearing restores the built-ins. The eye stages the
   // customization without losing text. The Value column seeds from the
   // built-ins below.
-  let pgContainerRowClass = $state('')
-  let pgContainerRowClassOn = $state(false)
-  let pgLeafRowClass = $state('')
-  let pgLeafRowClassOn = $state(false)
 
-  const editable = $derived(pgEditableOn ? flagOn(pgEditable) : undefined)
+  const editable = $derived(pg.editableOn ? flagOn(pg.editable) : undefined)
 
   function handleNodeChange(path: string[], next: unknown): void {
-    if (!isContainer(pgValue)) return
-    pgValue = setAtPath(pgValue, path, next)
+    if (!isContainer(pg.value)) return
+    pg.value = setAtPath(pg.value, path, next)
   }
 
   function handleRenameKey(parentPath: string[], oldKey: string, newKey: string): void {
-    if (!isContainer(pgValue)) return
-    pgValue = renameKeyAtPath(pgValue, parentPath, oldKey, newKey)
+    if (!isContainer(pg.value)) return
+    pg.value = renameKeyAtPath(pg.value, parentPath, oldKey, newKey)
   }
 
   function commitValueDraft(draft: string): void {
     const parsed = parseTreeValueJson(draft)
-    if (parsed !== undefined) pgValue = parsed
+    if (parsed !== undefined) pg.value = parsed
   }
 
   function clearPlayground() {
-    pgValue = freshValue()
-    pgValueEnabled = true
-    pgEditable = 'yes'
-    pgEditableOn = true
-    pgContainerRowClass = ''
-    pgContainerRowClassOn = false
-    pgLeafRowClass = ''
-    pgLeafRowClassOn = false
+    pg = structuredClone(INITIAL)
   }
 
   const code = $derived.by(() =>
     buildStructureTreeSnippet({
-      value: pgValue,
-      editable: pgEditable,
-      editableOn: pgEditableOn,
-      containerRowClass: pgContainerRowClass,
-      containerRowClassOn: pgContainerRowClassOn,
-      leafRowClass: pgLeafRowClass,
-      leafRowClassOn: pgLeafRowClassOn,
+      value: pg.value,
+      editable: pg.editable,
+      editableOn: pg.editableOn,
+      containerRowClass: pg.containerRowClass,
+      containerRowClassOn: pg.containerRowClassOn,
+      leafRowClass: pg.leafRowClass,
+      leafRowClassOn: pg.leafRowClassOn,
     }),
   )
 
@@ -94,28 +90,28 @@
       note: 'Replaces the tunable container header row classes; the Value shows the built-ins, edit from there. Clearing restores the built-ins.',
       editor: 'text',
       clearable: true,
-      value: pgContainerRowClass || DEFAULT_CONTAINER_ROW_CLASS,
+      value: pg.containerRowClass || DEFAULT_CONTAINER_ROW_CLASS,
       onChange: value => {
-        pgContainerRowClass = value === DEFAULT_CONTAINER_ROW_CLASS ? '' : value
-        pgContainerRowClassOn = true
+        pg.containerRowClass = value === DEFAULT_CONTAINER_ROW_CLASS ? '' : value
+        pg.containerRowClassOn = true
       },
-      toggle: snippetToggle(pgContainerRowClassOn, enabled => (pgContainerRowClassOn = enabled)),
+      toggle: snippetToggle(pg.containerRowClassOn, enabled => (pg.containerRowClassOn = enabled)),
       sync: {
         kind: 'custom',
         read: attrs => {
           if (!attrs) return undefined
           // Absent resolves to the current Value text so seed edits elsewhere
           // never reset committed text.
-          if (!attrs.has('containerRowClass')) return pgContainerRowClass || DEFAULT_CONTAINER_ROW_CLASS
+          if (!attrs.has('containerRowClass')) return pg.containerRowClass || DEFAULT_CONTAINER_ROW_CLASS
           const attr = attrs.get('containerRowClass')!
           return attr.kind === 'string' ? attr.value : undefined
         },
         set: value => {
-          pgContainerRowClass = value === DEFAULT_CONTAINER_ROW_CLASS ? '' : value
+          pg.containerRowClass = value === DEFAULT_CONTAINER_ROW_CLASS ? '' : value
         },
       },
     },
-    boolField({ name: 'editable', defaultValue: 'true', note: 'Gates leaf editing and key renames; the callbacks stay wired either way.', value: pgEditable, onChange: v => (pgEditable = v as TriState), enabled: pgEditableOn, setEnabled: v => (pgEditableOn = v) }),
+    boolField({ name: 'editable', defaultValue: 'true', note: 'Gates leaf editing and key renames; the callbacks stay wired either way.', value: pg.editable, onChange: v => (pg.editable = v as TriState), enabled: pg.editableOn, setEnabled: v => (pg.editableOn = v) }),
     {
       name: 'leafRowClass',
       type: 'string?',
@@ -123,22 +119,22 @@
       note: 'Replaces the tunable leaf row classes; the Value shows the built-ins, edit from there. Clearing restores the built-ins.',
       editor: 'text',
       clearable: true,
-      value: pgLeafRowClass || DEFAULT_LEAF_ROW_CLASS,
+      value: pg.leafRowClass || DEFAULT_LEAF_ROW_CLASS,
       onChange: value => {
-        pgLeafRowClass = value === DEFAULT_LEAF_ROW_CLASS ? '' : value
-        pgLeafRowClassOn = true
+        pg.leafRowClass = value === DEFAULT_LEAF_ROW_CLASS ? '' : value
+        pg.leafRowClassOn = true
       },
-      toggle: snippetToggle(pgLeafRowClassOn, enabled => (pgLeafRowClassOn = enabled)),
+      toggle: snippetToggle(pg.leafRowClassOn, enabled => (pg.leafRowClassOn = enabled)),
       sync: {
         kind: 'custom',
         read: attrs => {
           if (!attrs) return undefined
-          if (!attrs.has('leafRowClass')) return pgLeafRowClass || DEFAULT_LEAF_ROW_CLASS
+          if (!attrs.has('leafRowClass')) return pg.leafRowClass || DEFAULT_LEAF_ROW_CLASS
           const attr = attrs.get('leafRowClass')!
           return attr.kind === 'string' ? attr.value : undefined
         },
         set: value => {
-          pgLeafRowClass = value === DEFAULT_LEAF_ROW_CLASS ? '' : value
+          pg.leafRowClass = value === DEFAULT_LEAF_ROW_CLASS ? '' : value
         },
       },
     },
@@ -146,16 +142,16 @@
       name: 'value',
       type: 'unknown',
       note: 'Tree data; any JSON document renders as nested nodes. The eye resets to the default tree.',
-      value: JSON.stringify(pgValue, null, 2) ?? 'null',
+      value: JSON.stringify(pg.value, null, 2) ?? 'null',
       onChange: (draft: string) => {
         commitValueDraft(draft)
-        if (parseTreeValueJson(draft) !== undefined) pgValueEnabled = true
+        if (parseTreeValueJson(draft) !== undefined) pg.valueEnabled = true
       },
       dialog: { valid: (draft: string) => parseTreeValueJson(draft) !== undefined, invalidMessage: 'Invalid value JSON. Use any JSON document.', title: 'Edit value' },
       toggle: resetToggle(
-        pgValueEnabled,
-        enabled => (pgValueEnabled = enabled),
-        () => (pgValue = freshValue()),
+        pg.valueEnabled,
+        enabled => (pg.valueEnabled = enabled),
+        () => (pg.value = freshValue()),
       ),
       sync: { kind: 'custom', read: (_attrs, declarations) => readTreeValueSeed(declarations), set: commitValueDraft },
     }),
@@ -175,10 +171,10 @@
     scope={{}}
   >
     <StructureTree
-      value={pgValue}
+      value={pg.value}
       onChange={handleNodeChange}
       onRenameKey={handleRenameKey}
       {editable}
-      containerRowClass={pgContainerRowClassOn && pgContainerRowClass ? pgContainerRowClass : undefined}
-      leafRowClass={pgLeafRowClassOn && pgLeafRowClass ? pgLeafRowClass : undefined} />
+      containerRowClass={pg.containerRowClassOn && pg.containerRowClass ? pg.containerRowClass : undefined}
+      leafRowClass={pg.leafRowClassOn && pg.leafRowClass ? pg.leafRowClass : undefined} />
 </ShowcasePage>

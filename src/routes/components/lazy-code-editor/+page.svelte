@@ -22,31 +22,34 @@
   // unsets it; Reset restores the defaults below. The content
   // seeds from the shared default and the language field falls back to the
   // component default (`text`, which loads no pack).
-  let pgContent = $state(DEFAULT_CONTENT)
+  const INITIAL = {
+    content: DEFAULT_CONTENT,
+    contentEnabled: true,
+    docType: 'text',
+    docTypeOn: true,
+    editable: 'yes' as TriState,
+    editableOn: true,
+    containerClass: '',
+    containerClassOn: false,
+    editorClass: '',
+    editorClassOn: false,
+    maxContentLength: '0',
+    maxContentLengthOn: false,
+    autoFocus: 'no' as TriState,
+    autoFocusOn: false,
+    editorAriaLabel: '',
+    editorAriaLabelOn: false,
+    recreateKey: '',
+    recreateKeyOn: false,
+  }
+  let pg = $state(structuredClone(INITIAL))
   // The component requires content, so the eye resets to the default document
   // instead of omitting; committing re-applies.
-  let pgContentEnabled = $state(true)
-  let pgDocType = $state('text')
-  let pgDocTypeOn = $state(true)
-  let pgEditable = $state<TriState>('yes')
-  let pgEditableOn = $state(true)
-  let pgContainerClass = $state('')
-  let pgContainerClassOn = $state(false)
-  let pgEditorClass = $state('')
-  let pgEditorClassOn = $state(false)
-  let pgMaxContentLength = $state('0')
-  let pgMaxContentLengthOn = $state(false)
-  let pgAutoFocus = $state<TriState>('no')
-  let pgAutoFocusOn = $state(false)
-  let pgEditorAriaLabel = $state('')
-  let pgEditorAriaLabelOn = $state(false)
-  let pgRecreateKey = $state('')
-  let pgRecreateKeyOn = $state(false)
 
-  const editable = $derived(pgEditableOn ? flagOn(pgEditable) : undefined)
-  const demoDocType = $derived((pgDocTypeOn && pgDocType ? pgDocType : DEFAULT_DOC_TYPE) as DocType)
-  const demoContainerClass = $derived(pgContainerClassOn && pgContainerClass ? pgContainerClass : undefined)
-  const demoEditorClass = $derived(pgEditorClassOn && pgEditorClass ? pgEditorClass : undefined)
+  const editable = $derived(pg.editableOn ? flagOn(pg.editable) : undefined)
+  const demoDocType = $derived((pg.docTypeOn && pg.docType ? pg.docType : DEFAULT_DOC_TYPE) as DocType)
+  const demoContainerClass = $derived(pg.containerClassOn && pg.containerClass ? pg.containerClass : undefined)
+  const demoEditorClass = $derived(pg.editorClassOn && pg.editorClass ? pg.editorClass : undefined)
 
   function asMaxLength(value: string): number | undefined {
     if (value.trim() === '') {
@@ -56,33 +59,16 @@
     return Number.isInteger(parsed) && parsed >= 0 ? parsed : undefined
   }
 
-  const demoMaxContentLength = $derived(pgMaxContentLengthOn ? asMaxLength(pgMaxContentLength) : undefined)
-  const demoAutoFocus = $derived(pgAutoFocusOn ? flagOn(pgAutoFocus) : undefined)
-  const demoEditorAriaLabel = $derived(pgEditorAriaLabelOn && pgEditorAriaLabel ? pgEditorAriaLabel : undefined)
-  const demoRecreateKey = $derived(pgRecreateKeyOn && pgRecreateKey ? pgRecreateKey : undefined)
+  const demoMaxContentLength = $derived(pg.maxContentLengthOn ? asMaxLength(pg.maxContentLength) : undefined)
+  const demoAutoFocus = $derived(pg.autoFocusOn ? flagOn(pg.autoFocus) : undefined)
+  const demoEditorAriaLabel = $derived(pg.editorAriaLabelOn && pg.editorAriaLabel ? pg.editorAriaLabel : undefined)
+  const demoRecreateKey = $derived(pg.recreateKeyOn && pg.recreateKey ? pg.recreateKey : undefined)
 
   function clearPlayground() {
-    pgContent = DEFAULT_CONTENT
-    pgContentEnabled = true
-    pgDocType = 'text'
-    pgDocTypeOn = true
-    pgEditable = 'yes'
-    pgEditableOn = true
-    pgContainerClass = ''
-    pgContainerClassOn = false
-    pgEditorClass = ''
-    pgEditorClassOn = false
-    pgMaxContentLength = '0'
-    pgMaxContentLengthOn = false
-    pgAutoFocus = 'no'
-    pgAutoFocusOn = false
-    pgEditorAriaLabel = ''
-    pgEditorAriaLabelOn = false
-    pgRecreateKey = ''
-    pgRecreateKeyOn = false
+    pg = structuredClone(INITIAL)
   }
 
-  const code = $derived.by(() => buildLazyCodeEditorSnippet({ docType: pgDocType, docTypeOn: pgDocTypeOn, editable: pgEditable, editableOn: pgEditableOn, containerClass: pgContainerClass, containerClassOn: pgContainerClassOn, editorClass: pgEditorClass, editorClassOn: pgEditorClassOn, maxContentLength: pgMaxContentLength, maxContentLengthOn: pgMaxContentLengthOn, autoFocus: pgAutoFocus, autoFocusOn: pgAutoFocusOn, editorAriaLabel: pgEditorAriaLabel, editorAriaLabelOn: pgEditorAriaLabelOn, recreateKey: pgRecreateKey, recreateKeyOn: pgRecreateKeyOn }))
+  const code = $derived.by(() => buildLazyCodeEditorSnippet({ docType: pg.docType, docTypeOn: pg.docTypeOn, editable: pg.editable, editableOn: pg.editableOn, containerClass: pg.containerClass, containerClassOn: pg.containerClassOn, editorClass: pg.editorClass, editorClassOn: pg.editorClassOn, maxContentLength: pg.maxContentLength, maxContentLengthOn: pg.maxContentLengthOn, autoFocus: pg.autoFocus, autoFocusOn: pg.autoFocusOn, editorAriaLabel: pg.editorAriaLabel, editorAriaLabelOn: pg.editorAriaLabelOn, recreateKey: pg.recreateKey, recreateKeyOn: pg.recreateKeyOn }))
 
   
   // Each editable row declares its Value editor and its snippet write-back
@@ -93,27 +79,26 @@
   // editor; `docType` is always emitted (falling back to Markdown), so the
   // Markdown literal maps back to unset.
   const fields: SyncableFieldConfig[] = $derived([
-    textField({ name: 'containerClass', type: 'string?', defaultValue: "''", note: 'Classes for the outer wrapper; give it a bounded height.', value: pgContainerClass, onChange: v => (pgContainerClass = v), editorDefaultValue: '', clearable: true, enabled: pgContainerClassOn, setEnabled: v => (pgContainerClassOn = v) }),
-    { name: 'content', type: 'string', defaultValue: '—', note: 'Bindable editor document. The eye resets to the default content.', editor: 'snippet', value: pgContent, onChange: value => {
-      pgContent = value
-      pgContentEnabled = true
+    textField({ name: 'containerClass', type: 'string?', defaultValue: "''", note: 'Classes for the outer wrapper; give it a bounded height.', value: pg.containerClass, onChange: v => (pg.containerClass = v), editorDefaultValue: '', clearable: true, enabled: pg.containerClassOn, setEnabled: v => (pg.containerClassOn = v) }),
+    { name: 'content', type: 'string', defaultValue: '—', note: 'Bindable editor document. The eye resets to the default content.', editor: 'snippet', value: pg.content, onChange: value => {
+      pg.content = value
+      pg.contentEnabled = true
     }, dialog: { docType: 'html', title: 'Edit content' }, toggle: resetToggle(
-      pgContentEnabled,
-      enabled => (pgContentEnabled = enabled),
-      () => (pgContent = DEFAULT_CONTENT),
+      pg.contentEnabled,
+      enabled => (pg.contentEnabled = enabled),
+      () => (pg.content = DEFAULT_CONTENT),
     ) },
-    { name: 'docType', type: 'string', defaultValue: "'text'", note: "Language pack key: json, javascript, html, markdown, yaml, or xml (loaded on demand). 'text' loads none.", editor: 'enum', options: DOC_TYPE_OPTIONS, value: pgDocType, onChange: value => { pgDocType = value; pgDocTypeOn = true; }, placeholder: 'text', clearLabel: 'Clear document type', toggle: snippetToggle(pgDocTypeOn, enabled => (pgDocTypeOn = enabled)), sync: { kind: 'text', unsetValues: ['markdown'] } },
-    boolField({ name: 'editable', defaultValue: 'true', note: 'Enables typing; false renders read-only.', value: pgEditable, onChange: v => (pgEditable = v as TriState), enabled: pgEditableOn, setEnabled: v => (pgEditableOn = v) }),
-    textField({ name: 'editorClass', type: 'string?', defaultValue: "''", note: 'Classes for the CodeMirror host; use h-full inside a sized wrapper.', value: pgEditorClass, onChange: v => (pgEditorClass = v), editorDefaultValue: '', clearable: true, enabled: pgEditorClassOn, setEnabled: v => (pgEditorClassOn = v) }),
-    { name: 'maxContentLength', type: 'number?', defaultValue: '0', editorDefaultValue: '0', note: 'Caps the document length; 0 disables the cap.', editor: 'number', clearable: true, value: pgMaxContentLength, onChange: value => { pgMaxContentLength = value; pgMaxContentLengthOn = true; }, placeholder: '0', toggle: snippetToggle(pgMaxContentLengthOn, enabled => (pgMaxContentLengthOn = enabled)), sync: { kind: 'number', pattern: /^\d+$/ } },
-    boolField({ name: 'autoFocus', defaultValue: 'false', note: 'Focuses the editor once it mounts.', value: pgAutoFocus, onChange: v => (pgAutoFocus = v as TriState), enabled: pgAutoFocusOn, setEnabled: v => (pgAutoFocusOn = v) }),
-    textField({ name: 'editorAriaLabel', type: 'string?', defaultValue: 'editor.content', note: 'Accessible name for the editor textbox; unset, the localized editor.content key renders.', value: pgEditorAriaLabel, onChange: v => (pgEditorAriaLabel = v), clearable: true, enabled: pgEditorAriaLabelOn, setEnabled: v => (pgEditorAriaLabelOn = v) }),
-    textField({ name: 'recreateKey', type: 'string?', defaultValue: "''", note: 'Changing it destroys and rebuilds the editor.', value: pgRecreateKey, onChange: v => (pgRecreateKey = v), editorDefaultValue: '', clearable: true, enabled: pgRecreateKeyOn, setEnabled: v => (pgRecreateKeyOn = v) }),
+    { name: 'docType', type: 'string', defaultValue: "'text'", note: "Language pack key: json, javascript, html, markdown, yaml, or xml (loaded on demand). 'text' loads none.", editor: 'enum', options: DOC_TYPE_OPTIONS, value: pg.docType, onChange: value => { pg.docType = value; pg.docTypeOn = true; }, placeholder: 'text', clearLabel: 'Clear document type', toggle: snippetToggle(pg.docTypeOn, enabled => (pg.docTypeOn = enabled)), sync: { kind: 'text', unsetValues: ['markdown'] } },
+    boolField({ name: 'editable', defaultValue: 'true', note: 'Enables typing; false renders read-only.', value: pg.editable, onChange: v => (pg.editable = v as TriState), enabled: pg.editableOn, setEnabled: v => (pg.editableOn = v) }),
+    textField({ name: 'editorClass', type: 'string?', defaultValue: "''", note: 'Classes for the CodeMirror host; use h-full inside a sized wrapper.', value: pg.editorClass, onChange: v => (pg.editorClass = v), editorDefaultValue: '', clearable: true, enabled: pg.editorClassOn, setEnabled: v => (pg.editorClassOn = v) }),
+    { name: 'maxContentLength', type: 'number?', defaultValue: '0', editorDefaultValue: '0', note: 'Caps the document length; 0 disables the cap.', editor: 'number', clearable: true, value: pg.maxContentLength, onChange: value => { pg.maxContentLength = value; pg.maxContentLengthOn = true; }, placeholder: '0', toggle: snippetToggle(pg.maxContentLengthOn, enabled => (pg.maxContentLengthOn = enabled)), sync: { kind: 'number', pattern: /^\d+$/ } },
+    boolField({ name: 'autoFocus', defaultValue: 'false', note: 'Focuses the editor once it mounts.', value: pg.autoFocus, onChange: v => (pg.autoFocus = v as TriState), enabled: pg.autoFocusOn, setEnabled: v => (pg.autoFocusOn = v) }),
+    textField({ name: 'editorAriaLabel', type: 'string?', defaultValue: 'editor.content', note: 'Accessible name for the editor textbox; unset, the localized editor.content key renders.', value: pg.editorAriaLabel, onChange: v => (pg.editorAriaLabel = v), clearable: true, enabled: pg.editorAriaLabelOn, setEnabled: v => (pg.editorAriaLabelOn = v) }),
+    textField({ name: 'recreateKey', type: 'string?', defaultValue: "''", note: 'Changing it destroys and rebuilds the editor.', value: pg.recreateKey, onChange: v => (pg.recreateKey = v), editorDefaultValue: '', clearable: true, enabled: pg.recreateKeyOn, setEnabled: v => (pg.recreateKeyOn = v) }),
     { name: 'onAutoFocused', type: '() => void', defaultValue: '—', note: 'Called after an autofocus.' },
     { name: 'onContentChange', type: '(content: string) => void', defaultValue: '—', note: 'Called with the document after every edit.' },
     { name: 'onReady', type: '() => void', defaultValue: '—', note: 'Called once the EditorView exists.' },
   ])
-
 
   // The seed covers every override except the document (the snippet reads it
   // from scope), so only content edits need a scope refresh; everything else
@@ -125,14 +110,14 @@
     title="LazyCodeEditor"
     {code}
     onReset={clearPlayground}
-    scope={{ content: pgContent }}
+    scope={{ content: pg.content }}
 
     sync={{ tag: 'LazyCodeEditor' }}
-    scopeRefresh={() => [pgContent]}
+    scopeRefresh={() => [pg.content]}
   >
     <div class="h-64 w-full max-w-xl">
       <LazyCodeEditor
-        bind:content={pgContent}
+        bind:content={pg.content}
         docType={demoDocType}
         {editable}
         autoFocus={demoAutoFocus}

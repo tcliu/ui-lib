@@ -18,21 +18,20 @@
   // so the cleared form applies no overrides. Clearing a Value unsets it;
   // Reset restores the defaults below. Stage width is
   // interaction state, not a curated option; Reset restores it.
-  let pgFrom = $state('')
-  let pgFromOn = $state(true)
-  let pgTo = $state('')
-  let pgToOn = $state(true)
-  let pgStageWidth = $state(DATE_STAGE_DEFAULT_WIDTH)
+  const INITIAL = {
+    from: '',
+    fromOn: true,
+    to: '',
+    toOn: true,
+    stageWidth: DATE_STAGE_DEFAULT_WIDTH,
+  }
+  let pg = $state(structuredClone(INITIAL))
 
   function clearPlayground() {
-    pgFrom = ''
-    pgFromOn = true
-    pgTo = ''
-    pgToOn = true
-    pgStageWidth = DATE_STAGE_DEFAULT_WIDTH
+    pg = structuredClone(INITIAL)
   }
 
-  const code = $derived.by(() => buildDateRangePickerSnippet({ from: pgFrom, to: pgTo }))
+  const code = $derived.by(() => buildDateRangePickerSnippet({ from: pg.from, to: pg.to }))
 
   
   // Editable rows first (A–Z), then the read-only data and function props.
@@ -48,15 +47,15 @@
       note: 'Range start as YYYY-MM-DD; an invalid date reads as unset; the eye resets to the default.',
       editor: 'text',
       clearable: true,
-      value: pgFrom,
+      value: pg.from,
       onChange: value => {
-        pgFrom = value
-        pgFromOn = true
+        pg.from = value
+        pg.fromOn = true
       },
       toggle: resetToggle(
-        pgFromOn,
-        enabled => (pgFromOn = enabled),
-        () => (pgFrom = ''),
+        pg.fromOn,
+        enabled => (pg.fromOn = enabled),
+        () => (pg.from = ''),
       ),
       sync: { kind: 'script', attr: 'from', unsetAbsent: true },
     },
@@ -68,15 +67,15 @@
       note: 'Range end as YYYY-MM-DD; an invalid date reads as unset; the eye resets to the default.',
       editor: 'text',
       clearable: true,
-      value: pgTo,
+      value: pg.to,
       onChange: value => {
-        pgTo = value
-        pgToOn = true
+        pg.to = value
+        pg.toOn = true
       },
       toggle: resetToggle(
-        pgToOn,
-        enabled => (pgToOn = enabled),
-        () => (pgTo = ''),
+        pg.toOn,
+        enabled => (pg.toOn = enabled),
+        () => (pg.to = ''),
       ),
       sync: { kind: 'script', attr: 'to', unsetAbsent: true },
     },
@@ -108,17 +107,17 @@
     {code}
     onReset={clearPlayground}
     stage={{ minWidth: DATE_STAGE_MIN_WIDTH }}
-    bind:stageWidth={pgStageWidth}
+    bind:stageWidth={pg.stageWidth}
 
     sync={{ tag: 'DateRangePicker' }}
     scope={{}}
   >
     <div class={DATE_STAGE_CONTENT}>
       <DateRangePicker
-        from={pgFrom}
-        to={pgTo}
-        onFrom={value => (pgFrom = value)}
-        onTo={value => (pgTo = value)} />
-      <span class="text-sm text-slate-400">range: {pgFrom || '—'} – {pgTo || '—'}</span>
+        from={pg.from}
+        to={pg.to}
+        onFrom={value => (pg.from = value)}
+        onTo={value => (pg.to = value)} />
+      <span class="text-sm text-slate-400">range: {pg.from || '—'} – {pg.to || '—'}</span>
     </div>
   </ShowcasePage>

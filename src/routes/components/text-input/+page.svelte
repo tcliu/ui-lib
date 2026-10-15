@@ -23,52 +23,55 @@
   // component default (the Value column shows it), so the cleared form
   // applies no overrides and Show-code omits the defaults. Clearing a Value
   // unsets it; Reset restores the defaults below.
-  let pgValue = $state('')
-  let pgValueOn = $state(true)
-  let pgAriaLabel = $state('Apply')
-  let pgAriaLabelOn = $state(true)
-  let pgPlaceholder = $state('')
-  let pgPlaceholderOn = $state(false)
-  let pgSize = $state('md')
-  let pgSizeOn = $state(false)
-  let pgDisabled = $state<TriState>('no')
-  let pgDisabledOn = $state(false)
-  let pgReadonly = $state<TriState>('no')
-  let pgReadonlyOn = $state(false)
-  let pgRequired = $state<TriState>('no')
-  let pgRequiredOn = $state(false)
-  let pgId = $state('')
-  let pgIdOn = $state(false)
-  let pgInputClass = $state('')
-  let pgInputClassOn = $state(false)
-  let pgClassName = $state('')
-  let pgClassNameOn = $state(false)
-  let pgClearable = $state<TriState>('no')
-  let pgClearableOn = $state(false)
-  let pgClearLabel = $state('Clear')
-  let pgClearLabelOn = $state(false)
-  let pgClearPlacement = $state('auto')
-  let pgClearPlacementOn = $state(false)
-  let pgDefaultValue = $state('')
-  let pgDefaultValueOn = $state(false)
-  let pgAutocomplete = $state('')
-  let pgAutocompleteOn = $state(false)
-  let pgInputmode = $state('')
-  let pgInputmodeOn = $state(false)
-  let pgName = $state('')
-  let pgNameOn = $state(false)
-  let pgType = $state('text')
-  let pgTypeOn = $state(false)
-  let pgInputStyle = $state('')
-  let pgInputStyleOn = $state(false)
-  let pgWrapperStyle = $state('')
-  let pgWrapperStyleOn = $state(false)
-  let pgLeading = $state('')
-  let pgLeadingEnabled = $state(true)
-  let pgTrailing = $state('')
-  let pgTrailingEnabled = $state(true)
-  let pgTrailer = $state('')
-  let pgTrailerEnabled = $state(true)
+  const INITIAL = {
+    value: '',
+    valueOn: true,
+    ariaLabel: 'Apply',
+    ariaLabelOn: true,
+    placeholder: '',
+    placeholderOn: false,
+    size: 'md',
+    sizeOn: false,
+    disabled: 'no' as TriState,
+    disabledOn: false,
+    readonly: 'no' as TriState,
+    readonlyOn: false,
+    required: 'no' as TriState,
+    requiredOn: false,
+    id: '',
+    idOn: false,
+    inputClass: '',
+    inputClassOn: false,
+    className: '',
+    classNameOn: false,
+    clearable: 'no' as TriState,
+    clearableOn: false,
+    clearLabel: 'Clear',
+    clearLabelOn: false,
+    clearPlacement: 'auto',
+    clearPlacementOn: false,
+    defaultValue: '',
+    defaultValueOn: false,
+    autocomplete: '',
+    autocompleteOn: false,
+    inputmode: '',
+    inputmodeOn: false,
+    name: '',
+    nameOn: false,
+    type: 'text',
+    typeOn: false,
+    inputStyle: '',
+    inputStyleOn: false,
+    wrapperStyle: '',
+    wrapperStyleOn: false,
+    leading: '',
+    leadingEnabled: true,
+    trailing: '',
+    trailingEnabled: true,
+    trailer: '',
+    trailerEnabled: true,
+  }
+  let pg = $state(structuredClone(INITIAL))
   let demoInputRef = $state<HTMLInputElement | null>(null)
 
   onMount(() => {
@@ -81,119 +84,74 @@
     { value: 'outside', label: 'outside' },
   ]
 
-  const demoAriaLabel = $derived(pgAriaLabelOn && pgAriaLabel ? pgAriaLabel : i18n.t('common.apply'))
-  const demoAutocomplete = $derived((pgAutocompleteOn && pgAutocomplete ? pgAutocomplete : undefined) as HTMLInputAttributes['autocomplete'])
-  const demoInputmode = $derived((pgInputmodeOn && pgInputmode ? pgInputmode : undefined) as HTMLInputAttributes['inputmode'])
-  const demoSize = $derived(pgSizeOn ? parseSizeValue(pgSize) : undefined)
-  const disabled = $derived(pgDisabledOn ? flagOn(pgDisabled) : undefined)
-  const readonly = $derived(pgReadonlyOn ? flagOn(pgReadonly) : undefined)
-  const required = $derived(pgRequiredOn ? flagOn(pgRequired) : undefined)
-  const clearable = $derived(pgClearableOn ? flagOn(pgClearable) : undefined)
-  const demoClearLabel = $derived(pgClearLabelOn && pgClearLabel ? pgClearLabel : undefined)
+  const demoAriaLabel = $derived(pg.ariaLabelOn && pg.ariaLabel ? pg.ariaLabel : i18n.t('common.apply'))
+  const demoAutocomplete = $derived((pg.autocompleteOn && pg.autocomplete ? pg.autocomplete : undefined) as HTMLInputAttributes['autocomplete'])
+  const demoInputmode = $derived((pg.inputmodeOn && pg.inputmode ? pg.inputmode : undefined) as HTMLInputAttributes['inputmode'])
+  const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
+  const disabled = $derived(pg.disabledOn ? flagOn(pg.disabled) : undefined)
+  const readonly = $derived(pg.readonlyOn ? flagOn(pg.readonly) : undefined)
+  const required = $derived(pg.requiredOn ? flagOn(pg.required) : undefined)
+  const clearable = $derived(pg.clearableOn ? flagOn(pg.clearable) : undefined)
+  const demoClearLabel = $derived(pg.clearLabelOn && pg.clearLabel ? pg.clearLabel : undefined)
   const demoClearPlacement = $derived(
-    pgClearPlacementOn
-      ? ((pgClearPlacement || undefined) as 'auto' | 'inside' | 'outside' | undefined)
+    pg.clearPlacementOn
+      ? ((pg.clearPlacement || undefined) as 'auto' | 'inside' | 'outside' | undefined)
       : undefined,
   )
-  const demoDefaultValue = $derived(pgDefaultValueOn && pgDefaultValue ? pgDefaultValue : undefined)
+  const demoDefaultValue = $derived(pg.defaultValueOn && pg.defaultValue ? pg.defaultValue : undefined)
   const demoClassName = $derived(
-    adornmentClassName(pgClassNameOn ? pgClassName : '', pgLeadingEnabled ? pgLeading : '', pgTrailingEnabled ? pgTrailing : '') ||
+    adornmentClassName(pg.classNameOn ? pg.className : '', pg.leadingEnabled ? pg.leading : '', pg.trailingEnabled ? pg.trailing : '') ||
       undefined,
   )
 
   function clearPlayground() {
-    pgValue = ''
-    pgValueOn = true
-    pgAriaLabel = 'Apply'
-    pgAriaLabelOn = true
-    pgPlaceholder = ''
-    pgPlaceholderOn = false
-    pgSize = 'md'
-    pgSizeOn = false
-    pgDisabled = 'no'
-    pgDisabledOn = false
-    pgReadonly = 'no'
-    pgReadonlyOn = false
-    pgRequired = 'no'
-    pgRequiredOn = false
-    pgId = ''
-    pgIdOn = false
-    pgInputClass = ''
-    pgInputClassOn = false
-    pgClassName = ''
-    pgClassNameOn = false
-    pgClearable = 'no'
-    pgClearableOn = false
-    pgClearLabel = 'Clear'
-    pgClearLabelOn = false
-    pgClearPlacement = 'auto'
-    pgClearPlacementOn = false
-    pgDefaultValue = ''
-    pgDefaultValueOn = false
-    pgAutocomplete = ''
-    pgAutocompleteOn = false
-    pgInputmode = ''
-    pgInputmodeOn = false
-    pgName = ''
-    pgNameOn = false
-    pgType = 'text'
-    pgTypeOn = false
-    pgInputStyle = ''
-    pgInputStyleOn = false
-    pgWrapperStyle = ''
-    pgWrapperStyleOn = false
-    pgLeading = ''
-    pgLeadingEnabled = true
-    pgTrailing = ''
-    pgTrailingEnabled = true
-    pgTrailer = ''
-    pgTrailerEnabled = true
+    pg = structuredClone(INITIAL)
   }
 
   const code = $derived.by(() =>
     buildTextInputSnippet({
-      ariaLabel: pgAriaLabel,
-      ariaLabelOn: pgAriaLabelOn,
-      value: pgValue,
-      placeholder: pgPlaceholder,
-      placeholderOn: pgPlaceholderOn,
-      size: pgSize,
-      sizeOn: pgSizeOn,
-      disabled: pgDisabled,
-      disabledOn: pgDisabledOn,
-      readonly: pgReadonly,
-      readonlyOn: pgReadonlyOn,
-      required: pgRequired,
-      requiredOn: pgRequiredOn,
-      id: pgId,
-      idOn: pgIdOn,
-      inputClass: pgInputClass,
-      inputClassOn: pgInputClassOn,
-      className: pgClassName,
-      classNameOn: pgClassNameOn,
-      clearable: pgClearable,
-      clearableOn: pgClearableOn,
-      clearLabel: pgClearLabel,
-      clearLabelOn: pgClearLabelOn,
-      clearPlacement: pgClearPlacement,
-      clearPlacementOn: pgClearPlacementOn,
-      defaultValue: pgDefaultValue,
-      defaultValueOn: pgDefaultValueOn,
-      autocomplete: pgAutocomplete,
-      autocompleteOn: pgAutocompleteOn,
-      inputmode: pgInputmode,
-      inputmodeOn: pgInputmodeOn,
-      name: pgName,
-      nameOn: pgNameOn,
-      type: pgType,
-      typeOn: pgTypeOn,
-      inputStyle: pgInputStyle,
-      inputStyleOn: pgInputStyleOn,
-      wrapperStyle: pgWrapperStyle,
-      wrapperStyleOn: pgWrapperStyleOn,
-      leading: pgLeadingEnabled ? pgLeading : '',
-      trailing: pgTrailingEnabled ? pgTrailing : '',
-      trailer: pgTrailerEnabled ? pgTrailer : '',
+      ariaLabel: pg.ariaLabel,
+      ariaLabelOn: pg.ariaLabelOn,
+      value: pg.value,
+      placeholder: pg.placeholder,
+      placeholderOn: pg.placeholderOn,
+      size: pg.size,
+      sizeOn: pg.sizeOn,
+      disabled: pg.disabled,
+      disabledOn: pg.disabledOn,
+      readonly: pg.readonly,
+      readonlyOn: pg.readonlyOn,
+      required: pg.required,
+      requiredOn: pg.requiredOn,
+      id: pg.id,
+      idOn: pg.idOn,
+      inputClass: pg.inputClass,
+      inputClassOn: pg.inputClassOn,
+      className: pg.className,
+      classNameOn: pg.classNameOn,
+      clearable: pg.clearable,
+      clearableOn: pg.clearableOn,
+      clearLabel: pg.clearLabel,
+      clearLabelOn: pg.clearLabelOn,
+      clearPlacement: pg.clearPlacement,
+      clearPlacementOn: pg.clearPlacementOn,
+      defaultValue: pg.defaultValue,
+      defaultValueOn: pg.defaultValueOn,
+      autocomplete: pg.autocomplete,
+      autocompleteOn: pg.autocompleteOn,
+      inputmode: pg.inputmode,
+      inputmodeOn: pg.inputmodeOn,
+      name: pg.name,
+      nameOn: pg.nameOn,
+      type: pg.type,
+      typeOn: pg.typeOn,
+      inputStyle: pg.inputStyle,
+      inputStyleOn: pg.inputStyleOn,
+      wrapperStyle: pg.wrapperStyle,
+      wrapperStyleOn: pg.wrapperStyleOn,
+      leading: pg.leadingEnabled ? pg.leading : '',
+      trailing: pg.trailingEnabled ? pg.trailing : '',
+      trailer: pg.trailerEnabled ? pg.trailer : '',
     }),
   )
 
@@ -210,52 +168,52 @@
       note: 'Accessible name; optional so wrappers can leave it to an external label.',
       editor: 'text',
       clearable: true,
-      value: pgAriaLabel,
+      value: pg.ariaLabel,
       onChange: value => {
-        pgAriaLabel = value
-        pgAriaLabelOn = true
+        pg.ariaLabel = value
+        pg.ariaLabelOn = true
       },
-      toggle: snippetToggle(pgAriaLabelOn, enabled => (pgAriaLabelOn = enabled)),
+      toggle: snippetToggle(pg.ariaLabelOn, enabled => (pg.ariaLabelOn = enabled)),
       sync: { kind: 'scopeText', scopeRef: 'applyLabel' },
     },
-    textField({ name: 'autocomplete', type: 'string?', defaultValue: '—', note: 'Native autocomplete token.', value: pgAutocomplete, onChange: v => (pgAutocomplete = v), clearable: true, enabled: pgAutocompleteOn, setEnabled: v => (pgAutocompleteOn = v) }),
-    textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes appended to the input.', value: pgClassName, onChange: v => (pgClassName = v), editorDefaultValue: '', clearable: true, enabled: pgClassNameOn, setEnabled: v => (pgClassNameOn = v) }),
-    textField({ name: 'clearLabel', type: 'string?', defaultValue: "'Clear'", note: 'Accessible name for the clear button.', value: pgClearLabel, onChange: v => (pgClearLabel = v), editorDefaultValue: 'Clear', clearable: true, placeholder: 'Clear', enabled: pgClearLabelOn, setEnabled: v => (pgClearLabelOn = v) }),
-    enumField({ name: 'clearPlacement', type: "'auto' | 'inside' | 'outside'", defaultValue: "'auto'", note: 'Inside overlays the field edge; outside sits after it; auto picks outside when a trailing adornment is set.', options: clearPlacementOptions, value: pgClearPlacement, onChange: v => (pgClearPlacement = v), placeholder: 'auto', clearLabel: 'Clear placement', enabled: pgClearPlacementOn, setEnabled: v => (pgClearPlacementOn = v) }),
-    boolField({ name: 'clearable', defaultValue: 'false', note: 'Appends a cross button that clears the value.', value: pgClearable, onChange: v => (pgClearable = v as TriState), enabled: pgClearableOn, setEnabled: v => (pgClearableOn = v) }),
-    textField({ name: 'defaultValue', type: 'string?', defaultValue: "''", note: 'Baseline the clear button compares against; the cross hides while the value matches it.', value: pgDefaultValue, onChange: v => (pgDefaultValue = v), editorDefaultValue: '', clearable: true, enabled: pgDefaultValueOn, setEnabled: v => (pgDefaultValueOn = v) }),
-    boolField({ name: 'disabled', defaultValue: 'false', note: 'Disables the input.', value: pgDisabled, onChange: v => (pgDisabled = v as TriState), enabled: pgDisabledOn, setEnabled: v => (pgDisabledOn = v) }),
-    textField({ name: 'id', type: 'string?', defaultValue: '—', note: 'Native input id.', value: pgId, onChange: v => (pgId = v), clearable: true, enabled: pgIdOn, setEnabled: v => (pgIdOn = v) }),
-    textField({ name: 'inputClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the default input classes.', value: pgInputClass, onChange: v => (pgInputClass = v), clearable: true, enabled: pgInputClassOn, setEnabled: v => (pgInputClassOn = v) }),
-    textField({ name: 'inputStyle', type: 'string?', defaultValue: '—', note: 'Inline style appended after the size metrics; sizes the field at runtime.', value: pgInputStyle, onChange: v => (pgInputStyle = v), clearable: true, enabled: pgInputStyleOn, setEnabled: v => (pgInputStyleOn = v) }),
-    textField({ name: 'inputmode', type: 'string?', defaultValue: '—', note: 'Native inputmode; NumberInput drives numeric/decimal.', value: pgInputmode, onChange: v => (pgInputmode = v), clearable: true, enabled: pgInputmodeOn, setEnabled: v => (pgInputmodeOn = v) }),
+    textField({ name: 'autocomplete', type: 'string?', defaultValue: '—', note: 'Native autocomplete token.', value: pg.autocomplete, onChange: v => (pg.autocomplete = v), clearable: true, enabled: pg.autocompleteOn, setEnabled: v => (pg.autocompleteOn = v) }),
+    textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes appended to the input.', value: pg.className, onChange: v => (pg.className = v), editorDefaultValue: '', clearable: true, enabled: pg.classNameOn, setEnabled: v => (pg.classNameOn = v) }),
+    textField({ name: 'clearLabel', type: 'string?', defaultValue: "'Clear'", note: 'Accessible name for the clear button.', value: pg.clearLabel, onChange: v => (pg.clearLabel = v), editorDefaultValue: 'Clear', clearable: true, placeholder: 'Clear', enabled: pg.clearLabelOn, setEnabled: v => (pg.clearLabelOn = v) }),
+    enumField({ name: 'clearPlacement', type: "'auto' | 'inside' | 'outside'", defaultValue: "'auto'", note: 'Inside overlays the field edge; outside sits after it; auto picks outside when a trailing adornment is set.', options: clearPlacementOptions, value: pg.clearPlacement, onChange: v => (pg.clearPlacement = v), placeholder: 'auto', clearLabel: 'Clear placement', enabled: pg.clearPlacementOn, setEnabled: v => (pg.clearPlacementOn = v) }),
+    boolField({ name: 'clearable', defaultValue: 'false', note: 'Appends a cross button that clears the value.', value: pg.clearable, onChange: v => (pg.clearable = v as TriState), enabled: pg.clearableOn, setEnabled: v => (pg.clearableOn = v) }),
+    textField({ name: 'defaultValue', type: 'string?', defaultValue: "''", note: 'Baseline the clear button compares against; the cross hides while the value matches it.', value: pg.defaultValue, onChange: v => (pg.defaultValue = v), editorDefaultValue: '', clearable: true, enabled: pg.defaultValueOn, setEnabled: v => (pg.defaultValueOn = v) }),
+    boolField({ name: 'disabled', defaultValue: 'false', note: 'Disables the input.', value: pg.disabled, onChange: v => (pg.disabled = v as TriState), enabled: pg.disabledOn, setEnabled: v => (pg.disabledOn = v) }),
+    textField({ name: 'id', type: 'string?', defaultValue: '—', note: 'Native input id.', value: pg.id, onChange: v => (pg.id = v), clearable: true, enabled: pg.idOn, setEnabled: v => (pg.idOn = v) }),
+    textField({ name: 'inputClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the default input classes.', value: pg.inputClass, onChange: v => (pg.inputClass = v), clearable: true, enabled: pg.inputClassOn, setEnabled: v => (pg.inputClassOn = v) }),
+    textField({ name: 'inputStyle', type: 'string?', defaultValue: '—', note: 'Inline style appended after the size metrics; sizes the field at runtime.', value: pg.inputStyle, onChange: v => (pg.inputStyle = v), clearable: true, enabled: pg.inputStyleOn, setEnabled: v => (pg.inputStyleOn = v) }),
+    textField({ name: 'inputmode', type: 'string?', defaultValue: '—', note: 'Native inputmode; NumberInput drives numeric/decimal.', value: pg.inputmode, onChange: v => (pg.inputmode = v), clearable: true, enabled: pg.inputmodeOn, setEnabled: v => (pg.inputmodeOn = v) }),
     snippetField({
       name: 'leading',
       note: 'Adornment block rendered before the text, positioned inside the frame.',
-      value: pgLeading,
-      onChange: value => ((pgLeading = value), (pgLeadingEnabled = true)),
-      toggle: snippetToggle(pgLeadingEnabled, enabled => (pgLeadingEnabled = enabled)),
+      value: pg.leading,
+      onChange: value => ((pg.leading = value), (pg.leadingEnabled = true)),
+      toggle: snippetToggle(pg.leadingEnabled, enabled => (pg.leadingEnabled = enabled)),
     }),
-    textField({ name: 'name', type: 'string?', defaultValue: '—', note: 'Native input name.', value: pgName, onChange: v => (pgName = v), clearable: true, enabled: pgNameOn, setEnabled: v => (pgNameOn = v) }),
-    textField({ name: 'placeholder', type: 'string?', defaultValue: '—', note: 'Native placeholder.', value: pgPlaceholder, onChange: v => (pgPlaceholder = v), clearable: true, enabled: pgPlaceholderOn, setEnabled: v => (pgPlaceholderOn = v) }),
-    boolField({ name: 'readonly', defaultValue: 'false', note: 'Read-only input.', value: pgReadonly, onChange: v => (pgReadonly = v as TriState), enabled: pgReadonlyOn, setEnabled: v => (pgReadonlyOn = v) }),
-    boolField({ name: 'required', defaultValue: 'false', note: 'Native required flag.', value: pgRequired, onChange: v => (pgRequired = v as TriState), enabled: pgRequiredOn, setEnabled: v => (pgRequiredOn = v) }),
-    sizeField({ note: 'Control scale; numbers are icon-scale pixels interpolated between the steps.', value: pgSize, onChange: v => (pgSize = v), enabled: pgSizeOn, setEnabled: v => (pgSizeOn = v) }),
+    textField({ name: 'name', type: 'string?', defaultValue: '—', note: 'Native input name.', value: pg.name, onChange: v => (pg.name = v), clearable: true, enabled: pg.nameOn, setEnabled: v => (pg.nameOn = v) }),
+    textField({ name: 'placeholder', type: 'string?', defaultValue: '—', note: 'Native placeholder.', value: pg.placeholder, onChange: v => (pg.placeholder = v), clearable: true, enabled: pg.placeholderOn, setEnabled: v => (pg.placeholderOn = v) }),
+    boolField({ name: 'readonly', defaultValue: 'false', note: 'Read-only input.', value: pg.readonly, onChange: v => (pg.readonly = v as TriState), enabled: pg.readonlyOn, setEnabled: v => (pg.readonlyOn = v) }),
+    boolField({ name: 'required', defaultValue: 'false', note: 'Native required flag.', value: pg.required, onChange: v => (pg.required = v as TriState), enabled: pg.requiredOn, setEnabled: v => (pg.requiredOn = v) }),
+    sizeField({ note: 'Control scale; numbers are icon-scale pixels interpolated between the steps.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
     snippetField({
       name: 'trailer',
       note: 'Content rendered outside the field, after it, in a size-scaled row.',
-      value: pgTrailer,
-      onChange: value => ((pgTrailer = value), (pgTrailerEnabled = true)),
-      toggle: snippetToggle(pgTrailerEnabled, enabled => (pgTrailerEnabled = enabled)),
+      value: pg.trailer,
+      onChange: value => ((pg.trailer = value), (pg.trailerEnabled = true)),
+      toggle: snippetToggle(pg.trailerEnabled, enabled => (pg.trailerEnabled = enabled)),
     }),
     snippetField({
       name: 'trailing',
       note: 'Adornment block rendered after the text, positioned inside the frame.',
-      value: pgTrailing,
-      onChange: value => ((pgTrailing = value), (pgTrailingEnabled = true)),
-      toggle: snippetToggle(pgTrailingEnabled, enabled => (pgTrailingEnabled = enabled)),
+      value: pg.trailing,
+      onChange: value => ((pg.trailing = value), (pg.trailingEnabled = true)),
+      toggle: snippetToggle(pg.trailingEnabled, enabled => (pg.trailingEnabled = enabled)),
     }),
-    textField({ name: 'type', type: 'string?', defaultValue: "'text'", note: 'Native input type; PasswordInput and SearchInput drive it.', value: pgType, onChange: v => (pgType = v), editorDefaultValue: 'text', clearable: true, placeholder: 'text', enabled: pgTypeOn, setEnabled: v => (pgTypeOn = v) }),
+    textField({ name: 'type', type: 'string?', defaultValue: "'text'", note: 'Native input type; PasswordInput and SearchInput drive it.', value: pg.type, onChange: v => (pg.type = v), editorDefaultValue: 'text', clearable: true, placeholder: 'text', enabled: pg.typeOn, setEnabled: v => (pg.typeOn = v) }),
     {
       name: 'value',
       type: 'string',
@@ -263,19 +221,19 @@
       note: 'Bindable field value; the eye resets it to empty.',
       editor: 'text',
       clearable: true,
-      value: pgValue,
+      value: pg.value,
       onChange: value => {
-        pgValue = value
-        pgValueOn = true
+        pg.value = value
+        pg.valueOn = true
       },
       toggle: resetToggle(
-        pgValueOn,
-        enabled => (pgValueOn = enabled),
-        () => (pgValue = ''),
+        pg.valueOn,
+        enabled => (pg.valueOn = enabled),
+        () => (pg.value = ''),
       ),
       sync: { kind: 'script' },
     },
-    textField({ name: 'wrapperStyle', type: 'string?', defaultValue: '—', note: 'Metric custom properties for the adornments, set on the wrapping frame.', value: pgWrapperStyle, onChange: v => (pgWrapperStyle = v), clearable: true, enabled: pgWrapperStyleOn, setEnabled: v => (pgWrapperStyleOn = v) }),
+    textField({ name: 'wrapperStyle', type: 'string?', defaultValue: '—', note: 'Metric custom properties for the adornments, set on the wrapping frame.', value: pg.wrapperStyle, onChange: v => (pg.wrapperStyle = v), clearable: true, enabled: pg.wrapperStyleOn, setEnabled: v => (pg.wrapperStyleOn = v) }),
     { name: 'inputRef', type: 'HTMLInputElement | null', defaultValue: 'null', note: 'Bindable native input.' },
     {
       name: 'onClear',
@@ -300,15 +258,15 @@
 </script>
 
 {#snippet demoLeading()}
-  <span class={LEADING_SPAN}>{pgLeading}</span>
+  <span class={LEADING_SPAN}>{pg.leading}</span>
 {/snippet}
 
 {#snippet demoTrailing()}
-  <span class={TRAILING_SPAN}>{pgTrailing}</span>
+  <span class={TRAILING_SPAN}>{pg.trailing}</span>
 {/snippet}
 
 {#snippet demoTrailer()}
-  <span class={TRAILER_SPAN}>{pgTrailer}</span>
+  <span class={TRAILER_SPAN}>{pg.trailer}</span>
 {/snippet}
 
 <ShowcasePage
@@ -322,30 +280,30 @@
   >
     <div class="flex flex-col gap-1">
       <TextInput
-        bind:value={pgValue}
+        bind:value={pg.value}
         bind:inputRef={demoInputRef}
         ariaLabel={demoAriaLabel}
-        placeholder={pgPlaceholderOn && pgPlaceholder ? pgPlaceholder : undefined}
+        placeholder={pg.placeholderOn && pg.placeholder ? pg.placeholder : undefined}
         size={demoSize}
         {disabled}
         {readonly}
         {required}
-        id={pgIdOn && pgId ? pgId : undefined}
-        type={pgTypeOn && pgType ? pgType : undefined}
+        id={pg.idOn && pg.id ? pg.id : undefined}
+        type={pg.typeOn && pg.type ? pg.type : undefined}
         autocomplete={demoAutocomplete}
         inputmode={demoInputmode}
-        name={pgNameOn && pgName ? pgName : undefined}
-        inputClass={pgInputClassOn && pgInputClass ? pgInputClass : undefined}
-        inputStyle={pgInputStyleOn && pgInputStyle ? pgInputStyle : undefined}
-        wrapperStyle={pgWrapperStyleOn && pgWrapperStyle ? pgWrapperStyle : undefined}
+        name={pg.nameOn && pg.name ? pg.name : undefined}
+        inputClass={pg.inputClassOn && pg.inputClass ? pg.inputClass : undefined}
+        inputStyle={pg.inputStyleOn && pg.inputStyle ? pg.inputStyle : undefined}
+        wrapperStyle={pg.wrapperStyleOn && pg.wrapperStyle ? pg.wrapperStyle : undefined}
         className={demoClassName}
         {clearable}
         clearLabel={demoClearLabel}
         clearPlacement={demoClearPlacement}
         defaultValue={demoDefaultValue}
-        leading={pgLeadingEnabled && pgLeading ? demoLeading : undefined}
-        trailing={pgTrailingEnabled && pgTrailing ? demoTrailing : undefined}
-        trailer={pgTrailerEnabled && pgTrailer ? demoTrailer : undefined} />
-      <span class="text-sm text-slate-400">value: {pgValue || '—'}</span>
+        leading={pg.leadingEnabled && pg.leading ? demoLeading : undefined}
+        trailing={pg.trailingEnabled && pg.trailing ? demoTrailing : undefined}
+        trailer={pg.trailerEnabled && pg.trailer ? demoTrailer : undefined} />
+      <span class="text-sm text-slate-400">value: {pg.value || '—'}</span>
     </div>
   </ShowcasePage>

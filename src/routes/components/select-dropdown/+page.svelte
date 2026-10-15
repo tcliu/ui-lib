@@ -46,42 +46,45 @@
   // Options are committed state edited through the JSON dialog below. The
   // component requires options, so the eye resets to the defaults instead of
   // omitting; committing re-applies.
-  let pgOptions = $state(DEFAULT_OPTIONS)
-  let pgOptionsEnabled = $state(true)
-  let pgValue = $state('two')
-  let pgValueOn = $state(true)
-  let pgDefaultValue = $state('')
-  let pgDefaultValueOn = $state(false)
-  let pgAriaLabel = $state('default')
-  let pgAriaLabelOn = $state(true)
-  let pgButtonLabel = $state('')
-  let pgButtonLabelOn = $state(false)
-  let pgSize = $state('md')
-  let pgSizeOn = $state(false)
-  let pgFilterable = $state<TriState>('no')
-  let pgFilterableOn = $state(false)
-  let pgAllowCustomValue = $state<TriState>('no')
-  let pgAllowCustomValueOn = $state(false)
-  let pgButtonClass = $state('')
-  let pgButtonClassOn = $state(false)
-  let pgControlClass = $state('')
-  let pgControlClassOn = $state(false)
-  let pgOptionClass = $state('')
-  let pgOptionClassOn = $state(false)
-  let pgEmptyLabel = $state('')
-  let pgEmptyLabelOn = $state(false)
-  let pgClearable = $state<TriState>('no')
-  let pgClearableOn = $state(false)
-  let pgClearLabel = $state('Clear selection')
-  let pgClearLabelOn = $state(false)
-  let pgAlign = $state('left')
-  let pgAlignOn = $state(false)
-  let pgAutoPlace = $state<TriState>('yes')
-  let pgAutoPlaceOn = $state(true)
-  let pgPanelClass = $state('')
-  let pgPanelClassOn = $state(false)
+  const INITIAL = {
+    options: DEFAULT_OPTIONS,
+    optionsEnabled: true,
+    value: 'two',
+    valueOn: true,
+    defaultValue: '',
+    defaultValueOn: false,
+    ariaLabel: 'default',
+    ariaLabelOn: true,
+    buttonLabel: '',
+    buttonLabelOn: false,
+    size: 'md',
+    sizeOn: false,
+    filterable: 'no' as TriState,
+    filterableOn: false,
+    allowCustomValue: 'no' as TriState,
+    allowCustomValueOn: false,
+    buttonClass: '',
+    buttonClassOn: false,
+    controlClass: '',
+    controlClassOn: false,
+    optionClass: '',
+    optionClassOn: false,
+    emptyLabel: '',
+    emptyLabelOn: false,
+    clearable: 'no' as TriState,
+    clearableOn: false,
+    clearLabel: 'Clear selection',
+    clearLabelOn: false,
+    align: 'left',
+    alignOn: false,
+    autoPlace: 'yes' as TriState,
+    autoPlaceOn: true,
+    panelClass: '',
+    panelClassOn: false,
+    stageWidth: SELECT_STAGE_DEFAULT_WIDTH,
+  }
+  let pg = $state(structuredClone(INITIAL))
   // Stage width is interaction state, not a curated option; Reset restores it.
-  let pgStageWidth = $state(SELECT_STAGE_DEFAULT_WIDTH)
 
   function labelFor(list: SelectOption[], current: string): string {
     for (const option of list) {
@@ -94,19 +97,19 @@
     return current
   }
 
-  const demoSize = $derived(pgSizeOn ? parseSizeValue(pgSize) : undefined)
-  const filterable = $derived(pgFilterableOn ? flagOn(pgFilterable) : undefined)
-  const allowCustomValue = $derived(pgAllowCustomValueOn ? flagOn(pgAllowCustomValue) : undefined)
-  const clearable = $derived(pgClearableOn ? flagOn(pgClearable) : undefined)
-  const autoPlace = $derived(pgAutoPlaceOn ? flagOn(pgAutoPlace) : undefined)
-  const demoAlign = $derived(pgAlignOn ? ((pgAlign || undefined) as 'left' | 'right' | undefined) : undefined)
-  const demoButtonClass = $derived(pgButtonClassOn && pgButtonClass ? pgButtonClass : undefined)
-  const demoControlClass = $derived(pgControlClassOn && pgControlClass ? pgControlClass : undefined)
-  const demoOptionClass = $derived(pgOptionClassOn && pgOptionClass ? pgOptionClass : undefined)
-  const demoEmptyLabel = $derived(pgEmptyLabelOn && pgEmptyLabel ? pgEmptyLabel : undefined)
-  const demoDefaultValue = $derived(pgDefaultValueOn && pgDefaultValue ? pgDefaultValue : undefined)
-  const demoClearLabel = $derived(pgClearLabelOn && pgClearLabel ? pgClearLabel : undefined)
-  const demoPanelClass = $derived(pgPanelClassOn && pgPanelClass ? pgPanelClass : undefined)
+  const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
+  const filterable = $derived(pg.filterableOn ? flagOn(pg.filterable) : undefined)
+  const allowCustomValue = $derived(pg.allowCustomValueOn ? flagOn(pg.allowCustomValue) : undefined)
+  const clearable = $derived(pg.clearableOn ? flagOn(pg.clearable) : undefined)
+  const autoPlace = $derived(pg.autoPlaceOn ? flagOn(pg.autoPlace) : undefined)
+  const demoAlign = $derived(pg.alignOn ? ((pg.align || undefined) as 'left' | 'right' | undefined) : undefined)
+  const demoButtonClass = $derived(pg.buttonClassOn && pg.buttonClass ? pg.buttonClass : undefined)
+  const demoControlClass = $derived(pg.controlClassOn && pg.controlClass ? pg.controlClass : undefined)
+  const demoOptionClass = $derived(pg.optionClassOn && pg.optionClass ? pg.optionClass : undefined)
+  const demoEmptyLabel = $derived(pg.emptyLabelOn && pg.emptyLabel ? pg.emptyLabel : undefined)
+  const demoDefaultValue = $derived(pg.defaultValueOn && pg.defaultValue ? pg.defaultValue : undefined)
+  const demoClearLabel = $derived(pg.clearLabelOn && pg.clearLabel ? pg.clearLabel : undefined)
+  const demoPanelClass = $derived(pg.panelClassOn && pg.panelClass ? pg.panelClass : undefined)
 
   const alignOptions = [
     { value: 'left', label: 'left' },
@@ -114,77 +117,43 @@
   ]
 
   function clearPlayground() {
-    pgOptions = DEFAULT_OPTIONS
-    pgOptionsEnabled = true
-    pgValue = 'two'
-    pgValueOn = true
-    pgDefaultValue = ''
-    pgDefaultValueOn = false
-    pgAriaLabel = 'default'
-    pgAriaLabelOn = true
-    pgButtonLabel = ''
-    pgButtonLabelOn = false
-    pgSize = 'md'
-    pgSizeOn = false
-    pgFilterable = 'no'
-    pgFilterableOn = false
-    pgAllowCustomValue = 'no'
-    pgAllowCustomValueOn = false
-    pgButtonClass = ''
-    pgButtonClassOn = false
-    pgControlClass = ''
-    pgControlClassOn = false
-    pgOptionClass = ''
-    pgOptionClassOn = false
-    pgEmptyLabel = ''
-    pgEmptyLabelOn = false
-    pgClearable = 'no'
-    pgClearableOn = false
-    pgClearLabel = 'Clear selection'
-    pgClearLabelOn = false
-    pgAlign = 'left'
-    pgAlignOn = false
-    pgAutoPlace = 'yes'
-    pgAutoPlaceOn = true
-    pgPanelClass = ''
-    pgPanelClassOn = false
-    pgStageWidth = SELECT_STAGE_DEFAULT_WIDTH
+    pg = structuredClone(INITIAL)
   }
 
   const code = $derived.by(() =>
     buildSelectDropdownSnippet({
-      ariaLabel: pgAriaLabel,
-      ariaLabelOn: pgAriaLabelOn,
-      buttonLabel: pgButtonLabel,
-      buttonLabelOn: pgButtonLabelOn,
-      value: pgValue,
-      valueOn: pgValueOn,
-      defaultValue: pgDefaultValue,
-      defaultValueOn: pgDefaultValueOn,
-      size: pgSize,
-      sizeOn: pgSizeOn,
-      filterable: pgFilterable,
-      filterableOn: pgFilterableOn,
-      allowCustomValue: pgAllowCustomValue,
-      allowCustomValueOn: pgAllowCustomValueOn,
-      buttonClass: pgButtonClass,
-      buttonClassOn: pgButtonClassOn,
-      controlClass: pgControlClass,
-      controlClassOn: pgControlClassOn,
-      optionClass: pgOptionClass,
-      optionClassOn: pgOptionClassOn,
-      emptyLabel: pgEmptyLabel,
-      emptyLabelOn: pgEmptyLabelOn,
-      clearable: pgClearable,
-      clearableOn: pgClearableOn,
-      clearLabel: pgClearLabel,
-      clearLabelOn: pgClearLabelOn,
-      align: pgAlign,
-      alignOn: pgAlignOn,
-      autoPlace: pgAutoPlace,
-      autoPlaceOn: pgAutoPlaceOn,
-      panelClass: pgPanelClass,
-      panelClassOn: pgPanelClassOn,
+      ariaLabel: pg.ariaLabel,
+      ariaLabelOn: pg.ariaLabelOn,
+      buttonLabel: pg.buttonLabel,
+      buttonLabelOn: pg.buttonLabelOn,
+      value: pg.value,
+      valueOn: pg.valueOn,
+      defaultValue: pg.defaultValue,
+      defaultValueOn: pg.defaultValueOn,
+      size: pg.size,
+      sizeOn: pg.sizeOn,
+      filterable: pg.filterable,
+      filterableOn: pg.filterableOn,
+      allowCustomValue: pg.allowCustomValue,
+      allowCustomValueOn: pg.allowCustomValueOn,
+      buttonClass: pg.buttonClass,
+      buttonClassOn: pg.buttonClassOn,
+      controlClass: pg.controlClass,
+      controlClassOn: pg.controlClassOn,
+      optionClass: pg.optionClass,
+      optionClassOn: pg.optionClassOn,
+      emptyLabel: pg.emptyLabel,
+      emptyLabelOn: pg.emptyLabelOn,
+      clearable: pg.clearable,
+      clearableOn: pg.clearableOn,
+      clearLabel: pg.clearLabel,
+      clearLabelOn: pg.clearLabelOn,
+      align: pg.align,
+      alignOn: pg.alignOn,
+      autoPlace: pg.autoPlace,
+      autoPlaceOn: pg.autoPlaceOn,
+      panelClass: pg.panelClass,
+      panelClassOn: pg.panelClassOn,
     }),
   )
 
@@ -196,45 +165,45 @@
   // Editable rows first (primitives and plain data, A–Z), then the function
   // props (A–Z). Snippet edits map the same way through the preview's sync table.
   const fields: SyncableFieldConfig[] = $derived([
-    { name: 'activeValue', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Committed option value (not its label); marked in the panel.', editor: 'text', clearable: true, value: pgValue, onChange: value => { pgValue = value; pgValueOn = true; }, toggle: snippetToggle(pgValueOn, enabled => (pgValueOn = enabled)), sync: { kind: 'script', attr: 'value', literalAttr: 'activeValue' } },
-    enumField({ name: 'align', type: "'left' | 'right'", defaultValue: "'left'", note: 'Panel edge anchored to the trigger.', options: alignOptions, value: pgAlign, onChange: v => (pgAlign = v), placeholder: 'left', clearLabel: 'Clear align', enabled: pgAlignOn, setEnabled: v => (pgAlignOn = v) }),
-    boolField({ name: 'allowCustomValue', defaultValue: 'false', note: 'Enter commits typed text that matches no option (filterable only).', value: pgAllowCustomValue, onChange: v => (pgAllowCustomValue = v as TriState), enabled: pgAllowCustomValueOn, setEnabled: v => (pgAllowCustomValueOn = v) }),
-    textField({ name: 'ariaLabel', type: 'string?', defaultValue: '—', note: 'Accessible name for the control.', value: pgAriaLabel, onChange: v => (pgAriaLabel = v), clearable: true, enabled: pgAriaLabelOn, setEnabled: v => (pgAriaLabelOn = v) }),
-    boolField({ name: 'autoPlace', defaultValue: 'true', note: 'Flips the panel when crowded.', value: pgAutoPlace, onChange: v => (pgAutoPlace = v as TriState), enabled: pgAutoPlaceOn, setEnabled: v => (pgAutoPlaceOn = v) }),
-    textField({ name: 'buttonClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the trigger button box classes.', value: pgButtonClass, onChange: v => (pgButtonClass = v), clearable: true, enabled: pgButtonClassOn, setEnabled: v => (pgButtonClassOn = v) }),
+    { name: 'activeValue', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Committed option value (not its label); marked in the panel.', editor: 'text', clearable: true, value: pg.value, onChange: value => { pg.value = value; pg.valueOn = true; }, toggle: snippetToggle(pg.valueOn, enabled => (pg.valueOn = enabled)), sync: { kind: 'script', attr: 'value', literalAttr: 'activeValue' } },
+    enumField({ name: 'align', type: "'left' | 'right'", defaultValue: "'left'", note: 'Panel edge anchored to the trigger.', options: alignOptions, value: pg.align, onChange: v => (pg.align = v), placeholder: 'left', clearLabel: 'Clear align', enabled: pg.alignOn, setEnabled: v => (pg.alignOn = v) }),
+    boolField({ name: 'allowCustomValue', defaultValue: 'false', note: 'Enter commits typed text that matches no option (filterable only).', value: pg.allowCustomValue, onChange: v => (pg.allowCustomValue = v as TriState), enabled: pg.allowCustomValueOn, setEnabled: v => (pg.allowCustomValueOn = v) }),
+    textField({ name: 'ariaLabel', type: 'string?', defaultValue: '—', note: 'Accessible name for the control.', value: pg.ariaLabel, onChange: v => (pg.ariaLabel = v), clearable: true, enabled: pg.ariaLabelOn, setEnabled: v => (pg.ariaLabelOn = v) }),
+    boolField({ name: 'autoPlace', defaultValue: 'true', note: 'Flips the panel when crowded.', value: pg.autoPlace, onChange: v => (pg.autoPlace = v as TriState), enabled: pg.autoPlaceOn, setEnabled: v => (pg.autoPlaceOn = v) }),
+    textField({ name: 'buttonClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the trigger button box classes.', value: pg.buttonClass, onChange: v => (pg.buttonClass = v), clearable: true, enabled: pg.buttonClassOn, setEnabled: v => (pg.buttonClassOn = v) }),
     {
       name: 'buttonLabel',
       type: 'string?',
       defaultValue: 'derived',
-      note: "Overrides the trigger label; omit it and the trigger shows the committed option's label (or the raw value).", editor: 'text', clearable: true, value: pgButtonLabel, onChange: value => { pgButtonLabel = value; pgButtonLabelOn = true; }, toggle: snippetToggle(pgButtonLabelOn, enabled => (pgButtonLabelOn = enabled)), sync: { kind: 'text' } },
-    textField({ name: 'clearLabel', type: 'string?', defaultValue: "'Clear selection'", note: 'Accessible name for the clear button.', value: pgClearLabel, onChange: v => (pgClearLabel = v), editorDefaultValue: 'Clear selection', clearable: true, placeholder: 'Clear selection', enabled: pgClearLabelOn, setEnabled: v => (pgClearLabelOn = v) }),
-    boolField({ name: 'clearable', defaultValue: 'false', note: 'Appends a cross button that clears the value.', value: pgClearable, onChange: v => (pgClearable = v as TriState), enabled: pgClearableOn, setEnabled: v => (pgClearableOn = v) }),
-    textField({ name: 'controlClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the filterable trigger box classes.', value: pgControlClass, onChange: v => (pgControlClass = v), clearable: true, enabled: pgControlClassOn, setEnabled: v => (pgControlClassOn = v) }),
-    textField({ name: 'defaultValue', type: 'string?', defaultValue: "''", note: 'Baseline the clear button compares against: the option value (not its label); the cross hides while the committed value matches it.', value: pgDefaultValue, onChange: v => (pgDefaultValue = v), editorDefaultValue: '', clearable: true, enabled: pgDefaultValueOn, setEnabled: v => (pgDefaultValueOn = v) }),
-    textField({ name: 'emptyLabel', type: 'string?', defaultValue: '—', note: 'Shown when the filtered list is empty.', value: pgEmptyLabel, onChange: v => (pgEmptyLabel = v), clearable: true, enabled: pgEmptyLabelOn, setEnabled: v => (pgEmptyLabelOn = v) }),
-    boolField({ name: 'filterable', defaultValue: 'false', note: 'Renders a combobox input with filtering.', value: pgFilterable, onChange: v => (pgFilterable = v as TriState), enabled: pgFilterableOn, setEnabled: v => (pgFilterableOn = v) }),
-    textField({ name: 'optionClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the option row classes.', value: pgOptionClass, onChange: v => (pgOptionClass = v), clearable: true, enabled: pgOptionClassOn, setEnabled: v => (pgOptionClassOn = v) }),
+      note: "Overrides the trigger label; omit it and the trigger shows the committed option's label (or the raw value).", editor: 'text', clearable: true, value: pg.buttonLabel, onChange: value => { pg.buttonLabel = value; pg.buttonLabelOn = true; }, toggle: snippetToggle(pg.buttonLabelOn, enabled => (pg.buttonLabelOn = enabled)), sync: { kind: 'text' } },
+    textField({ name: 'clearLabel', type: 'string?', defaultValue: "'Clear selection'", note: 'Accessible name for the clear button.', value: pg.clearLabel, onChange: v => (pg.clearLabel = v), editorDefaultValue: 'Clear selection', clearable: true, placeholder: 'Clear selection', enabled: pg.clearLabelOn, setEnabled: v => (pg.clearLabelOn = v) }),
+    boolField({ name: 'clearable', defaultValue: 'false', note: 'Appends a cross button that clears the value.', value: pg.clearable, onChange: v => (pg.clearable = v as TriState), enabled: pg.clearableOn, setEnabled: v => (pg.clearableOn = v) }),
+    textField({ name: 'controlClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the filterable trigger box classes.', value: pg.controlClass, onChange: v => (pg.controlClass = v), clearable: true, enabled: pg.controlClassOn, setEnabled: v => (pg.controlClassOn = v) }),
+    textField({ name: 'defaultValue', type: 'string?', defaultValue: "''", note: 'Baseline the clear button compares against: the option value (not its label); the cross hides while the committed value matches it.', value: pg.defaultValue, onChange: v => (pg.defaultValue = v), editorDefaultValue: '', clearable: true, enabled: pg.defaultValueOn, setEnabled: v => (pg.defaultValueOn = v) }),
+    textField({ name: 'emptyLabel', type: 'string?', defaultValue: '—', note: 'Shown when the filtered list is empty.', value: pg.emptyLabel, onChange: v => (pg.emptyLabel = v), clearable: true, enabled: pg.emptyLabelOn, setEnabled: v => (pg.emptyLabelOn = v) }),
+    boolField({ name: 'filterable', defaultValue: 'false', note: 'Renders a combobox input with filtering.', value: pg.filterable, onChange: v => (pg.filterable = v as TriState), enabled: pg.filterableOn, setEnabled: v => (pg.filterableOn = v) }),
+    textField({ name: 'optionClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the option row classes.', value: pg.optionClass, onChange: v => (pg.optionClass = v), clearable: true, enabled: pg.optionClassOn, setEnabled: v => (pg.optionClassOn = v) }),
     jsonField({
       name: 'options',
       type: '(string | { value: string; label?: string })[]',
       note: "Selectable options; a bare string (or a missing label) displays as its own value. The eye resets to the default options.",
-      value: JSON.stringify(pgOptions, null, 2),
+      value: JSON.stringify(pg.options, null, 2),
       onChange: (draft: string) => {
         const parsed = parseOptionArrayJson(draft)
         if (parsed) {
-          pgOptions = parsed
-          pgOptionsEnabled = true
+          pg.options = parsed
+          pg.optionsEnabled = true
         }
       },
       dialog: { valid: (draft: string) => parseOptionArrayJson(draft) != null, invalidMessage: 'Invalid options JSON. Use an array of strings or { value, label? } objects.' },
       toggle: resetToggle(
-        pgOptionsEnabled,
-        enabled => (pgOptionsEnabled = enabled),
-        () => (pgOptions = DEFAULT_OPTIONS),
+        pg.optionsEnabled,
+        enabled => (pg.optionsEnabled = enabled),
+        () => (pg.options = DEFAULT_OPTIONS),
       ),
     }),
-    textField({ name: 'panelClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the floating panel classes.', value: pgPanelClass, onChange: v => (pgPanelClass = v), clearable: true, enabled: pgPanelClassOn, setEnabled: v => (pgPanelClassOn = v) }),
-    sizeField({ note: 'Control scale; numbers are icon-scale pixels interpolated between the steps.', value: pgSize, onChange: v => (pgSize = v), enabled: pgSizeOn, setEnabled: v => (pgSizeOn = v) }),
+    textField({ name: 'panelClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the floating panel classes.', value: pg.panelClass, onChange: v => (pg.panelClass = v), clearable: true, enabled: pg.panelClassOn, setEnabled: v => (pg.panelClassOn = v) }),
+    sizeField({ note: 'Control scale; numbers are icon-scale pixels interpolated between the steps.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
     {
       name: 'onClear',
       type: '() => void',
@@ -251,18 +220,18 @@
     title="SelectDropdown"
     {code}
     onReset={clearPlayground}
-    scope={{ options: pgOptions }}
+    scope={{ options: pg.options }}
     stage={{ minWidth: SELECT_STAGE_MIN_WIDTH }}
-    bind:stageWidth={pgStageWidth}
+    bind:stageWidth={pg.stageWidth}
 
     sync={{ tag: 'SelectDropdown' }}
-    scopeRefresh={() => [pgOptions]}
+    scopeRefresh={() => [pg.options]}
   >
     <SelectDropdown
-      buttonLabel={pgButtonLabelOn && pgButtonLabel ? pgButtonLabel : undefined}
-      activeValue={pgValueOn && pgValue ? pgValue : undefined}
+      buttonLabel={pg.buttonLabelOn && pg.buttonLabel ? pg.buttonLabel : undefined}
+      activeValue={pg.valueOn && pg.value ? pg.value : undefined}
       defaultValue={demoDefaultValue}
-      ariaLabel={pgAriaLabelOn && pgAriaLabel ? pgAriaLabel : undefined}
+      ariaLabel={pg.ariaLabelOn && pg.ariaLabel ? pg.ariaLabel : undefined}
       size={demoSize}
       {filterable}
       {allowCustomValue}
@@ -275,7 +244,7 @@
       align={demoAlign}
       {autoPlace}
       panelClass={demoPanelClass}
-      options={pgOptions}
-      onSelect={next => (pgValue = next)} />
-    <span class="text-sm text-slate-400">value: {pgValue}</span>
+      options={pg.options}
+      onSelect={next => (pg.value = next)} />
+    <span class="text-sm text-slate-400">value: {pg.value}</span>
   </ShowcasePage>

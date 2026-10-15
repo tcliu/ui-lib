@@ -15,35 +15,33 @@
   // unsets it; Reset restores the defaults below.
   // `explicitTrigger` is interaction state fed through scope.
   let explicitTrigger = $state<HTMLButtonElement | null>(null)
-  let pgLabel = $state('Apply')
+  const INITIAL = {
+    label: 'Apply',
+    childrenEnabled: true,
+    align: 'center',
+    alignOn: false,
+    class: '',
+    classOn: false,
+  }
+  let pg = $state(structuredClone(INITIAL))
   // The component requires children, so the eye resets to the default label
   // instead of omitting; committing re-applies.
-  let pgChildrenEnabled = $state(true)
-  let pgAlign = $state('center')
-  let pgAlignOn = $state(false)
-  let pgClass = $state('')
-  let pgClassOn = $state(false)
 
   const alignOptions = [
     { value: 'left', label: 'left' },
     { value: 'right', label: 'right' },
   ]
 
-  const demoLabel = $derived(pgLabel || i18n.t('common.apply'))
-  const demoAlign = $derived(pgAlignOn ? ((pgAlign || undefined) as 'center' | 'left' | 'right' | undefined) : undefined)
-  const demoClass = $derived(pgClassOn && pgClass ? pgClass : undefined)
+  const demoLabel = $derived(pg.label || i18n.t('common.apply'))
+  const demoAlign = $derived(pg.alignOn ? ((pg.align || undefined) as 'center' | 'left' | 'right' | undefined) : undefined)
+  const demoClass = $derived(pg.classOn && pg.class ? pg.class : undefined)
   const applyLabel = $derived(i18n.t('common.apply'))
 
   function clearPlayground() {
-    pgLabel = 'Apply'
-    pgChildrenEnabled = true
-    pgAlign = 'center'
-    pgAlignOn = false
-    pgClass = ''
-    pgClassOn = false
+    pg = structuredClone(INITIAL)
   }
 
-  const code = $derived.by(() => buildTooltipSnippet({ label: pgLabel, align: pgAlign, alignOn: pgAlignOn, className: pgClass, classNameOn: pgClassOn }))
+  const code = $derived.by(() => buildTooltipSnippet({ label: pg.label, align: pg.align, alignOn: pg.alignOn, className: pg.class, classNameOn: pg.classOn }))
 
   
   // Each editable row declares its Value editor and its snippet write-back
@@ -53,23 +51,22 @@
   // are required, so the eye resets to the default label instead of omitting;
   // committing re-applies.
   const fields: SyncableFieldConfig[] = $derived([
-    enumField({ name: 'align', type: "'center' | 'left' | 'right'", defaultValue: "'center'", note: 'Horizontal alignment to the trigger.', options: alignOptions, value: pgAlign, onChange: v => (pgAlign = v), placeholder: 'center', clearLabel: 'Clear align', enabled: pgAlignOn, setEnabled: v => (pgAlignOn = v) }),
+    enumField({ name: 'align', type: "'center' | 'left' | 'right'", defaultValue: "'center'", note: 'Horizontal alignment to the trigger.', options: alignOptions, value: pg.align, onChange: v => (pg.align = v), placeholder: 'center', clearLabel: 'Clear align', enabled: pg.alignOn, setEnabled: v => (pg.alignOn = v) }),
     snippetField({
       name: 'children',
       note: 'Tooltip text/content; the dialog edits its text, and the eye resets to the default label.',
       value: demoLabel,
       onChange: value => {
-        pgLabel = value === applyLabel ? '' : value
-        pgChildrenEnabled = true
+        pg.label = value === applyLabel ? '' : value
+        pg.childrenEnabled = true
       },
       placeholder: 'Apply',
-      toggle: resetToggle(pgChildrenEnabled, enabled => (pgChildrenEnabled = enabled), () => (pgLabel = 'Apply')),
-      sync: { kind: 'script', attr: 'label', unsetAbsent: true, set: value => (pgLabel = value) },
+      toggle: resetToggle(pg.childrenEnabled, enabled => (pg.childrenEnabled = enabled), () => (pg.label = 'Apply')),
+      sync: { kind: 'script', attr: 'label', unsetAbsent: true, set: value => (pg.label = value) },
     }),
-    textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes for the tooltip box.', value: pgClass, onChange: v => (pgClass = v), editorDefaultValue: '', clearable: true, enabled: pgClassOn, setEnabled: v => (pgClassOn = v) }),
+    textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes for the tooltip box.', value: pg.class, onChange: v => (pg.class = v), editorDefaultValue: '', clearable: true, enabled: pg.classOn, setEnabled: v => (pg.classOn = v) }),
     { name: 'trigger', type: 'HTMLElement | null', defaultValue: 'null', note: 'Explicit trigger; falls back to the anchor parent.' },
   ])
-
 
   // With an unset label the demo reads the localized default from scope, which
   // reseeding never refreshes; recompile the draft on those scope changes
@@ -85,7 +82,7 @@
 
     sync={{ tag: 'Tooltip' }}
     scopeRefresh={() => [demoLabel]}
-    scopeRefreshWhen={() => pgLabel === ''}
+    scopeRefreshWhen={() => pg.label === ''}
   >
     <Button bind:buttonEl={explicitTrigger}>{demoLabel}</Button>
     <Tooltip trigger={explicitTrigger} align={demoAlign} className={demoClass}>{demoLabel}</Tooltip>

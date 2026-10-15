@@ -14,40 +14,36 @@
   // component default (the Value column shows it), so the cleared form
   // applies no overrides and Show-code omits the defaults. Clearing a Value
   // unsets it; Reset restores the defaults below.
-  let pgText = $state('')
-  let pgTextOn = $state(false)
-  let pgAriaLabel = $state('')
-  let pgAriaLabelOn = $state(false)
-  let pgTooltip = $state('')
-  let pgTooltipOn = $state(false)
-  let pgSize = $state('md')
-  let pgSizeOn = $state(false)
+  const INITIAL = {
+    text: '',
+    textOn: false,
+    ariaLabel: '',
+    ariaLabelOn: false,
+    tooltip: '',
+    tooltipOn: false,
+    size: 'md',
+    sizeOn: false,
+  }
+  let pg = $state(structuredClone(INITIAL))
 
-  const demoText = $derived(pgTextOn && pgText ? pgText : DEFAULT_TEXT)
+  const demoText = $derived(pg.textOn && pg.text ? pg.text : DEFAULT_TEXT)
   const copyHint = $derived(i18n.t('copy.toClipboard'))
-  const demoSize = $derived(pgSizeOn ? parseSizeValue(pgSize) : undefined)
+  const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
 
   function clearPlayground() {
-    pgText = ''
-    pgTextOn = false
-    pgAriaLabel = ''
-    pgAriaLabelOn = false
-    pgTooltip = ''
-    pgTooltipOn = false
-    pgSize = 'md'
-    pgSizeOn = false
+    pg = structuredClone(INITIAL)
   }
 
   const code = $derived.by(() =>
     buildCopyButtonSnippet({
-      text: pgText,
-      textOn: pgTextOn,
-      ariaLabel: pgAriaLabel,
-      ariaLabelOn: pgAriaLabelOn,
-      tooltip: pgTooltip,
-      tooltipOn: pgTooltipOn,
-      size: pgSize,
-      sizeOn: pgSizeOn,
+      text: pg.text,
+      textOn: pg.textOn,
+      ariaLabel: pg.ariaLabel,
+      ariaLabelOn: pg.ariaLabelOn,
+      tooltip: pg.tooltip,
+      tooltipOn: pg.tooltipOn,
+      size: pg.size,
+      sizeOn: pg.sizeOn,
     }),
   )
 
@@ -59,12 +55,11 @@
   // always emitted (falling back to the default), so the default literal maps
   // back to unset.
   const fields: SyncableFieldConfig[] = $derived([
-    textField({ name: 'ariaLabel', type: 'string?', defaultValue: 'locale', note: 'Accessible name for the copy button.', value: pgAriaLabel, onChange: v => (pgAriaLabel = v), clearable: true, enabled: pgAriaLabelOn, setEnabled: v => (pgAriaLabelOn = v) }),
-    sizeField({ note: 'Button scale; numbers are icon-scale pixels interpolated between the steps.', value: pgSize, onChange: v => (pgSize = v), enabled: pgSizeOn, setEnabled: v => (pgSizeOn = v) }),
-    { name: 'text', type: 'string', defaultValue: '—', note: 'Text placed on the clipboard (required).', editor: 'text', clearable: true, value: pgText, onChange: value => { pgText = value; pgTextOn = true; }, toggle: snippetToggle(pgTextOn, enabled => (pgTextOn = enabled)), sync: { kind: 'text', unsetValues: [DEFAULT_TEXT] } },
-    textField({ name: 'tooltip', type: 'string?', defaultValue: 'locale', note: 'Tooltip shown on hover/focus.', value: pgTooltip, onChange: v => (pgTooltip = v), clearable: true, enabled: pgTooltipOn, setEnabled: v => (pgTooltipOn = v) }),
+    textField({ name: 'ariaLabel', type: 'string?', defaultValue: 'locale', note: 'Accessible name for the copy button.', value: pg.ariaLabel, onChange: v => (pg.ariaLabel = v), clearable: true, enabled: pg.ariaLabelOn, setEnabled: v => (pg.ariaLabelOn = v) }),
+    sizeField({ note: 'Button scale; numbers are icon-scale pixels interpolated between the steps.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
+    { name: 'text', type: 'string', defaultValue: '—', note: 'Text placed on the clipboard (required).', editor: 'text', clearable: true, value: pg.text, onChange: value => { pg.text = value; pg.textOn = true; }, toggle: snippetToggle(pg.textOn, enabled => (pg.textOn = enabled)), sync: { kind: 'text', unsetValues: [DEFAULT_TEXT] } },
+    textField({ name: 'tooltip', type: 'string?', defaultValue: 'locale', note: 'Tooltip shown on hover/focus.', value: pg.tooltip, onChange: v => (pg.tooltip = v), clearable: true, enabled: pg.tooltipOn, setEnabled: v => (pg.tooltipOn = v) }),
   ])
-
 
   // The hint reads the locale from scope, which reseeding never refreshes;
   // recompile the draft on those scope changes without touching the editor
@@ -87,8 +82,8 @@
         <CopyButton
           text={demoText}
           size={demoSize}
-          ariaLabel={pgAriaLabelOn && pgAriaLabel ? pgAriaLabel : undefined}
-          tooltip={pgTooltipOn && pgTooltip ? pgTooltip : undefined} />
+          ariaLabel={pg.ariaLabelOn && pg.ariaLabel ? pg.ariaLabel : undefined}
+          tooltip={pg.tooltipOn && pg.tooltip ? pg.tooltip : undefined} />
       </div>
       <span class="text-xs text-slate-500">{copyHint}</span>
     </div>

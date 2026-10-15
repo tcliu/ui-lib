@@ -12,21 +12,24 @@
 
   // The committed value is demo state: double-clicking the label opens the
   // input and the accepted text is written back, so the demo stays controlled.
-  let pgValue = $state(DEFAULT_TEXT)
+  const INITIAL = {
+    value: DEFAULT_TEXT,
+    size: 'md',
+    sizeOn: false,
+    copyable: 'no' as TriState,
+    copyableOn: false,
+    valueOn: true,
+    className: 'text-slate-200',
+    classNameOn: true,
+    maxWidth: '480',
+    maxWidthOn: true,
+  }
+  let pg = $state(structuredClone(INITIAL))
 
   // Customizer playground state. Every curated option starts at the
   // component default (the Value column shows it), so the cleared form
   // applies no overrides and Show-code omits the defaults. Clearing a Value
   // unsets it; Reset restores the defaults below.
-  let pgSize = $state('md')
-  let pgSizeOn = $state(false)
-  let pgCopyable = $state<TriState>('no')
-  let pgCopyableOn = $state(false)
-  let pgValueOn = $state(true)
-  let pgClassName = $state('text-slate-200')
-  let pgClassNameOn = $state(true)
-  let pgMaxWidth = $state('480')
-  let pgMaxWidthOn = $state(true)
 
   function asNumber(value: string): number | undefined {
     if (value.trim() === '') {
@@ -36,49 +39,39 @@
     return Number.isFinite(parsed) ? parsed : undefined
   }
 
-  const demoSize = $derived(pgSizeOn ? parseSizeValue(pgSize) : undefined)
-  const copyable = $derived(pgCopyableOn ? flagOn(pgCopyable) : undefined)
-  const demoClassName = $derived(pgClassNameOn && pgClassName ? pgClassName : undefined)
-  const demoMaxWidth = $derived(pgMaxWidthOn ? asNumber(pgMaxWidth) : undefined)
+  const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
+  const copyable = $derived(pg.copyableOn ? flagOn(pg.copyable) : undefined)
+  const demoClassName = $derived(pg.classNameOn && pg.className ? pg.className : undefined)
+  const demoMaxWidth = $derived(pg.maxWidthOn ? asNumber(pg.maxWidth) : undefined)
   const editHint = $derived(i18n.t('edit.doubleClickToEdit'))
 
   function clearPlayground() {
-    pgValue = DEFAULT_TEXT
-    pgValueOn = true
-    pgSize = 'md'
-    pgSizeOn = false
-    pgCopyable = 'no'
-    pgCopyableOn = false
-    pgClassName = 'text-slate-200'
-    pgClassNameOn = true
-    pgMaxWidth = '480'
-    pgMaxWidthOn = true
+    pg = structuredClone(INITIAL)
   }
 
   const code = $derived.by(() =>
     buildEditableTextSnippet({
-      value: pgValue,
-      size: pgSize,
-      sizeOn: pgSizeOn,
-      copyable: pgCopyable,
-      copyableOn: pgCopyableOn,
-      className: pgClassName,
-      classNameOn: pgClassNameOn,
-      maxWidth: pgMaxWidth,
-      maxWidthOn: pgMaxWidthOn,
+      value: pg.value,
+      size: pg.size,
+      sizeOn: pg.sizeOn,
+      copyable: pg.copyable,
+      copyableOn: pg.copyableOn,
+      className: pg.className,
+      classNameOn: pg.classNameOn,
+      maxWidth: pg.maxWidth,
+      maxWidthOn: pg.maxWidthOn,
     }),
   )
 
   
   const fields: SyncableFieldConfig[] = $derived([
-    textField({ name: 'className', type: 'string?', defaultValue: "'text-slate-200'", note: 'Classes for the display label.', value: pgClassName, onChange: v => (pgClassName = v), editorDefaultValue: 'text-slate-200', clearable: true, placeholder: 'text-slate-200', enabled: pgClassNameOn, setEnabled: v => (pgClassNameOn = v) }),
-    boolField({ name: 'copyable', defaultValue: 'false', note: 'Adds a copy button beside the label.', value: pgCopyable, onChange: v => (pgCopyable = v as TriState), enabled: pgCopyableOn, setEnabled: v => (pgCopyableOn = v) }),
-    { name: 'maxWidth', type: 'number?', defaultValue: '480', editorDefaultValue: '480', note: 'Maximum input width in px, clamped to the remaining horizontal space.', editor: 'number', clearable: true, value: pgMaxWidth, onChange: value => { pgMaxWidth = value; pgMaxWidthOn = true; }, placeholder: '480', toggle: snippetToggle(pgMaxWidthOn, enabled => (pgMaxWidthOn = enabled)), sync: { kind: 'number' } },
-    sizeField({ note: 'Text size for the label and the input.', value: pgSize, onChange: v => (pgSize = v), enabled: pgSizeOn, setEnabled: v => (pgSizeOn = v) }),
-    { name: 'text', type: 'string', defaultValue: '—', note: 'Displayed value; double-click or use the edit button to change it (required); the eye resets to the default.', editor: 'text', clearable: true, value: pgValue, onChange: value => { pgValue = value; pgValueOn = true; }, toggle: resetToggle(pgValueOn, enabled => (pgValueOn = enabled), () => (pgValue = DEFAULT_TEXT)), sync: { kind: 'script', attr: 'value' } },
+    textField({ name: 'className', type: 'string?', defaultValue: "'text-slate-200'", note: 'Classes for the display label.', value: pg.className, onChange: v => (pg.className = v), editorDefaultValue: 'text-slate-200', clearable: true, placeholder: 'text-slate-200', enabled: pg.classNameOn, setEnabled: v => (pg.classNameOn = v) }),
+    boolField({ name: 'copyable', defaultValue: 'false', note: 'Adds a copy button beside the label.', value: pg.copyable, onChange: v => (pg.copyable = v as TriState), enabled: pg.copyableOn, setEnabled: v => (pg.copyableOn = v) }),
+    { name: 'maxWidth', type: 'number?', defaultValue: '480', editorDefaultValue: '480', note: 'Maximum input width in px, clamped to the remaining horizontal space.', editor: 'number', clearable: true, value: pg.maxWidth, onChange: value => { pg.maxWidth = value; pg.maxWidthOn = true; }, placeholder: '480', toggle: snippetToggle(pg.maxWidthOn, enabled => (pg.maxWidthOn = enabled)), sync: { kind: 'number' } },
+    sizeField({ note: 'Text size for the label and the input.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
+    { name: 'text', type: 'string', defaultValue: '—', note: 'Displayed value; double-click or use the edit button to change it (required); the eye resets to the default.', editor: 'text', clearable: true, value: pg.value, onChange: value => { pg.value = value; pg.valueOn = true; }, toggle: resetToggle(pg.valueOn, enabled => (pg.valueOn = enabled), () => (pg.value = DEFAULT_TEXT)), sync: { kind: 'script', attr: 'value' } },
     { name: 'onChange', type: '(text: string) => void | boolean', defaultValue: '—', note: 'Called with the committed value; return false to reject it and keep editing.' },
   ])
-
 
   // The hint reads the locale from scope, which reseeding never refreshes;
   // recompile the draft on those scope changes without touching the editor
@@ -97,9 +90,9 @@
   >
     <div class="group flex flex-wrap items-center gap-2">
       <EditableText
-        text={pgValue}
+        text={pg.value}
         onChange={next => {
-          pgValue = next
+          pg.value = next
         }}
         size={demoSize}
         {copyable}

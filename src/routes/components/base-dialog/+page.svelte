@@ -26,47 +26,50 @@
   // applies no overrides and Show-code omits the defaults. Clearing a Value
   // unsets it; Reset restores the defaults below.
   // `pgOpen` is interaction state, not a curated option.
-  let pgOpen = $state(false)
-  let pgWidthVariant = $state('md')
-  let pgWidthVariantOn = $state(false)
-  let pgHeightVariant = $state('auto')
-  let pgHeightVariantOn = $state(false)
-  let pgSize = $state('')
-  let pgSizeOn = $state(false)
-  let pgClassName = $state('')
-  let pgClassNameOn = $state(false)
+  const INITIAL = {
+    open: false,
+    widthVariant: 'md',
+    widthVariantOn: false,
+    heightVariant: 'auto',
+    heightVariantOn: false,
+    size: '',
+    sizeOn: false,
+    className: '',
+    classNameOn: false,
+    children: '',
+    childrenOn: true,
+    title: '',
+    titleOn: false,
+    closeLabel: '',
+    closeLabelOn: false,
+    header: '',
+    headerOn: false,
+    footer: '',
+    footerOn: false,
+  }
+  let pg = $state(structuredClone(INITIAL))
   // The children row edits the inner markup the dialog lays out (demo data,
   // so it has no single prop). Committing the canonical shape resets to
   // unset, so defaults keep flowing from scope (e.g. on locale change).
-  let pgChildren = $state('')
-  let pgChildrenOn = $state(true)
-  let pgTitle = $state('')
-  let pgTitleOn = $state(false)
-  let pgCloseLabel = $state('')
-  let pgCloseLabelOn = $state(false)
   // The header row edits the Copyable title the dialog heading renders (demo
   // data, so it has no single prop); committing the canonical shape resets to
   // unset, so defaults keep flowing from the title. The footer row edits the
   // fixed action row below the body; same reset rule.
-  let pgHeader = $state('')
-  let pgHeaderOn = $state(false)
-  let pgFooter = $state('')
-  let pgFooterOn = $state(false)
 
   const demoWidthVariant = $derived(
-    pgWidthVariantOn
-      ? ((pgWidthVariant || undefined) as
+    pg.widthVariantOn
+      ? ((pg.widthVariant || undefined) as
         | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | '7xl' | 'fit' | 'wide'
         | undefined)
       : undefined,
   )
   const demoHeightVariant = $derived(
-    pgHeightVariantOn
-      ? ((pgHeightVariant || undefined) as 'auto' | (typeof DIALOG_SIZE_VARIANTS)[number] | undefined)
+    pg.heightVariantOn
+      ? ((pg.heightVariant || undefined) as 'auto' | (typeof DIALOG_SIZE_VARIANTS)[number] | undefined)
       : undefined,
   )
   const demoSize = $derived(
-    pgSizeOn ? ((pgSize || undefined) as (typeof DIALOG_SIZE_VARIANTS)[number] | undefined) : undefined,
+    pg.sizeOn ? ((pg.size || undefined) as (typeof DIALOG_SIZE_VARIANTS)[number] | undefined) : undefined,
   )
 
   const widthVariantOptions = [...DIALOG_SIZE_VARIANTS, 'fit', 'wide'].map(value => ({ value, label: value }))
@@ -76,7 +79,7 @@
   // Parsed children segments for the demo; unset, the canonical pair reads
   // the localized defaults from scope.
   const demoChildren = $derived<BaseBodyContent>(
-    parseBaseBodyMarkup(pgChildren) ?? {
+    parseBaseBodyMarkup(pg.children) ?? {
       body: i18n.t('showcase.dialogBody'),
       buttons: [
         { variant: 'primary', label: i18n.t('common.ok'), onClick: DISMISS_HANDLER },
@@ -87,7 +90,7 @@
   // The row dialog seeds the committed markup, or the canonical block with
   // resolved labels when unset.
   const childrenMarkup = $derived(
-    pgChildren ||
+    pg.children ||
       buildBaseBodyLines({
         body: i18n.t('showcase.dialogBody'),
         buttons: [
@@ -119,68 +122,50 @@
       return
     }
     if (handler === DISMISS_HANDLER) {
-      pgOpen = false
+      pg.open = false
       return
     }
     runCustomHandler(handler)
   }
   // Unset, the plain title renders the localized default (matching the seed's
   // scope ref); the labels stay absent so component defaults apply.
-  const demoTitle = $derived(pgTitleOn && pgTitle ? pgTitle : i18n.t('showcase.dialogTitle'))
-  const demoCloseLabel = $derived(pgCloseLabelOn && pgCloseLabel ? pgCloseLabel : undefined)
+  const demoTitle = $derived(pg.titleOn && pg.title ? pg.title : i18n.t('showcase.dialogTitle'))
+  const demoCloseLabel = $derived(pg.closeLabelOn && pg.closeLabel ? pg.closeLabel : undefined)
   // Canonical slot markup resolved from the title, matching the row seed
   // while unset.
   const canonicalHeader = $derived(buildHeaderLine({ text: demoTitle, inner: demoTitle }))
-  const headerMarkup = $derived(pgHeader || canonicalHeader)
-  const headerContent = $derived(parseHeaderMarkup(pgHeader) ?? { text: demoTitle, inner: demoTitle })
+  const headerMarkup = $derived(pg.header || canonicalHeader)
+  const headerContent = $derived(parseHeaderMarkup(pg.header) ?? { text: demoTitle, inner: demoTitle })
   const canonicalFooter = $derived(buildFooterLines([{ variant: 'primary', label: i18n.t('common.ok') }]))
-  const footerMarkup = $derived(pgFooter || canonicalFooter)
+  const footerMarkup = $derived(pg.footer || canonicalFooter)
   const footerButtons = $derived<BaseFooterButton[]>(
-    parseFooterMarkup(pgFooter) ?? [{ variant: 'primary', label: i18n.t('common.ok') }],
+    parseFooterMarkup(pg.footer) ?? [{ variant: 'primary', label: i18n.t('common.ok') }],
   )
 
   function clearPlayground() {
-    pgOpen = false
-    pgWidthVariant = 'md'
-    pgWidthVariantOn = false
-    pgHeightVariant = 'auto'
-    pgHeightVariantOn = false
-    pgSize = ''
-    pgSizeOn = false
-    pgClassName = ''
-    pgClassNameOn = false
-    pgChildren = ''
-    pgChildrenOn = true
-    pgTitle = ''
-    pgTitleOn = false
-    pgCloseLabel = ''
-    pgCloseLabelOn = false
-    pgHeader = ''
-    pgHeaderOn = false
-    pgFooter = ''
-    pgFooterOn = false
+    pg = structuredClone(INITIAL)
   }
 
   const code = $derived.by(() =>
     buildBaseDialogSnippet({
-      widthVariant: pgWidthVariant,
-      widthVariantOn: pgWidthVariantOn,
-      heightVariant: pgHeightVariant,
-      heightVariantOn: pgHeightVariantOn,
-      size: pgSize,
-      sizeOn: pgSizeOn,
-      className: pgClassName,
-      classNameOn: pgClassNameOn,
+      widthVariant: pg.widthVariant,
+      widthVariantOn: pg.widthVariantOn,
+      heightVariant: pg.heightVariant,
+      heightVariantOn: pg.heightVariantOn,
+      size: pg.size,
+      sizeOn: pg.sizeOn,
+      className: pg.className,
+      classNameOn: pg.classNameOn,
       children: childrenMarkup,
-      childrenOn: pgChildrenOn,
-      title: pgTitle,
-      titleOn: pgTitleOn,
-      closeLabel: pgCloseLabel,
-      closeLabelOn: pgCloseLabelOn,
+      childrenOn: pg.childrenOn,
+      title: pg.title,
+      titleOn: pg.titleOn,
+      closeLabel: pg.closeLabel,
+      closeLabelOn: pg.closeLabelOn,
       header: headerMarkup,
-      headerOn: pgHeaderOn,
+      headerOn: pg.headerOn,
       footer: footerMarkup,
-      footerOn: pgFooterOn,
+      footerOn: pg.footerOn,
     }),
   )
 
@@ -194,7 +179,7 @@
         const parsed = parseBaseBodyMarkup(draft)
         if (!parsed) return
         const normalized = buildBaseBodyLines(parsed)
-        pgChildren =
+        pg.children =
           normalized ===
           buildBaseBodyLines({
             body: i18n.t('showcase.dialogBody'),
@@ -205,16 +190,16 @@
           })
             ? ''
             : normalized
-        pgChildrenOn = true
+        pg.childrenOn = true
       },
       dialog: snippetDialog(
         parseBaseBodyMarkup,
         'Use a <p> paragraph plus a <Buttons align="right"> row of <Button variant="…"> labels; a button dismisses with onClick={() => (open = false)} or runs any balanced onClick expression.',
       ),
-      toggle: snippetToggle(pgChildrenOn, enabled => (pgChildrenOn = enabled)),
+      toggle: snippetToggle(pg.childrenOn, enabled => (pg.childrenOn = enabled)),
     }),
-    textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes for the dialog panel.', value: pgClassName, onChange: v => (pgClassName = v), editorDefaultValue: '', clearable: true, enabled: pgClassNameOn, setEnabled: v => (pgClassNameOn = v) }),
-    textField({ name: 'closeLabel', type: 'string?', defaultValue: 'locale', note: 'Overrides the close accessible name.', value: pgCloseLabel, onChange: v => (pgCloseLabel = v), clearable: true, enabled: pgCloseLabelOn, setEnabled: v => (pgCloseLabelOn = v) }),
+    textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes for the dialog panel.', value: pg.className, onChange: v => (pg.className = v), editorDefaultValue: '', clearable: true, enabled: pg.classNameOn, setEnabled: v => (pg.classNameOn = v) }),
+    textField({ name: 'closeLabel', type: 'string?', defaultValue: 'locale', note: 'Overrides the close accessible name.', value: pg.closeLabel, onChange: v => (pg.closeLabel = v), clearable: true, enabled: pg.closeLabelOn, setEnabled: v => (pg.closeLabelOn = v) }),
     snippetField({
       name: 'footer',
       note: 'Fixed action row below the body; one Buttons block of plain-label Button lines, committing applies it. Demo buttons dismiss.',
@@ -223,14 +208,14 @@
         const parsed = parseFooterMarkup(draft)
         if (!parsed) return
         const normalized = buildFooterLines(parsed)
-        pgFooter = normalized === canonicalFooter ? '' : normalized
-        pgFooterOn = true
+        pg.footer = normalized === canonicalFooter ? '' : normalized
+        pg.footerOn = true
       },
       dialog: snippetDialog(
         parseFooterMarkup,
         'Use a <Buttons align="right"> block of <Button variant="…">Label</Button> lines; a missing variant reads as the Button default.',
       ),
-      toggle: snippetToggle(pgFooterOn, enabled => (pgFooterOn = enabled)),
+      toggle: snippetToggle(pg.footerOn, enabled => (pg.footerOn = enabled)),
     }),
     snippetField({
       name: 'header',
@@ -240,22 +225,21 @@
         const parsed = parseHeaderMarkup(draft)
         if (!parsed) return
         const normalized = buildHeaderLine(parsed)
-        pgHeader = normalized === canonicalHeader ? '' : normalized
-        pgHeaderOn = true
+        pg.header = normalized === canonicalHeader ? '' : normalized
+        pg.headerOn = true
       },
       dialog: snippetDialog(
         parseHeaderMarkup,
         'Use a single <Copyable text="…"><span>…</span></Copyable> line with non-blank text and label.',
       ),
-      toggle: snippetToggle(pgHeaderOn, enabled => (pgHeaderOn = enabled)),
+      toggle: snippetToggle(pg.headerOn, enabled => (pg.headerOn = enabled)),
     }),
-    enumField({ name: 'heightVariant', type: "'auto' | 'xs' | … | '7xl'", defaultValue: "'auto'", note: 'Panel height step; auto hugs the content.', options: heightVariantOptions, value: pgHeightVariant, onChange: v => (pgHeightVariant = v), placeholder: 'auto', clearLabel: 'Clear height', enabled: pgHeightVariantOn, setEnabled: v => (pgHeightVariantOn = v) }),
-    enumField({ name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | '7xl'", defaultValue: '—', note: 'Shorthand setting both width and height; an explicit variant wins.', options: sizeOptions, value: pgSize, onChange: v => (pgSize = v), clearLabel: 'Clear size', enabled: pgSizeOn, setEnabled: v => (pgSizeOn = v) }),
-    { name: 'title', type: 'string?', defaultValue: '—', note: 'Dialog heading.', editor: 'text', clearable: true, value: pgTitle || i18n.t('showcase.dialogTitle'), onChange: value => { pgTitle = value === i18n.t('showcase.dialogTitle') ? '' : value; pgTitleOn = true; }, toggle: snippetToggle(pgTitleOn, enabled => (pgTitleOn = enabled)), sync: { kind: 'text' } },
-    enumField({ name: 'widthVariant', type: "'xs' | … | '7xl' | 'fit' | 'wide'", defaultValue: "'md'", note: 'Panel width variant.', options: widthVariantOptions, value: pgWidthVariant, onChange: v => (pgWidthVariant = v), placeholder: 'md', clearLabel: 'Clear width', enabled: pgWidthVariantOn, setEnabled: v => (pgWidthVariantOn = v) }),
+    enumField({ name: 'heightVariant', type: "'auto' | 'xs' | … | '7xl'", defaultValue: "'auto'", note: 'Panel height step; auto hugs the content.', options: heightVariantOptions, value: pg.heightVariant, onChange: v => (pg.heightVariant = v), placeholder: 'auto', clearLabel: 'Clear height', enabled: pg.heightVariantOn, setEnabled: v => (pg.heightVariantOn = v) }),
+    enumField({ name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | '7xl'", defaultValue: '—', note: 'Shorthand setting both width and height; an explicit variant wins.', options: sizeOptions, value: pg.size, onChange: v => (pg.size = v), clearLabel: 'Clear size', enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
+    { name: 'title', type: 'string?', defaultValue: '—', note: 'Dialog heading.', editor: 'text', clearable: true, value: pg.title || i18n.t('showcase.dialogTitle'), onChange: value => { pg.title = value === i18n.t('showcase.dialogTitle') ? '' : value; pg.titleOn = true; }, toggle: snippetToggle(pg.titleOn, enabled => (pg.titleOn = enabled)), sync: { kind: 'text' } },
+    enumField({ name: 'widthVariant', type: "'xs' | … | '7xl' | 'fit' | 'wide'", defaultValue: "'md'", note: 'Panel width variant.', options: widthVariantOptions, value: pg.widthVariant, onChange: v => (pg.widthVariant = v), placeholder: 'md', clearLabel: 'Clear width', enabled: pg.widthVariantOn, setEnabled: v => (pg.widthVariantOn = v) }),
     { name: 'onCancel', type: '() => void', defaultValue: '—', note: 'Called by every dismissal affordance.' },
   ])
-
 
 </script>
 
@@ -266,7 +250,7 @@
 {#snippet dialogFooter()}
   <Buttons align="right">
     {#each footerButtons as button}
-      <Button variant={button.variant ?? undefined} onClick={() => (pgOpen = false)}>
+      <Button variant={button.variant ?? undefined} onClick={() => (pg.open = false)}>
         {button.label}
       </Button>
     {/each}
@@ -279,7 +263,7 @@
     {code}
     onReset={clearPlayground}
     scope={{
-      open: pgOpen,
+      open: pg.open,
       openDialogLabel: i18n.t('showcase.openDialog'),
       dialogTitle: i18n.t('showcase.dialogTitle'),
       cancelLabel: i18n.t('common.cancel'),
@@ -288,19 +272,19 @@
 
     sync={{ tag: 'BaseDialog' }}
   >
-    <Button variant="primary" onClick={() => (pgOpen = true)}>{i18n.t('showcase.openDialog')}</Button>
-    {#if pgOpen}
+    <Button variant="primary" onClick={() => (pg.open = true)}>{i18n.t('showcase.openDialog')}</Button>
+    {#if pg.open}
       <BaseDialog
         title={demoTitle}
-        header={pgHeaderOn ? dialogHeader : undefined}
-        footer={pgFooterOn ? dialogFooter : undefined}
+        header={pg.headerOn ? dialogHeader : undefined}
+        footer={pg.footerOn ? dialogFooter : undefined}
         closeLabel={demoCloseLabel}
-        className={pgClassNameOn && pgClassName ? pgClassName : undefined}
+        className={pg.classNameOn && pg.className ? pg.className : undefined}
         widthVariant={demoWidthVariant}
         heightVariant={demoHeightVariant}
         size={demoSize}
-        onCancel={() => (pgOpen = false)}>
-        {#if pgChildrenOn}
+        onCancel={() => (pg.open = false)}>
+        {#if pg.childrenOn}
           <p>{demoChildren.body}</p>
           <Buttons align="right">
             {#each demoChildren.buttons as button}

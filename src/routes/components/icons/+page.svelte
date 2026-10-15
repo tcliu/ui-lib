@@ -15,11 +15,14 @@
   // overrides and Show-code omits the defaults. Clearing a Value unsets it;
   // Reset restores the defaults below. `pgTint` is
   // demo-only chrome with no prop row, so it keeps a settings panel below.
-  let pgSize = $state('md')
-  let pgSizeOn = $state(false)
-  let pgTint = $state('')
-  let pgClassName = $state('')
-  let pgClassNameOn = $state(false)
+  const INITIAL = {
+    size: 'md',
+    sizeOn: false,
+    tint: '',
+    className: '',
+    classNameOn: false,
+  }
+  let pg = $state(structuredClone(INITIAL))
 
   const sizeOptions = [
     { value: 'xs', label: 'xs' },
@@ -34,18 +37,14 @@
     { value: 'text-amber-400', label: 'amber' },
     { value: 'text-rose-400', label: 'rose' },
   ]
-  const demoSize = $derived(pgSizeOn ? parseSizeValue(pgSize) : undefined)
-  const galleryClass = $derived(iconClassFor(pgTint, pgClassNameOn ? pgClassName : ''))
+  const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
+  const galleryClass = $derived(iconClassFor(pg.tint, pg.classNameOn ? pg.className : ''))
 
   function clearPlayground() {
-    pgSize = 'md'
-    pgSizeOn = false
-    pgTint = ''
-    pgClassName = ''
-    pgClassNameOn = false
+    pg = structuredClone(INITIAL)
   }
 
-  const code = $derived.by(() => buildIconsSnippet({ size: pgSize, sizeOn: pgSizeOn, tint: pgTint, className: pgClassName, classNameOn: pgClassNameOn }))
+  const code = $derived.by(() => buildIconsSnippet({ size: pg.size, sizeOn: pg.sizeOn, tint: pg.tint, className: pg.className, classNameOn: pg.classNameOn }))
 
   // The page owns the preview so the shell can host the code toggle (and the
   // playground Reset) in the sticky title row while it renders the demo and
@@ -71,14 +70,14 @@
       note: 'Color and extra classes; explicit size classes win over the size attributes.',
       editor: 'text',
       clearable: true,
-      value: pgClassName,
+      value: pg.className,
       onChange: value => {
-        pgClassName = value
-        pgClassNameOn = true
+        pg.className = value
+        pg.classNameOn = true
       },
-      toggle: snippetToggle(pgClassNameOn, enabled => (pgClassNameOn = enabled)),
+      toggle: snippetToggle(pg.classNameOn, enabled => (pg.classNameOn = enabled)),
     },
-    sizeField({ note: 'Width/height attributes (12/16/20/24px for names, passthrough for numbers); composes with className.', value: pgSize, onChange: v => (pgSize = v), enabled: pgSizeOn, setEnabled: v => (pgSizeOn = v), options: sizeOptions }),
+    sizeField({ note: 'Width/height attributes (12/16/20/24px for names, passthrough for numbers); composes with className.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v), options: sizeOptions }),
   ])
 
 </script>
@@ -87,14 +86,14 @@
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Tint">
       <SelectDropdown
-        buttonLabel={tintOptions.find(option => option.value === pgTint)?.label ?? 'Default'}
-        activeValue={pgTint}
+        buttonLabel={tintOptions.find(option => option.value === pg.tint)?.label ?? 'Default'}
+        activeValue={pg.tint}
         ariaLabel="Tint"
         options={tintOptions}
-        onSelect={value => (pgTint = value)}
+        onSelect={value => (pg.tint = value)}
         clearable
         clearLabel="Clear tint"
-        onClear={() => (pgTint = '')} />
+        onClear={() => (pg.tint = '')} />
     </FormField>
   </div>
 {/snippet}

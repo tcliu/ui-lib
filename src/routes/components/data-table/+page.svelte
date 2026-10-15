@@ -34,163 +34,112 @@
   // applies no overrides and Show-code omits the defaults. Clearing a Value
   // unsets it; Reset restores the defaults below.
 
-  let pgShowSearch = $state<TriState>('yes')
-  let pgShowSearchOn = $state(true)
-  let pgShowPagination = $state<TriState>('')
-  let pgShowPaginationOn = $state(false)
-  let pgSelectable = $state<TriState>('no')
-  let pgSelectableOn = $state(false)
-  let pgDense = $state<TriState>('no')
-  let pgDenseOn = $state(false)
-  let pgResizable = $state<TriState>('no')
-  let pgResizableOn = $state(false)
-  let pgLoading = $state<TriState>('no')
-  let pgLoadingOn = $state(false)
-  let pgFillHeight = $state<TriState>('no')
-  let pgFillHeightOn = $state(false)
-  let pgBodyScroll = $state<TriState>('no')
-  let pgBodyScrollOn = $state(false)
-  let pgPlaceholder = $state('Search')
-  let pgPlaceholderOn = $state(false)
-  let pgEmptyMessage = $state('No rows')
-  let pgEmptyMessageOn = $state(false)
-  let pgPageSizeText = $state('')
-  let pgQuery = $state('')
-  let pgQueryOn = $state(true)
-  let pgPage = $state(1)
-  let pgResetWidthsText = $state('0')
-  let pgResetWidthsOn = $state(false)
-  let pgSearchAriaLabel = $state('Search')
-  let pgSearchAriaLabelOn = $state(false)
-  let pgSearchKeys = $state<string[] | null>(null)
+  const INITIAL = {
+    showSearch: 'yes' as TriState,
+    showSearchOn: true,
+    showPagination: '' as TriState,
+    showPaginationOn: false,
+    selectable: 'no' as TriState,
+    selectableOn: false,
+    dense: 'no' as TriState,
+    denseOn: false,
+    resizable: 'no' as TriState,
+    resizableOn: false,
+    loading: 'no' as TriState,
+    loadingOn: false,
+    fillHeight: 'no' as TriState,
+    fillHeightOn: false,
+    bodyScroll: 'no' as TriState,
+    bodyScrollOn: false,
+    placeholder: 'Search',
+    placeholderOn: false,
+    emptyMessage: 'No rows',
+    emptyMessageOn: false,
+    pageSizeText: '',
+    query: '',
+    queryOn: true,
+    page: 1,
+    resetWidthsText: '0',
+    resetWidthsOn: false,
+    searchAriaLabel: 'Search',
+    searchAriaLabelOn: false,
+    searchKeys: null as string[] | null,
+    rowsEnabled: true,
+    searchKeysEnabled: true,
+    chooserLabel: 'Choose columns',
+    chooserLabelOn: false,
+    chooserResetLabel: 'Reset columns',
+    chooserResetLabelOn: false,
+    selectAllAriaLabel: 'Select all',
+    selectAllAriaLabelOn: false,
+    allSelected: '' as TriState,
+    allSelectedOn: false,
+    someSelected: '' as TriState,
+    someSelectedOn: false,
+    containerClassName: '',
+    containerClassNameOn: false,
+    tableClassName: 'min-w-0',
+    tableClassNameOn: false,
+    storageKey: '',
+    storageKeyOn: false,
+    size: 'md',
+    sizeOn: false,
+    sortKey: null as string | null,
+    sortKeyOn: true,
+    sortDirection: 'asc' as 'asc' | 'desc',
+    sortDirectionOn: true,
+    selected: new Set<string>(),
+    rows: freshRows() as DemoRow[],
+  }
+  let pg = $state(structuredClone(INITIAL))
   // Eye toggles for the dialog rows below: `rows` is required content, so its
   // eye resets to the defaults; `searchKeys` is optional, so its eye omits
   // while off (the committed list stays in the dialog).
-  let pgRowsEnabled = $state(true)
-  let pgSearchKeysEnabled = $state(true)
-  let pgChooserLabel = $state('Choose columns')
-  let pgChooserLabelOn = $state(false)
-  let pgChooserResetLabel = $state('Reset columns')
-  let pgChooserResetLabelOn = $state(false)
-  let pgSelectAllAriaLabel = $state('Select all')
-  let pgSelectAllAriaLabelOn = $state(false)
-  let pgAllSelected = $state<TriState>('')
-  let pgAllSelectedOn = $state(false)
-  let pgSomeSelected = $state<TriState>('')
-  let pgSomeSelectedOn = $state(false)
-  let pgContainerClassName = $state('')
-  let pgContainerClassNameOn = $state(false)
-  let pgTableClassName = $state('min-w-0')
-  let pgTableClassNameOn = $state(false)
-  let pgStorageKey = $state('')
-  let pgStorageKeyOn = $state(false)
-  let pgSize = $state('md')
-  let pgSizeOn = $state(false)
-  let pgSortKey = $state<string | null>(null)
-  let pgSortKeyOn = $state(true)
-  let pgSortDirection = $state<'asc' | 'desc'>('asc')
   // The sort-direction eye resets the bindable to its default instead of
   // omitting: the seed always binds `pgSortDirection`, so off-state data
   // equals the default and nothing visibly changes.
-  let pgSortDirectionOn = $state(true)
-  let pgSelected = $state(new Set<string>())
   // Demo rows edit through the rows dialog as JSON; the cleared form restores
   // the default set.
-  let pgRows = $state<DemoRow[]>(freshRows())
-  const pgPageSize = $derived.by(() => {
-    const parsed = Number.parseInt(pgPageSizeText, 10)
+  const demoPageSize = $derived.by(() => {
+    const parsed = Number.parseInt(pg.pageSizeText, 10)
     return Number.isInteger(parsed) && parsed > 0 ? parsed : 10
   })
   // The pagination row's trailing count suffix. The `pagination` object prop is
   // read-only, so the suffix is fixed demo data rather than a Value cell.
   const TRAILING_SUFFIX = 'rows'
 
-  const showSearch = $derived(pgShowSearchOn ? flagOn(pgShowSearch) : undefined)
-  const showPagination = $derived(pgShowPaginationOn ? flagOn(pgShowPagination) : undefined)
-  const selectable = $derived(pgSelectableOn ? flagOn(pgSelectable) : undefined)
-  const dense = $derived(pgDenseOn ? flagOn(pgDense) : undefined)
-  const resizable = $derived(pgResizableOn ? flagOn(pgResizable) : undefined)
-  const loading = $derived(pgLoadingOn ? flagOn(pgLoading) : undefined)
-  const fillHeight = $derived(pgFillHeightOn ? flagOn(pgFillHeight) : undefined)
-  const bodyScroll = $derived(pgBodyScrollOn ? flagOn(pgBodyScroll) : undefined)
-  const demoSize = $derived(pgSizeOn ? parseSizeValue(pgSize) : undefined)
-  const stagePaneClass = $derived(pgFillHeightOn && pgFillHeight === 'yes' ? TABLE_STAGE_PANE_FILL : TABLE_STAGE_PANE)
+  const showSearch = $derived(pg.showSearchOn ? flagOn(pg.showSearch) : undefined)
+  const showPagination = $derived(pg.showPaginationOn ? flagOn(pg.showPagination) : undefined)
+  const selectable = $derived(pg.selectableOn ? flagOn(pg.selectable) : undefined)
+  const dense = $derived(pg.denseOn ? flagOn(pg.dense) : undefined)
+  const resizable = $derived(pg.resizableOn ? flagOn(pg.resizable) : undefined)
+  const loading = $derived(pg.loadingOn ? flagOn(pg.loading) : undefined)
+  const fillHeight = $derived(pg.fillHeightOn ? flagOn(pg.fillHeight) : undefined)
+  const bodyScroll = $derived(pg.bodyScrollOn ? flagOn(pg.bodyScroll) : undefined)
+  const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
+  const stagePaneClass = $derived(pg.fillHeightOn && pg.fillHeight === 'yes' ? TABLE_STAGE_PANE_FILL : TABLE_STAGE_PANE)
 
   // Fill height implies the fixed header band, so enabling it fills the Body
   // scroll field too; clearing it clears Body scroll. Enabling Body scroll
   // needs the fill-height parent, so it fills Fill height too.
   function applyFillHeight(value: string): void {
-    pgFillHeight = value as TriState
-    pgFillHeightOn = true
-    pgBodyScroll = value === 'yes' ? 'yes' : 'no'
-    pgBodyScrollOn = true
+    pg.fillHeight = value as TriState
+    pg.fillHeightOn = true
+    pg.bodyScroll = value === 'yes' ? 'yes' : 'no'
+    pg.bodyScrollOn = true
   }
 
   function applyBodyScroll(value: string): void {
-    pgBodyScroll = value as TriState
-    pgBodyScrollOn = true
+    pg.bodyScroll = value as TriState
+    pg.bodyScrollOn = true
     if (value === 'yes') {
-      pgFillHeight = 'yes'
-      pgFillHeightOn = true
+      pg.fillHeight = 'yes'
+      pg.fillHeightOn = true
     }
   }
 
   function clearPlayground() {
-    pgShowSearch = 'yes'
-    pgShowSearchOn = true
-    pgShowPagination = ''
-    pgShowPaginationOn = false
-    pgSelectable = 'no'
-    pgSelectableOn = false
-    pgDense = 'no'
-    pgDenseOn = false
-    pgResizable = 'no'
-    pgResizableOn = false
-    pgLoading = 'no'
-    pgLoadingOn = false
-    pgFillHeight = 'no'
-    pgFillHeightOn = false
-    pgBodyScroll = 'no'
-    pgBodyScrollOn = false
-    pgPlaceholder = 'Search'
-    pgPlaceholderOn = false
-    pgEmptyMessage = 'No rows'
-    pgEmptyMessageOn = false
-    pgPageSizeText = ''
-    pgQuery = ''
-    pgQueryOn = true
-    pgPage = 1
-    pgResetWidthsText = '0'
-    pgResetWidthsOn = false
-    pgSearchAriaLabel = 'Search'
-    pgSearchAriaLabelOn = false
-    pgSearchKeys = null
-    pgRowsEnabled = true
-    pgSearchKeysEnabled = true
-    pgChooserLabel = 'Choose columns'
-    pgChooserLabelOn = false
-    pgChooserResetLabel = 'Reset columns'
-    pgChooserResetLabelOn = false
-    pgSelectAllAriaLabel = 'Select all'
-    pgSelectAllAriaLabelOn = false
-    pgAllSelected = ''
-    pgAllSelectedOn = false
-    pgSomeSelected = ''
-    pgSomeSelectedOn = false
-    pgContainerClassName = ''
-    pgContainerClassNameOn = false
-    pgTableClassName = 'min-w-0'
-    pgTableClassNameOn = false
-    pgStorageKey = ''
-    pgStorageKeyOn = false
-    pgSize = 'md'
-    pgSizeOn = false
-    pgSortKey = null
-    pgSortKeyOn = true
-    pgSortDirection = 'asc'
-    pgSortDirectionOn = true
-    pgSelected = new Set<string>()
-    pgRows = freshRows()
+    pg = structuredClone(INITIAL)
   }
 
   function matches(row: DemoRow, text: string): boolean {
@@ -269,18 +218,18 @@
       checked: !hidden.has(column.key),
     })),
   )
-  const pageRows = $derived(visibleRows(pgRows, pgQuery, pgSortKey, pgSortDirection, pgPage, pgPageSize))
-  const rowTotal = $derived(visibleTotal(pgRows, pgQuery))
-  const allRowsSelected = $derived(pgSelected.size > 0 && pgSelected.size === pgRows.length)
-  const someRowsSelected = $derived(pgSelected.size > 0 && pgSelected.size < pgRows.length)
+  const pageRows = $derived(visibleRows(pg.rows, pg.query, pg.sortKey, pg.sortDirection, pg.page, demoPageSize))
+  const rowTotal = $derived(visibleTotal(pg.rows, pg.query))
+  const allRowsSelected = $derived(pg.selected.size > 0 && pg.selected.size === pg.rows.length)
+  const someRowsSelected = $derived(pg.selected.size > 0 && pg.selected.size < pg.rows.length)
   const demoResetWidths = $derived.by(() => {
-    if (!pgResetWidthsOn) return undefined
-    const parsed = Number.parseInt(pgResetWidthsText, 10)
+    if (!pg.resetWidthsOn) return undefined
+    const parsed = Number.parseInt(pg.resetWidthsText, 10)
     return Number.isInteger(parsed) && parsed >= 0 ? parsed : 0
   })
 
   function handleSearchInput() {
-    pgPage = 1
+    pg.page = 1
   }
   function handleToggleColumn(key: string, checked: boolean) {
     hidden = toggleColumn(hidden, key, checked)
@@ -289,70 +238,70 @@
     hidden = clearedColumns()
   }
   function handlePageChange(page: number) {
-    pgPage = page
+    pg.page = page
   }
   function handlePageSizeChange(size: number) {
-    pgPageSizeText = String(size)
-    pgPage = 1
+    pg.pageSizeText = String(size)
+    pg.page = 1
   }
   function handleToggleSelection(id: string, checked: boolean) {
-    pgSelected = toggleSelection(pgSelected, id, checked)
+    pg.selected = toggleSelection(pg.selected, id, checked)
   }
   function handleToggleAll() {
-    pgSelected = toggleAllSelected(
-      pgSelected,
-      pgRows.map(row => row.id),
+    pg.selected = toggleAllSelected(
+      pg.selected,
+      pg.rows.map(row => row.id),
     )
   }
 
   const code = $derived.by(() =>
     buildDataTableSnippet({
-      rows: pgRows,
-      showSearch: pgShowSearch,
-      showSearchOn: pgShowSearchOn,
-      showPagination: pgShowPagination,
-      showPaginationOn: pgShowPaginationOn,
-      selectable: pgSelectable,
-      selectableOn: pgSelectableOn,
-      dense: pgDense,
-      denseOn: pgDenseOn,
-      resizable: pgResizable,
-      resizableOn: pgResizableOn,
-      loading: pgLoading,
-      loadingOn: pgLoadingOn,
-      fillHeight: pgFillHeight,
-      fillHeightOn: pgFillHeightOn,
-      bodyScroll: pgBodyScroll,
-      bodyScrollOn: pgBodyScrollOn,
-      placeholder: pgPlaceholder,
-      placeholderOn: pgPlaceholderOn,
-      emptyMessage: pgEmptyMessage,
-      emptyMessageOn: pgEmptyMessageOn,
+      rows: pg.rows,
+      showSearch: pg.showSearch,
+      showSearchOn: pg.showSearchOn,
+      showPagination: pg.showPagination,
+      showPaginationOn: pg.showPaginationOn,
+      selectable: pg.selectable,
+      selectableOn: pg.selectableOn,
+      dense: pg.dense,
+      denseOn: pg.denseOn,
+      resizable: pg.resizable,
+      resizableOn: pg.resizableOn,
+      loading: pg.loading,
+      loadingOn: pg.loadingOn,
+      fillHeight: pg.fillHeight,
+      fillHeightOn: pg.fillHeightOn,
+      bodyScroll: pg.bodyScroll,
+      bodyScrollOn: pg.bodyScrollOn,
+      placeholder: pg.placeholder,
+      placeholderOn: pg.placeholderOn,
+      emptyMessage: pg.emptyMessage,
+      emptyMessageOn: pg.emptyMessageOn,
       trailing: TRAILING_SUFFIX,
-      searchAriaLabel: pgSearchAriaLabel,
-      searchAriaLabelOn: pgSearchAriaLabelOn,
-      searchKeys: pgSearchKeys,
-      searchKeysEnabled: pgSearchKeysEnabled,
-      chooserLabel: pgChooserLabel,
-      chooserLabelOn: pgChooserLabelOn,
-      chooserResetLabel: pgChooserResetLabel,
-      chooserResetLabelOn: pgChooserResetLabelOn,
-      selectAllAriaLabel: pgSelectAllAriaLabel,
-      selectAllAriaLabelOn: pgSelectAllAriaLabelOn,
-      allSelected: pgAllSelected,
-      allSelectedOn: pgAllSelectedOn,
-      someSelected: pgSomeSelected,
-      someSelectedOn: pgSomeSelectedOn,
-      containerClassName: pgContainerClassName,
-      containerClassNameOn: pgContainerClassNameOn,
-      tableClassName: pgTableClassName,
-      tableClassNameOn: pgTableClassNameOn,
-      storageKey: pgStorageKey,
-      storageKeyOn: pgStorageKeyOn,
-      resetWidthsSignal: pgResetWidthsText,
-      resetWidthsSignalOn: pgResetWidthsOn,
-      size: pgSize,
-      sizeOn: pgSizeOn,
+      searchAriaLabel: pg.searchAriaLabel,
+      searchAriaLabelOn: pg.searchAriaLabelOn,
+      searchKeys: pg.searchKeys,
+      searchKeysEnabled: pg.searchKeysEnabled,
+      chooserLabel: pg.chooserLabel,
+      chooserLabelOn: pg.chooserLabelOn,
+      chooserResetLabel: pg.chooserResetLabel,
+      chooserResetLabelOn: pg.chooserResetLabelOn,
+      selectAllAriaLabel: pg.selectAllAriaLabel,
+      selectAllAriaLabelOn: pg.selectAllAriaLabelOn,
+      allSelected: pg.allSelected,
+      allSelectedOn: pg.allSelectedOn,
+      someSelected: pg.someSelected,
+      someSelectedOn: pg.someSelectedOn,
+      containerClassName: pg.containerClassName,
+      containerClassNameOn: pg.containerClassNameOn,
+      tableClassName: pg.tableClassName,
+      tableClassNameOn: pg.tableClassNameOn,
+      storageKey: pg.storageKey,
+      storageKeyOn: pg.storageKeyOn,
+      resetWidthsSignal: pg.resetWidthsText,
+      resetWidthsSignalOn: pg.resetWidthsOn,
+      size: pg.size,
+      sizeOn: pg.sizeOn,
     }),
   )
 
@@ -366,16 +315,16 @@
   // plainly on snippet sync so a hand-edited line round-trips; the
   // Value-column coupling lives in the appliers above.
   const fields: SyncableFieldConfig[] = $derived([
-    boolField({ name: 'allSelected', defaultValue: '—', note: 'Header checkbox checked state. Interaction override; unset follows the selection.', value: pgAllSelected, onChange: v => (pgAllSelected = v as TriState), enabled: pgAllSelectedOn, setEnabled: v => (pgAllSelectedOn = v) }),
+    boolField({ name: 'allSelected', defaultValue: '—', note: 'Header checkbox checked state. Interaction override; unset follows the selection.', value: pg.allSelected, onChange: v => (pg.allSelected = v as TriState), enabled: pg.allSelectedOn, setEnabled: v => (pg.allSelectedOn = v) }),
     {
       name: 'bodyScroll',
       type: 'boolean',
       defaultValue: 'false',
       note: 'Fixed header band with a body-only scrollport (needs fillHeight).',
       editor: 'boolean',
-      value: pgBodyScroll,
+      value: pg.bodyScroll,
       onChange: applyBodyScroll,
-      toggle: snippetToggle(pgBodyScrollOn, enabled => (pgBodyScrollOn = enabled)),
+      toggle: snippetToggle(pg.bodyScrollOn, enabled => (pg.bodyScrollOn = enabled)),
       sync: { kind: 'tri' },
     },
     // Eye-free by design: the entries derive from the live hidden-column set
@@ -395,24 +344,24 @@
         'Invalid chooser JSON. Use an array of { key, header, checked } over the demo columns.',
       ),
     }),
-    textField({ name: 'chooserLabel', type: 'string?', defaultValue: "'Choose columns'", note: 'Accessible name for the column selector.', value: pgChooserLabel, onChange: v => (pgChooserLabel = v), editorDefaultValue: 'Choose columns', clearable: true, placeholder: 'Choose columns', enabled: pgChooserLabelOn, setEnabled: v => (pgChooserLabelOn = v) }),
-    textField({ name: 'chooserResetLabel', type: 'string?', defaultValue: "'Reset columns'", note: 'Accessible name for the reset button.', value: pgChooserResetLabel, onChange: v => (pgChooserResetLabel = v), editorDefaultValue: 'Reset columns', clearable: true, placeholder: 'Reset columns', enabled: pgChooserResetLabelOn, setEnabled: v => (pgChooserResetLabelOn = v) }),
-    textField({ name: 'containerClassName', type: 'string?', defaultValue: "''", note: 'Extra classes for the outer container; built-in scroll/border chrome when unset.', value: pgContainerClassName, onChange: v => (pgContainerClassName = v), editorDefaultValue: '', clearable: true, enabled: pgContainerClassNameOn, setEnabled: v => (pgContainerClassNameOn = v) }),
-    boolField({ name: 'dense', defaultValue: 'false', note: 'Compact padding for panel tables.', value: pgDense, onChange: v => (pgDense = v as TriState), enabled: pgDenseOn, setEnabled: v => (pgDenseOn = v) }),
-    textField({ name: 'emptyMessage', type: 'string?', defaultValue: "'No rows'", note: 'Shown when rows is empty.', value: pgEmptyMessage, onChange: v => (pgEmptyMessage = v), editorDefaultValue: 'No rows', clearable: true, placeholder: 'No rows', enabled: pgEmptyMessageOn, setEnabled: v => (pgEmptyMessageOn = v) }),
+    textField({ name: 'chooserLabel', type: 'string?', defaultValue: "'Choose columns'", note: 'Accessible name for the column selector.', value: pg.chooserLabel, onChange: v => (pg.chooserLabel = v), editorDefaultValue: 'Choose columns', clearable: true, placeholder: 'Choose columns', enabled: pg.chooserLabelOn, setEnabled: v => (pg.chooserLabelOn = v) }),
+    textField({ name: 'chooserResetLabel', type: 'string?', defaultValue: "'Reset columns'", note: 'Accessible name for the reset button.', value: pg.chooserResetLabel, onChange: v => (pg.chooserResetLabel = v), editorDefaultValue: 'Reset columns', clearable: true, placeholder: 'Reset columns', enabled: pg.chooserResetLabelOn, setEnabled: v => (pg.chooserResetLabelOn = v) }),
+    textField({ name: 'containerClassName', type: 'string?', defaultValue: "''", note: 'Extra classes for the outer container; built-in scroll/border chrome when unset.', value: pg.containerClassName, onChange: v => (pg.containerClassName = v), editorDefaultValue: '', clearable: true, enabled: pg.containerClassNameOn, setEnabled: v => (pg.containerClassNameOn = v) }),
+    boolField({ name: 'dense', defaultValue: 'false', note: 'Compact padding for panel tables.', value: pg.dense, onChange: v => (pg.dense = v as TriState), enabled: pg.denseOn, setEnabled: v => (pg.denseOn = v) }),
+    textField({ name: 'emptyMessage', type: 'string?', defaultValue: "'No rows'", note: 'Shown when rows is empty.', value: pg.emptyMessage, onChange: v => (pg.emptyMessage = v), editorDefaultValue: 'No rows', clearable: true, placeholder: 'No rows', enabled: pg.emptyMessageOn, setEnabled: v => (pg.emptyMessageOn = v) }),
     {
       name: 'fillHeight',
       type: 'boolean',
       defaultValue: 'false',
       note: 'Fills the parent; table body scrolls.',
       editor: 'boolean',
-      value: pgFillHeight,
+      value: pg.fillHeight,
       onChange: applyFillHeight,
-      toggle: snippetToggle(pgFillHeightOn, enabled => (pgFillHeightOn = enabled)),
+      toggle: snippetToggle(pg.fillHeightOn, enabled => (pg.fillHeightOn = enabled)),
       sync: { kind: 'tri' },
     },
-    boolField({ name: 'loading', defaultValue: 'false', note: 'Shows the spinner when there are no rows yet.', value: pgLoading, onChange: v => (pgLoading = v as TriState), enabled: pgLoadingOn, setEnabled: v => (pgLoadingOn = v) }),
-    boolField({ name: 'resizable', defaultValue: 'false', note: 'Draggable column resize handles.', value: pgResizable, onChange: v => (pgResizable = v as TriState), enabled: pgResizableOn, setEnabled: v => (pgResizableOn = v) }),
+    boolField({ name: 'loading', defaultValue: 'false', note: 'Shows the spinner when there are no rows yet.', value: pg.loading, onChange: v => (pg.loading = v as TriState), enabled: pg.loadingOn, setEnabled: v => (pg.loadingOn = v) }),
+    boolField({ name: 'resizable', defaultValue: 'false', note: 'Draggable column resize handles.', value: pg.resizable, onChange: v => (pg.resizable = v as TriState), enabled: pg.resizableOn, setEnabled: v => (pg.resizableOn = v) }),
     {
       name: 'resetWidthsSignal',
       type: 'number?',
@@ -421,12 +370,12 @@
       note: 'Rising signal: each new value drops managed and persisted widths.',
       editor: 'number',
       clearable: true,
-      value: pgResetWidthsText,
+      value: pg.resetWidthsText,
       onChange: value => {
-        pgResetWidthsText = value
-        pgResetWidthsOn = true
+        pg.resetWidthsText = value
+        pg.resetWidthsOn = true
       },
-      toggle: snippetToggle(pgResetWidthsOn, enabled => (pgResetWidthsOn = enabled)),
+      toggle: snippetToggle(pg.resetWidthsOn, enabled => (pg.resetWidthsOn = enabled)),
       placeholder: '0',
       sync: { kind: 'number' },
     },
@@ -434,12 +383,12 @@
       name: 'rows',
       type: 'DemoRow[]',
       note: 'Demo rows as JSON; the caller filters, sorts, and slices the current page. The eye resets to the default rows.',
-      value: JSON.stringify(pgRows, null, 2),
+      value: JSON.stringify(pg.rows, null, 2),
       onChange: (draft: string) => {
         const parsed = parseRowsJson(draft)
         if (parsed) {
-          pgRows = parsed
-          pgRowsEnabled = true
+          pg.rows = parsed
+          pg.rowsEnabled = true
         }
       },
       dialog: {
@@ -448,22 +397,22 @@
         title: 'Edit rows',
       },
       toggle: resetToggle(
-        pgRowsEnabled,
-        enabled => (pgRowsEnabled = enabled),
-        () => (pgRows = freshRows()),
+        pg.rowsEnabled,
+        enabled => (pg.rowsEnabled = enabled),
+        () => (pg.rows = freshRows()),
       ),
     }),
-    textField({ name: 'searchAriaLabel', type: 'string?', defaultValue: "'Search'", note: 'Accessible name for the search field.', value: pgSearchAriaLabel, onChange: v => (pgSearchAriaLabel = v), editorDefaultValue: 'Search', clearable: true, placeholder: 'Search', enabled: pgSearchAriaLabelOn, setEnabled: v => (pgSearchAriaLabelOn = v) }),
+    textField({ name: 'searchAriaLabel', type: 'string?', defaultValue: "'Search'", note: 'Accessible name for the search field.', value: pg.searchAriaLabel, onChange: v => (pg.searchAriaLabel = v), editorDefaultValue: 'Search', clearable: true, placeholder: 'Search', enabled: pg.searchAriaLabelOn, setEnabled: v => (pg.searchAriaLabelOn = v) }),
     jsonField({
       name: 'searchKeys',
       type: 'string[]',
       note: 'Bindable searchable column keys; derived from searchable columns when unset. The eye applies the list.',
-      value: JSON.stringify(pgSearchKeys ?? ['name', 'status'], null, 2),
+      value: JSON.stringify(pg.searchKeys ?? ['name', 'status'], null, 2),
       onChange: (draft: string) => {
         const parsed = parseSearchKeysJson(draft)
         if (parsed) {
-          pgSearchKeys = parsed
-          pgSearchKeysEnabled = true
+          pg.searchKeys = parsed
+          pg.searchKeysEnabled = true
         }
       },
       dialog: {
@@ -471,14 +420,14 @@
         invalidMessage: 'Invalid search-keys JSON. Use an array of strings.',
         title: 'Edit searchKeys',
       },
-      toggle: snippetToggle(pgSearchKeysEnabled, enabled => (pgSearchKeysEnabled = enabled)),
+      toggle: snippetToggle(pg.searchKeysEnabled, enabled => (pg.searchKeysEnabled = enabled)),
       sync: {
         kind: 'scriptJson',
         parseJson: parseSearchKeysValue,
-        setJson: value => (pgSearchKeys = value as string[]),
+        setJson: value => (pg.searchKeys = value as string[]),
       },
     }),
-    textField({ name: 'searchPlaceholder', type: 'string?', defaultValue: "'Search'", note: 'Search placeholder.', value: pgPlaceholder, onChange: v => (pgPlaceholder = v), editorDefaultValue: 'Search', clearable: true, placeholder: 'Search', enabled: pgPlaceholderOn, setEnabled: v => (pgPlaceholderOn = v) }),
+    textField({ name: 'searchPlaceholder', type: 'string?', defaultValue: "'Search'", note: 'Search placeholder.', value: pg.placeholder, onChange: v => (pg.placeholder = v), editorDefaultValue: 'Search', clearable: true, placeholder: 'Search', enabled: pg.placeholderOn, setEnabled: v => (pg.placeholderOn = v) }),
     {
       name: 'searchValue',
       type: 'string?',
@@ -487,23 +436,23 @@
       note: 'Bindable search text; filtering stays with the caller. The eye resets it to the default.',
       editor: 'text',
       clearable: true,
-      value: pgQuery,
+      value: pg.query,
       onChange: value => {
-        pgQuery = value
-        pgQueryOn = true
+        pg.query = value
+        pg.queryOn = true
       },
       toggle: resetToggle(
-        pgQueryOn,
-        enabled => (pgQueryOn = enabled),
-        () => (pgQuery = ''),
+        pg.queryOn,
+        enabled => (pg.queryOn = enabled),
+        () => (pg.query = ''),
       ),
     },
-    textField({ name: 'selectAllAriaLabel', type: 'string?', defaultValue: "'Select all'", note: 'Accessible name for the header checkbox.', value: pgSelectAllAriaLabel, onChange: v => (pgSelectAllAriaLabel = v), editorDefaultValue: 'Select all', clearable: true, placeholder: 'Select all', enabled: pgSelectAllAriaLabelOn, setEnabled: v => (pgSelectAllAriaLabelOn = v) }),
-    boolField({ name: 'selectable', defaultValue: 'false', note: 'Renders the checkbox column.', value: pgSelectable, onChange: v => (pgSelectable = v as TriState), enabled: pgSelectableOn, setEnabled: v => (pgSelectableOn = v) }),
-    boolField({ name: 'showPagination', defaultValue: 'pagination configured', note: 'Renders the pagination footer. Unset, the footer renders only when `pagination` supplies its data and onPageChange.', value: pgShowPagination, onChange: v => (pgShowPagination = v as TriState), enabled: pgShowPaginationOn, setEnabled: v => (pgShowPaginationOn = v) }),
-    boolField({ name: 'showSearch', defaultValue: 'true', note: 'Renders the search field.', value: pgShowSearch, onChange: v => (pgShowSearch = v as TriState), enabled: pgShowSearchOn, setEnabled: v => (pgShowSearchOn = v) }),
-    sizeField({ note: 'Search, chooser, selection, and pagination scale; numbers are icon-scale pixels interpolated between the steps.', value: pgSize, onChange: v => (pgSize = v), enabled: pgSizeOn, setEnabled: v => (pgSizeOn = v) }),
-    boolField({ name: 'someSelected', defaultValue: '—', note: 'Header checkbox indeterminate state. Interaction override; unset follows the selection.', value: pgSomeSelected, onChange: v => (pgSomeSelected = v as TriState), enabled: pgSomeSelectedOn, setEnabled: v => (pgSomeSelectedOn = v) }),
+    textField({ name: 'selectAllAriaLabel', type: 'string?', defaultValue: "'Select all'", note: 'Accessible name for the header checkbox.', value: pg.selectAllAriaLabel, onChange: v => (pg.selectAllAriaLabel = v), editorDefaultValue: 'Select all', clearable: true, placeholder: 'Select all', enabled: pg.selectAllAriaLabelOn, setEnabled: v => (pg.selectAllAriaLabelOn = v) }),
+    boolField({ name: 'selectable', defaultValue: 'false', note: 'Renders the checkbox column.', value: pg.selectable, onChange: v => (pg.selectable = v as TriState), enabled: pg.selectableOn, setEnabled: v => (pg.selectableOn = v) }),
+    boolField({ name: 'showPagination', defaultValue: 'pagination configured', note: 'Renders the pagination footer. Unset, the footer renders only when `pagination` supplies its data and onPageChange.', value: pg.showPagination, onChange: v => (pg.showPagination = v as TriState), enabled: pg.showPaginationOn, setEnabled: v => (pg.showPaginationOn = v) }),
+    boolField({ name: 'showSearch', defaultValue: 'true', note: 'Renders the search field.', value: pg.showSearch, onChange: v => (pg.showSearch = v as TriState), enabled: pg.showSearchOn, setEnabled: v => (pg.showSearchOn = v) }),
+    sizeField({ note: 'Search, chooser, selection, and pagination scale; numbers are icon-scale pixels interpolated between the steps.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
+    boolField({ name: 'someSelected', defaultValue: '—', note: 'Header checkbox indeterminate state. Interaction override; unset follows the selection.', value: pg.someSelected, onChange: v => (pg.someSelected = v as TriState), enabled: pg.someSelectedOn, setEnabled: v => (pg.someSelectedOn = v) }),
     {
       name: 'sortDirection',
       type: "'asc' | 'desc'",
@@ -514,17 +463,17 @@
         { value: 'asc', label: 'asc' },
         { value: 'desc', label: 'desc' },
       ],
-      value: pgSortDirection,
+      value: pg.sortDirection,
       onChange: value => {
-        pgSortDirection = value === 'desc' ? 'desc' : 'asc'
-        pgSortDirectionOn = true
+        pg.sortDirection = value === 'desc' ? 'desc' : 'asc'
+        pg.sortDirectionOn = true
       },
       placeholder: 'asc',
       clearLabel: 'Clear sort direction',
       toggle: resetToggle(
-        pgSortDirectionOn,
-        enabled => (pgSortDirectionOn = enabled),
-        () => (pgSortDirection = 'asc'),
+        pg.sortDirectionOn,
+        enabled => (pg.sortDirectionOn = enabled),
+        () => (pg.sortDirection = 'asc'),
       ),
     },
     {
@@ -534,19 +483,19 @@
       note: 'Bindable active sort column. The eye resets it to the default.',
       editor: 'text',
       clearable: true,
-      value: pgSortKey ?? '',
+      value: pg.sortKey ?? '',
       onChange: value => {
-        pgSortKey = value === '' ? null : value
-        pgSortKeyOn = true
+        pg.sortKey = value === '' ? null : value
+        pg.sortKeyOn = true
       },
       toggle: resetToggle(
-        pgSortKeyOn,
-        enabled => (pgSortKeyOn = enabled),
-        () => (pgSortKey = null),
+        pg.sortKeyOn,
+        enabled => (pg.sortKeyOn = enabled),
+        () => (pg.sortKey = null),
       ),
     },
-    textField({ name: 'storageKey', type: 'string?', defaultValue: '—', note: 'Persists resized widths under this key.', value: pgStorageKey, onChange: v => (pgStorageKey = v), clearable: true, enabled: pgStorageKeyOn, setEnabled: v => (pgStorageKeyOn = v) }),
-    textField({ name: 'tableClassName', type: 'string?', defaultValue: "'min-w-0'", note: 'Extra classes for the table element; raise the minimum width when columns need a horizontal scroll floor.', value: pgTableClassName, onChange: v => (pgTableClassName = v), editorDefaultValue: 'min-w-0', clearable: true, placeholder: 'min-w-0', enabled: pgTableClassNameOn, setEnabled: v => (pgTableClassNameOn = v) }),
+    textField({ name: 'storageKey', type: 'string?', defaultValue: '—', note: 'Persists resized widths under this key.', value: pg.storageKey, onChange: v => (pg.storageKey = v), clearable: true, enabled: pg.storageKeyOn, setEnabled: v => (pg.storageKeyOn = v) }),
+    textField({ name: 'tableClassName', type: 'string?', defaultValue: "'min-w-0'", note: 'Extra classes for the table element; raise the minimum width when columns need a horizontal scroll floor.', value: pg.tableClassName, onChange: v => (pg.tableClassName = v), editorDefaultValue: 'min-w-0', clearable: true, placeholder: 'min-w-0', enabled: pg.tableClassNameOn, setEnabled: v => (pg.tableClassNameOn = v) }),
     {
       name: 'columns',
       type: 'DataTableColumn<T>[]',
@@ -601,7 +550,6 @@
     },
   ])
 
-
   // The seed covers every curated option; only interaction state (search text,
   // page, sort, selection, hidden columns) rides scope, so refresh the live
   // preview on those without touching the editor text.
@@ -630,19 +578,19 @@
     onReset={clearPlayground}
     scope={{
       hidden,
-      pgQuery,
-      pgPage,
-      pgPageSize,
-      pgSortKey,
-      pgSortDirection,
-      pgShowSearch,
-      pgShowPagination,
-      pgSelectable,
-      pgDense,
-      pgResizable,
-      pgPlaceholder,
-      pgEmptyMessage,
-      pgSelected,
+      pgQuery: pg.query,
+      pgPage: pg.page,
+      demoPageSize,
+      pgSortKey: pg.sortKey,
+      pgSortDirection: pg.sortDirection,
+      pgShowSearch: pg.showSearch,
+      pgShowPagination: pg.showPagination,
+      pgSelectable: pg.selectable,
+      pgDense: pg.dense,
+      pgResizable: pg.resizable,
+      pgPlaceholder: pg.placeholder,
+      pgEmptyMessage: pg.emptyMessage,
+      pgSelected: pg.selected,
       visibleRows,
       visibleTotal,
       toggleSelection,
@@ -655,52 +603,52 @@
     }}
 
     sync={{ tag: 'DataTable' }}
-    scopeRefresh={() => [pgQuery, pgPage, pgSortKey, pgSortDirection, pgSelected, hidden]}
+    scopeRefresh={() => [pg.query, pg.page, pg.sortKey, pg.sortDirection, pg.selected, hidden]}
   >
     <ShowcaseStage paneClass={stagePaneClass}>
       <DataTable
         rows={pageRows}
         columns={visibleColumns}
         rowId={row => row.id}
-        searchAriaLabel={pgSearchAriaLabelOn && pgSearchAriaLabel ? pgSearchAriaLabel : undefined}
-        bind:searchValue={pgQuery}
-        searchKeys={pgSearchKeysEnabled ? pgSearchKeys ?? undefined : undefined}
+        searchAriaLabel={pg.searchAriaLabelOn && pg.searchAriaLabel ? pg.searchAriaLabel : undefined}
+        bind:searchValue={pg.query}
+        searchKeys={pg.searchKeysEnabled ? pg.searchKeys ?? undefined : undefined}
         onSearchInput={handleSearchInput}
         {showSearch}
-        searchPlaceholder={pgPlaceholderOn && pgPlaceholder ? pgPlaceholder : undefined}
-        emptyMessage={pgEmptyMessageOn && pgEmptyMessage ? pgEmptyMessage : undefined}
+        searchPlaceholder={pg.placeholderOn && pg.placeholder ? pg.placeholder : undefined}
+        emptyMessage={pg.emptyMessageOn && pg.emptyMessage ? pg.emptyMessage : undefined}
         {showPagination}
         chooserColumns={chooserEntries}
-        chooserLabel={pgChooserLabelOn && pgChooserLabel ? pgChooserLabel : undefined}
-        chooserResetLabel={pgChooserResetLabelOn && pgChooserResetLabel ? pgChooserResetLabel : undefined}
+        chooserLabel={pg.chooserLabelOn && pg.chooserLabel ? pg.chooserLabel : undefined}
+        chooserResetLabel={pg.chooserResetLabelOn && pg.chooserResetLabel ? pg.chooserResetLabel : undefined}
         onToggleColumn={handleToggleColumn}
         onResetColumns={handleResetColumns}
-        bind:sortKey={pgSortKey}
-        bind:sortDirection={pgSortDirection}
+        bind:sortKey={pg.sortKey}
+        bind:sortDirection={pg.sortDirection}
         pagination={{
           total: rowTotal,
-          pageSize: pgPageSize,
-          currentPage: pgPage,
+          pageSize: demoPageSize,
+          currentPage: pg.page,
           onPageChange: handlePageChange,
           onPageSizeChange: handlePageSizeChange,
           trailing: tableTrailing,
         }}
         {selectable}
-        selectedIds={pgSelected}
+        selectedIds={pg.selected}
         onToggleSelection={handleToggleSelection}
         onToggleAll={handleToggleAll}
-        allSelected={pgAllSelectedOn ? (pgAllSelected === '' ? allRowsSelected : pgAllSelected === 'yes') : undefined}
-        someSelected={pgSomeSelectedOn ? (pgSomeSelected === '' ? someRowsSelected : pgSomeSelected === 'yes') : undefined}
-        selectAllAriaLabel={pgSelectAllAriaLabelOn && pgSelectAllAriaLabel ? pgSelectAllAriaLabel : undefined}
+        allSelected={pg.allSelectedOn ? (pg.allSelected === '' ? allRowsSelected : pg.allSelected === 'yes') : undefined}
+        someSelected={pg.someSelectedOn ? (pg.someSelected === '' ? someRowsSelected : pg.someSelected === 'yes') : undefined}
+        selectAllAriaLabel={pg.selectAllAriaLabelOn && pg.selectAllAriaLabel ? pg.selectAllAriaLabel : undefined}
         rowSelectAriaLabel={row => `Select ${row.name}`}
         {dense}
         {fillHeight}
         {bodyScroll}
         {resizable}
         resizeAriaLabel={column => `Resize ${column.header}`}
-        containerClassName={pgContainerClassNameOn && pgContainerClassName ? pgContainerClassName : undefined}
-        tableClassName={pgTableClassNameOn && pgTableClassName ? pgTableClassName : undefined}
-        storageKey={pgStorageKeyOn && pgStorageKey ? pgStorageKey : undefined}
+        containerClassName={pg.containerClassNameOn && pg.containerClassName ? pg.containerClassName : undefined}
+        tableClassName={pg.tableClassNameOn && pg.tableClassName ? pg.tableClassName : undefined}
+        storageKey={pg.storageKeyOn && pg.storageKey ? pg.storageKey : undefined}
         size={demoSize}
         resetWidthsSignal={demoResetWidths}
         {loading} />

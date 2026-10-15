@@ -17,19 +17,22 @@
   // applies no overrides and Show-code omits the defaults. Clearing a Value
   // unsets it; Reset restores the defaults below.
   // `pgOpen` and `pgActionTaken` are interaction state, not curated options.
-  let pgOpen = $state(false)
-  let pgActionTaken = $state('')
-  let pgMessage = $state('Default')
-  let pgMessageOn = $state(true)
-  let pgType = $state('info')
-  let pgTypeOn = $state(false)
-  let pgPosition = $state('bottom-right')
-  let pgPositionOn = $state(false)
-  let pgSize = $state('md')
-  let pgSizeOn = $state(false)
-  let pgAction = $state('')
-  let pgCloseLabel = $state('')
-  let pgCloseLabelOn = $state(false)
+  const INITIAL = {
+    open: false,
+    actionTaken: '',
+    message: 'Default',
+    messageOn: true,
+    type: 'info',
+    typeOn: false,
+    position: 'bottom-right',
+    positionOn: false,
+    size: 'md',
+    sizeOn: false,
+    action: '',
+    closeLabel: '',
+    closeLabelOn: false,
+  }
+  let pg = $state(structuredClone(INITIAL))
 
   const typeOptions = ['success', 'info', 'warning', 'error'].map(value => ({ value, label: value }))
   const positionOptions = ['top-right', 'top-center', 'bottom-right', 'bottom-center'].map(value => ({
@@ -37,62 +40,49 @@
     label: value,
   }))
 
-  const demoType = $derived(pgTypeOn ? ((pgType || undefined) as 'success' | 'info' | 'warning' | 'error' | undefined) : undefined)
+  const demoType = $derived(pg.typeOn ? ((pg.type || undefined) as 'success' | 'info' | 'warning' | 'error' | undefined) : undefined)
   const demoPosition = $derived(
-    pgPositionOn
-      ? ((pgPosition || undefined) as 'top-right' | 'top-center' | 'bottom-right' | 'bottom-center' | undefined)
+    pg.positionOn
+      ? ((pg.position || undefined) as 'top-right' | 'top-center' | 'bottom-right' | 'bottom-center' | undefined)
       : undefined,
   )
-  const demoSize = $derived(pgSizeOn ? parseSizeValue(pgSize) : undefined)
-  const demoMessage = $derived(pgMessageOn && pgMessage ? pgMessage : i18n.t('showcase.default'))
-  const demoCloseLabel = $derived(pgCloseLabelOn && pgCloseLabel ? pgCloseLabel : i18n.t('common.close'))
+  const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
+  const demoMessage = $derived(pg.messageOn && pg.message ? pg.message : i18n.t('showcase.default'))
+  const demoCloseLabel = $derived(pg.closeLabelOn && pg.closeLabel ? pg.closeLabel : i18n.t('common.close'))
   const demoAction = $derived(
-    pgAction ? { label: pgAction, onClick: () => (pgActionTaken = pgAction) } : undefined,
+    pg.action ? { label: pg.action, onClick: () => (pg.actionTaken = pg.action) } : undefined,
   )
 
   function clearPlayground() {
-    pgOpen = false
-    pgActionTaken = ''
-    pgMessage = 'Default'
-    pgMessageOn = true
-    pgType = 'info'
-    pgTypeOn = false
-    pgPosition = 'bottom-right'
-    pgPositionOn = false
-    pgSize = 'md'
-    pgSizeOn = false
-    pgAction = ''
-    pgCloseLabel = ''
-    pgCloseLabelOn = false
+    pg = structuredClone(INITIAL)
   }
 
   const code = $derived.by(() =>
     buildToastSnippet({
-      message: pgMessage,
-      messageOn: pgMessageOn,
-      toastType: pgType,
-      toastTypeOn: pgTypeOn,
-      position: pgPosition,
-      positionOn: pgPositionOn,
-      size: pgSize,
-      sizeOn: pgSizeOn,
-      action: pgAction,
-      closeLabel: pgCloseLabel,
-      closeLabelOn: pgCloseLabelOn,
+      message: pg.message,
+      messageOn: pg.messageOn,
+      toastType: pg.type,
+      toastTypeOn: pg.typeOn,
+      position: pg.position,
+      positionOn: pg.positionOn,
+      size: pg.size,
+      sizeOn: pg.sizeOn,
+      action: pg.action,
+      closeLabel: pg.closeLabel,
+      closeLabelOn: pg.closeLabelOn,
     }),
   )
 
   
   const fields: SyncableFieldConfig[] = $derived([
-    textField({ name: 'closeLabel', type: 'string', defaultValue: '—', note: 'Accessible name for the dismiss button.', value: pgCloseLabel, onChange: v => (pgCloseLabel = v), clearable: true, enabled: pgCloseLabelOn, setEnabled: v => (pgCloseLabelOn = v) }),
-    { name: 'message', type: 'string', defaultValue: '—', note: 'Toast body text.', editor: 'text', clearable: true, value: pgMessage, onChange: value => { pgMessage = value; pgMessageOn = true; }, toggle: snippetToggle(pgMessageOn, enabled => (pgMessageOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'defaultMessage' } },
-    enumField({ name: 'position', type: "'top-right' | 'top-center' | 'bottom-right' | 'bottom-center'", defaultValue: "'bottom-right'", note: 'Viewport edge the toast docks to.', options: positionOptions, value: pgPosition, onChange: v => (pgPosition = v), placeholder: 'bottom-right', clearLabel: 'Clear position', enabled: pgPositionOn, setEnabled: v => (pgPositionOn = v) }),
-    sizeField({ note: 'Text scale; every metric is a fixed ratio of the size.', value: pgSize, onChange: v => (pgSize = v), enabled: pgSizeOn, setEnabled: v => (pgSizeOn = v) }),
-    enumField({ name: 'type', type: "'success' | 'info' | 'warning' | 'error'", defaultValue: "'info'", note: 'Accent treatment.', options: typeOptions, value: pgType, onChange: v => (pgType = v), placeholder: 'info', clearLabel: 'Clear type', enabled: pgTypeOn, setEnabled: v => (pgTypeOn = v) }),
+    textField({ name: 'closeLabel', type: 'string', defaultValue: '—', note: 'Accessible name for the dismiss button.', value: pg.closeLabel, onChange: v => (pg.closeLabel = v), clearable: true, enabled: pg.closeLabelOn, setEnabled: v => (pg.closeLabelOn = v) }),
+    { name: 'message', type: 'string', defaultValue: '—', note: 'Toast body text.', editor: 'text', clearable: true, value: pg.message, onChange: value => { pg.message = value; pg.messageOn = true; }, toggle: snippetToggle(pg.messageOn, enabled => (pg.messageOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'defaultMessage' } },
+    enumField({ name: 'position', type: "'top-right' | 'top-center' | 'bottom-right' | 'bottom-center'", defaultValue: "'bottom-right'", note: 'Viewport edge the toast docks to.', options: positionOptions, value: pg.position, onChange: v => (pg.position = v), placeholder: 'bottom-right', clearLabel: 'Clear position', enabled: pg.positionOn, setEnabled: v => (pg.positionOn = v) }),
+    sizeField({ note: 'Text scale; every metric is a fixed ratio of the size.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
+    enumField({ name: 'type', type: "'success' | 'info' | 'warning' | 'error'", defaultValue: "'info'", note: 'Accent treatment.', options: typeOptions, value: pg.type, onChange: v => (pg.type = v), placeholder: 'info', clearLabel: 'Clear type', enabled: pg.typeOn, setEnabled: v => (pg.typeOn = v) }),
     { name: 'action', type: '{ label: string; onClick: () => void }', defaultValue: '—', note: 'Action button; renders only when set.' },
     { name: 'onClose', type: '() => void', defaultValue: '—', note: 'Dismiss handler (button and Escape).' },
   ])
-
 
   // With an unset message the demo reads the localized default from scope,
   // which reseeding never refreshes; recompile the draft on those scope
@@ -105,7 +95,7 @@
     through a Value column. -->
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Action">
-      <TextInput bind:value={pgAction} ariaLabel="Action" />
+      <TextInput bind:value={pg.action} ariaLabel="Action" />
     </FormField>
   </div>
 {/snippet}
@@ -117,9 +107,9 @@
     onReset={clearPlayground}
     configPanel={settingsPanel}
     scope={{
-      open: pgOpen,
-      actionTaken: pgActionTaken,
-      actionLabel: pgAction,
+      open: pg.open,
+      actionTaken: pg.actionTaken,
+      actionLabel: pg.action,
       defaultMessage: i18n.t('showcase.default'),
       closeLabel: i18n.t('common.close'),
       showLabel: i18n.t('showcase.openDialog'),
@@ -127,10 +117,10 @@
 
     sync={{ tag: 'Toast' }}
     scopeRefresh={() => [demoMessage]}
-    scopeRefreshWhen={() => !(pgMessageOn && pgMessage)}
+    scopeRefreshWhen={() => !(pg.messageOn && pg.message)}
   >
-    <Button variant="primary" onClick={() => (pgOpen = true)}>{i18n.t('showcase.openDialog')}</Button>
-    {#if pgOpen}
+    <Button variant="primary" onClick={() => (pg.open = true)}>{i18n.t('showcase.openDialog')}</Button>
+    {#if pg.open}
       <Toast
         message={demoMessage}
         closeLabel={demoCloseLabel}
@@ -138,7 +128,7 @@
         position={demoPosition}
         size={demoSize}
         action={demoAction}
-        onClose={() => (pgOpen = false)} />
+        onClose={() => (pg.open = false)} />
     {/if}
-    <span class="text-sm text-slate-400">action: {pgActionTaken || '—'}</span>
+    <span class="text-sm text-slate-400">action: {pg.actionTaken || '—'}</span>
   </ShowcasePage>
