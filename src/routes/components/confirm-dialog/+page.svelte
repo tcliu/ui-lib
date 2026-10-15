@@ -1,13 +1,13 @@
 <script lang="ts">
+  import { flagOn } from '$lib/showcase/snippet-build'
   import Button from '$lib/components/Button.svelte'
   import ConfirmDialog from '$lib/components/ConfirmDialog.svelte'
   import { DIALOG_SIZE_VARIANTS } from '$lib/components/BaseDialog.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
   import { parseSizeValue } from '$lib/showcase/size-input'
-  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { snippetToggle } from '$lib/showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { enumField, textField, boolField, sizeField, snippetToggle } from '$lib/showcase/snippet-field'
   import { buildConfirmDialogSnippet, type TriState } from './demo-snippet'
 
   const i18n = getI18nContext()
@@ -43,11 +43,6 @@
   let pgTitleOn = $state(false)
   let pgButtonSize = $state('md')
   let pgButtonSizeOn = $state(false)
-
-  // Unset renders the component default; Yes/No force the value.
-  function flagOn(value: TriState): boolean | undefined {
-    return value === '' ? undefined : value === 'yes'
-  }
 
   const demoWidthVariant = $derived(
     pgWidthVariantOn
@@ -143,38 +138,24 @@
     }),
   )
 
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({
-      open: pgOpen,
-      result: pgResult,
-      openLabel: i18n.t('showcase.delete'),
-      discardTitle: i18n.t('showcase.discardTitle'),
-      discardMessage: i18n.t('showcase.discardMessage'),
-      discardLabel: i18n.t('showcase.discard'),
-      closeLabel: i18n.t('common.close'),
-    }),
-    sync: { tag: 'ConfirmDialog', getFields: () => syncFields },
-  })
-
+  
   const fields: SyncableFieldConfig[] = $derived([
-    { name: 'accent', type: "'cyan' | 'emerald' | 'amber' | 'violet' | 'rose'", defaultValue: "'rose'", note: 'Confirm button accent; the eye stages the customization.', editor: 'enum', options: accentOptions, value: pgAccent, onChange: value => { pgAccent = value; pgAccentOn = true; }, placeholder: 'rose', clearLabel: 'Clear accent', toggle: snippetToggle(pgAccentOn, enabled => (pgAccentOn = enabled)), sync: { kind: 'text' } },
-    { name: 'buttonSize', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number", defaultValue: "'md'", note: 'Confirm button scale; numbers are icon-scale pixels interpolated between the steps; the eye stages the customization.', editor: 'size', allowCustomValue: true, value: pgButtonSize, onChange: value => { pgButtonSize = value; pgButtonSizeOn = true; }, placeholder: 'md', clearLabel: 'Clear button size', toggle: snippetToggle(pgButtonSizeOn, enabled => (pgButtonSizeOn = enabled)), sync: { kind: 'custom', read: attrs => { const attr = attrs?.get('buttonSize'); if (!attr) return 'md'; if (attr.kind === 'string') return attr.value; if (attr.kind === 'expression' && /^\d+(\.\d+)?$/.test(attr.value)) return attr.value; return undefined } } },
-    { name: 'className', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Extra classes for the dialog panel; the eye stages the customization.', editor: 'text', clearable: true, value: pgClassName, onChange: value => { pgClassName = value; pgClassNameOn = true; }, toggle: snippetToggle(pgClassNameOn, enabled => (pgClassNameOn = enabled)), sync: { kind: 'text' } },
-    { name: 'closeLabel', type: 'string?', defaultValue: 'locale', note: 'Accessible name for the dismiss affordances; the eye stages the customization.', editor: 'text', clearable: true, value: pgCloseLabel, onChange: value => { pgCloseLabel = value; pgCloseLabelOn = true; }, toggle: snippetToggle(pgCloseLabelOn, enabled => (pgCloseLabelOn = enabled)), sync: { kind: 'text' } },
-    { name: 'confirmLabel', type: 'string', defaultValue: '—', note: 'Confirm button text; the eye stages the customization.', editor: 'text', clearable: true, value: pgConfirmLabel, onChange: value => { pgConfirmLabel = value; pgConfirmLabelOn = true; }, toggle: snippetToggle(pgConfirmLabelOn, enabled => (pgConfirmLabelOn = enabled)), sync: { kind: 'text' } },
-    { name: 'confirmOnDismiss', type: 'boolean', defaultValue: 'false', note: 'Routes Escape, overlay click, and the close icon to onConfirm instead of onCancel; the eye stages the customization.', editor: 'boolean', value: pgConfirmOnDismiss, onChange: value => { pgConfirmOnDismiss = value as TriState; pgConfirmOnDismissOn = true; }, toggle: snippetToggle(pgConfirmOnDismissOn, enabled => (pgConfirmOnDismissOn = enabled)), sync: { kind: 'tri' } },
-    { name: 'heightVariant', type: "'auto' | 'xs' | … | '7xl'", defaultValue: "'auto'", note: 'Panel height step; auto hugs the content; the eye stages the customization.', editor: 'enum', options: heightVariantOptions, value: pgHeightVariant, onChange: value => { pgHeightVariant = value; pgHeightVariantOn = true; }, placeholder: 'auto', clearLabel: 'Clear height', toggle: snippetToggle(pgHeightVariantOn, enabled => (pgHeightVariantOn = enabled)), sync: { kind: 'text' } },
-    { name: 'message', type: 'string', defaultValue: '—', note: 'Body copy explaining the action; the eye stages the customization.', editor: 'text', clearable: true, value: pgMessage, onChange: value => { pgMessage = value; pgMessageOn = true; }, toggle: snippetToggle(pgMessageOn, enabled => (pgMessageOn = enabled)), sync: { kind: 'text' } },
-    { name: 'pending', type: 'boolean', defaultValue: 'false', note: 'Disables dismissal and marks the confirm button pending; the eye stages the customization.', editor: 'boolean', value: pgPending, onChange: value => { pgPending = value as TriState; pgPendingOn = true; }, toggle: snippetToggle(pgPendingOn, enabled => (pgPendingOn = enabled)), sync: { kind: 'tri' } },
-    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | '7xl'", defaultValue: '—', note: 'Shorthand setting both panel width and height; an explicit variant wins; the eye stages the customization.', editor: 'enum', options: sizeOptions, value: pgSize, onChange: value => { pgSize = value; pgSizeOn = true; }, clearLabel: 'Clear size', toggle: snippetToggle(pgSizeOn, enabled => (pgSizeOn = enabled)), sync: { kind: 'text' } },
-    { name: 'title', type: 'string', defaultValue: '—', note: 'Dialog heading; the eye stages the customization.', editor: 'text', clearable: true, value: pgTitle, onChange: value => { pgTitle = value; pgTitleOn = true; }, toggle: snippetToggle(pgTitleOn, enabled => (pgTitleOn = enabled)), sync: { kind: 'text' } },
-    { name: 'widthVariant', type: "'xs' | … | '7xl' | 'fit' | 'wide'", defaultValue: "'md'", note: 'Panel width variant; the eye stages the customization.', editor: 'enum', options: widthVariantOptions, value: pgWidthVariant, onChange: value => { pgWidthVariant = value; pgWidthVariantOn = true; }, placeholder: 'md', clearLabel: 'Clear width', toggle: snippetToggle(pgWidthVariantOn, enabled => (pgWidthVariantOn = enabled)), sync: { kind: 'text' } },
+    enumField({ name: 'accent', type: "'cyan' | 'emerald' | 'amber' | 'violet' | 'rose'", defaultValue: "'rose'", note: 'Confirm button accent.', options: accentOptions, value: pgAccent, onChange: v => (pgAccent = v), placeholder: 'rose', clearLabel: 'Clear accent', enabled: pgAccentOn, setEnabled: v => (pgAccentOn = v) }),
+    sizeField({ note: 'Confirm button scale; numbers are icon-scale pixels interpolated between the steps.', value: pgButtonSize, onChange: v => (pgButtonSize = v), enabled: pgButtonSizeOn, setEnabled: v => (pgButtonSizeOn = v), name: 'buttonSize', clearLabel: 'Clear button size' }),
+    textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes for the dialog panel.', value: pgClassName, onChange: v => (pgClassName = v), editorDefaultValue: '', clearable: true, enabled: pgClassNameOn, setEnabled: v => (pgClassNameOn = v) }),
+    textField({ name: 'closeLabel', type: 'string?', defaultValue: 'locale', note: 'Accessible name for the dismiss affordances.', value: pgCloseLabel, onChange: v => (pgCloseLabel = v), clearable: true, enabled: pgCloseLabelOn, setEnabled: v => (pgCloseLabelOn = v) }),
+    textField({ name: 'confirmLabel', type: 'string', defaultValue: '—', note: 'Confirm button text.', value: pgConfirmLabel, onChange: v => (pgConfirmLabel = v), clearable: true, enabled: pgConfirmLabelOn, setEnabled: v => (pgConfirmLabelOn = v) }),
+    boolField({ name: 'confirmOnDismiss', defaultValue: 'false', note: 'Routes Escape, overlay click, and the close icon to onConfirm instead of onCancel.', value: pgConfirmOnDismiss, onChange: v => (pgConfirmOnDismiss = v as TriState), enabled: pgConfirmOnDismissOn, setEnabled: v => (pgConfirmOnDismissOn = v) }),
+    enumField({ name: 'heightVariant', type: "'auto' | 'xs' | … | '7xl'", defaultValue: "'auto'", note: 'Panel height step; auto hugs the content.', options: heightVariantOptions, value: pgHeightVariant, onChange: v => (pgHeightVariant = v), placeholder: 'auto', clearLabel: 'Clear height', enabled: pgHeightVariantOn, setEnabled: v => (pgHeightVariantOn = v) }),
+    textField({ name: 'message', type: 'string', defaultValue: '—', note: 'Body copy explaining the action.', value: pgMessage, onChange: v => (pgMessage = v), clearable: true, enabled: pgMessageOn, setEnabled: v => (pgMessageOn = v) }),
+    boolField({ name: 'pending', defaultValue: 'false', note: 'Disables dismissal and marks the confirm button pending.', value: pgPending, onChange: v => (pgPending = v as TriState), enabled: pgPendingOn, setEnabled: v => (pgPendingOn = v) }),
+    enumField({ name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | '7xl'", defaultValue: '—', note: 'Shorthand setting both panel width and height; an explicit variant wins.', options: sizeOptions, value: pgSize, onChange: v => (pgSize = v), clearLabel: 'Clear size', enabled: pgSizeOn, setEnabled: v => (pgSizeOn = v) }),
+    textField({ name: 'title', type: 'string', defaultValue: '—', note: 'Dialog heading.', value: pgTitle, onChange: v => (pgTitle = v), clearable: true, enabled: pgTitleOn, setEnabled: v => (pgTitleOn = v) }),
+    enumField({ name: 'widthVariant', type: "'xs' | … | '7xl' | 'fit' | 'wide'", defaultValue: "'md'", note: 'Panel width variant.', options: widthVariantOptions, value: pgWidthVariant, onChange: v => (pgWidthVariant = v), placeholder: 'md', clearLabel: 'Clear width', enabled: pgWidthVariantOn, setEnabled: v => (pgWidthVariantOn = v) }),
     { name: 'onCancel', type: '() => void', defaultValue: 'onConfirm', note: 'Dismiss handler; falls back to onConfirm when omitted.' },
     { name: 'onConfirm', type: '() => void', defaultValue: '—', note: 'Confirm handler.' },
   ])
 
-  const syncFields = $derived(syncFieldsOf(fields))
 
 </script>
 
@@ -182,7 +163,6 @@
     {fields}
     title="ConfirmDialog"
     {code}
-    {preview}
     onReset={clearPlayground}
     scope={{
       open: pgOpen,
@@ -193,7 +173,9 @@
       discardLabel: i18n.t('showcase.discard'),
       closeLabel: i18n.t('common.close'),
     }}
->
+
+    sync={{ tag: 'ConfirmDialog' }}
+  >
     <Button variant="primary" accent="rose" onClick={() => (pgOpen = true)}>{i18n.t('showcase.delete')}</Button>
     {#if pgOpen}
       <ConfirmDialog

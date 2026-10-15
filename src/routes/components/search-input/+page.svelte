@@ -1,14 +1,14 @@
 <script lang="ts">
+  import { flagOn } from '$lib/showcase/snippet-build'
   import { onMount } from 'svelte'
   import FormField from '$lib/components/FormField.svelte'
   import SearchInput from '$lib/components/SearchInput.svelte'
   import SelectDropdown from '$lib/components/SelectDropdown.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
   import { parseSizeValue } from '$lib/showcase/size-input'
-  import { snippetToggle, resetToggle } from '$lib/showcase/snippet-field'
-  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { enumField, textField, boolField, snippetToggle, resetToggle } from '$lib/showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
   import { STYLED_INPUT, STYLED_WRAPPER, buildSearchInputSnippet, type TriState } from './demo-snippet'
 
   const i18n = getI18nContext()
@@ -46,11 +46,6 @@
   })
 
   const styledOptions = [{ value: 'yes', label: 'Styled' }]
-
-  // Unset renders the component default; Yes/No force the value.
-  function flagOn(value: TriState): boolean | undefined {
-    return value === '' ? undefined : value === 'yes'
-  }
 
   const clearPlacementOptions = [
     { value: 'auto', label: 'auto' },
@@ -126,27 +121,22 @@
     }),
   )
 
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({ applyLabel: i18n.t('common.apply'), handleKeydown }),
-    sync: { tag: 'SearchInput', getFields: () => syncFields },
-  })
-
+  
   // Editable rows first (primitives and plain data, A–Z), then the function
   // props (A–Z). The bound value edits through the Value column like the
   // SelectDropdown's committed value.
   const fields: SyncableFieldConfig[] = $derived([
-    { name: 'ariaLabel', type: 'string', defaultValue: '—', note: 'Required accessible name; the eye stages the customization.', editor: 'text', clearable: true, value: pgAriaLabel, onChange: value => { pgAriaLabel = value; pgAriaLabelOn = true; }, toggle: snippetToggle(pgAriaLabelOn, enabled => (pgAriaLabelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'applyLabel' } },
-    { name: 'clearLabel', type: 'string?', defaultValue: "'Clear'", editorDefaultValue: 'Clear', note: 'Accessible name for the clear button; the eye stages the customization.', editor: 'text', clearable: true, value: pgClearLabel, onChange: value => { pgClearLabel = value; pgClearLabelOn = true; }, toggle: snippetToggle(pgClearLabelOn, enabled => (pgClearLabelOn = enabled)), placeholder: 'Clear', sync: { kind: 'text' } },
-    { name: 'clearPlacement', type: "'auto' | 'inside' | 'outside'", defaultValue: "'auto'", note: 'Inside overlays the field edge; outside sits after it; auto stays inside (no trailing adornment); the eye stages the customization.', editor: 'enum', options: clearPlacementOptions, value: pgClearPlacement, onChange: value => { pgClearPlacement = value; pgClearPlacementOn = true; }, placeholder: 'auto', clearLabel: 'Clear placement', toggle: snippetToggle(pgClearPlacementOn, enabled => (pgClearPlacementOn = enabled)), sync: { kind: 'text' } },
-    { name: 'clearable', type: 'boolean', defaultValue: 'false', note: 'Appends a cross button that clears the value; the eye stages the customization.', editor: 'boolean', value: pgClearable, onChange: value => { pgClearable = value as TriState; pgClearableOn = true; }, toggle: snippetToggle(pgClearableOn, enabled => (pgClearableOn = enabled)), sync: { kind: 'tri' } },
-    { name: 'defaultValue', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Baseline the clear button compares against; the cross hides while the value matches it; the eye stages the customization.', editor: 'text', clearable: true, value: pgDefaultValue, onChange: value => { pgDefaultValue = value; pgDefaultValueOn = true; }, toggle: snippetToggle(pgDefaultValueOn, enabled => (pgDefaultValueOn = enabled)), sync: { kind: 'text' } },
-    { name: 'inputClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the default input classes; the eye stages the customization.', editor: 'text', clearable: true, value: pgInputClass, onChange: value => { pgInputClass = value; pgInputClassOn = true; }, toggle: snippetToggle(pgInputClassOn, enabled => (pgInputClassOn = enabled)), sync: { kind: 'text' } },
+    { name: 'ariaLabel', type: 'string', defaultValue: '—', note: 'Required accessible name.', editor: 'text', clearable: true, value: pgAriaLabel, onChange: value => { pgAriaLabel = value; pgAriaLabelOn = true; }, toggle: snippetToggle(pgAriaLabelOn, enabled => (pgAriaLabelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'applyLabel' } },
+    textField({ name: 'clearLabel', type: 'string?', defaultValue: "'Clear'", note: 'Accessible name for the clear button.', value: pgClearLabel, onChange: v => (pgClearLabel = v), editorDefaultValue: 'Clear', clearable: true, placeholder: 'Clear', enabled: pgClearLabelOn, setEnabled: v => (pgClearLabelOn = v) }),
+    enumField({ name: 'clearPlacement', type: "'auto' | 'inside' | 'outside'", defaultValue: "'auto'", note: 'Inside overlays the field edge; outside sits after it; auto stays inside (no trailing adornment).', options: clearPlacementOptions, value: pgClearPlacement, onChange: v => (pgClearPlacement = v), placeholder: 'auto', clearLabel: 'Clear placement', enabled: pgClearPlacementOn, setEnabled: v => (pgClearPlacementOn = v) }),
+    boolField({ name: 'clearable', defaultValue: 'false', note: 'Appends a cross button that clears the value.', value: pgClearable, onChange: v => (pgClearable = v as TriState), enabled: pgClearableOn, setEnabled: v => (pgClearableOn = v) }),
+    textField({ name: 'defaultValue', type: 'string?', defaultValue: "''", note: 'Baseline the clear button compares against; the cross hides while the value matches it.', value: pgDefaultValue, onChange: v => (pgDefaultValue = v), editorDefaultValue: '', clearable: true, enabled: pgDefaultValueOn, setEnabled: v => (pgDefaultValueOn = v) }),
+    textField({ name: 'inputClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the default input classes.', value: pgInputClass, onChange: v => (pgInputClass = v), clearable: true, enabled: pgInputClassOn, setEnabled: v => (pgInputClassOn = v) }),
     { name: 'inputRef', type: 'HTMLInputElement | null', defaultValue: 'null', note: 'Bindable native input.' },
-    { name: 'placeholder', type: 'string?', defaultValue: "'Search...'", editorDefaultValue: 'Search...', note: 'Native placeholder; the eye stages the customization.', editor: 'text', clearable: true, value: pgPlaceholder, onChange: value => { pgPlaceholder = value; pgPlaceholderOn = true; }, toggle: snippetToggle(pgPlaceholderOn, enabled => (pgPlaceholderOn = enabled)), placeholder: 'Search...', sync: { kind: 'text' } },
-    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number", defaultValue: "'md'", note: 'Box, text, and icon scale together; numbers are icon-scale pixels interpolated between the steps; the eye stages the customization.', editor: 'size', allowCustomValue: true, value: pgSize, onChange: value => { pgSize = value; pgSizeOn = true; }, clearLabel: 'Clear size', placeholder: 'md', toggle: snippetToggle(pgSizeOn, enabled => (pgSizeOn = enabled)), sync: { kind: 'text' } },
+    textField({ name: 'placeholder', type: 'string?', defaultValue: "'Search...'", note: 'Native placeholder.', value: pgPlaceholder, onChange: v => (pgPlaceholder = v), editorDefaultValue: 'Search...', clearable: true, placeholder: 'Search...', enabled: pgPlaceholderOn, setEnabled: v => (pgPlaceholderOn = v) }),
+    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number", defaultValue: "'md'", note: 'Box, text, and icon scale together; numbers are icon-scale pixels interpolated between the steps.', editor: 'size', allowCustomValue: true, value: pgSize, onChange: value => { pgSize = value; pgSizeOn = true; }, clearLabel: 'Clear size', placeholder: 'md', toggle: snippetToggle(pgSizeOn, enabled => (pgSizeOn = enabled)), sync: { kind: 'text' } },
     { name: 'value', type: 'string', defaultValue: '—', note: 'Bindable search text; the eye resets it to empty.', editor: 'text', clearable: true, value: pgQuery, onChange: value => { pgQuery = value; pgQueryOn = true; }, toggle: resetToggle(pgQueryOn, enabled => (pgQueryOn = enabled), () => (pgQuery = '')), sync: { kind: 'script', attr: 'query' } },
-    { name: 'wrapperClass', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Extra classes for the outer wrapper; the eye stages the customization.', editor: 'text', clearable: true, value: pgWrapperClass, onChange: value => { pgWrapperClass = value; pgWrapperClassOn = true; }, toggle: snippetToggle(pgWrapperClassOn, enabled => (pgWrapperClassOn = enabled)), sync: { kind: 'text' } },
+    textField({ name: 'wrapperClass', type: 'string?', defaultValue: "''", note: 'Extra classes for the outer wrapper.', value: pgWrapperClass, onChange: v => (pgWrapperClass = v), editorDefaultValue: '', clearable: true, enabled: pgWrapperClassOn, setEnabled: v => (pgWrapperClassOn = v) }),
     { name: 'onClear', type: '() => void', defaultValue: 'clears value', note: 'Clear handler; falls back to clearing the bound value when omitted.' },
     { name: 'onblur', type: '(event: FocusEvent) => void', defaultValue: '—', note: 'Blur callback.' },
     { name: 'onfocus', type: '(event: FocusEvent) => void', defaultValue: '—', note: 'Focus callback.' },
@@ -154,7 +144,6 @@
     { name: 'onkeydown', type: '(event: KeyboardEvent) => void', defaultValue: '—', note: 'Keydown callback; Escape clears in this demo.' },
   ])
 
-  const syncFields = $derived(syncFieldsOf(fields))
 </script>
 
 {#snippet settingsPanel()}
@@ -192,11 +181,12 @@
     {fields}
     title="SearchInput"
     {code}
-    {preview}
     onReset={clearPlayground}
     configPanel={settingsPanel}
     scope={{ applyLabel: i18n.t('common.apply'), handleKeydown }}
->
+
+    sync={{ tag: 'SearchInput' }}
+  >
     <div class="flex flex-col gap-1">
       <SearchInput
         bind:value={pgQuery}

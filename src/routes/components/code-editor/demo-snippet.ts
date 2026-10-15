@@ -8,6 +8,8 @@
 // Curated playground option: unset or the component default renders the
 // default, Yes/No force the value. Options start at the default, so the
 // cleared form applies no overrides.
+import { escapeAttr } from '$lib/showcase/snippet-build'
+
 export type TriState = '' | 'yes' | 'no'
 
 // The document types CodeEditor loads a language pack for (see
@@ -63,10 +65,6 @@ function flagLine(name: string, value: TriState, indent: number, def: TriState =
     return []
   }
   return [`${' '.repeat(indent)}${name}${value === 'yes' ? '' : '={false}'}`]
-}
-
-function escapeAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 }
 
 // A max-length line: omitted while unset, at the component default (`0`

@@ -2,10 +2,9 @@
   import Copyable from '$lib/components/Copyable.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
   import { parseSizeValue } from '$lib/showcase/size-input'
-  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { snippetField, snippetToggle } from '$lib/showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { enumField, textField, sizeField, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
   import { buildCopyableSnippet } from './demo-snippet'
 
   const i18n = getI18nContext()
@@ -84,12 +83,7 @@
     }),
   )
 
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({}),
-    sync: { tag: 'Copyable', getFields: () => syncFields },
-  })
-
+  
   // Each editable row declares its Value editor and its snippet write-back
   // shape once; the sync table below derives from the same declarations.
   // Snippet edits surface in the Value column, and `syncSeed` holds the
@@ -97,7 +91,7 @@
   // always emitted (falling back to the demo default), so the default literal
   // maps back to unset.
   const fields: SyncableFieldConfig[] = $derived([
-    { name: 'ariaLabel', type: 'string?', defaultValue: 'locale', note: 'Accessible name for the copy button; the eye stages the customization.', editor: 'text', clearable: true, value: pgAriaLabel, onChange: value => { pgAriaLabel = value; pgAriaLabelOn = true; }, toggle: snippetToggle(pgAriaLabelOn, enabled => (pgAriaLabelOn = enabled)), sync: { kind: 'text' } },
+    textField({ name: 'ariaLabel', type: 'string?', defaultValue: 'locale', note: 'Accessible name for the copy button.', value: pgAriaLabel, onChange: v => (pgAriaLabel = v), clearable: true, enabled: pgAriaLabelOn, setEnabled: v => (pgAriaLabelOn = v) }),
     snippetField({
       name: 'children',
       note: 'Renders instead of text when passed; committing applies it, and the dialog edits its text.',
@@ -109,15 +103,14 @@
       toggle: snippetToggle(pgChildrenOn, enabled => (pgChildrenOn = enabled)),
       dialog: { docType: 'text' },
     }),
-    { name: 'containerClass', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Extra classes for the wrapper; the eye stages the customization.', editor: 'text', clearable: true, value: pgContainerClass, onChange: value => { pgContainerClass = value; pgContainerClassOn = true; }, toggle: snippetToggle(pgContainerClassOn, enabled => (pgContainerClassOn = enabled)), sync: { kind: 'text' } },
-    { name: 'copyPosition', type: "'inline' | 'top-right'", defaultValue: "'inline'", note: 'Copy button placement; the eye stages the customization.', editor: 'enum', options: positionOptions, value: pgPosition, onChange: value => { pgPosition = value; pgPositionOn = true; }, placeholder: 'inline', clearLabel: 'Clear copy position', toggle: snippetToggle(pgPositionOn, enabled => (pgPositionOn = enabled)), sync: { kind: 'text' } },
-    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number", defaultValue: "'md'", note: 'Copy button scale; numbers are icon-scale pixels interpolated between the steps; the eye stages the customization.', editor: 'size', allowCustomValue: true, value: pgSize, onChange: value => { pgSize = value; pgSizeOn = true; }, placeholder: 'md', clearLabel: 'Clear size', toggle: snippetToggle(pgSizeOn, enabled => (pgSizeOn = enabled)), sync: { kind: 'custom', read: attrs => { const attr = attrs?.get('size'); if (!attr) return 'md'; if (attr.kind === 'string') return attr.value; if (attr.kind === 'expression' && /^\d+(\.\d+)?$/.test(attr.value)) return attr.value; return undefined } } },
-    { name: 'text', type: 'string?', defaultValue: '—', note: 'Text to render (or wrap children instead); the eye stages the customization.', editor: 'text', clearable: true, value: pgText, onChange: value => { pgText = value; pgTextOn = true; }, toggle: snippetToggle(pgTextOn, enabled => (pgTextOn = enabled)), sync: { kind: 'text', unsetValues: ['Copy me'] } },
-    { name: 'textClass', type: 'string?', defaultValue: "'text-slate-400'", editorDefaultValue: 'text-slate-400', note: 'Classes for the rendered text; the eye stages the customization.', editor: 'text', clearable: true, value: pgTextClass, onChange: value => { pgTextClass = value; pgTextClassOn = true; }, toggle: snippetToggle(pgTextClassOn, enabled => (pgTextClassOn = enabled)), placeholder: 'text-slate-400', sync: { kind: 'text' } },
-    { name: 'tooltip', type: 'string?', defaultValue: 'locale', note: 'Tooltip for the copy button; the eye stages the customization.', editor: 'text', clearable: true, value: pgTooltip, onChange: value => { pgTooltip = value; pgTooltipOn = true; }, toggle: snippetToggle(pgTooltipOn, enabled => (pgTooltipOn = enabled)), sync: { kind: 'text' } },
+    textField({ name: 'containerClass', type: 'string?', defaultValue: "''", note: 'Extra classes for the wrapper.', value: pgContainerClass, onChange: v => (pgContainerClass = v), editorDefaultValue: '', clearable: true, enabled: pgContainerClassOn, setEnabled: v => (pgContainerClassOn = v) }),
+    enumField({ name: 'copyPosition', type: "'inline' | 'top-right'", defaultValue: "'inline'", note: 'Copy button placement.', options: positionOptions, value: pgPosition, onChange: v => (pgPosition = v), placeholder: 'inline', clearLabel: 'Clear copy position', enabled: pgPositionOn, setEnabled: v => (pgPositionOn = v) }),
+    sizeField({ note: 'Copy button scale; numbers are icon-scale pixels interpolated between the steps.', value: pgSize, onChange: v => (pgSize = v), enabled: pgSizeOn, setEnabled: v => (pgSizeOn = v) }),
+    { name: 'text', type: 'string?', defaultValue: '—', note: 'Text to render (or wrap children instead).', editor: 'text', clearable: true, value: pgText, onChange: value => { pgText = value; pgTextOn = true; }, toggle: snippetToggle(pgTextOn, enabled => (pgTextOn = enabled)), sync: { kind: 'text', unsetValues: ['Copy me'] } },
+    textField({ name: 'textClass', type: 'string?', defaultValue: "'text-slate-400'", note: 'Classes for the rendered text.', value: pgTextClass, onChange: v => (pgTextClass = v), editorDefaultValue: 'text-slate-400', clearable: true, placeholder: 'text-slate-400', enabled: pgTextClassOn, setEnabled: v => (pgTextClassOn = v) }),
+    textField({ name: 'tooltip', type: 'string?', defaultValue: 'locale', note: 'Tooltip for the copy button.', value: pgTooltip, onChange: v => (pgTooltip = v), clearable: true, enabled: pgTooltipOn, setEnabled: v => (pgTooltipOn = v) }),
   ])
 
-  const syncFields = $derived(syncFieldsOf(fields))
 
 </script>
 
@@ -129,9 +122,11 @@
     {fields}
     title="Copyable"
     {code}
-    {preview}
     onReset={clearPlayground}
->
+
+    sync={{ tag: 'Copyable' }}
+    scope={{}}
+  >
     <Copyable
       text={demoText}
       size={demoSize}

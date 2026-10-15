@@ -2,6 +2,8 @@
 // playground form state: the section regenerates the editor text from this, so
 // the editor always shows the markup behind the demo above.
 
+import { escapeRawLine } from '$lib/showcase/snippet-build'
+
 export type ButtonsButtonVariant = 'primary' | 'secondary' | 'danger' | 'outline' | 'ghost'
 
 const BUTTON_VARIANTS: readonly string[] = ['primary', 'secondary', 'danger', 'outline', 'ghost']
@@ -97,9 +99,6 @@ export function normalizeButtonsDraft(draft: string): string {
 // Verbatim children lines carry the user's literal labels, so `&` is escaped
 // for compilation; `<`/`{` cannot appear (validation rejects them), and the
 // tags themselves carry no `&`.
-function escapeRawLine(line: string): string {
-  return line.replace(/&/g, '&amp;')
-}
 
 export function buildButtonsSnippet({ align, alignOn, className, classNameOn, children, childrenEnabled }: ButtonsSnippetState): string {
   // A custom className replaces the default row, so align is omitted with it.

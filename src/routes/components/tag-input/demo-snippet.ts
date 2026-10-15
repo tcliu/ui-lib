@@ -8,6 +8,7 @@
 // The resize harness is ShowcasePage-owned chrome (its `stage` prop), so the
 // snippet carries only the demo content the page authors inside that frame.
 
+import { escapeAttr, escapeText } from '$lib/showcase/snippet-build'
 import { sizeAttributeLine } from '$lib/showcase/size-input'
 
 export type TriState = '' | 'yes' | 'no'
@@ -46,14 +47,7 @@ export interface TagInputSnippetState {
   option: string
 }
 
-function escapeAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
-}
-
 // Element text for the chip/option prefix spans below.
-function escapeText(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-}
 
 // A tri-state line: omitted while unset or at the component default, bare
 // while Yes, ={false} while No.

@@ -5,6 +5,8 @@
 // round-trip through the shared structure-value helpers, which the playground
 // resolves from its module registry.
 
+import { escapeAttr } from '$lib/showcase/snippet-build'
+
 export type TriState = '' | 'yes' | 'no'
 
 export interface StructureTreeSnippetState {
@@ -35,10 +37,6 @@ function flagLine(name: string, value: TriState, def: TriState = ''): string[] {
     return []
   }
   return [`  ${name}${value === 'yes' ? '' : '={false}'}`]
-}
-
-function escapeAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 }
 
 // A class line: omitted unless the eye applies committed text.

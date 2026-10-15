@@ -2,10 +2,9 @@
   import ColumnChooser from '$lib/components/ColumnChooser.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
   import { parseSizeValue } from '$lib/showcase/size-input'
-  import { jsonField, resetToggle, snippetToggle } from '$lib/showcase/snippet-field'
-  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { sizeField, jsonField, resetToggle, snippetToggle } from '$lib/showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
   import {
     buildColumnChooserSnippet,
     CHOOSER_LABEL,
@@ -64,12 +63,7 @@
     buildColumnChooserSnippet({ triggerLabel: pgTriggerLabel, triggerLabelOn: pgTriggerLabelOn, resetAriaLabel: pgResetAriaLabel, resetAriaLabelOn: pgResetAriaLabelOn, columns: pgColumns, size: pgSize, sizeOn: pgSizeOn }),
   )
 
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({ chooserLabel: CHOOSER_LABEL, resetLabel: CHOOSER_RESET_LABEL }),
-    sync: { tag: 'ColumnChooser', getFields: () => syncFields },
-  })
-
+  
   // Editable rows first (primitives and plain data, A–Z), then the function
   // props (A–Z).
   const fields: SyncableFieldConfig[] = $derived([
@@ -97,9 +91,9 @@
       name: 'resetAriaLabel',
       type: 'string',
       defaultValue: '—',
-      note: 'Accessible name and tooltip for the reset button; the eye stages the customization.', editor: 'text', clearable: true, value: pgResetAriaLabel, onChange: value => { pgResetAriaLabel = value; pgResetAriaLabelOn = true; }, toggle: snippetToggle(pgResetAriaLabelOn, enabled => (pgResetAriaLabelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'resetLabel' } },
-    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number", defaultValue: "'md'", note: 'Trigger, reset, and option scale; numbers are icon-scale pixels interpolated between the steps; the eye stages the customization.', editor: 'size', allowCustomValue: true, value: pgSize, onChange: value => { pgSize = value; pgSizeOn = true; }, placeholder: 'md', clearLabel: 'Clear size', toggle: snippetToggle(pgSizeOn, enabled => (pgSizeOn = enabled)), sync: { kind: 'custom', read: attrs => { const attr = attrs?.get('size'); if (!attr) return 'md'; if (attr.kind === 'string') return attr.value; if (attr.kind === 'expression' && /^\d+(\.\d+)?$/.test(attr.value)) return attr.value; return undefined } } },
-    { name: 'triggerLabel', type: 'string', defaultValue: '—', note: 'Accessible name and tooltip for the trigger; the eye stages the customization.', editor: 'text', clearable: true, value: pgTriggerLabel, onChange: value => { pgTriggerLabel = value; pgTriggerLabelOn = true; }, toggle: snippetToggle(pgTriggerLabelOn, enabled => (pgTriggerLabelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'chooserLabel' } },
+      note: 'Accessible name and tooltip for the reset button.', editor: 'text', clearable: true, value: pgResetAriaLabel, onChange: value => { pgResetAriaLabel = value; pgResetAriaLabelOn = true; }, toggle: snippetToggle(pgResetAriaLabelOn, enabled => (pgResetAriaLabelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'resetLabel' } },
+    sizeField({ note: 'Trigger, reset, and option scale; numbers are icon-scale pixels interpolated between the steps.', value: pgSize, onChange: v => (pgSize = v), enabled: pgSizeOn, setEnabled: v => (pgSizeOn = v) }),
+    { name: 'triggerLabel', type: 'string', defaultValue: '—', note: 'Accessible name and tooltip for the trigger.', editor: 'text', clearable: true, value: pgTriggerLabel, onChange: value => { pgTriggerLabel = value; pgTriggerLabelOn = true; }, toggle: snippetToggle(pgTriggerLabelOn, enabled => (pgTriggerLabelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'chooserLabel' } },
     { name: 'onReset', type: '() => void', defaultValue: '—', note: 'Fires when the reset button is pressed.' },
     {
       name: 'onToggle',
@@ -109,19 +103,19 @@
     }
   ])
 
-  const syncFields = $derived(syncFieldsOf(fields))
 </script>
 
 <ShowcasePage
     {fields}
     title="ColumnChooser"
     {code}
-    {preview}
     onReset={clearPlayground}
     scope={{ chooserLabel: CHOOSER_LABEL, resetLabel: CHOOSER_RESET_LABEL }}
     stage={{ minWidth: COLUMNS_STAGE_MIN_WIDTH }}
     bind:stageWidth={pgStageWidth}
->
+
+    sync={{ tag: 'ColumnChooser' }}
+  >
     <ColumnChooser
       triggerLabel={pgTriggerLabelOn && pgTriggerLabel ? pgTriggerLabel : CHOOSER_LABEL}
       resetAriaLabel={pgResetAriaLabelOn && pgResetAriaLabel ? pgResetAriaLabel : CHOOSER_RESET_LABEL}

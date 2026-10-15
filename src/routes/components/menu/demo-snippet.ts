@@ -7,6 +7,8 @@
 // The resize harness is ShowcasePage-owned chrome (its `stage` prop), so the
 // snippet carries only the demo content the page authors inside that frame.
 
+import { escapeAttr, escapeText, unescapeAttr } from '$lib/showcase/snippet-build'
+
 export type TriState = '' | 'yes' | 'no'
 
 export const MENU_STAGE_CONTENT = 'flex items-center gap-4'
@@ -116,17 +118,6 @@ export function parseMenuIconMarkup(draft: string): string | null {
 }
 
 // Element text for the item prefix below.
-function escapeText(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-}
-
-function escapeAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
-}
-
-function unescapeAttr(value: string): string {
-  return value.replace(/&quot;/g, '"').replace(/&amp;/g, '&')
-}
 
 // A tri-state line: omitted while unset or at the component default, bare
 // while Yes, ={false} while No.

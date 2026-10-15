@@ -1,6 +1,7 @@
 // Show-code source for the TextInput demo section. Pure string building over
 // the playground form state: the section regenerates the editor text from this,
 // so the editor always shows the markup behind the demo above.
+import { escapeAttr, escapeText } from '$lib/showcase/snippet-build'
 import { sizeAttributeLine } from '$lib/showcase/size-input'
 
 export type TriState = '' | 'yes' | 'no'
@@ -72,14 +73,7 @@ export function adornmentClassName(className: string, leading: string, trailing:
   return [leading ? LEADING_GUTTER : '', trailing ? TRAILING_GUTTER : '', className].filter(Boolean).join(' ')
 }
 
-function escapeAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
-}
-
 // Element text for the adornment spans below.
-function escapeText(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-}
 
 // A tri-state line: omitted while unset or at the component default, bare
 // while Yes, ={false} while No.

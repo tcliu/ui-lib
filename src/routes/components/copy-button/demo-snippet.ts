@@ -2,6 +2,7 @@
 // the playground form state: the section regenerates the editor text from this,
 // so the editor always shows the markup behind the demo above.
 
+import { escapeText } from '$lib/showcase/snippet-build'
 import { sizeAttributeLine } from '$lib/showcase/size-input'
 
 // Default text shared by the page and the snippet so the static demo and the
@@ -21,10 +22,6 @@ export interface CopyButtonSnippetState {
 
 function escapeAttr(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
-}
-
-function escapeText(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
 export function buildCopyButtonSnippet({

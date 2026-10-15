@@ -6,10 +6,8 @@
   import Resizable from '$lib/components/Resizable.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
-  import { useScopeRefresh } from '$lib/showcase/use-scope-refresh.svelte'
-  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { jsonField, snippetDialog, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { enumField, textField, jsonField, snippetDialog, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
   import {
     APP_SHELL_HEADER_MARKUP,
     appShellChildrenMarkup,
@@ -198,18 +196,7 @@
     }),
   )
 
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({
-      demoTitle: i18n.t('showcase.title'),
-      navLabel: i18n.t('showcase.components'),
-      bodyText: i18n.t('showcase.intro'),
-      showLabel: i18n.t('appShell.showPane'),
-      hideLabel: i18n.t('appShell.hidePane'),
-    }),
-    sync: { tag: 'AppShell', getFields: () => syncFields },
-  })
-
+  
   // children/footer are Snippet props: their rows open a markup dialog instead
   // of an inline editor. Only markup the static demo can reproduce exactly is
   // valid, so OK disables for anything else: children takes free-form HTML the
@@ -242,7 +229,7 @@
       type: 'string?',
       defaultValue: "'flex h-full min-h-0 flex-col bg-slate-950 text-slate-100'",
       editorDefaultValue: 'flex h-full min-h-0 flex-col bg-slate-950 text-slate-100',
-      note: 'Replaces the shell frame classes; unset, the component default renders inside the sized demo stage; the eye stages the customization.',
+      note: 'Replaces the shell frame classes; unset, the component default renders inside the sized demo stage.',
       editor: 'text',
       clearable: true,
       value: pgClassName,
@@ -298,21 +285,7 @@
         },
       },
     }),
-    {
-      name: 'closeLabel',
-      type: 'string?',
-      defaultValue: "i18n 'appShell.closePane'",
-      note: 'Floating backdrop aria label override; the eye stages the customization.',
-      editor: 'text',
-      clearable: true,
-      value: pgCloseLabel,
-      onChange: value => {
-        pgCloseLabel = value
-        pgCloseLabelOn = true
-      },
-      toggle: snippetToggle(pgCloseLabelOn, enabled => (pgCloseLabelOn = enabled)),
-      sync: { kind: 'text' },
-    },
+    textField({ name: 'closeLabel', type: 'string?', defaultValue: "i18n 'appShell.closePane'", note: 'Floating backdrop aria label override.', value: pgCloseLabel, onChange: v => (pgCloseLabel = v), clearable: true, enabled: pgCloseLabelOn, setEnabled: v => (pgCloseLabelOn = v) }),
     snippetField({
       name: 'footer',
       note: 'Footer block; committing applies it, and the dialog edits its markup.',
@@ -381,23 +354,7 @@
       ),
       toggle: snippetToggle(pgLeftPaneEnabled, enabled => (pgLeftPaneEnabled = enabled)),
     }),
-    {
-      name: 'mode',
-      type: "'auto' | 'docked' | 'floating'",
-      defaultValue: "'auto'",
-      note: 'Auto docks beside content while the shell container is wide and floats above it when narrow (measured on the shell, not the viewport). Pinned docked stays an in-flow row at every width; rail panes float as an open-or-closed overlay below the breakpoint; the eye stages the customization.',
-      editor: 'enum',
-      options: modeOptions,
-      value: pgMode,
-      onChange: value => {
-        pgMode = value
-        pgModeOn = true
-      },
-      placeholder: 'auto',
-      clearLabel: 'Clear mode',
-      toggle: snippetToggle(pgModeOn, enabled => (pgModeOn = enabled)),
-      sync: { kind: 'text' },
-    },
+    enumField({ name: 'mode', type: "'auto' | 'docked' | 'floating'", defaultValue: "'auto'", note: 'Auto docks beside content while the shell container is wide and floats above it when narrow (measured on the shell, not the viewport). Pinned docked stays an in-flow row at every width; rail panes float as an open-or-closed overlay below the breakpoint.', options: modeOptions, value: pgMode, onChange: v => (pgMode = v), placeholder: 'auto', clearLabel: 'Clear mode', enabled: pgModeOn, setEnabled: v => (pgModeOn = v) }),
     jsonField({
       name: 'right',
       type: 'AppShellPaneConfig',
@@ -448,13 +405,11 @@
     },
   ])
 
-  const syncFields = $derived(syncFieldsOf(fields))
 
   // The snippet reads its labels from scope (i18n), which the seed does not
   // cover, so a locale switch must recompile the live instance without
   // touching the editor text.
-  useScopeRefresh(preview, () => [i18n.locale])
-</script>
+  </script>
 
 {#snippet headerContent(api: AppShellHeaderApi)}
   {@const toggleLabel = api.open ? i18n.t('appShell.hidePane') : i18n.t('appShell.showPane')}
@@ -496,7 +451,6 @@
   {fields}
   title="AppShell"
   {code}
-  {preview}
   onReset={clearPlayground}
   scope={{
     demoTitle: i18n.t('showcase.title'),
@@ -504,7 +458,10 @@
     bodyText: i18n.t('showcase.intro'),
     showLabel: i18n.t('appShell.showPane'),
     hideLabel: i18n.t('appShell.hidePane'),
-  }}>
+  }}
+    sync={{ tag: 'AppShell' }}
+    scopeRefresh={() => [i18n.locale]}
+  >
   <!-- The demo is wrapped in `Resizable`: shrinking the frame floats the
       pane over the text when narrow, so the responsive behavior can be
       inspected in place without resizing the window. The frame is the only

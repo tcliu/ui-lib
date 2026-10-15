@@ -5,10 +5,8 @@
   import Tabs from '$lib/components/Tabs.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
-  import { useScopeRefresh } from '$lib/showcase/use-scope-refresh.svelte'
-  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { snippetToggle } from '$lib/showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { textField, snippetToggle } from '$lib/showcase/snippet-field'
   import { buildTabsSnippet } from './demo-snippet'
 
   const i18n = getI18nContext()
@@ -58,43 +56,27 @@
   // playground Reset) in the sticky title row while it renders the demo and
   // the editor below. Scope keys are demo-owned names that never collide
   // with the preamble's shared imports.
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({
-      overviewContent,
-      overviewToolbar,
-      detailsContent,
-      demoState,
-      routePath: pgRoutePath,
-      defaultLabel: i18n.t('showcase.default'),
-      customizedLabel: i18n.t('showcase.customized'),
-      componentsLabel: i18n.t('showcase.components'),
-    }),
-    sync: { tag: 'Tabs', getFields: () => syncFields },
-  })
-
+  
   // Each editable row declares its Value editor and its snippet write-back
   // shape once; the sync table below derives from the same declarations.
   // Snippet edits surface in the Value column, and `syncSeed` holds the
   // regenerated seed back so the editor keeps the user's text. The tab list
   // and its snippets are demo data with no prop row.
   const fields: SyncableFieldConfig[] = $derived([
-    { name: 'ariaLabel', type: 'string?', defaultValue: "'Tabs'", editorDefaultValue: 'Tabs', note: 'Accessible name for the nav; the eye stages the customization.', editor: 'text', clearable: true, value: pgAriaLabel, onChange: value => { pgAriaLabel = value; pgAriaLabelOn = true; }, placeholder: 'Tabs', toggle: snippetToggle(pgAriaLabelOn, enabled => (pgAriaLabelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'componentsLabel' } },
-    { name: 'className', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Extra classes appended to the header row; the eye stages the customization.', editor: 'text', clearable: true, value: pgClassName, onChange: value => { pgClassName = value; pgClassNameOn = true; }, toggle: snippetToggle(pgClassNameOn, enabled => (pgClassNameOn = enabled)), sync: { kind: 'text' } },
-    { name: 'pathname', type: 'string?', defaultValue: '—', note: 'Route mode: active path drives link rendering; the eye stages the customization.', editor: 'text', clearable: true, value: pgPathname, onChange: value => { pgPathname = value; pgPathnameOn = true; }, toggle: snippetToggle(pgPathnameOn, enabled => (pgPathnameOn = enabled)), sync: { kind: 'text' } },
+    { name: 'ariaLabel', type: 'string?', defaultValue: "'Tabs'", editorDefaultValue: 'Tabs', note: 'Accessible name for the nav.', editor: 'text', clearable: true, value: pgAriaLabel, onChange: value => { pgAriaLabel = value; pgAriaLabelOn = true; }, placeholder: 'Tabs', toggle: snippetToggle(pgAriaLabelOn, enabled => (pgAriaLabelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'componentsLabel' } },
+    textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes appended to the header row.', value: pgClassName, onChange: v => (pgClassName = v), editorDefaultValue: '', clearable: true, enabled: pgClassNameOn, setEnabled: v => (pgClassNameOn = v) }),
+    textField({ name: 'pathname', type: 'string?', defaultValue: '—', note: 'Route mode: active path drives link rendering.', value: pgPathname, onChange: v => (pgPathname = v), clearable: true, enabled: pgPathnameOn, setEnabled: v => (pgPathnameOn = v) }),
     // Read-only: the generic demo state object has no literal editor.
     { name: 'state', type: 'TState', defaultValue: '—', note: 'Passed to the toolbar/content snippets.' },
     { name: 'tabs', type: 'Tab<TState>[]', defaultValue: '—', note: 'Label, path, optional toolbar snippet, content snippet.' },
   ])
 
-  const syncFields = $derived(syncFieldsOf(fields))
 
   // The seed covers every override except the route interaction state (the
   // snippet reads it from scope), so only path edits need a scope refresh;
   // everything else reseeds. The refresh preserves the editor text by
   // recompiling the draft.
-  useScopeRefresh(preview, () => [pgRoutePath])
-</script>
+  </script>
 
 {#snippet overviewContent(state: DemoState)}
   <p class="text-sm text-slate-300">overview content — {state.note}</p>
@@ -128,7 +110,6 @@
     {fields}
     title="Tabs"
     {code}
-    {preview}
     onReset={clearPlayground}
     configPanel={settingsPanel}
     scope={{
@@ -141,7 +122,10 @@
       customizedLabel: i18n.t('showcase.customized'),
       componentsLabel: i18n.t('showcase.components'),
     }}
->
+
+    sync={{ tag: 'Tabs' }}
+    scopeRefresh={() => [pgRoutePath]}
+  >
     {#if pgRouteMode}
       <Button onClick={() => (pgRoutePath = pgRoutePath === '#overview' ? '#details' : '#overview')}>
         pathname: {pgRoutePath}

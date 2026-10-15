@@ -1,12 +1,11 @@
 <script lang="ts">
+  import { flagOn } from '$lib/showcase/snippet-build'
   import Splitter from '$lib/components/Splitter.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import ShowcaseStage from '$lib/showcase/ShowcaseStage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
-  import { useScopeRefresh } from '$lib/showcase/use-scope-refresh.svelte'
-  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { snippetToggle } from '$lib/showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { textField, boolField, snippetToggle } from '$lib/showcase/snippet-field'
   import {
     SPLITTER_MAIN,
     SPLITTER_PANE,
@@ -62,10 +61,6 @@
   const demoAriaLabel = $derived(pgAriaLabelOn && pgAriaLabel ? pgAriaLabel : undefined)
   const demoClassName = $derived(pgClassNameOn && pgClassName ? pgClassName : undefined)
   const demoLineClass = $derived(pgLineClassOn && pgLineClass ? pgLineClass : undefined)
-  // Unset renders the component default; Yes/No force the value.
-  function flagOn(value: TriState): boolean | undefined {
-    return value === '' ? undefined : value === 'yes'
-  }
   const demoInvert = $derived(pgInvertOn ? flagOn(pgInvert) : undefined)
   const demoMin = $derived(pgMinOn ? (parseSplitterBound(pgMin) ?? preset.min) : undefined)
   const demoMax = $derived(pgMaxOn ? (parseSplitterBound(pgMax) ?? preset.max) : undefined)
@@ -135,16 +130,7 @@
     }),
   )
 
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({
-      initialSplit: pgSplit,
-      leftLabel,
-      rightLabel,
-    }),
-    sync: { tag: 'Splitter', getFields: () => syncFields },
-  })
-
+  
   // Each editable row declares its Value editor and its snippet write-back
   // shape once; the sync table below derives from the same declarations.
   // Snippet edits surface in the Value column, and `syncSeed` holds the
@@ -152,40 +138,40 @@
   // and unit reseed the divider through the same appliers as the demo, so
   // snippet edits stay in range too.
   const fields: SyncableFieldConfig[] = $derived([
-    { name: 'ariaLabel', type: 'string?', defaultValue: "i18n 'splitter.resize'", note: 'Accessible name for the separator; the eye stages the customization.', editor: 'text', clearable: true, value: pgAriaLabel, onChange: value => { pgAriaLabel = value; pgAriaLabelOn = true; }, toggle: snippetToggle(pgAriaLabelOn, enabled => (pgAriaLabelOn = enabled)), sync: { kind: 'text' } },
-    { name: 'className', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Extra classes for the separator handle; the eye stages the customization.', editor: 'text', clearable: true, value: pgClassName, onChange: value => { pgClassName = value; pgClassNameOn = true; }, toggle: snippetToggle(pgClassNameOn, enabled => (pgClassNameOn = enabled)), sync: { kind: 'text' } },
-    { name: 'invert', type: 'boolean', defaultValue: 'false', note: 'Flips drag and arrow-key deltas for a pane anchored on the far side of the handle (right or bottom panes); the eye stages the customization.', editor: 'boolean', value: pgInvert, onChange: value => { pgInvert = value as TriState; pgInvertOn = true; }, toggle: snippetToggle(pgInvertOn, enabled => (pgInvertOn = enabled)), sync: { kind: 'tri' } },
-    { name: 'lineClass', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Extra classes for the visible divider line; the eye stages the customization.', editor: 'text', clearable: true, value: pgLineClass, onChange: value => { pgLineClass = value; pgLineClassOn = true; }, toggle: snippetToggle(pgLineClassOn, enabled => (pgLineClassOn = enabled)), sync: { kind: 'text' } },
-    { name: 'max', type: 'number?', defaultValue: '—', note: 'Upper clamp for the divider position; unset follows the orientation/unit preset; the eye stages the customization.', editor: 'number', clearable: true, value: pgMax, onChange: value => { pgMax = value; pgMaxOn = true; }, toggle: snippetToggle(pgMaxOn, enabled => (pgMaxOn = enabled)), sync: { kind: 'number' } },
-    { name: 'min', type: 'number?', defaultValue: '—', note: 'Lower clamp for the divider position; unset follows the orientation/unit preset; the eye stages the customization.', editor: 'number', clearable: true, value: pgMin, onChange: value => { pgMin = value; pgMinOn = true; }, toggle: snippetToggle(pgMinOn, enabled => (pgMinOn = enabled)), sync: { kind: 'number' } },
-    { name: 'orientation', type: "'vertical' | 'horizontal'", defaultValue: "'vertical'", note: 'Vertical splits left/right; horizontal splits top/bottom; the eye stages the customization.', editor: 'enum', options: orientationOptions, value: pgOrientation, onChange: applyOrientation, placeholder: 'vertical', clearLabel: 'Clear orientation', toggle: snippetToggle(pgOrientationOn, enabled => (pgOrientationOn = enabled)), sync: { kind: 'text' } },
-    { name: 'unit', type: "'px' | '%'", defaultValue: "'px'", note: 'Unit for the value, drag delta, and arrow-key step; the eye stages the customization.', editor: 'enum', options: unitOptions, value: pgUnit, onChange: applyUnit, placeholder: 'px', clearLabel: 'Clear unit', toggle: snippetToggle(pgUnitOn, enabled => (pgUnitOn = enabled)), sync: { kind: 'text' } },
+    textField({ name: 'ariaLabel', type: 'string?', defaultValue: "i18n 'splitter.resize'", note: 'Accessible name for the separator.', value: pgAriaLabel, onChange: v => (pgAriaLabel = v), clearable: true, enabled: pgAriaLabelOn, setEnabled: v => (pgAriaLabelOn = v) }),
+    textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes for the separator handle.', value: pgClassName, onChange: v => (pgClassName = v), editorDefaultValue: '', clearable: true, enabled: pgClassNameOn, setEnabled: v => (pgClassNameOn = v) }),
+    boolField({ name: 'invert', defaultValue: 'false', note: 'Flips drag and arrow-key deltas for a pane anchored on the far side of the handle (right or bottom panes).', value: pgInvert, onChange: v => (pgInvert = v as TriState), enabled: pgInvertOn, setEnabled: v => (pgInvertOn = v) }),
+    textField({ name: 'lineClass', type: 'string?', defaultValue: "''", note: 'Extra classes for the visible divider line.', value: pgLineClass, onChange: v => (pgLineClass = v), editorDefaultValue: '', clearable: true, enabled: pgLineClassOn, setEnabled: v => (pgLineClassOn = v) }),
+    { name: 'max', type: 'number?', defaultValue: '—', note: 'Upper clamp for the divider position; unset follows the orientation/unit preset.', editor: 'number', clearable: true, value: pgMax, onChange: value => { pgMax = value; pgMaxOn = true; }, toggle: snippetToggle(pgMaxOn, enabled => (pgMaxOn = enabled)), sync: { kind: 'number' } },
+    { name: 'min', type: 'number?', defaultValue: '—', note: 'Lower clamp for the divider position; unset follows the orientation/unit preset.', editor: 'number', clearable: true, value: pgMin, onChange: value => { pgMin = value; pgMinOn = true; }, toggle: snippetToggle(pgMinOn, enabled => (pgMinOn = enabled)), sync: { kind: 'number' } },
+    { name: 'orientation', type: "'vertical' | 'horizontal'", defaultValue: "'vertical'", note: 'Vertical splits left/right; horizontal splits top/bottom.', editor: 'enum', options: orientationOptions, value: pgOrientation, onChange: applyOrientation, placeholder: 'vertical', clearLabel: 'Clear orientation', toggle: snippetToggle(pgOrientationOn, enabled => (pgOrientationOn = enabled)), sync: { kind: 'text' } },
+    { name: 'unit', type: "'px' | '%'", defaultValue: "'px'", note: 'Unit for the value, drag delta, and arrow-key step.', editor: 'enum', options: unitOptions, value: pgUnit, onChange: applyUnit, placeholder: 'px', clearLabel: 'Clear unit', toggle: snippetToggle(pgUnitOn, enabled => (pgUnitOn = enabled)), sync: { kind: 'text' } },
     { name: 'value', type: 'number', defaultValue: '—', note: 'Divider position in pixels or percent; drive it from onChange (the seed reads it from scope).', editor: 'number', value: String(pgSplit), onChange: applySplit },
     { name: 'onChange', type: '(value: number) => void', defaultValue: '—', note: 'Fires while dragging and on arrow-key nudges.' },
     { name: 'onDragEnd', type: '() => void', defaultValue: '—', note: 'Fires after a drag or keyboard nudge completes.' },
   ])
 
-  const syncFields = $derived(syncFieldsOf(fields))
 
   // The seed covers every override except the divider position and pane labels
   // (the snippet reads them from scope), so only drags and locale changes need
   // a scope refresh; everything else reseeds. The refresh preserves the editor
   // text by recompiling the draft.
-  useScopeRefresh(preview, () => [pgSplit, leftLabel, rightLabel])
-</script>
+  </script>
 
 <ShowcasePage
     {fields}
     title="Splitter"
     {code}
-    {preview}
     onReset={clearPlayground}
     scope={{
       initialSplit: pgSplit,
       leftLabel,
       rightLabel,
     }}
->
+
+    sync={{ tag: 'Splitter' }}
+    scopeRefresh={() => [pgSplit, leftLabel, rightLabel]}
+  >
     <ShowcaseStage paneClass="w-full">
       <div class={orientation === 'horizontal' ? `${SPLITTER_WRAPPER} flex-col` : SPLITTER_WRAPPER}>
         <div

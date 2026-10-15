@@ -3,14 +3,8 @@
   import Buttons from '$lib/components/Buttons.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
-  import { useScopeRefresh } from '$lib/showcase/use-scope-refresh.svelte'
-  import {
-    syncFieldsOf,
-    type SyncableFieldConfig,
-    type SyncField,
-  } from '$lib/showcase/snippet-sync'
-  import { snippetDialog, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { enumField, textField, snippetDialog, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
   import { buildButtonsSnippet, buttonsChildrenSnippet, normalizeButtonsDraft, parseButtonsList, type ButtonsChildSegment } from './demo-snippet'
 
   const i18n = getI18nContext()
@@ -68,15 +62,10 @@
     buildButtonsSnippet({ align: pgAlign, alignOn: pgAlignOn, className: pgClassName, classNameOn: pgClassNameOn, children: pgChildren, childrenEnabled: pgChildrenEnabled }),
   )
 
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({ okLabel, cancelLabel }),
-    sync: { tag: 'Buttons', getFields: () => syncFields },
-  })
-
+  
   // Editable rows first (A–Z).
   const fields: SyncableFieldConfig[] = $derived([
-    { name: 'align', type: "'left' | 'center' | 'right'", defaultValue: "'left'", note: 'Horizontal alignment of the default row; the eye stages the customization.', editor: 'enum', options: alignOptions, value: pgAlign, onChange: value => { pgAlign = value; pgAlignOn = true; }, placeholder: 'left', clearLabel: 'Clear align', toggle: snippetToggle(pgAlignOn, enabled => (pgAlignOn = enabled)), sync: { kind: 'text' } },
+    enumField({ name: 'align', type: "'left' | 'center' | 'right'", defaultValue: "'left'", note: 'Horizontal alignment of the default row.', options: alignOptions, value: pgAlign, onChange: v => (pgAlign = v), placeholder: 'left', clearLabel: 'Clear align', enabled: pgAlignOn, setEnabled: v => (pgAlignOn = v) }),
     snippetField({
       name: 'children',
       note: 'Buttons to lay out; committing applies it.',
@@ -90,25 +79,25 @@
       dialog: snippetDialog(parseButtonsList, 'Use valid <Button> markup, e.g. <Button variant="primary">OK</Button>.'),
       toggle: snippetToggle(pgChildrenEnabled, enabled => (pgChildrenEnabled = enabled)),
     }),
-    { name: 'className', type: 'string?', defaultValue: '—', note: 'Replaces the default layout classes (align is ignored); the eye stages the customization.', editor: 'text', clearable: true, value: pgClassName, onChange: value => { pgClassName = value; pgClassNameOn = true; }, toggle: snippetToggle(pgClassNameOn, enabled => (pgClassNameOn = enabled)), sync: { kind: 'text' } },
+    textField({ name: 'className', type: 'string?', defaultValue: '—', note: 'Replaces the default layout classes (align is ignored).', value: pgClassName, onChange: v => (pgClassName = v), clearable: true, enabled: pgClassNameOn, setEnabled: v => (pgClassNameOn = v) }),
   ])
 
-  const syncFields: SyncField[] = $derived(syncFieldsOf(fields))
 
   // The seed reads both labels from scope while unset, which reseeding never
   // refreshes; recompile the draft on those scope changes without touching the
   // editor text (e.g. on locale change).
-  useScopeRefresh(preview, () => [okLabel, cancelLabel])
-</script>
+  </script>
 
 <ShowcasePage
     {fields}
     title="Buttons"
     {code}
-    {preview}
     onReset={clearPlayground}
     scope={{ okLabel, cancelLabel }}
->
+
+    sync={{ tag: 'Buttons' }}
+    scopeRefresh={() => [okLabel, cancelLabel]}
+  >
     <!-- Whitespace-sensitive: segments join with explicit single spaces to match the seed's line breaks; keep this block on one line. -->
     <Buttons align={demoClassName ? undefined : demoAlign} className={demoClassName}>{#if pgChildrenEnabled}{#each demoButtons as child, index}{#if index > 0}{' '}{/if}{#if child.kind === 'button'}<Button variant={child.variant}>{child.label}</Button>{:else if child.kind === 'html'}{#if child.tag === 'div'}<div>{child.text}</div>{:else if child.tag === 'span'}<span>{child.text}</span>{:else}<p>{child.text}</p>{/if}{:else}{child.text}{/if}{/each}{/if}</Buttons>
   </ShowcasePage>

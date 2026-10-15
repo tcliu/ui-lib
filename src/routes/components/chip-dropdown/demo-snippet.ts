@@ -5,6 +5,8 @@
 // The resize harness is ShowcasePage-owned chrome (its `stage` prop), so the
 // snippet carries only the demo content the page authors inside that frame.
 
+import { escapeAttr } from '$lib/showcase/snippet-build'
+
 export type TriState = '' | 'yes' | 'no'
 
 export const CHIP_STAGE_DEFAULT_WIDTH = 560
@@ -47,10 +49,6 @@ export interface ChipDropdownSnippetState {
   autoPlaceOn: boolean
   panelClass: string
   panelClassOn: boolean
-}
-
-function escapeAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 }
 
 // A tri-state line: omitted while unset or at the component default, bare

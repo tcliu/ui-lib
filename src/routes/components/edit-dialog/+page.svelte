@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { flagOn } from '$lib/showcase/snippet-build'
   import Button from '$lib/components/Button.svelte'
   import Copyable from '$lib/components/Copyable.svelte'
   import EditDialog from '$lib/components/EditDialog.svelte'
@@ -6,9 +7,8 @@
   import TextInput from '$lib/components/TextInput.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
-  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { snippetDialog, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { enumField, textField, boolField, snippetDialog, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
   import { buildHeaderLine, parseHeaderMarkup } from '$lib/showcase/snippet-header'
   import {
     buildEditActionsMarkup,
@@ -75,11 +75,6 @@
   // customized, empty for the canonical Format button.
   let pgActions = $state('')
   let pgActionsOn = $state(false)
-
-  // Unset renders the component default; Yes/No force the value.
-  function flagOn(value: TriState): boolean | undefined {
-    return value === '' ? undefined : value === 'yes'
-  }
 
   const demoWidthVariant = $derived(
     pgWidthVariantOn
@@ -229,24 +224,7 @@
     }),
   )
 
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({
-      open: pgOpen,
-      draft: pgDraft,
-      saved: pgSaved,
-      openDialogLabel: i18n.t('showcase.openDialog'),
-      dialogTitle: i18n.t('showcase.dialogTitle'),
-      closeLabel: i18n.t('common.close'),
-      okLabel: i18n.t('common.ok'),
-      resetLabel: i18n.t('common.reset'),
-      discardTitle: i18n.t('showcase.discardTitle'),
-      discardMessage: i18n.t('showcase.discardMessage'),
-      discardLabel: i18n.t('showcase.discard'),
-    }),
-    sync: { tag: 'EditDialog', getFields: () => syncFields },
-  })
-
+  
   // Each editable row declares its Value editor and its snippet write-back
   // shape once; the sync table below derives from the same declarations.
   // Snippet edits surface in the Value column, and `syncSeed` holds the
@@ -284,11 +262,11 @@
       ),
       toggle: snippetToggle(pgChildrenOn, enabled => (pgChildrenOn = enabled)),
     }),
-    { name: 'closeLabel', type: 'string', defaultValue: '—', note: 'Accessible name for dismissals; the eye stages the customization.', editor: 'text', clearable: true, value: pgCloseLabel, onChange: value => { pgCloseLabel = value; pgCloseLabelOn = true; }, toggle: snippetToggle(pgCloseLabelOn, enabled => (pgCloseLabelOn = enabled)), sync: { kind: 'text' } },
-    { name: 'dirty', type: 'boolean', defaultValue: 'false', note: 'Gates the discard prompt and Reset; the eye stages the customization.', editor: 'boolean', value: pgDirty, onChange: value => { pgDirty = value as TriState; pgDirtyOn = true; }, toggle: snippetToggle(pgDirtyOn, enabled => (pgDirtyOn = enabled)), sync: { kind: 'tri' } },
-    { name: 'discardLabel', type: 'string', defaultValue: '—', note: 'Discard-confirm button text; the eye stages the customization.', editor: 'text', clearable: true, value: pgDiscardLabel, onChange: value => { pgDiscardLabel = value; pgDiscardLabelOn = true; }, toggle: snippetToggle(pgDiscardLabelOn, enabled => (pgDiscardLabelOn = enabled)), sync: { kind: 'text' } },
-    { name: 'discardMessage', type: 'string', defaultValue: '—', note: 'Discard-confirm body; the eye stages the customization.', editor: 'text', clearable: true, value: pgDiscardMessage, onChange: value => { pgDiscardMessage = value; pgDiscardMessageOn = true; }, toggle: snippetToggle(pgDiscardMessageOn, enabled => (pgDiscardMessageOn = enabled)), sync: { kind: 'text' } },
-    { name: 'discardTitle', type: 'string', defaultValue: '—', note: 'Discard-confirm title; the eye stages the customization.', editor: 'text', clearable: true, value: pgDiscardTitle, onChange: value => { pgDiscardTitle = value; pgDiscardTitleOn = true; }, toggle: snippetToggle(pgDiscardTitleOn, enabled => (pgDiscardTitleOn = enabled)), sync: { kind: 'text' } },
+    textField({ name: 'closeLabel', type: 'string', defaultValue: '—', note: 'Accessible name for dismissals.', value: pgCloseLabel, onChange: v => (pgCloseLabel = v), clearable: true, enabled: pgCloseLabelOn, setEnabled: v => (pgCloseLabelOn = v) }),
+    boolField({ name: 'dirty', defaultValue: 'false', note: 'Gates the discard prompt and Reset.', value: pgDirty, onChange: v => (pgDirty = v as TriState), enabled: pgDirtyOn, setEnabled: v => (pgDirtyOn = v) }),
+    textField({ name: 'discardLabel', type: 'string', defaultValue: '—', note: 'Discard-confirm button text.', value: pgDiscardLabel, onChange: v => (pgDiscardLabel = v), clearable: true, enabled: pgDiscardLabelOn, setEnabled: v => (pgDiscardLabelOn = v) }),
+    textField({ name: 'discardMessage', type: 'string', defaultValue: '—', note: 'Discard-confirm body.', value: pgDiscardMessage, onChange: v => (pgDiscardMessage = v), clearable: true, enabled: pgDiscardMessageOn, setEnabled: v => (pgDiscardMessageOn = v) }),
+    textField({ name: 'discardTitle', type: 'string', defaultValue: '—', note: 'Discard-confirm title.', value: pgDiscardTitle, onChange: v => (pgDiscardTitle = v), clearable: true, enabled: pgDiscardTitleOn, setEnabled: v => (pgDiscardTitleOn = v) }),
     snippetField({
       name: 'header',
       note: 'Copyable title heading; one Copyable line, committing applies it. The plain title keeps rendering while off.',
@@ -306,20 +284,19 @@
       ),
       toggle: snippetToggle(pgHeaderOn, enabled => (pgHeaderOn = enabled)),
     }),
-    { name: 'heightVariant', type: "'auto' | 'xs' | … | '7xl'", defaultValue: "'auto'", note: 'Panel height step; auto hugs the content; the eye stages the customization.', editor: 'enum', options: heightVariantOptions, value: pgHeightVariant, onChange: value => { pgHeightVariant = value; pgHeightVariantOn = true; }, placeholder: 'auto', clearLabel: 'Clear height', toggle: snippetToggle(pgHeightVariantOn, enabled => (pgHeightVariantOn = enabled)), sync: { kind: 'text' } },
-    { name: 'pending', type: 'boolean', defaultValue: 'false', note: 'Disables Save/Reset while an operation runs; the eye stages the customization.', editor: 'boolean', value: pgPending, onChange: value => { pgPending = value as TriState; pgPendingOn = true; }, toggle: snippetToggle(pgPendingOn, enabled => (pgPendingOn = enabled)), sync: { kind: 'tri' } },
-    { name: 'resetLabel', type: 'string', defaultValue: '—', note: 'Reset button text; the eye stages the customization.', editor: 'text', clearable: true, value: pgResetLabel, onChange: value => { pgResetLabel = value; pgResetLabelOn = true; }, toggle: snippetToggle(pgResetLabelOn, enabled => (pgResetLabelOn = enabled)), sync: { kind: 'text' } },
-    { name: 'saveDisabled', type: 'boolean', defaultValue: 'false', note: 'Caller validity rules; ORed with pending; the eye stages the customization.', editor: 'boolean', value: pgSaveDisabled, onChange: value => { pgSaveDisabled = value as TriState; pgSaveDisabledOn = true; }, toggle: snippetToggle(pgSaveDisabledOn, enabled => (pgSaveDisabledOn = enabled)), sync: { kind: 'tri' } },
-    { name: 'saveLabel', type: 'string', defaultValue: '—', note: 'Save button text; the eye stages the customization.', editor: 'text', clearable: true, value: pgSaveLabel, onChange: value => { pgSaveLabel = value; pgSaveLabelOn = true; }, toggle: snippetToggle(pgSaveLabelOn, enabled => (pgSaveLabelOn = enabled)), sync: { kind: 'text' } },
-    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | '7xl'", defaultValue: '—', note: 'Shorthand setting both width and height; an explicit variant wins; the eye stages the customization.', editor: 'enum', options: sizeOptions, value: pgSize, onChange: value => { pgSize = value; pgSizeOn = true; }, clearLabel: 'Clear size', toggle: snippetToggle(pgSizeOn, enabled => (pgSizeOn = enabled)), sync: { kind: 'text' } },
-    { name: 'title', type: 'string?', defaultValue: '—', note: 'Dialog heading; the eye stages the customization.', editor: 'text', clearable: true, value: pgTitle, onChange: value => { pgTitle = value; pgTitleOn = true; }, toggle: snippetToggle(pgTitleOn, enabled => (pgTitleOn = enabled)), sync: { kind: 'text' } },
-    { name: 'widthVariant', type: "'xs' | … | '7xl' | 'fit' | 'wide'", defaultValue: "'md'", note: 'Panel width variant; the eye stages the customization.', editor: 'enum', options: widthVariantOptions, value: pgWidthVariant, onChange: value => { pgWidthVariant = value; pgWidthVariantOn = true; }, placeholder: 'md', clearLabel: 'Clear width', toggle: snippetToggle(pgWidthVariantOn, enabled => (pgWidthVariantOn = enabled)), sync: { kind: 'text' } },
+    enumField({ name: 'heightVariant', type: "'auto' | 'xs' | … | '7xl'", defaultValue: "'auto'", note: 'Panel height step; auto hugs the content.', options: heightVariantOptions, value: pgHeightVariant, onChange: v => (pgHeightVariant = v), placeholder: 'auto', clearLabel: 'Clear height', enabled: pgHeightVariantOn, setEnabled: v => (pgHeightVariantOn = v) }),
+    boolField({ name: 'pending', defaultValue: 'false', note: 'Disables Save/Reset while an operation runs.', value: pgPending, onChange: v => (pgPending = v as TriState), enabled: pgPendingOn, setEnabled: v => (pgPendingOn = v) }),
+    textField({ name: 'resetLabel', type: 'string', defaultValue: '—', note: 'Reset button text.', value: pgResetLabel, onChange: v => (pgResetLabel = v), clearable: true, enabled: pgResetLabelOn, setEnabled: v => (pgResetLabelOn = v) }),
+    boolField({ name: 'saveDisabled', defaultValue: 'false', note: 'Caller validity rules; ORed with pending.', value: pgSaveDisabled, onChange: v => (pgSaveDisabled = v as TriState), enabled: pgSaveDisabledOn, setEnabled: v => (pgSaveDisabledOn = v) }),
+    textField({ name: 'saveLabel', type: 'string', defaultValue: '—', note: 'Save button text.', value: pgSaveLabel, onChange: v => (pgSaveLabel = v), clearable: true, enabled: pgSaveLabelOn, setEnabled: v => (pgSaveLabelOn = v) }),
+    enumField({ name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | '7xl'", defaultValue: '—', note: 'Shorthand setting both width and height; an explicit variant wins.', options: sizeOptions, value: pgSize, onChange: v => (pgSize = v), clearLabel: 'Clear size', enabled: pgSizeOn, setEnabled: v => (pgSizeOn = v) }),
+    textField({ name: 'title', type: 'string?', defaultValue: '—', note: 'Dialog heading.', value: pgTitle, onChange: v => (pgTitle = v), clearable: true, enabled: pgTitleOn, setEnabled: v => (pgTitleOn = v) }),
+    enumField({ name: 'widthVariant', type: "'xs' | … | '7xl' | 'fit' | 'wide'", defaultValue: "'md'", note: 'Panel width variant.', options: widthVariantOptions, value: pgWidthVariant, onChange: v => (pgWidthVariant = v), placeholder: 'md', clearLabel: 'Clear width', enabled: pgWidthVariantOn, setEnabled: v => (pgWidthVariantOn = v) }),
     { name: 'onClose', type: '() => void', defaultValue: '—', note: 'Final close (direct when clean, after discard confirm).' },
     { name: 'onReset', type: '() => void', defaultValue: '—', note: 'Reset handler.' },
     { name: 'onSave', type: '() => void', defaultValue: '—', note: 'Save handler.' },
   ])
 
-  const syncFields = $derived(syncFieldsOf(fields))
 
 </script>
 
@@ -335,7 +312,6 @@
     {fields}
     title="EditDialog"
     {code}
-    {preview}
     onReset={clearPlayground}
     scope={{
       open: pgOpen,
@@ -350,7 +326,9 @@
       discardMessage: i18n.t('showcase.discardMessage'),
       discardLabel: i18n.t('showcase.discard'),
     }}
->
+
+    sync={{ tag: 'EditDialog' }}
+  >
     <Button variant="primary" onClick={() => (pgOpen = true)}>{i18n.t('showcase.openDialog')}</Button>
     {#if pgOpen}
       <EditDialog

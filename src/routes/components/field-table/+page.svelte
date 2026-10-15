@@ -2,7 +2,6 @@
   import FieldTable, { type FieldConfig } from '$lib/components/FieldTable.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
   import { parseSizeValue } from '$lib/showcase/size-input'
   import { jsonField, resetToggle, snippetToggle } from '$lib/showcase/snippet-field'
   import { syncFieldsOf, type SyncField, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
@@ -182,18 +181,7 @@
     }),
   )
 
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({
-      propText: i18n.t('showcase.prop'),
-      typeText: i18n.t('showcase.type'),
-      defaultText: i18n.t('showcase.default'),
-      valueText: i18n.t('showcase.value'),
-      noteText: i18n.t('showcase.note'),
-    }),
-    sync: { tag: 'FieldTable', getFields: () => syncFields },
-  })
-
+  
   // Snippet write-backs for the sample values derive from `fields` below
   // through `syncFieldsOf`; the header keys are demo-only data with no prop
   // row, so their write-backs stay explicit, like the sample values.
@@ -212,7 +200,7 @@
       toggle: snippetToggle(pgHeadersEnabled, enabled => (pgHeadersEnabled = enabled)),
       sync: { kind: 'custom', read: readHeadersAttribute, set: commitHeadersWriteBack },
     }),
-    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number", defaultValue: "'md'", note: 'Editor and action scale; numbers are icon-scale pixels interpolated between the steps; the eye stages the customization.', editor: 'size', allowCustomValue: true, value: pgTableSize, onChange: value => { pgTableSize = value; pgTableSizeOn = true; }, placeholder: 'md', clearLabel: 'Clear size', toggle: snippetToggle(pgTableSizeOn, enabled => (pgTableSizeOn = enabled)), sync: { kind: 'custom', read: attrs => { const attr = attrs?.get('size'); if (!attr) return 'md'; if (attr.kind === 'string') return attr.value; if (attr.kind === 'expression' && /^\d+(\.\d+)?$/.test(attr.value)) return attr.value; return undefined } } },
+    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number", defaultValue: "'md'", note: 'Editor and action scale; numbers are icon-scale pixels interpolated between the steps.', editor: 'size', allowCustomValue: true, value: pgTableSize, onChange: value => { pgTableSize = value; pgTableSizeOn = true; }, placeholder: 'md', clearLabel: 'Clear size', toggle: snippetToggle(pgTableSizeOn, enabled => (pgTableSizeOn = enabled)), sync: { kind: 'custom', read: attrs => { const attr = attrs?.get('size'); if (!attr) return 'md'; if (attr.kind === 'string') return attr.value; if (attr.kind === 'expression' && /^\d+(\.\d+)?$/.test(attr.value)) return attr.value; return undefined } } },
     { name: 'fields', type: 'FieldConfig[]', defaultValue: '—', note: 'Field defs in display order; editors render from editor/value/onChange.' },
     { name: 'value', type: 'Snippet<[FieldConfig]>', defaultValue: '—', note: 'Per-row Value cell override; wins over the built-in editors.' },
   ])
@@ -232,7 +220,6 @@
     {fields}
     title="FieldTable"
     {code}
-    {preview}
     onReset={clearPlayground}
     scope={{
       propText: i18n.t('showcase.prop'),
@@ -241,7 +228,9 @@
       valueText: i18n.t('showcase.value'),
       noteText: i18n.t('showcase.note'),
     }}
->
+
+    sync={{ tag: 'FieldTable', getFields: () => syncFields }}
+  >
     <FieldTable
       fields={demoFields}
       size={demoTableSize}

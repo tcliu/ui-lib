@@ -1,13 +1,12 @@
 <script lang="ts">
+  import { flagOn } from '$lib/showcase/snippet-build'
   import DataTable, { type DataTableColumn } from '$lib/components/DataTable.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import ShowcaseStage from '$lib/showcase/ShowcaseStage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
-  import { useScopeRefresh } from '$lib/showcase/use-scope-refresh.svelte'
   import { parseSizeValue } from '$lib/showcase/size-input'
-  import { jsonField, resetToggle, snippetDialog, snippetToggle } from '$lib/showcase/snippet-field'
-  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { textField, boolField, sizeField, jsonField, resetToggle, snippetDialog, snippetToggle } from '$lib/showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
   import {
     buildDataTableSnippet,
     DEFAULT_ROWS,
@@ -105,11 +104,6 @@
   // The pagination row's trailing count suffix. The `pagination` object prop is
   // read-only, so the suffix is fixed demo data rather than a Value cell.
   const TRAILING_SUFFIX = 'rows'
-
-  // Unset renders the component default; Yes/No force the value.
-  function flagOn(value: TriState): boolean | undefined {
-    return value === '' ? undefined : value === 'yes'
-  }
 
   const showSearch = $derived(pgShowSearchOn ? flagOn(pgShowSearch) : undefined)
   const showPagination = $derived(pgShowPaginationOn ? flagOn(pgShowPagination) : undefined)
@@ -362,36 +356,7 @@
     }),
   )
 
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({
-      hidden,
-      pgQuery,
-      pgPage,
-      pgPageSize,
-      pgSortKey,
-      pgSortDirection,
-      pgShowSearch,
-      pgShowPagination,
-      pgSelectable,
-      pgDense,
-      pgResizable,
-      pgPlaceholder,
-      pgEmptyMessage,
-      pgSelected,
-      visibleRows,
-      visibleTotal,
-      toggleSelection,
-      toggleAllSelected,
-      handleSearchInput,
-      handleToggleColumn,
-      handleResetColumns,
-      handlePageChange,
-      handlePageSizeChange,
-    }),
-    sync: { tag: 'DataTable', getFields: () => syncFields },
-  })
-
+  
   // Each editable row declares its Value editor and its snippet write-back
   // shape once; the sync table below derives from the same declarations.
   // Snippet edits surface in the Value column, and `syncSeed` holds the
@@ -401,25 +366,12 @@
   // plainly on snippet sync so a hand-edited line round-trips; the
   // Value-column coupling lives in the appliers above.
   const fields: SyncableFieldConfig[] = $derived([
-    {
-      name: 'allSelected',
-      type: 'boolean',
-      defaultValue: '—',
-      note: 'Header checkbox checked state. Interaction override; unset follows the selection; the eye stages the customization.',
-      editor: 'boolean',
-      value: pgAllSelected,
-      onChange: value => {
-        pgAllSelected = value as TriState
-        pgAllSelectedOn = true
-      },
-      toggle: snippetToggle(pgAllSelectedOn, enabled => (pgAllSelectedOn = enabled)),
-      sync: { kind: 'tri' },
-    },
+    boolField({ name: 'allSelected', defaultValue: '—', note: 'Header checkbox checked state. Interaction override; unset follows the selection.', value: pgAllSelected, onChange: v => (pgAllSelected = v as TriState), enabled: pgAllSelectedOn, setEnabled: v => (pgAllSelectedOn = v) }),
     {
       name: 'bodyScroll',
       type: 'boolean',
       defaultValue: 'false',
-      note: 'Fixed header band with a body-only scrollport (needs fillHeight); the eye stages the customization.',
+      note: 'Fixed header band with a body-only scrollport (needs fillHeight).',
       editor: 'boolean',
       value: pgBodyScroll,
       onChange: applyBodyScroll,
@@ -443,132 +395,30 @@
         'Invalid chooser JSON. Use an array of { key, header, checked } over the demo columns.',
       ),
     }),
-    {
-      name: 'chooserLabel',
-      type: 'string?',
-      defaultValue: "'Choose columns'",
-      editorDefaultValue: 'Choose columns',
-      note: 'Accessible name for the column selector; the eye stages the customization.',
-      editor: 'text',
-      clearable: true,
-      value: pgChooserLabel,
-      onChange: value => {
-        pgChooserLabel = value
-        pgChooserLabelOn = true
-      },
-      toggle: snippetToggle(pgChooserLabelOn, enabled => (pgChooserLabelOn = enabled)),
-      placeholder: 'Choose columns',
-      sync: { kind: 'text' },
-    },
-    {
-      name: 'chooserResetLabel',
-      type: 'string?',
-      defaultValue: "'Reset columns'",
-      editorDefaultValue: 'Reset columns',
-      note: 'Accessible name for the reset button; the eye stages the customization.',
-      editor: 'text',
-      clearable: true,
-      value: pgChooserResetLabel,
-      onChange: value => {
-        pgChooserResetLabel = value
-        pgChooserResetLabelOn = true
-      },
-      toggle: snippetToggle(pgChooserResetLabelOn, enabled => (pgChooserResetLabelOn = enabled)),
-      placeholder: 'Reset columns',
-      sync: { kind: 'text' },
-    },
-    {
-      name: 'containerClassName',
-      type: 'string?',
-      defaultValue: "''",
-      editorDefaultValue: '',
-      note: 'Extra classes for the outer container; built-in scroll/border chrome when unset; the eye stages the customization.',
-      editor: 'text',
-      clearable: true,
-      value: pgContainerClassName,
-      onChange: value => {
-        pgContainerClassName = value
-        pgContainerClassNameOn = true
-      },
-      toggle: snippetToggle(pgContainerClassNameOn, enabled => (pgContainerClassNameOn = enabled)),
-      sync: { kind: 'text' },
-    },
-    {
-      name: 'dense',
-      type: 'boolean',
-      defaultValue: 'false',
-      note: 'Compact padding for panel tables; the eye stages the customization.',
-      editor: 'boolean',
-      value: pgDense,
-      onChange: value => {
-        pgDense = value as TriState
-        pgDenseOn = true
-      },
-      toggle: snippetToggle(pgDenseOn, enabled => (pgDenseOn = enabled)),
-      sync: { kind: 'tri' },
-    },
-    {
-      name: 'emptyMessage',
-      type: 'string?',
-      defaultValue: "'No rows'",
-      editorDefaultValue: 'No rows',
-      note: 'Shown when rows is empty; the eye stages the customization.',
-      editor: 'text',
-      clearable: true,
-      value: pgEmptyMessage,
-      onChange: value => {
-        pgEmptyMessage = value
-        pgEmptyMessageOn = true
-      },
-      toggle: snippetToggle(pgEmptyMessageOn, enabled => (pgEmptyMessageOn = enabled)),
-      placeholder: 'No rows',
-      sync: { kind: 'text' },
-    },
+    textField({ name: 'chooserLabel', type: 'string?', defaultValue: "'Choose columns'", note: 'Accessible name for the column selector.', value: pgChooserLabel, onChange: v => (pgChooserLabel = v), editorDefaultValue: 'Choose columns', clearable: true, placeholder: 'Choose columns', enabled: pgChooserLabelOn, setEnabled: v => (pgChooserLabelOn = v) }),
+    textField({ name: 'chooserResetLabel', type: 'string?', defaultValue: "'Reset columns'", note: 'Accessible name for the reset button.', value: pgChooserResetLabel, onChange: v => (pgChooserResetLabel = v), editorDefaultValue: 'Reset columns', clearable: true, placeholder: 'Reset columns', enabled: pgChooserResetLabelOn, setEnabled: v => (pgChooserResetLabelOn = v) }),
+    textField({ name: 'containerClassName', type: 'string?', defaultValue: "''", note: 'Extra classes for the outer container; built-in scroll/border chrome when unset.', value: pgContainerClassName, onChange: v => (pgContainerClassName = v), editorDefaultValue: '', clearable: true, enabled: pgContainerClassNameOn, setEnabled: v => (pgContainerClassNameOn = v) }),
+    boolField({ name: 'dense', defaultValue: 'false', note: 'Compact padding for panel tables.', value: pgDense, onChange: v => (pgDense = v as TriState), enabled: pgDenseOn, setEnabled: v => (pgDenseOn = v) }),
+    textField({ name: 'emptyMessage', type: 'string?', defaultValue: "'No rows'", note: 'Shown when rows is empty.', value: pgEmptyMessage, onChange: v => (pgEmptyMessage = v), editorDefaultValue: 'No rows', clearable: true, placeholder: 'No rows', enabled: pgEmptyMessageOn, setEnabled: v => (pgEmptyMessageOn = v) }),
     {
       name: 'fillHeight',
       type: 'boolean',
       defaultValue: 'false',
-      note: 'Fills the parent; table body scrolls; the eye stages the customization.',
+      note: 'Fills the parent; table body scrolls.',
       editor: 'boolean',
       value: pgFillHeight,
       onChange: applyFillHeight,
       toggle: snippetToggle(pgFillHeightOn, enabled => (pgFillHeightOn = enabled)),
       sync: { kind: 'tri' },
     },
-    {
-      name: 'loading',
-      type: 'boolean',
-      defaultValue: 'false',
-      note: 'Shows the spinner when there are no rows yet; the eye stages the customization.',
-      editor: 'boolean',
-      value: pgLoading,
-      onChange: value => {
-        pgLoading = value as TriState
-        pgLoadingOn = true
-      },
-      toggle: snippetToggle(pgLoadingOn, enabled => (pgLoadingOn = enabled)),
-      sync: { kind: 'tri' },
-    },
-    {
-      name: 'resizable',
-      type: 'boolean',
-      defaultValue: 'false',
-      note: 'Draggable column resize handles; the eye stages the customization.',
-      editor: 'boolean',
-      value: pgResizable,
-      onChange: value => {
-        pgResizable = value as TriState
-        pgResizableOn = true
-      },
-      toggle: snippetToggle(pgResizableOn, enabled => (pgResizableOn = enabled)),
-      sync: { kind: 'tri' },
-    },
+    boolField({ name: 'loading', defaultValue: 'false', note: 'Shows the spinner when there are no rows yet.', value: pgLoading, onChange: v => (pgLoading = v as TriState), enabled: pgLoadingOn, setEnabled: v => (pgLoadingOn = v) }),
+    boolField({ name: 'resizable', defaultValue: 'false', note: 'Draggable column resize handles.', value: pgResizable, onChange: v => (pgResizable = v as TriState), enabled: pgResizableOn, setEnabled: v => (pgResizableOn = v) }),
     {
       name: 'resetWidthsSignal',
       type: 'number?',
       defaultValue: '0',
       editorDefaultValue: '0',
-      note: 'Rising signal: each new value drops managed and persisted widths; the eye stages the customization.',
+      note: 'Rising signal: each new value drops managed and persisted widths.',
       editor: 'number',
       clearable: true,
       value: pgResetWidthsText,
@@ -603,23 +453,7 @@
         () => (pgRows = freshRows()),
       ),
     }),
-    {
-      name: 'searchAriaLabel',
-      type: 'string?',
-      defaultValue: "'Search'",
-      editorDefaultValue: 'Search',
-      note: 'Accessible name for the search field; the eye stages the customization.',
-      editor: 'text',
-      clearable: true,
-      value: pgSearchAriaLabel,
-      onChange: value => {
-        pgSearchAriaLabel = value
-        pgSearchAriaLabelOn = true
-      },
-      toggle: snippetToggle(pgSearchAriaLabelOn, enabled => (pgSearchAriaLabelOn = enabled)),
-      placeholder: 'Search',
-      sync: { kind: 'text' },
-    },
+    textField({ name: 'searchAriaLabel', type: 'string?', defaultValue: "'Search'", note: 'Accessible name for the search field.', value: pgSearchAriaLabel, onChange: v => (pgSearchAriaLabel = v), editorDefaultValue: 'Search', clearable: true, placeholder: 'Search', enabled: pgSearchAriaLabelOn, setEnabled: v => (pgSearchAriaLabelOn = v) }),
     jsonField({
       name: 'searchKeys',
       type: 'string[]',
@@ -644,23 +478,7 @@
         setJson: value => (pgSearchKeys = value as string[]),
       },
     }),
-    {
-      name: 'searchPlaceholder',
-      type: 'string?',
-      defaultValue: "'Search'",
-      editorDefaultValue: 'Search',
-      note: 'Search placeholder; the eye stages the customization.',
-      editor: 'text',
-      clearable: true,
-      value: pgPlaceholder,
-      onChange: value => {
-        pgPlaceholder = value
-        pgPlaceholderOn = true
-      },
-      toggle: snippetToggle(pgPlaceholderOn, enabled => (pgPlaceholderOn = enabled)),
-      placeholder: 'Search',
-      sync: { kind: 'text' },
-    },
+    textField({ name: 'searchPlaceholder', type: 'string?', defaultValue: "'Search'", note: 'Search placeholder.', value: pgPlaceholder, onChange: v => (pgPlaceholder = v), editorDefaultValue: 'Search', clearable: true, placeholder: 'Search', enabled: pgPlaceholderOn, setEnabled: v => (pgPlaceholderOn = v) }),
     {
       name: 'searchValue',
       type: 'string?',
@@ -680,102 +498,12 @@
         () => (pgQuery = ''),
       ),
     },
-    {
-      name: 'selectAllAriaLabel',
-      type: 'string?',
-      defaultValue: "'Select all'",
-      editorDefaultValue: 'Select all',
-      note: 'Accessible name for the header checkbox; the eye stages the customization.',
-      editor: 'text',
-      clearable: true,
-      value: pgSelectAllAriaLabel,
-      onChange: value => {
-        pgSelectAllAriaLabel = value
-        pgSelectAllAriaLabelOn = true
-      },
-      toggle: snippetToggle(pgSelectAllAriaLabelOn, enabled => (pgSelectAllAriaLabelOn = enabled)),
-      placeholder: 'Select all',
-      sync: { kind: 'text' },
-    },
-    {
-      name: 'selectable',
-      type: 'boolean',
-      defaultValue: 'false',
-      note: 'Renders the checkbox column; the eye stages the customization.',
-      editor: 'boolean',
-      value: pgSelectable,
-      onChange: value => {
-        pgSelectable = value as TriState
-        pgSelectableOn = true
-      },
-      toggle: snippetToggle(pgSelectableOn, enabled => (pgSelectableOn = enabled)),
-      sync: { kind: 'tri' },
-    },
-    {
-      name: 'showPagination',
-      type: 'boolean',
-      defaultValue: 'pagination configured',
-      note: 'Renders the pagination footer. Unset, the footer renders only when `pagination` supplies its data and onPageChange; the eye stages the customization.',
-      editor: 'boolean',
-      value: pgShowPagination,
-      onChange: value => {
-        pgShowPagination = value as TriState
-        pgShowPaginationOn = true
-      },
-      toggle: snippetToggle(pgShowPaginationOn, enabled => (pgShowPaginationOn = enabled)),
-      sync: { kind: 'tri' },
-    },
-    {
-      name: 'showSearch',
-      type: 'boolean',
-      defaultValue: 'true',
-      note: 'Renders the search field; the eye stages the customization.',
-      editor: 'boolean',
-      value: pgShowSearch,
-      onChange: value => {
-        pgShowSearch = value as TriState
-        pgShowSearchOn = true
-      },
-      toggle: snippetToggle(pgShowSearchOn, enabled => (pgShowSearchOn = enabled)),
-      sync: { kind: 'tri' },
-    },
-    {
-      name: 'size',
-      type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number",
-      defaultValue: "'md'",
-      note: 'Search, chooser, selection, and pagination scale; numbers are icon-scale pixels interpolated between the steps; the eye stages the customization.',
-      editor: 'size',
-      allowCustomValue: true,
-      value: pgSize,
-      onChange: value => {
-        pgSize = value
-        pgSizeOn = true
-      },
-      clearLabel: 'Clear size',
-      placeholder: 'md',
-      toggle: snippetToggle(pgSizeOn, enabled => (pgSizeOn = enabled)),
-      sync: { kind: 'custom', read: attrs => {
-        const attr = attrs?.get('size')
-        if (!attr) return 'md'
-        if (attr.kind === 'string') return attr.value
-        if (attr.kind === 'expression' && /^\d+(\.\d+)?$/.test(attr.value)) return attr.value
-        return undefined
-      } },
-    },
-    {
-      name: 'someSelected',
-      type: 'boolean',
-      defaultValue: '—',
-      note: 'Header checkbox indeterminate state. Interaction override; unset follows the selection; the eye stages the customization.',
-      editor: 'boolean',
-      value: pgSomeSelected,
-      onChange: value => {
-        pgSomeSelected = value as TriState
-        pgSomeSelectedOn = true
-      },
-      toggle: snippetToggle(pgSomeSelectedOn, enabled => (pgSomeSelectedOn = enabled)),
-      sync: { kind: 'tri' },
-    },
+    textField({ name: 'selectAllAriaLabel', type: 'string?', defaultValue: "'Select all'", note: 'Accessible name for the header checkbox.', value: pgSelectAllAriaLabel, onChange: v => (pgSelectAllAriaLabel = v), editorDefaultValue: 'Select all', clearable: true, placeholder: 'Select all', enabled: pgSelectAllAriaLabelOn, setEnabled: v => (pgSelectAllAriaLabelOn = v) }),
+    boolField({ name: 'selectable', defaultValue: 'false', note: 'Renders the checkbox column.', value: pgSelectable, onChange: v => (pgSelectable = v as TriState), enabled: pgSelectableOn, setEnabled: v => (pgSelectableOn = v) }),
+    boolField({ name: 'showPagination', defaultValue: 'pagination configured', note: 'Renders the pagination footer. Unset, the footer renders only when `pagination` supplies its data and onPageChange.', value: pgShowPagination, onChange: v => (pgShowPagination = v as TriState), enabled: pgShowPaginationOn, setEnabled: v => (pgShowPaginationOn = v) }),
+    boolField({ name: 'showSearch', defaultValue: 'true', note: 'Renders the search field.', value: pgShowSearch, onChange: v => (pgShowSearch = v as TriState), enabled: pgShowSearchOn, setEnabled: v => (pgShowSearchOn = v) }),
+    sizeField({ note: 'Search, chooser, selection, and pagination scale; numbers are icon-scale pixels interpolated between the steps.', value: pgSize, onChange: v => (pgSize = v), enabled: pgSizeOn, setEnabled: v => (pgSizeOn = v) }),
+    boolField({ name: 'someSelected', defaultValue: '—', note: 'Header checkbox indeterminate state. Interaction override; unset follows the selection.', value: pgSomeSelected, onChange: v => (pgSomeSelected = v as TriState), enabled: pgSomeSelectedOn, setEnabled: v => (pgSomeSelectedOn = v) }),
     {
       name: 'sortDirection',
       type: "'asc' | 'desc'",
@@ -817,38 +545,8 @@
         () => (pgSortKey = null),
       ),
     },
-    {
-      name: 'storageKey',
-      type: 'string?',
-      defaultValue: '—',
-      note: 'Persists resized widths under this key; the eye stages the customization.',
-      editor: 'text',
-      clearable: true,
-      value: pgStorageKey,
-      onChange: value => {
-        pgStorageKey = value
-        pgStorageKeyOn = true
-      },
-      toggle: snippetToggle(pgStorageKeyOn, enabled => (pgStorageKeyOn = enabled)),
-      sync: { kind: 'text' },
-    },
-    {
-      name: 'tableClassName',
-      type: 'string?',
-      defaultValue: "'min-w-0'",
-      editorDefaultValue: 'min-w-0',
-      note: 'Extra classes for the table element; raise the minimum width when columns need a horizontal scroll floor; the eye stages the customization.',
-      editor: 'text',
-      clearable: true,
-      value: pgTableClassName,
-      onChange: value => {
-        pgTableClassName = value
-        pgTableClassNameOn = true
-      },
-      toggle: snippetToggle(pgTableClassNameOn, enabled => (pgTableClassNameOn = enabled)),
-      placeholder: 'min-w-0',
-      sync: { kind: 'text' },
-    },
+    textField({ name: 'storageKey', type: 'string?', defaultValue: '—', note: 'Persists resized widths under this key.', value: pgStorageKey, onChange: v => (pgStorageKey = v), clearable: true, enabled: pgStorageKeyOn, setEnabled: v => (pgStorageKeyOn = v) }),
+    textField({ name: 'tableClassName', type: 'string?', defaultValue: "'min-w-0'", note: 'Extra classes for the table element; raise the minimum width when columns need a horizontal scroll floor.', value: pgTableClassName, onChange: v => (pgTableClassName = v), editorDefaultValue: 'min-w-0', clearable: true, placeholder: 'min-w-0', enabled: pgTableClassNameOn, setEnabled: v => (pgTableClassNameOn = v) }),
     {
       name: 'columns',
       type: 'DataTableColumn<T>[]',
@@ -903,13 +601,11 @@
     },
   ])
 
-  const syncFields = $derived(syncFieldsOf(fields))
 
   // The seed covers every curated option; only interaction state (search text,
   // page, sort, selection, hidden columns) rides scope, so refresh the live
   // preview on those without touching the editor text.
-  useScopeRefresh(preview, () => [pgQuery, pgPage, pgSortKey, pgSortDirection, pgSelected, hidden])
-</script>
+  </script>
 
 {#snippet nameCell(row: DemoRow)}
   <strong class="font-medium text-slate-100">{row.name}</strong>
@@ -931,7 +627,6 @@
     {fields}
     title="DataTable"
     {code}
-    {preview}
     onReset={clearPlayground}
     scope={{
       hidden,
@@ -958,7 +653,10 @@
       handlePageChange,
       handlePageSizeChange,
     }}
->
+
+    sync={{ tag: 'DataTable' }}
+    scopeRefresh={() => [pgQuery, pgPage, pgSortKey, pgSortDirection, pgSelected, hidden]}
+  >
     <ShowcaseStage paneClass={stagePaneClass}>
       <DataTable
         rows={pageRows}

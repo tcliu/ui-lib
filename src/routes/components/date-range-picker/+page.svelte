@@ -2,8 +2,7 @@
   import DateRangePicker from '$lib/components/DateRangePicker.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
-  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
   import { resetToggle } from '$lib/showcase/snippet-field'
   import {
     buildDateRangePickerSnippet,
@@ -35,12 +34,7 @@
 
   const code = $derived.by(() => buildDateRangePickerSnippet({ from: pgFrom, to: pgTo }))
 
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({}),
-    sync: { tag: 'DateRangePicker', getFields: () => syncFields },
-  })
-
+  
   // Editable rows first (A–Z), then the read-only data and function props.
   // The two range ends are the valid `from`/`to` primitives, so the converted
   // page keeps its editable Value column and the demo stays driveable there;
@@ -106,18 +100,19 @@
     },
   ])
 
-  const syncFields = $derived(syncFieldsOf(fields))
 </script>
 
 <ShowcasePage
     {fields}
     title="DateRangePicker"
     {code}
-    {preview}
     onReset={clearPlayground}
     stage={{ minWidth: DATE_STAGE_MIN_WIDTH }}
     bind:stageWidth={pgStageWidth}
->
+
+    sync={{ tag: 'DateRangePicker' }}
+    scope={{}}
+  >
     <div class={DATE_STAGE_CONTENT}>
       <DateRangePicker
         from={pgFrom}

@@ -1,11 +1,11 @@
 <script lang="ts">
+  import { flagOn } from '$lib/showcase/snippet-build'
   import TagInput from '$lib/components/TagInput.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
   import { parseSizeValue } from '$lib/showcase/size-input'
-  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { jsonField, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { enumField, textField, boolField, sizeField, jsonField, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
   import {
     buildTagInputSnippet,
     parseTagListJson,
@@ -67,11 +67,6 @@
   let pgClearPlacementOn = $state(false)
   // Stage width is interaction state, not a curated option; Reset restores it.
   let pgStageWidth = $state(TAG_STAGE_DEFAULT_WIDTH)
-
-  // Unset renders the component default; Yes/No force the value.
-  function flagOn(value: TriState): boolean | undefined {
-    return value === '' ? undefined : value === 'yes'
-  }
 
   const disabled = $derived(pgDisabledOn ? flagOn(pgDisabled) : undefined)
   const clearable = $derived(pgClearableOn ? flagOn(pgClearable) : undefined)
@@ -156,12 +151,7 @@
     }),
   )
 
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({ altPalette: ALT_PALETTE }),
-    sync: { tag: 'TagInput', getFields: () => syncFields },
-  })
-
+  
   // Editable rows first (primitives, plain data, and snippets, A–Z), then the
   // function props (A–Z). Snippet rows keep no Value editor yet; the snippet
   // playground remains their customization surface.
@@ -174,23 +164,10 @@
       onChange: value => (pgChipPrefix = value),
       toggle: snippetToggle(pgChipOn, enabled => (pgChipOn = enabled)),
     }),
-    {
-      name: 'chipClass',
-      type: 'string | ((tag: string) => string)?',
-      defaultValue: '—',
-      note: 'Chip classes; a string applies to all, a function overrides per tag (wins over the palette); the eye stages the customization.', editor: 'text', clearable: true, value: pgChipClass, onChange: value => { pgChipClass = value; pgChipClassOn = true; }, toggle: snippetToggle(pgChipClassOn, enabled => (pgChipClassOn = enabled)), sync: { kind: 'text' } },
-    {
-      name: 'clearLabel',
-      type: 'string?',
-      defaultValue: "'Clear tags'",
-      editorDefaultValue: 'Clear tags',
-      note: 'Accessible name for the clear button; the eye stages the customization.', editor: 'text', clearable: true, value: pgClearLabel, onChange: value => { pgClearLabel = value; pgClearLabelOn = true; }, toggle: snippetToggle(pgClearLabelOn, enabled => (pgClearLabelOn = enabled)), placeholder: 'Clear tags', sync: { kind: 'text' } },
-    { name: 'clearPlacement', type: "'auto' | 'inside' | 'outside'", defaultValue: "'auto'", note: 'Inside overlays the box edge; outside sits after it; auto renders inside with the tags; the eye stages the customization.', editor: 'enum', options: clearPlacementOptions, value: pgClearPlacement, onChange: value => { pgClearPlacement = value; pgClearPlacementOn = true; }, placeholder: 'auto', clearLabel: 'Clear placement', toggle: snippetToggle(pgClearPlacementOn, enabled => (pgClearPlacementOn = enabled)), sync: { kind: 'text' } },
-    {
-      name: 'clearable',
-      type: 'boolean',
-      defaultValue: 'false',
-      note: 'Appends a cross button that resets the tags to the default value; the eye stages the customization.', editor: 'boolean', value: pgClearable, onChange: value => { pgClearable = value as TriState; pgClearableOn = true; }, toggle: snippetToggle(pgClearableOn, enabled => (pgClearableOn = enabled)), sync: { kind: 'tri' } },
+    textField({ name: 'chipClass', type: 'string | ((tag: string) => string)?', defaultValue: '—', note: 'Chip classes; a string applies to all, a function overrides per tag (wins over the palette).', value: pgChipClass, onChange: v => (pgChipClass = v), clearable: true, enabled: pgChipClassOn, setEnabled: v => (pgChipClassOn = v) }),
+    textField({ name: 'clearLabel', type: 'string?', defaultValue: "'Clear tags'", note: 'Accessible name for the clear button.', value: pgClearLabel, onChange: v => (pgClearLabel = v), editorDefaultValue: 'Clear tags', clearable: true, placeholder: 'Clear tags', enabled: pgClearLabelOn, setEnabled: v => (pgClearLabelOn = v) }),
+    enumField({ name: 'clearPlacement', type: "'auto' | 'inside' | 'outside'", defaultValue: "'auto'", note: 'Inside overlays the box edge; outside sits after it; auto renders inside with the tags.', options: clearPlacementOptions, value: pgClearPlacement, onChange: v => (pgClearPlacement = v), placeholder: 'auto', clearLabel: 'Clear placement', enabled: pgClearPlacementOn, setEnabled: v => (pgClearPlacementOn = v) }),
+    boolField({ name: 'clearable', defaultValue: 'false', note: 'Appends a cross button that resets the tags to the default value.', value: pgClearable, onChange: v => (pgClearable = v as TriState), enabled: pgClearableOn, setEnabled: v => (pgClearableOn = v) }),
     jsonField({
       name: 'defaultValue',
       type: 'string[]',
@@ -207,8 +184,8 @@
       toggle: snippetToggle(pgDefaultValueOn, enabled => (pgDefaultValueOn = enabled)),
       sync: { kind: 'scriptJson', parseJson: parseTagListValue, setJson: value => (pgDefaultValue = value as typeof pgDefaultValue) },
     }),
-    { name: 'disabled', type: 'boolean', defaultValue: 'false', note: 'Disables the input; the eye stages the customization.', editor: 'boolean', value: pgDisabled, onChange: value => { pgDisabled = value as TriState; pgDisabledOn = true; }, toggle: snippetToggle(pgDisabledOn, enabled => (pgDisabledOn = enabled)), sync: { kind: 'tri' } },
-    { name: 'id', type: 'string?', defaultValue: '—', note: 'Native input id; the eye stages the customization.', editor: 'text', clearable: true, value: pgId, onChange: value => { pgId = value; pgIdOn = true; }, toggle: snippetToggle(pgIdOn, enabled => (pgIdOn = enabled)), sync: { kind: 'text' } },
+    boolField({ name: 'disabled', defaultValue: 'false', note: 'Disables the input.', value: pgDisabled, onChange: v => (pgDisabled = v as TriState), enabled: pgDisabledOn, setEnabled: v => (pgDisabledOn = v) }),
+    textField({ name: 'id', type: 'string?', defaultValue: '—', note: 'Native input id.', value: pgId, onChange: v => (pgId = v), clearable: true, enabled: pgIdOn, setEnabled: v => (pgIdOn = v) }),
     snippetField({
       type: 'Snippet<[tag]>',
       name: 'option',
@@ -237,22 +214,9 @@
       name: 'palette',
       type: 'readonly string[]',
       defaultValue: 'built-in',
-      note: 'Per-tag colour classes; replaces the built-in palette; the eye stages the customization.', editor: 'enum', options: paletteOptions, value: pgPalette, onChange: value => { pgPalette = value; pgPaletteOn = true; }, clearLabel: 'Clear palette', toggle: snippetToggle(pgPaletteOn, enabled => (pgPaletteOn = enabled)), sync: { kind: 'scopeReset', scopeRef: 'altPalette' } },
-    { name: 'placeholder', type: 'string?', defaultValue: '—', note: 'Placeholder text; the eye stages the customization.', editor: 'text', clearable: true, value: pgPlaceholder, onChange: value => { pgPlaceholder = value; pgPlaceholderOn = true; }, toggle: snippetToggle(pgPlaceholderOn, enabled => (pgPlaceholderOn = enabled)), sync: { kind: 'text' } },
-    {
-      name: 'size',
-      type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number",
-      defaultValue: "'md'",
-      note: 'Control scale; numbers are icon-scale pixels interpolated between the steps; the eye stages the customization.', editor: 'size', allowCustomValue: true, value: pgSize, onChange: value => { pgSize = value; pgSizeOn = true; }, clearLabel: 'Clear size', placeholder: 'md', toggle: snippetToggle(pgSizeOn, enabled => (pgSizeOn = enabled)), sync: { kind: 'custom', read: attrs => {
-        const attr = attrs?.get('size')
-        // Absent restores the default, like the builder omitting the line;
-        // string and numeric shapes set, anything else is custom code the
-        // playground leaves alone.
-        if (!attr) return 'md'
-        if (attr.kind === 'string') return attr.value
-        if (attr.kind === 'expression' && /^\d+(\.\d+)?$/.test(attr.value)) return attr.value
-        return undefined
-      } } },
+      note: 'Per-tag colour classes; replaces the built-in palette.', editor: 'enum', options: paletteOptions, value: pgPalette, onChange: value => { pgPalette = value; pgPaletteOn = true; }, clearLabel: 'Clear palette', toggle: snippetToggle(pgPaletteOn, enabled => (pgPaletteOn = enabled)), sync: { kind: 'scopeReset', scopeRef: 'altPalette' } },
+    textField({ name: 'placeholder', type: 'string?', defaultValue: '—', note: 'Placeholder text.', value: pgPlaceholder, onChange: v => (pgPlaceholder = v), clearable: true, enabled: pgPlaceholderOn, setEnabled: v => (pgPlaceholderOn = v) }),
+    sizeField({ note: 'Control scale; numbers are icon-scale pixels interpolated between the steps.', value: pgSize, onChange: v => (pgSize = v), enabled: pgSizeOn, setEnabled: v => (pgSizeOn = v) }),
     jsonField({
       name: 'value',
       type: 'string[]',
@@ -284,7 +248,6 @@
     }
   ])
 
-  const syncFields = $derived(syncFieldsOf(fields))
 </script>
 
 {#snippet demoChip(tag: string, remove: () => void)}
@@ -299,12 +262,13 @@
     {fields}
     title="TagInput"
     {code}
-    {preview}
     onReset={clearPlayground}
     scope={{ altPalette: ALT_PALETTE }}
     stage={{ minWidth: TAG_STAGE_MIN_WIDTH }}
     bind:stageWidth={pgStageWidth}
->
+
+    sync={{ tag: 'TagInput' }}
+  >
     <TagInput
       value={pgValueEnabled ? pgValue : undefined}
       defaultValue={demoDefaultValue}

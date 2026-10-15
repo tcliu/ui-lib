@@ -1,6 +1,7 @@
 // Show-code source for the TextArea demo section. Pure string building over
 // the playground form state: the section regenerates the editor text from this,
 // so the editor always shows the markup behind the demo above.
+import { escapeAttr } from '$lib/showcase/snippet-build'
 import { sizeAttributeLine } from '$lib/showcase/size-input'
 
 export type TriState = '' | 'yes' | 'no'
@@ -25,10 +26,6 @@ export interface TextAreaSnippetState {
   idOn: boolean
   inputClass: string
   inputClassOn: boolean
-}
-
-function escapeAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 }
 
 // A tri-state line: omitted while unset or at the component default, bare

@@ -1,13 +1,12 @@
 <script lang="ts">
+  import { flagOn } from '$lib/showcase/snippet-build'
   import ChipDropdown from '$lib/components/ChipDropdown.svelte'
   import { type SelectOption } from '$lib/components/SelectDropdown.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
-  import { useScopeRefresh } from '$lib/showcase/use-scope-refresh.svelte'
   import { parseOptionArrayJson } from '$lib/showcase/option-json'
-  import { jsonField, resetToggle, snippetToggle } from '$lib/showcase/snippet-field'
-  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { enumField, textField, boolField, jsonField, resetToggle, snippetToggle } from '$lib/showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
   import {
     buildChipDropdownSnippet,
     CHIP_STAGE_DEFAULT_WIDTH,
@@ -76,11 +75,6 @@
       }
     }
     return current
-  }
-
-  // Unset renders the component default; Yes/No force the value.
-  function flagOn(value: TriState): boolean | undefined {
-    return value === '' ? undefined : value === 'yes'
   }
 
   const demoVariant = $derived(
@@ -179,50 +173,21 @@
     }),
   )
 
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({ options: pgOptions, labelFor }),
-    sync: { tag: 'ChipDropdown', getFields: () => syncFields },
-  })
-
+  
   const fields: SyncableFieldConfig[] = $derived([
-    { name: 'activeValue', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Committed option value (not its label); marked in the panel; the eye stages the customization.', editor: 'text', clearable: true, value: pgValue, onChange: value => { pgValue = value; pgValueOn = true; }, toggle: snippetToggle(pgValueOn, enabled => (pgValueOn = enabled)), sync: { kind: 'script', attr: 'value', literalAttr: 'activeValue' } },
-    { name: 'align', type: "'left' | 'right'", defaultValue: "'left'", note: 'Panel edge anchored to the trigger; the eye stages the customization.', editor: 'enum', options: alignOptions, value: pgAlign, onChange: value => { pgAlign = value; pgAlignOn = true; }, placeholder: 'left', clearLabel: 'Clear align', toggle: snippetToggle(pgAlignOn, enabled => (pgAlignOn = enabled)), sync: { kind: 'text' } },
-    { name: 'ariaLabel', type: 'string', defaultValue: '—', note: 'Accessible name for the trigger; the eye stages the customization.', editor: 'text', clearable: true, value: pgAriaLabel, onChange: value => { pgAriaLabel = value; pgAriaLabelOn = true; }, toggle: snippetToggle(pgAriaLabelOn, enabled => (pgAriaLabelOn = enabled)), sync: { kind: 'text' } },
-    { name: 'autoPlace', type: 'boolean', defaultValue: 'true', note: 'Flips the panel when crowded; the eye stages the customization.', editor: 'boolean', value: pgAutoPlace, onChange: value => { pgAutoPlace = value as TriState; pgAutoPlaceOn = true; }, toggle: snippetToggle(pgAutoPlaceOn, enabled => (pgAutoPlaceOn = enabled)), sync: { kind: 'tri' } },
-    { name: 'buttonClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the trigger chip classes; the eye stages the customization.', editor: 'text', clearable: true, value: pgButtonClass, onChange: value => { pgButtonClass = value; pgButtonClassOn = true; }, toggle: snippetToggle(pgButtonClassOn, enabled => (pgButtonClassOn = enabled)), sync: { kind: 'text' } },
-    {
-      name: 'clearLabel',
-      type: 'string?',
-      defaultValue: "'Clear selection'",
-      editorDefaultValue: 'Clear selection',
-      note: 'Accessible name for the clear button; the eye stages the customization.', editor: 'text', clearable: true, value: pgClearLabel, onChange: value => { pgClearLabel = value; pgClearLabelOn = true; }, toggle: snippetToggle(pgClearLabelOn, enabled => (pgClearLabelOn = enabled)), placeholder: 'Clear selection', sync: { kind: 'text' } },
-    {
-      name: 'clearable',
-      type: 'boolean',
-      defaultValue: 'false',
-      note: 'Appends a cross button that selects the default value; the eye stages the customization.', editor: 'boolean', value: pgClearable, onChange: value => { pgClearable = value as TriState; pgClearableOn = true; }, toggle: snippetToggle(pgClearableOn, enabled => (pgClearableOn = enabled)), sync: { kind: 'tri' } },
-    {
-      name: 'defaultValue',
-      type: 'string?',
-      defaultValue: "''",
-      editorDefaultValue: '',
-      note: 'Baseline the clear button compares against: the option value (not its label); the cross hides while the committed value matches it; the eye stages the customization.', editor: 'text', clearable: true, value: pgDefaultValue, onChange: value => { pgDefaultValue = value; pgDefaultValueOn = true; }, toggle: snippetToggle(pgDefaultValueOn, enabled => (pgDefaultValueOn = enabled)), sync: { kind: 'text' } },
-    { name: 'disabled', type: 'boolean', defaultValue: 'false', note: 'Disables the trigger; the eye stages the customization.', editor: 'boolean', value: pgDisabled, onChange: value => { pgDisabled = value as TriState; pgDisabledOn = true; }, toggle: snippetToggle(pgDisabledOn, enabled => (pgDisabledOn = enabled)), sync: { kind: 'tri' } },
-    {
-      name: 'emptyText',
-      type: 'string?',
-      defaultValue: "'No results.'",
-      editorDefaultValue: 'No results.',
-      note: 'Shown when the filtered panel is empty; the eye stages the customization.', editor: 'text', clearable: true, value: pgEmptyText, onChange: value => { pgEmptyText = value; pgEmptyTextOn = true; }, toggle: snippetToggle(pgEmptyTextOn, enabled => (pgEmptyTextOn = enabled)), placeholder: 'No results.', sync: { kind: 'text' } },
-    {
-      name: 'filterPlaceholder',
-      type: 'string?',
-      defaultValue: "'Search…'",
-      editorDefaultValue: 'Search…',
-      note: 'Search input placeholder; the eye stages the customization.', editor: 'text', clearable: true, value: pgFilterPlaceholder, onChange: value => { pgFilterPlaceholder = value; pgFilterPlaceholderOn = true; }, toggle: snippetToggle(pgFilterPlaceholderOn, enabled => (pgFilterPlaceholderOn = enabled)), placeholder: 'Search…', sync: { kind: 'text' } },
-    { name: 'filterable', type: 'boolean', defaultValue: 'false', note: 'Adds a search field to the panel; the eye stages the customization.', editor: 'boolean', value: pgFilterable, onChange: value => { pgFilterable = value as TriState; pgFilterableOn = true; }, toggle: snippetToggle(pgFilterableOn, enabled => (pgFilterableOn = enabled)), sync: { kind: 'tri' } },
-    { name: 'label', type: 'string', defaultValue: '—', note: 'Trigger chip text; usually the selected label; the eye stages the customization.', editor: 'text', clearable: true, value: pgLabel, onChange: value => { pgLabel = value; pgLabelOn = true; }, toggle: snippetToggle(pgLabelOn, enabled => (pgLabelOn = enabled)), sync: { kind: 'text' } },
+    { name: 'activeValue', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Committed option value (not its label); marked in the panel.', editor: 'text', clearable: true, value: pgValue, onChange: value => { pgValue = value; pgValueOn = true; }, toggle: snippetToggle(pgValueOn, enabled => (pgValueOn = enabled)), sync: { kind: 'script', attr: 'value', literalAttr: 'activeValue' } },
+    enumField({ name: 'align', type: "'left' | 'right'", defaultValue: "'left'", note: 'Panel edge anchored to the trigger.', options: alignOptions, value: pgAlign, onChange: v => (pgAlign = v), placeholder: 'left', clearLabel: 'Clear align', enabled: pgAlignOn, setEnabled: v => (pgAlignOn = v) }),
+    textField({ name: 'ariaLabel', type: 'string', defaultValue: '—', note: 'Accessible name for the trigger.', value: pgAriaLabel, onChange: v => (pgAriaLabel = v), clearable: true, enabled: pgAriaLabelOn, setEnabled: v => (pgAriaLabelOn = v) }),
+    boolField({ name: 'autoPlace', defaultValue: 'true', note: 'Flips the panel when crowded.', value: pgAutoPlace, onChange: v => (pgAutoPlace = v as TriState), enabled: pgAutoPlaceOn, setEnabled: v => (pgAutoPlaceOn = v) }),
+    textField({ name: 'buttonClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the trigger chip classes.', value: pgButtonClass, onChange: v => (pgButtonClass = v), clearable: true, enabled: pgButtonClassOn, setEnabled: v => (pgButtonClassOn = v) }),
+    textField({ name: 'clearLabel', type: 'string?', defaultValue: "'Clear selection'", note: 'Accessible name for the clear button.', value: pgClearLabel, onChange: v => (pgClearLabel = v), editorDefaultValue: 'Clear selection', clearable: true, placeholder: 'Clear selection', enabled: pgClearLabelOn, setEnabled: v => (pgClearLabelOn = v) }),
+    boolField({ name: 'clearable', defaultValue: 'false', note: 'Appends a cross button that selects the default value.', value: pgClearable, onChange: v => (pgClearable = v as TriState), enabled: pgClearableOn, setEnabled: v => (pgClearableOn = v) }),
+    textField({ name: 'defaultValue', type: 'string?', defaultValue: "''", note: 'Baseline the clear button compares against: the option value (not its label); the cross hides while the committed value matches it.', value: pgDefaultValue, onChange: v => (pgDefaultValue = v), editorDefaultValue: '', clearable: true, enabled: pgDefaultValueOn, setEnabled: v => (pgDefaultValueOn = v) }),
+    boolField({ name: 'disabled', defaultValue: 'false', note: 'Disables the trigger.', value: pgDisabled, onChange: v => (pgDisabled = v as TriState), enabled: pgDisabledOn, setEnabled: v => (pgDisabledOn = v) }),
+    textField({ name: 'emptyText', type: 'string?', defaultValue: "'No results.'", note: 'Shown when the filtered panel is empty.', value: pgEmptyText, onChange: v => (pgEmptyText = v), editorDefaultValue: 'No results.', clearable: true, placeholder: 'No results.', enabled: pgEmptyTextOn, setEnabled: v => (pgEmptyTextOn = v) }),
+    textField({ name: 'filterPlaceholder', type: 'string?', defaultValue: "'Search…'", note: 'Search input placeholder.', value: pgFilterPlaceholder, onChange: v => (pgFilterPlaceholder = v), editorDefaultValue: 'Search…', clearable: true, placeholder: 'Search…', enabled: pgFilterPlaceholderOn, setEnabled: v => (pgFilterPlaceholderOn = v) }),
+    boolField({ name: 'filterable', defaultValue: 'false', note: 'Adds a search field to the panel.', value: pgFilterable, onChange: v => (pgFilterable = v as TriState), enabled: pgFilterableOn, setEnabled: v => (pgFilterableOn = v) }),
+    textField({ name: 'label', type: 'string', defaultValue: '—', note: 'Trigger chip text; usually the selected label.', value: pgLabel, onChange: v => (pgLabel = v), clearable: true, enabled: pgLabelOn, setEnabled: v => (pgLabelOn = v) }),
     jsonField({
       name: 'options',
       type: '(string | { value: string; label?: string })[]',
@@ -242,12 +207,8 @@
         () => (pgOptions = DEFAULT_OPTIONS),
       ),
     }),
-    { name: 'panelClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the floating panel classes; the eye stages the customization.', editor: 'text', clearable: true, value: pgPanelClass, onChange: value => { pgPanelClass = value; pgPanelClassOn = true; }, toggle: snippetToggle(pgPanelClassOn, enabled => (pgPanelClassOn = enabled)), sync: { kind: 'text' } },
-    {
-      name: 'variant',
-      type: "'sky' | 'violet' | 'amber' | 'fuchsia' | 'emerald'",
-      defaultValue: "'violet'",
-      note: 'Chip color scheme; the eye stages the customization.', editor: 'enum', options: variantOptions, value: pgVariant, onChange: value => { pgVariant = value; pgVariantOn = true; }, placeholder: 'violet', clearLabel: 'Clear variant', toggle: snippetToggle(pgVariantOn, enabled => (pgVariantOn = enabled)), sync: { kind: 'text' } },
+    textField({ name: 'panelClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the floating panel classes.', value: pgPanelClass, onChange: v => (pgPanelClass = v), clearable: true, enabled: pgPanelClassOn, setEnabled: v => (pgPanelClassOn = v) }),
+    enumField({ name: 'variant', type: "'sky' | 'violet' | 'amber' | 'fuchsia' | 'emerald'", defaultValue: "'violet'", note: 'Chip color scheme.', options: variantOptions, value: pgVariant, onChange: v => (pgVariant = v), placeholder: 'violet', clearLabel: 'Clear variant', enabled: pgVariantOn, setEnabled: v => (pgVariantOn = v) }),
     {
       name: 'onClear',
       type: '() => void',
@@ -259,24 +220,24 @@
 
   // Snippet write-backs derive from the field rows above; `syncSeed` holds the
   // regenerated seed back so the editor keeps the user's text.
-  const syncFields = $derived(syncFieldsOf(fields))
 
   // The seed covers every override except the options array (the snippet reads
   // it from scope), so only options edits need a scope refresh; everything else
   // reseeds. The refresh preserves the editor text by recompiling the draft.
-  useScopeRefresh(preview, () => [pgOptions])
-</script>
+  </script>
 
 <ShowcasePage
     {fields}
     title="ChipDropdown"
     {code}
-    {preview}
     onReset={clearPlayground}
     scope={{ options: pgOptions, labelFor }}
     stage={{ minWidth: CHIP_STAGE_MIN_WIDTH }}
     bind:stageWidth={pgStageWidth}
->
+
+    sync={{ tag: 'ChipDropdown' }}
+    scopeRefresh={() => [pgOptions]}
+  >
     <ChipDropdown
       label={pgLabelOn && pgLabel ? pgLabel : labelFor(pgOptions, pgValue)}
       activeValue={pgValueOn && pgValue ? pgValue : undefined}

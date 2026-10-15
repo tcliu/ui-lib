@@ -5,6 +5,7 @@
 // Single-quoted lines throughout: backticks and ${} inside them stay literal,
 // so no escaping.
 
+import { escapeAttr, escapeText } from '$lib/showcase/snippet-build'
 import { sizeAttributeLine } from '$lib/showcase/size-input'
 import { stageStaticCloseLines, stageStaticOpenLines } from '$lib/showcase/resizable-stage'
 
@@ -207,14 +208,7 @@ export interface DataTableSnippetState {
   sizeOn: boolean
 }
 
-function escapeAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
-}
-
 // Element text for the trailing span below.
-function escapeText(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-}
 
 // A tri-state line: omitted while unset or at the component default, bare
 // while Yes, ={false} while No.

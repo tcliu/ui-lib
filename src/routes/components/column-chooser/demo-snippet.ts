@@ -6,6 +6,7 @@
 //
 // The resize harness is ShowcasePage-owned chrome (its `stage` prop), so the
 // snippet carries only the demo content the page authors inside that frame.
+import { escapeAttr } from '$lib/showcase/snippet-build'
 import { sizeAttributeLine } from '$lib/showcase/size-input'
 import type { ChooserColumn } from '$lib/components/ColumnChooser.svelte'
 
@@ -77,10 +78,6 @@ export interface ColumnChooserSnippetState {
   columns: ChooserColumn[]
   size: string
   sizeOn: boolean
-}
-
-function escapeAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 }
 
 export function buildColumnChooserSnippet({ triggerLabel, triggerLabelOn, resetAriaLabel, resetAriaLabelOn, columns, size, sizeOn }: ColumnChooserSnippetState): string {

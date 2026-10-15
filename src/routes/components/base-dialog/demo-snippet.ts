@@ -2,6 +2,8 @@
 // the playground form state: the section regenerates the editor text from
 // this, so the editor always shows the markup behind the demo above.
 
+import { escapeAttr, escapeRawLine } from '$lib/showcase/snippet-build'
+
 export interface BaseDialogSnippetState {
   widthVariant: string
   widthVariantOn: boolean
@@ -153,15 +155,8 @@ export function parseBaseBodyMarkup(draft: string): BaseBodyContent | null {
   return { body: unescapeRawLine(bodyMatch[1]!.trim()), buttons }
 }
 
-function escapeAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
-}
-
 // Verbatim children lines carry the user's literal labels, so `&` is escaped
 // for compilation; `<`/`{` cannot appear (validation rejects them).
-function escapeRawLine(value: string): string {
-  return value.replace(/&/g, '&amp;')
-}
 
 function unescapeRawLine(value: string): string {
   return value.replace(/&amp;/g, '&')
@@ -224,7 +219,6 @@ export function buildFooterLines(buttons: BaseFooterButton[]): string {
     FOOTER_CLOSE,
   ].join('\n')
 }
-
 
 export function buildBaseDialogSnippet({
   widthVariant,

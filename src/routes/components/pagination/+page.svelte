@@ -4,11 +4,9 @@
   import SelectDropdown from '$lib/components/SelectDropdown.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
-  import { useScopeRefresh } from '$lib/showcase/use-scope-refresh.svelte'
-  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
   import type { SnippetAttribute } from '$lib/showcase/snippet-attributes'
-  import { jsonField, resetToggle, snippetDialog, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
+  import { textField, sizeField, jsonField, resetToggle, snippetDialog, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
   import { CUSTOM_LABELS, DEFAULT_PAGE_SIZE_OPTIONS, LABEL_FIELDS, buildPaginationSnippet, parseLabelsJson, parseLabelsValue, parsePageSizeOptionsJson } from './demo-snippet'
   import { parseSizeValue } from '$lib/showcase/size-input'
   import type { PaginationLabels } from '$lib/components/pagination-labels'
@@ -158,12 +156,7 @@
     }),
   )
 
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({ pageSize: pgPageSize, currentPage: pgCurrentPage, total: pgTotal, pageSizeOptions: pgPageSizeOptions, handlePageSizeChange }),
-    sync: { tag: 'Pagination', getFields: () => syncFields },
-  })
-
+  
   // Each editable row declares its Value editor and its snippet write-back
   // shape once; the sync table below derives from the same declarations.
   // Snippet edits surface in the Value column, and `syncSeed` holds the
@@ -171,7 +164,7 @@
   // control below fills the `labels` object from the shared preset, like the
   // Value dialog.
   const fields: SyncableFieldConfig[] = $derived([
-    { name: 'className', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Extra classes for the nav; the eye stages the customization.', editor: 'text', clearable: true, value: pgClassName, onChange: value => { pgClassName = value; pgClassNameOn = true; }, toggle: snippetToggle(pgClassNameOn, enabled => (pgClassNameOn = enabled)), sync: { kind: 'text' } },
+    textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes for the nav.', value: pgClassName, onChange: v => (pgClassName = v), editorDefaultValue: '', clearable: true, enabled: pgClassNameOn, setEnabled: v => (pgClassNameOn = v) }),
     { name: 'currentPage', type: 'number', defaultValue: '—', note: 'Active page (1-based).', editor: 'number', value: String(pgCurrentPage), onChange: applyCurrentPageValue }, // No eye: required live pagination state; omission would break the demo.
     jsonField({
       name: 'labels',
@@ -203,16 +196,7 @@
         () => (pgPageSizeOptions = [...DEFAULT_PAGE_SIZE_OPTIONS]),
       ),
     }),
-    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number", defaultValue: "'md'", note: 'Control scale; numbers flow to the page-size dropdown interpolated between the steps; the eye stages the customization.', editor: 'size', allowCustomValue: true, value: pgSize, onChange: value => { pgSize = value; pgSizeOn = true; }, placeholder: 'md', clearLabel: 'Clear size', toggle: snippetToggle(pgSizeOn, enabled => (pgSizeOn = enabled)), sync: { kind: 'custom', read: attrs => {
-      const attr = attrs?.get('size')
-      // Absent restores the default, like the builder omitting the line;
-      // string and numeric shapes set, anything else is custom code the
-      // playground leaves alone.
-      if (!attr) return 'md'
-      if (attr.kind === 'string') return attr.value
-      if (attr.kind === 'expression' && /^\d+(\.\d+)?$/.test(attr.value)) return attr.value
-      return undefined
-    } } },
+    sizeField({ note: 'Control scale; numbers flow to the page-size dropdown interpolated between the steps.', value: pgSize, onChange: v => (pgSize = v), enabled: pgSizeOn, setEnabled: v => (pgSizeOn = v) }),
     { name: 'total', type: 'number', defaultValue: '—', note: 'Total item count.', editor: 'number', value: String(pgTotal), onChange: applyTotalValue }, // No eye: required live pagination state; omission would break the demo.
     snippetField({
       name: 'trailing',
@@ -225,14 +209,12 @@
     { name: 'onPageSizeChange', type: '(size: number) => void', defaultValue: '—', note: 'Called on page-size change.' },
   ])
 
-  const syncFields = $derived(syncFieldsOf(fields))
 
   // The seed covers every override except the paging interaction state (the
   // snippet reads it from scope), so only paging edits need a scope refresh;
   // everything else reseeds. The refresh preserves the editor text by
   // recompiling the draft.
-  useScopeRefresh(preview, () => [pgPageSize, pgCurrentPage, pgTotal, pgPageSizeOptions])
-</script>
+  </script>
 
 {#snippet settingsPanel()}
   <!-- The Labels preset fills the labels object; the Value column edits the
@@ -264,11 +246,13 @@
     {fields}
     title="Pagination"
     {code}
-    {preview}
     onReset={clearPlayground}
     configPanel={settingsPanel}
     scope={{ pageSize: pgPageSize, currentPage: pgCurrentPage, total: pgTotal, pageSizeOptions: pgPageSizeOptions, handlePageSizeChange }}
->
+
+    sync={{ tag: 'Pagination' }}
+    scopeRefresh={() => [pgPageSize, pgCurrentPage, pgTotal, pgPageSizeOptions]}
+  >
     <Pagination
       total={pgTotal}
       pageSize={pgPageSize}

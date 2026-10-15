@@ -2,6 +2,7 @@
 // the playground form state: the section regenerates the editor text from
 // this, so the editor always shows the markup behind the demo above.
 
+import { escapeAttr, escapeRawLine, unescapeAttr } from '$lib/showcase/snippet-build'
 import { isBasicHtmlMarkup } from '$lib/showcase/snippet-html'
 import { buildHeaderLine, parseHeaderMarkup } from '$lib/showcase/snippet-header'
 
@@ -194,14 +195,6 @@ export function parseEditActionsMarkup(draft: string): string | null {
   return parseEditActionsLabel(normalized) === null ? null : normalized
 }
 
-function escapeAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
-}
-
-function unescapeAttr(value: string): string {
-  return value.replace(/&quot;/g, '"').replace(/&amp;/g, '&')
-}
-
 // A tri-state line: omitted while unset or at the component default, bare
 // while Yes, ={false} while No.
 function flagLine(name: string, value: TriState, def: TriState = ''): string[] {
@@ -213,9 +206,6 @@ function flagLine(name: string, value: TriState, def: TriState = ''): string[] {
 
 // Verbatim body lines carry the user's literal text, so `&` is escaped for
 // compilation; `<`/`{` cannot appear (validation rejects them).
-function escapeRawLine(line: string): string {
-  return line.replace(/&/g, '&amp;')
-}
 
 // Actions labels carry the same literal text; the grammar already rejects
 // `<`, `>` and `{`/`}`, so only `&` needs escaping.

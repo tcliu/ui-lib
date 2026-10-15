@@ -1,13 +1,13 @@
 <script lang="ts">
+  import { flagOn } from '$lib/showcase/snippet-build'
   import FormField from '$lib/components/FormField.svelte'
   import NumberInput from '$lib/components/NumberInput.svelte'
   import SelectDropdown from '$lib/components/SelectDropdown.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
   import { parseSizeValue } from '$lib/showcase/size-input'
-  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { snippetToggle, resetToggle } from '$lib/showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { enumField, textField, boolField, snippetToggle, resetToggle } from '$lib/showcase/snippet-field'
   import { STEPLESS_CLASS, buildNumberInputSnippet, type TriState } from './demo-snippet'
 
   const i18n = getI18nContext()
@@ -54,11 +54,6 @@
   let pgInputStyleOn = $state(false)
   let pgClassName = $state('')
   let pgClassNameOn = $state(false)
-
-  // Unset renders the component default; Yes/No force the value.
-  function flagOn(value: TriState): boolean | undefined {
-    return value === '' ? undefined : value === 'yes'
-  }
 
   function asNumber(value: string): number | undefined {
     if (value.trim() === '') {
@@ -173,32 +168,27 @@
     }),
   )
 
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({ applyLabel: i18n.t('common.apply') }),
-    sync: { tag: 'NumberInput', getFields: () => syncFields },
-  })
-
+  
   // Editable rows first (primitives and plain data, A–Z), then the function
   // props (A–Z).
   const fields: SyncableFieldConfig[] = $derived([
-    { name: 'ariaLabel', type: 'string', defaultValue: '—', note: 'Accessible name for the control; the eye stages the customization.', editor: 'text', clearable: true, value: pgAriaLabel, onChange: value => { pgAriaLabel = value; pgAriaLabelOn = true; }, toggle: snippetToggle(pgAriaLabelOn, enabled => (pgAriaLabelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'applyLabel' } },
-    { name: 'className', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Extra classes for the input; the eye stages the customization.', editor: 'text', clearable: true, value: pgClassName, onChange: value => { pgClassName = value; pgClassNameOn = true; }, toggle: snippetToggle(pgClassNameOn, enabled => (pgClassNameOn = enabled)), sync: { kind: 'text' } },
-    { name: 'clearLabel', type: 'string?', defaultValue: "'Clear'", editorDefaultValue: 'Clear', note: 'Accessible name for the clear button; the eye stages the customization.', editor: 'text', clearable: true, value: pgClearLabel, onChange: value => { pgClearLabel = value; pgClearLabelOn = true; }, toggle: snippetToggle(pgClearLabelOn, enabled => (pgClearLabelOn = enabled)), placeholder: 'Clear', sync: { kind: 'text' } },
-    { name: 'clearPlacement', type: "'auto' | 'inside' | 'outside'", defaultValue: "'auto'", note: 'Inside sits left of the steppers; outside sits after them; auto renders outside because the steppers own the right edge; the eye stages the customization.', editor: 'enum', options: clearPlacementOptions, value: pgClearPlacement, onChange: value => { pgClearPlacement = value; pgClearPlacementOn = true; }, placeholder: 'auto', clearLabel: 'Clear placement', toggle: snippetToggle(pgClearPlacementOn, enabled => (pgClearPlacementOn = enabled)), sync: { kind: 'text' } },
-    { name: 'clearable', type: 'boolean', defaultValue: 'false', note: 'Appends a cross button that clears the value; the eye stages the customization.', editor: 'boolean', value: pgClearable, onChange: value => { pgClearable = value as TriState; pgClearableOn = true; }, toggle: snippetToggle(pgClearableOn, enabled => (pgClearableOn = enabled)), sync: { kind: 'tri' } },
-    { name: 'decrementLabel', type: 'string?', defaultValue: 'locale', note: 'Accessible name for the down button; the eye stages the customization.', editor: 'text', clearable: true, value: pgDecrementLabel, onChange: value => { pgDecrementLabel = value; pgDecrementLabelOn = true; }, toggle: snippetToggle(pgDecrementLabelOn, enabled => (pgDecrementLabelOn = enabled)), sync: { kind: 'text' } },
-    { name: 'defaultValue', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Baseline the clear button compares against; the cross hides while the value matches it; the eye stages the customization.', editor: 'text', clearable: true, value: pgDefaultValue, onChange: value => { pgDefaultValue = value; pgDefaultValueOn = true; }, toggle: snippetToggle(pgDefaultValueOn, enabled => (pgDefaultValueOn = enabled)), sync: { kind: 'text' } },
-    { name: 'disabled', type: 'boolean', defaultValue: 'false', note: 'Disables the input and steppers; the eye stages the customization.', editor: 'boolean', value: pgDisabled, onChange: value => { pgDisabled = value as TriState; pgDisabledOn = true; }, toggle: snippetToggle(pgDisabledOn, enabled => (pgDisabledOn = enabled)), sync: { kind: 'tri' } },
-    { name: 'id', type: 'string?', defaultValue: '—', note: 'Native input id; the eye stages the customization.', editor: 'text', clearable: true, value: pgId, onChange: value => { pgId = value; pgIdOn = true; }, toggle: snippetToggle(pgIdOn, enabled => (pgIdOn = enabled)), sync: { kind: 'text' } },
-    { name: 'incrementLabel', type: 'string?', defaultValue: 'locale', note: 'Accessible name for the up button; the eye stages the customization.', editor: 'text', clearable: true, value: pgIncrementLabel, onChange: value => { pgIncrementLabel = value; pgIncrementLabelOn = true; }, toggle: snippetToggle(pgIncrementLabelOn, enabled => (pgIncrementLabelOn = enabled)), sync: { kind: 'text' } },
-    { name: 'inputStyle', type: 'string?', defaultValue: '—', note: 'Inline style for the input; widths the field when steppers are hidden; the eye stages the customization.', editor: 'text', clearable: true, value: pgInputStyle, onChange: value => { pgInputStyle = value; pgInputStyleOn = true; }, toggle: snippetToggle(pgInputStyleOn, enabled => (pgInputStyleOn = enabled)), sync: { kind: 'text' } },
-    { name: 'max', type: 'number?', defaultValue: '—', note: 'Upper clamp on blur and step; the eye stages the customization.', editor: 'number', clearable: true, value: pgMax, onChange: value => { pgMax = value; pgMaxOn = true; }, toggle: snippetToggle(pgMaxOn, enabled => (pgMaxOn = enabled)), sync: { kind: 'number' } },
-    { name: 'min', type: 'number?', defaultValue: '—', note: 'Lower clamp on blur and step; the eye stages the customization.', editor: 'number', clearable: true, value: pgMin, onChange: value => { pgMin = value; pgMinOn = true; }, toggle: snippetToggle(pgMinOn, enabled => (pgMinOn = enabled)), sync: { kind: 'number' } },
-    { name: 'placeholder', type: 'string?', defaultValue: '—', note: 'Native placeholder; the eye stages the customization.', editor: 'text', clearable: true, value: pgPlaceholder, onChange: value => { pgPlaceholder = value; pgPlaceholderOn = true; }, toggle: snippetToggle(pgPlaceholderOn, enabled => (pgPlaceholderOn = enabled)), sync: { kind: 'text' } },
-    { name: 'showControls', type: 'boolean', defaultValue: 'true', note: 'Renders the stepper buttons; the eye stages the customization.', editor: 'boolean', value: pgShowControls, onChange: value => { pgShowControls = value as TriState; pgShowControlsOn = true; }, toggle: snippetToggle(pgShowControlsOn, enabled => (pgShowControlsOn = enabled)), sync: { kind: 'tri' } },
-    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number", defaultValue: "'md'", note: 'Control scale; numbers are icon-scale pixels scaled by fixed ratios; the eye stages the customization.', editor: 'size', allowCustomValue: true, value: pgSize, onChange: value => { pgSize = value; pgSizeOn = true; }, clearLabel: 'Clear size', placeholder: 'md', toggle: snippetToggle(pgSizeOn, enabled => (pgSizeOn = enabled)), sync: { kind: 'text' } },
-    { name: 'step', type: 'number?', defaultValue: '1', editorDefaultValue: '1', note: 'Arrow/wheel step; decimals preserved; the eye stages the customization.', editor: 'number', clearable: true, value: pgStep, onChange: value => { pgStep = value; pgStepOn = true; }, placeholder: '1', toggle: snippetToggle(pgStepOn, enabled => (pgStepOn = enabled)), sync: { kind: 'number' } },
+    { name: 'ariaLabel', type: 'string', defaultValue: '—', note: 'Accessible name for the control.', editor: 'text', clearable: true, value: pgAriaLabel, onChange: value => { pgAriaLabel = value; pgAriaLabelOn = true; }, toggle: snippetToggle(pgAriaLabelOn, enabled => (pgAriaLabelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'applyLabel' } },
+    textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes for the input.', value: pgClassName, onChange: v => (pgClassName = v), editorDefaultValue: '', clearable: true, enabled: pgClassNameOn, setEnabled: v => (pgClassNameOn = v) }),
+    textField({ name: 'clearLabel', type: 'string?', defaultValue: "'Clear'", note: 'Accessible name for the clear button.', value: pgClearLabel, onChange: v => (pgClearLabel = v), editorDefaultValue: 'Clear', clearable: true, placeholder: 'Clear', enabled: pgClearLabelOn, setEnabled: v => (pgClearLabelOn = v) }),
+    enumField({ name: 'clearPlacement', type: "'auto' | 'inside' | 'outside'", defaultValue: "'auto'", note: 'Inside sits left of the steppers; outside sits after them; auto renders outside because the steppers own the right edge.', options: clearPlacementOptions, value: pgClearPlacement, onChange: v => (pgClearPlacement = v), placeholder: 'auto', clearLabel: 'Clear placement', enabled: pgClearPlacementOn, setEnabled: v => (pgClearPlacementOn = v) }),
+    boolField({ name: 'clearable', defaultValue: 'false', note: 'Appends a cross button that clears the value.', value: pgClearable, onChange: v => (pgClearable = v as TriState), enabled: pgClearableOn, setEnabled: v => (pgClearableOn = v) }),
+    textField({ name: 'decrementLabel', type: 'string?', defaultValue: 'locale', note: 'Accessible name for the down button.', value: pgDecrementLabel, onChange: v => (pgDecrementLabel = v), clearable: true, enabled: pgDecrementLabelOn, setEnabled: v => (pgDecrementLabelOn = v) }),
+    textField({ name: 'defaultValue', type: 'string?', defaultValue: "''", note: 'Baseline the clear button compares against; the cross hides while the value matches it.', value: pgDefaultValue, onChange: v => (pgDefaultValue = v), editorDefaultValue: '', clearable: true, enabled: pgDefaultValueOn, setEnabled: v => (pgDefaultValueOn = v) }),
+    boolField({ name: 'disabled', defaultValue: 'false', note: 'Disables the input and steppers.', value: pgDisabled, onChange: v => (pgDisabled = v as TriState), enabled: pgDisabledOn, setEnabled: v => (pgDisabledOn = v) }),
+    textField({ name: 'id', type: 'string?', defaultValue: '—', note: 'Native input id.', value: pgId, onChange: v => (pgId = v), clearable: true, enabled: pgIdOn, setEnabled: v => (pgIdOn = v) }),
+    textField({ name: 'incrementLabel', type: 'string?', defaultValue: 'locale', note: 'Accessible name for the up button.', value: pgIncrementLabel, onChange: v => (pgIncrementLabel = v), clearable: true, enabled: pgIncrementLabelOn, setEnabled: v => (pgIncrementLabelOn = v) }),
+    textField({ name: 'inputStyle', type: 'string?', defaultValue: '—', note: 'Inline style for the input; widths the field when steppers are hidden.', value: pgInputStyle, onChange: v => (pgInputStyle = v), clearable: true, enabled: pgInputStyleOn, setEnabled: v => (pgInputStyleOn = v) }),
+    { name: 'max', type: 'number?', defaultValue: '—', note: 'Upper clamp on blur and step.', editor: 'number', clearable: true, value: pgMax, onChange: value => { pgMax = value; pgMaxOn = true; }, toggle: snippetToggle(pgMaxOn, enabled => (pgMaxOn = enabled)), sync: { kind: 'number' } },
+    { name: 'min', type: 'number?', defaultValue: '—', note: 'Lower clamp on blur and step.', editor: 'number', clearable: true, value: pgMin, onChange: value => { pgMin = value; pgMinOn = true; }, toggle: snippetToggle(pgMinOn, enabled => (pgMinOn = enabled)), sync: { kind: 'number' } },
+    textField({ name: 'placeholder', type: 'string?', defaultValue: '—', note: 'Native placeholder.', value: pgPlaceholder, onChange: v => (pgPlaceholder = v), clearable: true, enabled: pgPlaceholderOn, setEnabled: v => (pgPlaceholderOn = v) }),
+    boolField({ name: 'showControls', defaultValue: 'true', note: 'Renders the stepper buttons.', value: pgShowControls, onChange: v => (pgShowControls = v as TriState), enabled: pgShowControlsOn, setEnabled: v => (pgShowControlsOn = v) }),
+    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number", defaultValue: "'md'", note: 'Control scale; numbers are icon-scale pixels scaled by fixed ratios.', editor: 'size', allowCustomValue: true, value: pgSize, onChange: value => { pgSize = value; pgSizeOn = true; }, clearLabel: 'Clear size', placeholder: 'md', toggle: snippetToggle(pgSizeOn, enabled => (pgSizeOn = enabled)), sync: { kind: 'text' } },
+    { name: 'step', type: 'number?', defaultValue: '1', editorDefaultValue: '1', note: 'Arrow/wheel step; decimals preserved.', editor: 'number', clearable: true, value: pgStep, onChange: value => { pgStep = value; pgStepOn = true; }, placeholder: '1', toggle: snippetToggle(pgStepOn, enabled => (pgStepOn = enabled)), sync: { kind: 'number' } },
     { name: 'value', type: 'string', defaultValue: '—', note: 'Bindable field value; the eye resets it to 5.', editor: 'text', clearable: true, value: pgValue, onChange: value => { pgValue = value; pgValueOn = true; }, toggle: resetToggle(pgValueOn, enabled => (pgValueOn = enabled), () => (pgValue = '5')), sync: { kind: 'script' } },
     { name: 'onClear', type: '() => void', defaultValue: 'clears value', note: 'Clear handler; falls back to clearing the bound value when omitted.' },
     { name: 'onblur', type: '(event: FocusEvent) => void', defaultValue: '—', note: 'Blur callback.' },
@@ -206,7 +196,6 @@
     { name: 'onkeydown', type: '(event: KeyboardEvent) => void', defaultValue: '—', note: 'Keydown callback.' },
   ])
 
-  const syncFields = $derived(syncFieldsOf(fields))
 </script>
 
 {#snippet settingsPanel()}
@@ -244,11 +233,12 @@
     {fields}
     title="NumberInput"
     {code}
-    {preview}
     onReset={clearPlayground}
     configPanel={settingsPanel}
     scope={{ applyLabel: i18n.t('common.apply') }}
->
+
+    sync={{ tag: 'NumberInput' }}
+  >
     <div class="flex flex-col gap-1">
       <NumberInput
         bind:value={pgValue}

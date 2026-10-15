@@ -1,13 +1,13 @@
 <script lang="ts">
+  import { flagOn } from '$lib/showcase/snippet-build'
   import { onMount } from 'svelte'
   import type { HTMLInputAttributes } from 'svelte/elements'
   import { getI18nContext } from '$lib/i18n.svelte'
   import PasswordInput from '$lib/components/PasswordInput.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
   import { parseSizeValue } from '$lib/showcase/size-input'
-  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { snippetToggle, resetToggle } from '$lib/showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { enumField, textField, boolField, snippetToggle, resetToggle } from '$lib/showcase/snippet-field'
   import { buildPasswordInputSnippet, type TriState } from './demo-snippet'
 
   const i18n = getI18nContext()
@@ -51,11 +51,6 @@
   onMount(() => {
     pwdDemo?.focus()
   })
-
-  // Unset renders the component default; Yes/No force the value.
-  function flagOn(value: TriState): boolean | undefined {
-    return value === '' ? undefined : value === 'yes'
-  }
 
   const clearPlacementOptions = [
     { value: 'auto', label: 'auto' },
@@ -143,44 +138,40 @@
     }),
   )
 
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({}),
-    sync: { tag: 'PasswordInput', getFields: () => syncFields },
-  })
-
+  
   // Editable rows first (primitives and plain data, A–Z), then the function
   // props (A–Z).
   const fields: SyncableFieldConfig[] = $derived([
-    { name: 'autocomplete', type: 'string?', defaultValue: "'current-password'", editorDefaultValue: 'current-password', note: 'Native autocomplete token; the eye stages the customization.', editor: 'text', clearable: true, value: pgAutocomplete, onChange: value => { pgAutocomplete = value; pgAutocompleteOn = true; }, placeholder: 'current-password', toggle: snippetToggle(pgAutocompleteOn, enabled => (pgAutocompleteOn = enabled)), sync: { kind: 'text' } },
-    { name: 'className', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Extra classes for the input; the eye stages the customization.', editor: 'text', clearable: true, value: pgClassName, onChange: value => { pgClassName = value; pgClassNameOn = true; }, toggle: snippetToggle(pgClassNameOn, enabled => (pgClassNameOn = enabled)), sync: { kind: 'text' } },
-    { name: 'clearLabel', type: 'string?', defaultValue: "'Clear'", editorDefaultValue: 'Clear', note: 'Accessible name for the clear button; the eye stages the customization.', editor: 'text', clearable: true, value: pgClearLabel, onChange: value => { pgClearLabel = value; pgClearLabelOn = true; }, toggle: snippetToggle(pgClearLabelOn, enabled => (pgClearLabelOn = enabled)), placeholder: 'Clear', sync: { kind: 'text' } },
-    { name: 'clearPlacement', type: "'auto' | 'inside' | 'outside'", defaultValue: "'auto'", note: 'Inside overlays the field edge; outside sits after it; auto renders outside because the toggle owns the right edge; the eye stages the customization.', editor: 'enum', options: clearPlacementOptions, value: pgClearPlacement, onChange: value => { pgClearPlacement = value; pgClearPlacementOn = true; }, placeholder: 'auto', clearLabel: 'Clear placement', toggle: snippetToggle(pgClearPlacementOn, enabled => (pgClearPlacementOn = enabled)), sync: { kind: 'text' } },
-    { name: 'clearable', type: 'boolean', defaultValue: 'false', note: 'Appends a cross button that clears the value; the eye stages the customization.', editor: 'boolean', value: pgClearable, onChange: value => { pgClearable = value as TriState; pgClearableOn = true; }, toggle: snippetToggle(pgClearableOn, enabled => (pgClearableOn = enabled)), sync: { kind: 'tri' } },
-    { name: 'defaultValue', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Baseline the clear button compares against; the cross hides while the value matches it; the eye stages the customization.', editor: 'text', clearable: true, value: pgDefaultValue, onChange: value => { pgDefaultValue = value; pgDefaultValueOn = true; }, toggle: snippetToggle(pgDefaultValueOn, enabled => (pgDefaultValueOn = enabled)), sync: { kind: 'text' } },
-    { name: 'disabled', type: 'boolean', defaultValue: 'false', note: 'Disables the field and the toggle; the eye stages the customization.', editor: 'boolean', value: pgDisabled, onChange: value => { pgDisabled = value as TriState; pgDisabledOn = true; }, toggle: snippetToggle(pgDisabledOn, enabled => (pgDisabledOn = enabled)), sync: { kind: 'tri' } },
-    { name: 'hideLabel', type: 'string?', defaultValue: '—', note: 'Toggle label when visible; falls back to the locale; the eye stages the customization.', editor: 'text', clearable: true, value: pgHideLabel, onChange: value => { pgHideLabel = value; pgHideLabelOn = true; }, toggle: snippetToggle(pgHideLabelOn, enabled => (pgHideLabelOn = enabled)), sync: { kind: 'text' } },
-    { name: 'id', type: 'string?', defaultValue: '—', note: 'Native input id; the eye stages the customization.', editor: 'text', clearable: true, value: pgId, onChange: value => { pgId = value; pgIdOn = true; }, toggle: snippetToggle(pgIdOn, enabled => (pgIdOn = enabled)), sync: { kind: 'text' } },
-    { name: 'name', type: 'string?', defaultValue: '—', note: 'Native input name; the eye stages the customization.', editor: 'text', clearable: true, value: pgName, onChange: value => { pgName = value; pgNameOn = true; }, toggle: snippetToggle(pgNameOn, enabled => (pgNameOn = enabled)), sync: { kind: 'text' } },
-    { name: 'placeholder', type: 'string?', defaultValue: '—', note: 'Placeholder text; the eye stages the customization.', editor: 'text', clearable: true, value: pgPlaceholder, onChange: value => { pgPlaceholder = value; pgPlaceholderOn = true; }, toggle: snippetToggle(pgPlaceholderOn, enabled => (pgPlaceholderOn = enabled)), sync: { kind: 'text' } },
-    { name: 'required', type: 'boolean', defaultValue: 'false', note: 'Native required flag; the eye stages the customization.', editor: 'boolean', value: pgRequired, onChange: value => { pgRequired = value as TriState; pgRequiredOn = true; }, toggle: snippetToggle(pgRequiredOn, enabled => (pgRequiredOn = enabled)), sync: { kind: 'tri' } },
-    { name: 'showLabel', type: 'string?', defaultValue: '—', note: 'Toggle label when hidden; falls back to the locale; the eye stages the customization.', editor: 'text', clearable: true, value: pgShowLabel, onChange: value => { pgShowLabel = value; pgShowLabelOn = true; }, toggle: snippetToggle(pgShowLabelOn, enabled => (pgShowLabelOn = enabled)), sync: { kind: 'text' } },
-    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number", defaultValue: "'md'", note: 'Control scale; numbers are icon-scale pixels scaled by fixed ratios; the eye stages the customization.', editor: 'size', allowCustomValue: true, value: pgSize, onChange: value => { pgSize = value; pgSizeOn = true; }, clearLabel: 'Clear size', placeholder: 'md', toggle: snippetToggle(pgSizeOn, enabled => (pgSizeOn = enabled)), sync: { kind: 'text' } },
+    textField({ name: 'autocomplete', type: 'string?', defaultValue: "'current-password'", note: 'Native autocomplete token.', value: pgAutocomplete, onChange: v => (pgAutocomplete = v), editorDefaultValue: 'current-password', clearable: true, placeholder: 'current-password', enabled: pgAutocompleteOn, setEnabled: v => (pgAutocompleteOn = v) }),
+    textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes for the input.', value: pgClassName, onChange: v => (pgClassName = v), editorDefaultValue: '', clearable: true, enabled: pgClassNameOn, setEnabled: v => (pgClassNameOn = v) }),
+    textField({ name: 'clearLabel', type: 'string?', defaultValue: "'Clear'", note: 'Accessible name for the clear button.', value: pgClearLabel, onChange: v => (pgClearLabel = v), editorDefaultValue: 'Clear', clearable: true, placeholder: 'Clear', enabled: pgClearLabelOn, setEnabled: v => (pgClearLabelOn = v) }),
+    enumField({ name: 'clearPlacement', type: "'auto' | 'inside' | 'outside'", defaultValue: "'auto'", note: 'Inside overlays the field edge; outside sits after it; auto renders outside because the toggle owns the right edge.', options: clearPlacementOptions, value: pgClearPlacement, onChange: v => (pgClearPlacement = v), placeholder: 'auto', clearLabel: 'Clear placement', enabled: pgClearPlacementOn, setEnabled: v => (pgClearPlacementOn = v) }),
+    boolField({ name: 'clearable', defaultValue: 'false', note: 'Appends a cross button that clears the value.', value: pgClearable, onChange: v => (pgClearable = v as TriState), enabled: pgClearableOn, setEnabled: v => (pgClearableOn = v) }),
+    textField({ name: 'defaultValue', type: 'string?', defaultValue: "''", note: 'Baseline the clear button compares against; the cross hides while the value matches it.', value: pgDefaultValue, onChange: v => (pgDefaultValue = v), editorDefaultValue: '', clearable: true, enabled: pgDefaultValueOn, setEnabled: v => (pgDefaultValueOn = v) }),
+    boolField({ name: 'disabled', defaultValue: 'false', note: 'Disables the field and the toggle.', value: pgDisabled, onChange: v => (pgDisabled = v as TriState), enabled: pgDisabledOn, setEnabled: v => (pgDisabledOn = v) }),
+    textField({ name: 'hideLabel', type: 'string?', defaultValue: '—', note: 'Toggle label when visible; falls back to the locale.', value: pgHideLabel, onChange: v => (pgHideLabel = v), clearable: true, enabled: pgHideLabelOn, setEnabled: v => (pgHideLabelOn = v) }),
+    textField({ name: 'id', type: 'string?', defaultValue: '—', note: 'Native input id.', value: pgId, onChange: v => (pgId = v), clearable: true, enabled: pgIdOn, setEnabled: v => (pgIdOn = v) }),
+    textField({ name: 'name', type: 'string?', defaultValue: '—', note: 'Native input name.', value: pgName, onChange: v => (pgName = v), clearable: true, enabled: pgNameOn, setEnabled: v => (pgNameOn = v) }),
+    textField({ name: 'placeholder', type: 'string?', defaultValue: '—', note: 'Placeholder text.', value: pgPlaceholder, onChange: v => (pgPlaceholder = v), clearable: true, enabled: pgPlaceholderOn, setEnabled: v => (pgPlaceholderOn = v) }),
+    boolField({ name: 'required', defaultValue: 'false', note: 'Native required flag.', value: pgRequired, onChange: v => (pgRequired = v as TriState), enabled: pgRequiredOn, setEnabled: v => (pgRequiredOn = v) }),
+    textField({ name: 'showLabel', type: 'string?', defaultValue: '—', note: 'Toggle label when hidden; falls back to the locale.', value: pgShowLabel, onChange: v => (pgShowLabel = v), clearable: true, enabled: pgShowLabelOn, setEnabled: v => (pgShowLabelOn = v) }),
+    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number", defaultValue: "'md'", note: 'Control scale; numbers are icon-scale pixels scaled by fixed ratios.', editor: 'size', allowCustomValue: true, value: pgSize, onChange: value => { pgSize = value; pgSizeOn = true; }, clearLabel: 'Clear size', placeholder: 'md', toggle: snippetToggle(pgSizeOn, enabled => (pgSizeOn = enabled)), sync: { kind: 'text' } },
     { name: 'value', type: 'string', defaultValue: "''", editorDefaultValue: '', note: 'Bindable field value; the eye resets it to empty.', editor: 'text', clearable: true, value: pgValue, onChange: value => { pgValue = value; pgValueOn = true; }, toggle: resetToggle(pgValueOn, enabled => (pgValueOn = enabled), () => (pgValue = '')), sync: { kind: 'script' } },
     { name: 'onClear', type: '() => void', defaultValue: 'clears value', note: 'Clear handler; falls back to clearing the bound value when omitted.' },
     { name: 'oninput', type: '(event: Event) => void', defaultValue: '—', note: 'Native input handler.' }
   ])
 
-  const syncFields = $derived(syncFieldsOf(fields))
 </script>
 
 <ShowcasePage
     {fields}
     title="PasswordInput"
     {code}
-    {preview}
     onReset={clearPlayground}
->
+
+    sync={{ tag: 'PasswordInput' }}
+    scope={{}}
+  >
     <PasswordInput
       bind:this={pwdDemo}
       bind:value={pgValue}

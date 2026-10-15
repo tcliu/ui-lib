@@ -5,10 +5,8 @@
   import Toast from '$lib/components/Toast.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
-  import { useScopeRefresh } from '$lib/showcase/use-scope-refresh.svelte'
-  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { snippetToggle } from '$lib/showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { enumField, textField, sizeField, snippetToggle } from '$lib/showcase/snippet-field'
   import { buildToastSnippet } from './demo-snippet'
   import { parseSizeValue } from '$lib/showcase/size-input'
 
@@ -84,46 +82,23 @@
     }),
   )
 
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({
-      open: pgOpen,
-      actionTaken: pgActionTaken,
-      actionLabel: pgAction,
-      defaultMessage: i18n.t('showcase.default'),
-      closeLabel: i18n.t('common.close'),
-      showLabel: i18n.t('showcase.openDialog'),
-    }),
-    sync: { tag: 'Toast', getFields: () => syncFields },
-  })
-
+  
   const fields: SyncableFieldConfig[] = $derived([
-    { name: 'closeLabel', type: 'string', defaultValue: '—', note: 'Accessible name for the dismiss button; the eye stages the customization.', editor: 'text', clearable: true, value: pgCloseLabel, onChange: value => { pgCloseLabel = value; pgCloseLabelOn = true; }, toggle: snippetToggle(pgCloseLabelOn, enabled => (pgCloseLabelOn = enabled)), sync: { kind: 'text' } },
-    { name: 'message', type: 'string', defaultValue: '—', note: 'Toast body text; the eye stages the customization.', editor: 'text', clearable: true, value: pgMessage, onChange: value => { pgMessage = value; pgMessageOn = true; }, toggle: snippetToggle(pgMessageOn, enabled => (pgMessageOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'defaultMessage' } },
-    { name: 'position', type: "'top-right' | 'top-center' | 'bottom-right' | 'bottom-center'", defaultValue: "'bottom-right'", note: 'Viewport edge the toast docks to; the eye stages the customization.', editor: 'enum', options: positionOptions, value: pgPosition, onChange: value => { pgPosition = value; pgPositionOn = true; }, placeholder: 'bottom-right', clearLabel: 'Clear position', toggle: snippetToggle(pgPositionOn, enabled => (pgPositionOn = enabled)), sync: { kind: 'text' } },
-    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number", defaultValue: "'md'", note: 'Text scale; every metric is a fixed ratio of the size; the eye stages the customization.', editor: 'size', allowCustomValue: true, value: pgSize, onChange: value => { pgSize = value; pgSizeOn = true; }, placeholder: 'md', clearLabel: 'Clear size', toggle: snippetToggle(pgSizeOn, enabled => (pgSizeOn = enabled)), sync: { kind: 'custom', read: attrs => {
-      const attr = attrs?.get('size')
-      // Absent restores the default, like the builder omitting the line;
-      // string and numeric shapes set, anything else is custom code the
-      // playground leaves alone.
-      if (!attr) return 'md'
-      if (attr.kind === 'string') return attr.value
-      if (attr.kind === 'expression' && /^\d+(\.\d+)?$/.test(attr.value)) return attr.value
-      return undefined
-    } } },
-    { name: 'type', type: "'success' | 'info' | 'warning' | 'error'", defaultValue: "'info'", note: 'Accent treatment; the eye stages the customization.', editor: 'enum', options: typeOptions, value: pgType, onChange: value => { pgType = value; pgTypeOn = true; }, placeholder: 'info', clearLabel: 'Clear type', toggle: snippetToggle(pgTypeOn, enabled => (pgTypeOn = enabled)), sync: { kind: 'text' } },
+    textField({ name: 'closeLabel', type: 'string', defaultValue: '—', note: 'Accessible name for the dismiss button.', value: pgCloseLabel, onChange: v => (pgCloseLabel = v), clearable: true, enabled: pgCloseLabelOn, setEnabled: v => (pgCloseLabelOn = v) }),
+    { name: 'message', type: 'string', defaultValue: '—', note: 'Toast body text.', editor: 'text', clearable: true, value: pgMessage, onChange: value => { pgMessage = value; pgMessageOn = true; }, toggle: snippetToggle(pgMessageOn, enabled => (pgMessageOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'defaultMessage' } },
+    enumField({ name: 'position', type: "'top-right' | 'top-center' | 'bottom-right' | 'bottom-center'", defaultValue: "'bottom-right'", note: 'Viewport edge the toast docks to.', options: positionOptions, value: pgPosition, onChange: v => (pgPosition = v), placeholder: 'bottom-right', clearLabel: 'Clear position', enabled: pgPositionOn, setEnabled: v => (pgPositionOn = v) }),
+    sizeField({ note: 'Text scale; every metric is a fixed ratio of the size.', value: pgSize, onChange: v => (pgSize = v), enabled: pgSizeOn, setEnabled: v => (pgSizeOn = v) }),
+    enumField({ name: 'type', type: "'success' | 'info' | 'warning' | 'error'", defaultValue: "'info'", note: 'Accent treatment.', options: typeOptions, value: pgType, onChange: v => (pgType = v), placeholder: 'info', clearLabel: 'Clear type', enabled: pgTypeOn, setEnabled: v => (pgTypeOn = v) }),
     { name: 'action', type: '{ label: string; onClick: () => void }', defaultValue: '—', note: 'Action button; renders only when set.' },
     { name: 'onClose', type: '() => void', defaultValue: '—', note: 'Dismiss handler (button and Escape).' },
   ])
 
-  const syncFields = $derived(syncFieldsOf(fields))
 
   // With an unset message the demo reads the localized default from scope,
   // which reseeding never refreshes; recompile the draft on those scope
   // changes without touching the editor text. Customized messages ride the
   // seed instead.
-  useScopeRefresh(preview, () => [demoMessage], () => !(pgMessageOn && pgMessage))
-</script>
+  </script>
 
 {#snippet settingsPanel()}
   <!-- The action is one object prop, so its label edits here instead of
@@ -139,7 +114,6 @@
     {fields}
     title="Toast"
     {code}
-    {preview}
     onReset={clearPlayground}
     configPanel={settingsPanel}
     scope={{
@@ -150,7 +124,11 @@
       closeLabel: i18n.t('common.close'),
       showLabel: i18n.t('showcase.openDialog'),
     }}
->
+
+    sync={{ tag: 'Toast' }}
+    scopeRefresh={() => [demoMessage]}
+    scopeRefreshWhen={() => !(pgMessageOn && pgMessage)}
+  >
     <Button variant="primary" onClick={() => (pgOpen = true)}>{i18n.t('showcase.openDialog')}</Button>
     {#if pgOpen}
       <Toast

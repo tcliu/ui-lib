@@ -1,6 +1,7 @@
 // Show-code source for the Button demo section. Pure string building over the
 // playground form state: the section regenerates the editor text from this, so
 // the editor always shows the markup behind the demo above.
+import { escapeAttr } from '$lib/showcase/snippet-build'
 import { sizeAttributeLine } from '$lib/showcase/size-input'
 
 export type TriState = '' | 'yes' | 'no'
@@ -37,10 +38,6 @@ export interface ButtonSnippetState {
   focusRingOn: boolean
   preventFocusSteal: TriState
   preventFocusStealOn: boolean
-}
-
-function escapeAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 }
 
 // A JS string literal for the leading script. JSON.stringify handles quotes and

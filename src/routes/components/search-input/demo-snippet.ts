@@ -1,6 +1,7 @@
 // Show-code source for the SearchInput demo section. Pure string building over
 // the playground form state: the section regenerates the editor text from
 // this, so the editor always shows the markup behind the demo above.
+import { escapeAttr } from '$lib/showcase/snippet-build'
 import { sizeAttributeLine } from '$lib/showcase/size-input'
 
 export type TriState = '' | 'yes' | 'no'
@@ -32,10 +33,6 @@ export interface SearchInputSnippetState {
 export const STYLED_WRAPPER = 'rounded-lg border border-cyan-500/40 p-2'
 export const STYLED_INPUT =
   'w-56 rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 pl-7 text-sm text-cyan-200 outline-none focus-visible:border-cyan-500'
-
-function escapeAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
-}
 
 // A tri-state line: omitted while unset or at the component default, bare
 // while Yes, ={false} while No.

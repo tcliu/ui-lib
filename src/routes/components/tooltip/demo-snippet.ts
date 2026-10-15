@@ -2,6 +2,8 @@
 // playground form state: the section regenerates the editor text from this, so
 // the editor always shows the markup behind the demo above.
 
+import { escapeAttr } from '$lib/showcase/snippet-build'
+
 export interface TooltipSnippetState {
   label: string
   align: string
@@ -11,10 +13,6 @@ export interface TooltipSnippetState {
 }
 
 export const STYLED_CLASS = 'border-cyan-500/40 text-cyan-200'
-
-function escapeAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
-}
 
 // A JS string literal for the leading script. JSON.stringify handles quotes and
 // backslashes; escaping every `<` as `\u003c` stops a label from closing the

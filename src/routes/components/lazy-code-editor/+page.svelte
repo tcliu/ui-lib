@@ -1,11 +1,10 @@
 <script lang="ts">
+  import { flagOn } from '$lib/showcase/snippet-build'
   import LazyCodeEditor from '$lib/components/LazyCodeEditor.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
-  import { useScopeRefresh } from '$lib/showcase/use-scope-refresh.svelte'
-  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { resetToggle, snippetToggle } from '$lib/showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { textField, boolField, resetToggle, snippetToggle } from '$lib/showcase/snippet-field'
   import {
     DEFAULT_CONTENT,
     DEFAULT_DOC_TYPE,
@@ -43,11 +42,6 @@
   let pgEditorAriaLabelOn = $state(false)
   let pgRecreateKey = $state('')
   let pgRecreateKeyOn = $state(false)
-
-  // Unset renders the component default; Yes/No force the value.
-  function flagOn(value: TriState): boolean | undefined {
-    return value === '' ? undefined : value === 'yes'
-  }
 
   const editable = $derived(pgEditableOn ? flagOn(pgEditable) : undefined)
   const demoDocType = $derived((pgDocTypeOn && pgDocType ? pgDocType : DEFAULT_DOC_TYPE) as DocType)
@@ -90,12 +84,7 @@
 
   const code = $derived.by(() => buildLazyCodeEditorSnippet({ docType: pgDocType, docTypeOn: pgDocTypeOn, editable: pgEditable, editableOn: pgEditableOn, containerClass: pgContainerClass, containerClassOn: pgContainerClassOn, editorClass: pgEditorClass, editorClassOn: pgEditorClassOn, maxContentLength: pgMaxContentLength, maxContentLengthOn: pgMaxContentLengthOn, autoFocus: pgAutoFocus, autoFocusOn: pgAutoFocusOn, editorAriaLabel: pgEditorAriaLabel, editorAriaLabelOn: pgEditorAriaLabelOn, recreateKey: pgRecreateKey, recreateKeyOn: pgRecreateKeyOn }))
 
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({ content: pgContent }),
-    sync: { tag: 'LazyCodeEditor', getFields: () => syncFields },
-  })
-
+  
   // Each editable row declares its Value editor and its snippet write-back
   // shape once; the sync table below derives from the same declarations.
   // Snippet edits surface in the Value column, and `syncSeed` holds the
@@ -104,7 +93,7 @@
   // editor; `docType` is always emitted (falling back to Markdown), so the
   // Markdown literal maps back to unset.
   const fields: SyncableFieldConfig[] = $derived([
-    { name: 'containerClass', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Classes for the outer wrapper; give it a bounded height; the eye stages the customization.', editor: 'text', clearable: true, value: pgContainerClass, onChange: value => { pgContainerClass = value; pgContainerClassOn = true; }, toggle: snippetToggle(pgContainerClassOn, enabled => (pgContainerClassOn = enabled)), sync: { kind: 'text' } },
+    textField({ name: 'containerClass', type: 'string?', defaultValue: "''", note: 'Classes for the outer wrapper; give it a bounded height.', value: pgContainerClass, onChange: v => (pgContainerClass = v), editorDefaultValue: '', clearable: true, enabled: pgContainerClassOn, setEnabled: v => (pgContainerClassOn = v) }),
     { name: 'content', type: 'string', defaultValue: '—', note: 'Bindable editor document. The eye resets to the default content.', editor: 'snippet', value: pgContent, onChange: value => {
       pgContent = value
       pgContentEnabled = true
@@ -113,34 +102,34 @@
       enabled => (pgContentEnabled = enabled),
       () => (pgContent = DEFAULT_CONTENT),
     ) },
-    { name: 'docType', type: 'string', defaultValue: "'text'", note: "Language pack key: json, javascript, html, markdown, yaml, or xml (loaded on demand). 'text' loads none; the eye stages the customization.", editor: 'enum', options: DOC_TYPE_OPTIONS, value: pgDocType, onChange: value => { pgDocType = value; pgDocTypeOn = true; }, placeholder: 'text', clearLabel: 'Clear document type', toggle: snippetToggle(pgDocTypeOn, enabled => (pgDocTypeOn = enabled)), sync: { kind: 'text', unsetValues: ['markdown'] } },
-    { name: 'editable', type: 'boolean', defaultValue: 'true', note: 'Enables typing; false renders read-only; the eye stages the customization.', editor: 'boolean', value: pgEditable, onChange: value => { pgEditable = value as TriState; pgEditableOn = true; }, toggle: snippetToggle(pgEditableOn, enabled => (pgEditableOn = enabled)), sync: { kind: 'tri' } },
-    { name: 'editorClass', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Classes for the CodeMirror host; use h-full inside a sized wrapper; the eye stages the customization.', editor: 'text', clearable: true, value: pgEditorClass, onChange: value => { pgEditorClass = value; pgEditorClassOn = true; }, toggle: snippetToggle(pgEditorClassOn, enabled => (pgEditorClassOn = enabled)), sync: { kind: 'text' } },
-    { name: 'maxContentLength', type: 'number?', defaultValue: '0', editorDefaultValue: '0', note: 'Caps the document length; 0 disables the cap; the eye stages the customization.', editor: 'number', clearable: true, value: pgMaxContentLength, onChange: value => { pgMaxContentLength = value; pgMaxContentLengthOn = true; }, placeholder: '0', toggle: snippetToggle(pgMaxContentLengthOn, enabled => (pgMaxContentLengthOn = enabled)), sync: { kind: 'number', pattern: /^\d+$/ } },
-    { name: 'autoFocus', type: 'boolean', defaultValue: 'false', note: 'Focuses the editor once it mounts; the eye stages the customization.', editor: 'boolean', value: pgAutoFocus, onChange: value => { pgAutoFocus = value as TriState; pgAutoFocusOn = true; }, toggle: snippetToggle(pgAutoFocusOn, enabled => (pgAutoFocusOn = enabled)), sync: { kind: 'tri' } },
-    { name: 'editorAriaLabel', type: 'string?', defaultValue: 'editor.content', note: 'Accessible name for the editor textbox; unset, the localized editor.content key renders; the eye stages the customization.', editor: 'text', clearable: true, value: pgEditorAriaLabel, onChange: value => { pgEditorAriaLabel = value; pgEditorAriaLabelOn = true; }, toggle: snippetToggle(pgEditorAriaLabelOn, enabled => (pgEditorAriaLabelOn = enabled)), sync: { kind: 'text' } },
-    { name: 'recreateKey', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Changing it destroys and rebuilds the editor; the eye stages the customization.', editor: 'text', clearable: true, value: pgRecreateKey, onChange: value => { pgRecreateKey = value; pgRecreateKeyOn = true; }, toggle: snippetToggle(pgRecreateKeyOn, enabled => (pgRecreateKeyOn = enabled)), sync: { kind: 'text' } },
+    { name: 'docType', type: 'string', defaultValue: "'text'", note: "Language pack key: json, javascript, html, markdown, yaml, or xml (loaded on demand). 'text' loads none.", editor: 'enum', options: DOC_TYPE_OPTIONS, value: pgDocType, onChange: value => { pgDocType = value; pgDocTypeOn = true; }, placeholder: 'text', clearLabel: 'Clear document type', toggle: snippetToggle(pgDocTypeOn, enabled => (pgDocTypeOn = enabled)), sync: { kind: 'text', unsetValues: ['markdown'] } },
+    boolField({ name: 'editable', defaultValue: 'true', note: 'Enables typing; false renders read-only.', value: pgEditable, onChange: v => (pgEditable = v as TriState), enabled: pgEditableOn, setEnabled: v => (pgEditableOn = v) }),
+    textField({ name: 'editorClass', type: 'string?', defaultValue: "''", note: 'Classes for the CodeMirror host; use h-full inside a sized wrapper.', value: pgEditorClass, onChange: v => (pgEditorClass = v), editorDefaultValue: '', clearable: true, enabled: pgEditorClassOn, setEnabled: v => (pgEditorClassOn = v) }),
+    { name: 'maxContentLength', type: 'number?', defaultValue: '0', editorDefaultValue: '0', note: 'Caps the document length; 0 disables the cap.', editor: 'number', clearable: true, value: pgMaxContentLength, onChange: value => { pgMaxContentLength = value; pgMaxContentLengthOn = true; }, placeholder: '0', toggle: snippetToggle(pgMaxContentLengthOn, enabled => (pgMaxContentLengthOn = enabled)), sync: { kind: 'number', pattern: /^\d+$/ } },
+    boolField({ name: 'autoFocus', defaultValue: 'false', note: 'Focuses the editor once it mounts.', value: pgAutoFocus, onChange: v => (pgAutoFocus = v as TriState), enabled: pgAutoFocusOn, setEnabled: v => (pgAutoFocusOn = v) }),
+    textField({ name: 'editorAriaLabel', type: 'string?', defaultValue: 'editor.content', note: 'Accessible name for the editor textbox; unset, the localized editor.content key renders.', value: pgEditorAriaLabel, onChange: v => (pgEditorAriaLabel = v), clearable: true, enabled: pgEditorAriaLabelOn, setEnabled: v => (pgEditorAriaLabelOn = v) }),
+    textField({ name: 'recreateKey', type: 'string?', defaultValue: "''", note: 'Changing it destroys and rebuilds the editor.', value: pgRecreateKey, onChange: v => (pgRecreateKey = v), editorDefaultValue: '', clearable: true, enabled: pgRecreateKeyOn, setEnabled: v => (pgRecreateKeyOn = v) }),
     { name: 'onAutoFocused', type: '() => void', defaultValue: '—', note: 'Called after an autofocus.' },
     { name: 'onContentChange', type: '(content: string) => void', defaultValue: '—', note: 'Called with the document after every edit.' },
     { name: 'onReady', type: '() => void', defaultValue: '—', note: 'Called once the EditorView exists.' },
   ])
 
-  const syncFields = $derived(syncFieldsOf(fields))
 
   // The seed covers every override except the document (the snippet reads it
   // from scope), so only content edits need a scope refresh; everything else
   // reseeds. The refresh preserves the editor text by recompiling the draft.
-  useScopeRefresh(preview, () => [pgContent])
-</script>
+  </script>
 
 <ShowcasePage
     {fields}
     title="LazyCodeEditor"
     {code}
-    {preview}
     onReset={clearPlayground}
     scope={{ content: pgContent }}
->
+
+    sync={{ tag: 'LazyCodeEditor' }}
+    scopeRefresh={() => [pgContent]}
+  >
     <div class="h-64 w-full max-w-xl">
       <LazyCodeEditor
         bind:content={pgContent}

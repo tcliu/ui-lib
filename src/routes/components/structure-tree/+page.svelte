@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { flagOn } from '$lib/showcase/snippet-build'
   import StructureTree from '$lib/components/StructureTree.svelte'
   import {
     DEFAULT_CONTAINER_ROW_CLASS,
@@ -6,9 +7,8 @@
   } from '$lib/components/StructureNode.svelte'
   import { isContainer, renameKeyAtPath, setAtPath } from '$lib/components/structure-value'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
-  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { jsonField, resetToggle, snippetToggle } from '$lib/showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { boolField, jsonField, resetToggle, snippetToggle } from '$lib/showcase/snippet-field'
   import {
     buildStructureTreeSnippet,
     DEFAULT_TREE_VALUE,
@@ -41,11 +41,6 @@
   let pgContainerRowClassOn = $state(false)
   let pgLeafRowClass = $state('')
   let pgLeafRowClassOn = $state(false)
-
-  // Unset renders the component default; Yes/No force the value.
-  function flagOn(value: TriState): boolean | undefined {
-    return value === '' ? undefined : value === 'yes'
-  }
 
   const editable = $derived(pgEditableOn ? flagOn(pgEditable) : undefined)
 
@@ -87,12 +82,7 @@
     }),
   )
 
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({}),
-    sync: { tag: 'StructureTree', getFields: () => syncFields },
-  })
-
+  
   // Editable rows first (A–Z), then the function props (A–Z). The value row
   // round-trips through the JSON dialog (any JSON document renders); the
   // callbacks stay read-only rows.
@@ -101,7 +91,7 @@
       name: 'containerRowClass',
       type: 'string?',
       defaultValue: 'built-in',
-      note: 'Replaces the tunable container header row classes; the Value shows the built-ins, edit from there. Clearing restores the built-ins; the eye stages the customization.',
+      note: 'Replaces the tunable container header row classes; the Value shows the built-ins, edit from there. Clearing restores the built-ins.',
       editor: 'text',
       clearable: true,
       value: pgContainerRowClass || DEFAULT_CONTAINER_ROW_CLASS,
@@ -125,12 +115,12 @@
         },
       },
     },
-    { name: 'editable', type: 'boolean', defaultValue: 'true', note: 'Gates leaf editing and key renames; the callbacks stay wired either way; the eye stages the customization.', editor: 'boolean', value: pgEditable, onChange: value => { pgEditable = value as TriState; pgEditableOn = true; }, toggle: snippetToggle(pgEditableOn, enabled => (pgEditableOn = enabled)), sync: { kind: 'tri' } },
+    boolField({ name: 'editable', defaultValue: 'true', note: 'Gates leaf editing and key renames; the callbacks stay wired either way.', value: pgEditable, onChange: v => (pgEditable = v as TriState), enabled: pgEditableOn, setEnabled: v => (pgEditableOn = v) }),
     {
       name: 'leafRowClass',
       type: 'string?',
       defaultValue: 'built-in',
-      note: 'Replaces the tunable leaf row classes; the Value shows the built-ins, edit from there. Clearing restores the built-ins; the eye stages the customization.',
+      note: 'Replaces the tunable leaf row classes; the Value shows the built-ins, edit from there. Clearing restores the built-ins.',
       editor: 'text',
       clearable: true,
       value: pgLeafRowClass || DEFAULT_LEAF_ROW_CLASS,
@@ -173,16 +163,17 @@
     { name: 'onRenameKey', type: '(parentPath: string[], oldKey: string, newKey: string) => void', defaultValue: '—', note: 'Called with the parent path and key pair when a key rename commits.' },
   ])
 
-  const syncFields = $derived(syncFieldsOf(fields))
 </script>
 
 <ShowcasePage
     {fields}
     title="StructureTree"
     {code}
-    {preview}
     onReset={clearPlayground}
->
+
+    sync={{ tag: 'StructureTree' }}
+    scope={{}}
+  >
     <StructureTree
       value={pgValue}
       onChange={handleNodeChange}

@@ -14,6 +14,8 @@
 // The frame chrome and sizing on the `Resizable` itself; `w-full` is what the
 // frame's own `maxWidth="parent"` measures against, and `overflow-hidden`
 // contains the demo without a scrollbar over the frame handles.
+import { escapeAttr, escapeRawLine } from '$lib/showcase/snippet-build'
+
 export const SHELL_STAGE_FRAME = 'w-full overflow-hidden rounded-lg border border-slate-800'
 export const SHELL_STAGE_DEFAULT_WIDTH = 840
 export const SHELL_STAGE_DEFAULT_HEIGHT = 420
@@ -133,15 +135,8 @@ export interface AppShellSnippetState {
   footerEnabled: boolean
 }
 
-function escapeAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
-}
-
 // Verbatim footer lines carry the user's labels, so `&` is escaped for
 // compilation (Svelte decodes it back), matching the static demo's literal text.
-function escapeRawLine(line: string): string {
-  return line.replace(/&/g, '&amp;')
-}
 
 // A string attribute line, omitted while unset.
 function textLine(name: string, value: string, indent: string): string[] {

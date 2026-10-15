@@ -2,6 +2,7 @@
 // playground form state: the section regenerates the editor text from this, so
 // the editor always shows the markup behind the demo above.
 
+import { escapeAttr } from '$lib/showcase/snippet-build'
 import { sizeAttributeLine } from '$lib/showcase/size-input'
 export interface ToastSnippetState {
   message: string
@@ -15,10 +16,6 @@ export interface ToastSnippetState {
   action: string
   closeLabel: string
   closeLabelOn: boolean
-}
-
-function escapeAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 }
 
 export function buildToastSnippet({ message, messageOn, toastType, toastTypeOn, position, positionOn, size, sizeOn, action, closeLabel, closeLabelOn }: ToastSnippetState): string {

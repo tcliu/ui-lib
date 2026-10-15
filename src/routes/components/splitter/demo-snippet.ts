@@ -4,6 +4,7 @@
 // local $state in the snippet (seeded from scope) so the live instance is
 // draggable, matching the static demo.
 
+import { escapeAttr } from '$lib/showcase/snippet-build'
 import { stageStaticCloseLines, stageStaticOpenLines } from '$lib/showcase/resizable-stage'
 
 export type SplitterOrientation = 'vertical' | 'horizontal'
@@ -51,10 +52,6 @@ export function splitterPreset(orientation: SplitterOrientation, unit: SplitterU
     return { min: 20, max: 80, value: 40 }
   }
   return orientation === 'horizontal' ? { min: 80, max: 200, value: 120 } : { min: 120, max: 320, value: 160 }
-}
-
-function escapeAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 }
 
 // A playground bound: empty or non-numeric text means unset, so the cleared

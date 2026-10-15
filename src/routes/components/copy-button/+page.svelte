@@ -3,11 +3,9 @@
   import CopyButton from '$lib/components/CopyButton.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
-  import { useScopeRefresh } from '$lib/showcase/use-scope-refresh.svelte'
   import { parseSizeValue } from '$lib/showcase/size-input'
-  import { snippetToggle } from '$lib/showcase/snippet-field'
-  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { textField, sizeField, snippetToggle } from '$lib/showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
   import { DEFAULT_TEXT, buildCopyButtonSnippet } from './demo-snippet'
 
   const i18n = getI18nContext()
@@ -53,12 +51,7 @@
     }),
   )
 
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({ copyHint }),
-    sync: { tag: 'CopyButton', getFields: () => syncFields },
-  })
-
+  
   // Each editable row declares its Value editor and its snippet write-back
   // shape once; the sync table below derives from the same declarations.
   // Snippet edits surface in the Value column, and `syncSeed` holds the
@@ -66,28 +59,28 @@
   // always emitted (falling back to the default), so the default literal maps
   // back to unset.
   const fields: SyncableFieldConfig[] = $derived([
-    { name: 'ariaLabel', type: 'string?', defaultValue: 'locale', note: 'Accessible name for the copy button; the eye stages the customization.', editor: 'text', clearable: true, value: pgAriaLabel, onChange: value => { pgAriaLabel = value; pgAriaLabelOn = true; }, toggle: snippetToggle(pgAriaLabelOn, enabled => (pgAriaLabelOn = enabled)), sync: { kind: 'text' } },
-    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number", defaultValue: "'md'", note: 'Button scale; numbers are icon-scale pixels interpolated between the steps; the eye stages the customization.', editor: 'size', allowCustomValue: true, value: pgSize, onChange: value => { pgSize = value; pgSizeOn = true; }, placeholder: 'md', clearLabel: 'Clear size', toggle: snippetToggle(pgSizeOn, enabled => (pgSizeOn = enabled)), sync: { kind: 'custom', read: attrs => { const attr = attrs?.get('size'); if (!attr) return 'md'; if (attr.kind === 'string') return attr.value; if (attr.kind === 'expression' && /^\d+(\.\d+)?$/.test(attr.value)) return attr.value; return undefined } } },
-    { name: 'text', type: 'string', defaultValue: '—', note: 'Text placed on the clipboard (required); the eye stages the customization.', editor: 'text', clearable: true, value: pgText, onChange: value => { pgText = value; pgTextOn = true; }, toggle: snippetToggle(pgTextOn, enabled => (pgTextOn = enabled)), sync: { kind: 'text', unsetValues: [DEFAULT_TEXT] } },
-    { name: 'tooltip', type: 'string?', defaultValue: 'locale', note: 'Tooltip shown on hover/focus; the eye stages the customization.', editor: 'text', clearable: true, value: pgTooltip, onChange: value => { pgTooltip = value; pgTooltipOn = true; }, toggle: snippetToggle(pgTooltipOn, enabled => (pgTooltipOn = enabled)), sync: { kind: 'text' } },
+    textField({ name: 'ariaLabel', type: 'string?', defaultValue: 'locale', note: 'Accessible name for the copy button.', value: pgAriaLabel, onChange: v => (pgAriaLabel = v), clearable: true, enabled: pgAriaLabelOn, setEnabled: v => (pgAriaLabelOn = v) }),
+    sizeField({ note: 'Button scale; numbers are icon-scale pixels interpolated between the steps.', value: pgSize, onChange: v => (pgSize = v), enabled: pgSizeOn, setEnabled: v => (pgSizeOn = v) }),
+    { name: 'text', type: 'string', defaultValue: '—', note: 'Text placed on the clipboard (required).', editor: 'text', clearable: true, value: pgText, onChange: value => { pgText = value; pgTextOn = true; }, toggle: snippetToggle(pgTextOn, enabled => (pgTextOn = enabled)), sync: { kind: 'text', unsetValues: [DEFAULT_TEXT] } },
+    textField({ name: 'tooltip', type: 'string?', defaultValue: 'locale', note: 'Tooltip shown on hover/focus.', value: pgTooltip, onChange: v => (pgTooltip = v), clearable: true, enabled: pgTooltipOn, setEnabled: v => (pgTooltipOn = v) }),
   ])
 
-  const syncFields = $derived(syncFieldsOf(fields))
 
   // The hint reads the locale from scope, which reseeding never refreshes;
   // recompile the draft on those scope changes without touching the editor
   // text.
-  useScopeRefresh(preview, () => [copyHint])
-</script>
+  </script>
 
 <ShowcasePage
     {fields}
     title="CopyButton"
     {code}
-    {preview}
     onReset={clearPlayground}
     scope={{ copyHint }}
->
+
+    sync={{ tag: 'CopyButton' }}
+    scopeRefresh={() => [copyHint]}
+  >
     <div class="group flex flex-wrap items-center gap-3">
       <div class="flex max-w-full items-center gap-2 rounded-md border border-slate-800 bg-slate-950 px-3 py-2">
         <span class="min-w-0 truncate font-mono text-sm text-slate-300">{demoText}</span>

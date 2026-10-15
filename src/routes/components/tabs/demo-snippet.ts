@@ -2,6 +2,8 @@
 // playground form state: the section regenerates the editor text from this, so
 // the editor always shows the markup behind the demo above.
 
+import { escapeAttr } from '$lib/showcase/snippet-build'
+
 export interface TabsSnippetState {
   routeMode: string
   className: string
@@ -13,10 +15,6 @@ export interface TabsSnippetState {
 }
 
 export const STYLED_HEADER = 'flex w-full items-center gap-2 rounded-lg border border-cyan-500/40 p-2'
-
-function escapeAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
-}
 
 export function buildTabsSnippet({ routeMode, className, classNameOn, ariaLabel, ariaLabelOn, pathname, pathnameOn }: TabsSnippetState): string {
   const overviewPath = routeMode ? '#overview' : 'overview'

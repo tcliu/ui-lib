@@ -4,6 +4,8 @@
 // $state in the snippet (seeded from scope) so the live instance is resizable,
 // matching the static demo.
 
+import { escapeAttr, unescapeAttr } from '$lib/showcase/snippet-build'
+
 export const RESIZABLE_DEFAULT_WIDTH = 320
 export const RESIZABLE_DEFAULT_HEIGHT = 240
 export const RESIZABLE_CONTENT =
@@ -76,14 +78,6 @@ function maxBoundLine(name: string, text: string): string[] {
 // locale default (labels) or empty default (className) renders.
 function textLine(name: string, value: string): string[] {
   return value ? [`    ${name}="${escapeAttr(value)}"`] : []
-}
-
-function escapeAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
-}
-
-function unescapeAttr(value: string): string {
-  return value.replace(/&quot;/g, '"').replace(/&amp;/g, '&')
 }
 
 // Canonical content markup: the size-label div in a caller class; the class

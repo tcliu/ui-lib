@@ -2,6 +2,8 @@
 // playground form state: the section regenerates the editor text from this, so
 // the editor always shows the markup behind the demo above.
 
+import { escapeAttr } from '$lib/showcase/snippet-build'
+
 export type TriState = '' | 'yes' | 'no'
 
 export interface ChipSnippetState {
@@ -25,10 +27,6 @@ export interface ChipSnippetState {
 }
 
 export const DEFAULT_CHIP_CLASS = 'rounded-md border border-slate-700 bg-slate-800 px-2 py-1 text-xs text-slate-200'
-
-function escapeAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
-}
 
 // A tri-state line: omitted while unset or at the component default, bare
 // while Yes, ={false} while No.

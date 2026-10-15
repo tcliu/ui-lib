@@ -1,12 +1,12 @@
 <script lang="ts">
+  import { flagOn } from '$lib/showcase/snippet-build'
   import Menu, { type MenuItemState } from '$lib/components/Menu.svelte'
   import KebabIcon from '$lib/icons/KebabIcon.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
-  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
   import type { SnippetAttribute } from '$lib/showcase/snippet-attributes'
-  import { jsonField, resetToggle, snippetDialog, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
+  import { enumField, textField, boolField, jsonField, resetToggle, snippetDialog, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
   import {
     buildMenuIconMarkup,
     buildMenuSnippet,
@@ -85,10 +85,6 @@
   ]
 
   const demoAlign = $derived(pgAlignOn ? ((pgAlign || undefined) as 'left' | 'right' | undefined) : undefined)
-  // Unset renders the component default; Yes/No force the value.
-  function flagOn(value: TriState): boolean | undefined {
-    return value === '' ? undefined : value === 'yes'
-  }
   const autoPlace = $derived(pgAutoPlaceOn ? flagOn(pgAutoPlace) : undefined)
   const demoTriggerTooltipAlign = $derived(
     (pgTriggerTooltipAlign || undefined) as 'center' | 'left' | 'right' | undefined,
@@ -221,24 +217,15 @@
     }),
   )
 
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({
-      menuItemClass,
-      triggerLabel: i18n.t('kebab.label'),
-      lastAction: pgLastAction,
-    }),
-    sync: { tag: 'Menu', getFields: () => syncFields },
-  })
-
+  
   // Editable rows first (primitives, plain data, and snippets, A–Z), then the
   // function props (A–Z). Snippet rows keep no Value editor yet; the snippet
   // playground remains their customization surface.
   const fields: SyncableFieldConfig[] = $derived([
-    { name: 'align', type: "'left' | 'right'", defaultValue: "'right'", note: 'Panel edge anchored to the trigger; the eye stages the customization.', editor: 'enum', options: alignOptions, value: pgAlign, onChange: value => { pgAlign = value; pgAlignOn = true; }, placeholder: 'right', clearLabel: 'Clear align', toggle: snippetToggle(pgAlignOn, enabled => (pgAlignOn = enabled)), sync: { kind: 'text' } },
-    { name: 'ariaLabel', type: 'string', defaultValue: '—', note: 'Accessible name for the trigger; the eye stages the customization.', editor: 'text', clearable: true, value: pgTriggerLabel, onChange: value => { pgTriggerLabel = value; pgTriggerLabelOn = true; }, toggle: snippetToggle(pgTriggerLabelOn, enabled => (pgTriggerLabelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'triggerLabel' } },
-    { name: 'autoPlace', type: 'boolean', defaultValue: 'true', note: 'Flips the panel when crowded; the eye stages the customization.', editor: 'boolean', value: pgAutoPlace, onChange: value => { pgAutoPlace = value as TriState; pgAutoPlaceOn = true; }, toggle: snippetToggle(pgAutoPlaceOn, enabled => (pgAutoPlaceOn = enabled)), sync: { kind: 'tri' } },
-    { name: 'closeLabel', type: 'string?', defaultValue: '—', note: 'Accessible name for the phone sheet close button; required with phoneSheetTitle; the eye stages the customization.', editor: 'text', clearable: true, value: pgCloseLabel, onChange: value => { pgCloseLabel = value; pgCloseLabelOn = true; }, toggle: snippetToggle(pgCloseLabelOn, enabled => (pgCloseLabelOn = enabled)), sync: { kind: 'text' } },
+    enumField({ name: 'align', type: "'left' | 'right'", defaultValue: "'right'", note: 'Panel edge anchored to the trigger.', options: alignOptions, value: pgAlign, onChange: v => (pgAlign = v), placeholder: 'right', clearLabel: 'Clear align', enabled: pgAlignOn, setEnabled: v => (pgAlignOn = v) }),
+    { name: 'ariaLabel', type: 'string', defaultValue: '—', note: 'Accessible name for the trigger.', editor: 'text', clearable: true, value: pgTriggerLabel, onChange: value => { pgTriggerLabel = value; pgTriggerLabelOn = true; }, toggle: snippetToggle(pgTriggerLabelOn, enabled => (pgTriggerLabelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'triggerLabel' } },
+    boolField({ name: 'autoPlace', defaultValue: 'true', note: 'Flips the panel when crowded.', value: pgAutoPlace, onChange: v => (pgAutoPlace = v as TriState), enabled: pgAutoPlaceOn, setEnabled: v => (pgAutoPlaceOn = v) }),
+    textField({ name: 'closeLabel', type: 'string?', defaultValue: '—', note: 'Accessible name for the phone sheet close button; required with phoneSheetTitle.', value: pgCloseLabel, onChange: v => (pgCloseLabel = v), clearable: true, enabled: pgCloseLabelOn, setEnabled: v => (pgCloseLabelOn = v) }),
     snippetField({
       name: 'icon',
       note: 'Trigger icon; the dialog edits its class, and the eye resets the class.',
@@ -257,7 +244,7 @@
         () => (pgIconClass = ''),
       ),
     }),
-    { name: 'id', type: 'string?', defaultValue: '—', note: 'Native id the panel id derives from; the eye stages the customization.', editor: 'text', clearable: true, value: pgId, onChange: value => { pgId = value; pgIdOn = true; }, toggle: snippetToggle(pgIdOn, enabled => (pgIdOn = enabled)), sync: { kind: 'text' } },
+    textField({ name: 'id', type: 'string?', defaultValue: '—', note: 'Native id the panel id derives from.', value: pgId, onChange: v => (pgId = v), clearable: true, enabled: pgIdOn, setEnabled: v => (pgIdOn = v) }),
     snippetField({
       type: 'Snippet<[item, state]>',
       name: 'item',
@@ -273,7 +260,7 @@
         () => (pgItemPrefix = ''),
       ),
     }),
-    { name: 'itemRole', type: "'menuitem' | 'menuitemradio'", defaultValue: "'menuitem'", note: 'ARIA role each row renders with; the eye stages the customization.', editor: 'enum', options: itemRoleOptions, value: pgItemRole, onChange: value => { pgItemRole = value; pgItemRoleOn = true; }, placeholder: 'menuitem', clearLabel: 'Clear item role', toggle: snippetToggle(pgItemRoleOn, enabled => (pgItemRoleOn = enabled)), sync: { kind: 'text' } },
+    enumField({ name: 'itemRole', type: "'menuitem' | 'menuitemradio'", defaultValue: "'menuitem'", note: 'ARIA role each row renders with.', options: itemRoleOptions, value: pgItemRole, onChange: v => (pgItemRole = v), placeholder: 'menuitem', clearLabel: 'Clear item role', enabled: pgItemRoleOn, setEnabled: v => (pgItemRoleOn = v) }),
     jsonField({
       name: 'items',
       type: '{ id: string; label: string; disabled?: boolean }[]',
@@ -294,9 +281,9 @@
       ),
       sync: { kind: 'scriptJson', parseJson: parseMenuItemsValue, setJson: value => (pgItems = value as MenuDemoItem[]) },
     }),
-    { name: 'panelClass', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Extra classes for the floating panel; the eye stages the customization.', editor: 'text', clearable: true, value: pgPanelClass, onChange: value => { pgPanelClass = value; pgPanelClassOn = true; }, toggle: snippetToggle(pgPanelClassOn, enabled => (pgPanelClassOn = enabled)), sync: { kind: 'text' } },
-    { name: 'phoneSheetTitle', type: 'string?', defaultValue: '—', note: 'Opts into the phone bottom-sheet presentation; pair with closeLabel; the eye stages the customization.', editor: 'text', clearable: true, value: pgPhoneSheetTitle, onChange: value => { pgPhoneSheetTitle = value; pgPhoneSheetTitleOn = true; }, toggle: snippetToggle(pgPhoneSheetTitleOn, enabled => (pgPhoneSheetTitleOn = enabled)), sync: { kind: 'text' } },
-    { name: 'triggerClass', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Extra classes for the trigger button; the eye stages the customization.', editor: 'text', clearable: true, value: pgTriggerClass, onChange: value => { pgTriggerClass = value; pgTriggerClassOn = true; }, toggle: snippetToggle(pgTriggerClassOn, enabled => (pgTriggerClassOn = enabled)), sync: { kind: 'text' } },
+    textField({ name: 'panelClass', type: 'string?', defaultValue: "''", note: 'Extra classes for the floating panel.', value: pgPanelClass, onChange: v => (pgPanelClass = v), editorDefaultValue: '', clearable: true, enabled: pgPanelClassOn, setEnabled: v => (pgPanelClassOn = v) }),
+    textField({ name: 'phoneSheetTitle', type: 'string?', defaultValue: '—', note: 'Opts into the phone bottom-sheet presentation; pair with closeLabel.', value: pgPhoneSheetTitle, onChange: v => (pgPhoneSheetTitle = v), clearable: true, enabled: pgPhoneSheetTitleOn, setEnabled: v => (pgPhoneSheetTitleOn = v) }),
+    textField({ name: 'triggerClass', type: 'string?', defaultValue: "''", note: 'Extra classes for the trigger button.', value: pgTriggerClass, onChange: v => (pgTriggerClass = v), editorDefaultValue: '', clearable: true, enabled: pgTriggerClassOn, setEnabled: v => (pgTriggerClassOn = v) }),
     jsonField({
       name: 'triggerTooltip',
       type: '{ text: string; align?: "center" | "left" | "right" }',
@@ -318,7 +305,6 @@
     { name: 'onSelect', type: '(index: number) => void', defaultValue: '—', note: 'Called with the picked row index.' }
   ])
 
-  const syncFields = $derived(syncFieldsOf(fields))
 </script>
 
 {#snippet menuTriggerIcon()}
@@ -333,7 +319,6 @@
     {fields}
     title="Menu"
     {code}
-    {preview}
     onReset={clearPlayground}
     scope={{
       menuItemClass,
@@ -342,7 +327,9 @@
     }}
     stage={{ minWidth: MENU_STAGE_MIN_WIDTH }}
     bind:stageWidth={pgStageWidth}
->
+
+    sync={{ tag: 'Menu' }}
+  >
     <div class={MENU_STAGE_CONTENT}>
       <Menu
         items={demoItems}

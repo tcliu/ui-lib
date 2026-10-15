@@ -3,6 +3,7 @@
 // the editor always shows the markup behind the demo above. The cell data is a
 // scope binding, so the snippet mirrors the live demo's controlled editing.
 
+import { escapeAttr } from '$lib/showcase/snippet-build'
 import { sizeAttributeLine } from '$lib/showcase/size-input'
 import { stageStaticCloseLines, stageStaticOpenLines } from '$lib/showcase/resizable-stage'
 
@@ -47,10 +48,6 @@ function flagLine(name: string, value: TriState, indent: number, def: TriState =
     return []
   }
   return [`${' '.repeat(indent)}${name}${value === 'yes' ? '' : '={false}'}`]
-}
-
-function escapeAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 }
 
 // A string attribute line, omitted while unset.

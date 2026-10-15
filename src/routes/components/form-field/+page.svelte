@@ -3,10 +3,8 @@
   import TextInput from '$lib/components/TextInput.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
-  import { useScopeRefresh } from '$lib/showcase/use-scope-refresh.svelte'
-  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { snippetDialog, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { enumField, textField, snippetDialog, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
   import {
     buildFormFieldChildrenMarkup,
     buildFormFieldSnippet,
@@ -86,12 +84,7 @@
     }),
   )
 
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({ value: pgValue, defaultLabel: i18n.t('showcase.default') }),
-    sync: { tag: 'FormField', getFields: () => syncFields },
-  })
-
+  
   // Each editable row declares its Value editor and its snippet write-back
   // shape once; the sync table below derives from the same declarations.
   // Snippet edits surface in the Value column, and `syncSeed` holds the
@@ -116,28 +109,29 @@
       ),
       toggle: snippetToggle(pgChildrenOn, enabled => (pgChildrenOn = enabled)),
     }),
-    { name: 'className', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Extra classes for the field wrapper; the eye stages the customization.', editor: 'text', clearable: true, value: pgClassName, onChange: value => { pgClassName = value; pgClassNameOn = true; }, toggle: snippetToggle(pgClassNameOn, enabled => (pgClassNameOn = enabled)), sync: { kind: 'text' } },
-    { name: 'htmlFor', type: 'string?', defaultValue: '—', note: 'Associates the label with a control id; the eye stages the customization.', editor: 'text', clearable: true, value: pgHtmlFor, onChange: value => { pgHtmlFor = value; pgHtmlForOn = true; }, toggle: snippetToggle(pgHtmlForOn, enabled => (pgHtmlForOn = enabled)), sync: { kind: 'text' } },
-    { name: 'label', type: 'string', defaultValue: '—', note: 'Visible field label; the eye stages the customization.', editor: 'text', clearable: true, value: pgLabel, onChange: value => { pgLabel = value; pgLabelOn = true; }, toggle: snippetToggle(pgLabelOn, enabled => (pgLabelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'defaultLabel' } },
-    { name: 'layout', type: "'stacked' | 'inline'", defaultValue: "'stacked'", note: 'Stacked puts the label above the control; inline puts it in a 6rem column beside it; the eye stages the customization.', editor: 'enum', options: layoutOptions, value: pgLayout, onChange: value => { pgLayout = value; pgLayoutOn = true; }, placeholder: 'stacked', clearLabel: 'Clear layout', toggle: snippetToggle(pgLayoutOn, enabled => (pgLayoutOn = enabled)), sync: { kind: 'text' } },
+    textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes for the field wrapper.', value: pgClassName, onChange: v => (pgClassName = v), editorDefaultValue: '', clearable: true, enabled: pgClassNameOn, setEnabled: v => (pgClassNameOn = v) }),
+    textField({ name: 'htmlFor', type: 'string?', defaultValue: '—', note: 'Associates the label with a control id.', value: pgHtmlFor, onChange: v => (pgHtmlFor = v), clearable: true, enabled: pgHtmlForOn, setEnabled: v => (pgHtmlForOn = v) }),
+    { name: 'label', type: 'string', defaultValue: '—', note: 'Visible field label.', editor: 'text', clearable: true, value: pgLabel, onChange: value => { pgLabel = value; pgLabelOn = true; }, toggle: snippetToggle(pgLabelOn, enabled => (pgLabelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'defaultLabel' } },
+    enumField({ name: 'layout', type: "'stacked' | 'inline'", defaultValue: "'stacked'", note: 'Stacked puts the label above the control; inline puts it in a 6rem column beside it.', options: layoutOptions, value: pgLayout, onChange: v => (pgLayout = v), placeholder: 'stacked', clearLabel: 'Clear layout', enabled: pgLayoutOn, setEnabled: v => (pgLayoutOn = v) }),
   ])
 
-  const syncFields = $derived(syncFieldsOf(fields))
 
   // With an unset label the demo reads the localized default from scope, which
   // reseeding never refreshes; recompile the draft on those scope changes
   // without touching the editor text. Customized labels ride the seed instead.
-  useScopeRefresh(preview, () => [demoLabel], () => !(pgLabelOn && pgLabel))
-</script>
+  </script>
 
 <ShowcasePage
     {fields}
     title="FormField"
     {code}
-    {preview}
     onReset={clearPlayground}
     scope={{ value: pgValue, defaultLabel: i18n.t('showcase.default') }}
->
+
+    sync={{ tag: 'FormField' }}
+    scopeRefresh={() => [demoLabel]}
+    scopeRefreshWhen={() => !(pgLabelOn && pgLabel)}
+  >
     <FormField label={demoLabel} htmlFor={demoHtmlFor} className={demoClassName} layout={demoLayout}>
       {#if pgChildrenOn}
         {#each demoChildren as segment}

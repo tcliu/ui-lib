@@ -1,11 +1,10 @@
 <script lang="ts">
+  import { flagOn } from '$lib/showcase/snippet-build'
   import EditableText from '$lib/components/EditableText.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
-  import { useScopeRefresh } from '$lib/showcase/use-scope-refresh.svelte'
-  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { snippetToggle, resetToggle } from '$lib/showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { textField, boolField, sizeField, snippetToggle, resetToggle } from '$lib/showcase/snippet-field'
   import { DEFAULT_TEXT, buildEditableTextSnippet, type TriState } from './demo-snippet'
   import { parseSizeValue } from '$lib/showcase/size-input'
 
@@ -28,11 +27,6 @@
   let pgClassNameOn = $state(true)
   let pgMaxWidth = $state('480')
   let pgMaxWidthOn = $state(true)
-
-  // Unset renders the component default; Yes/No force the value.
-  function flagOn(value: TriState): boolean | undefined {
-    return value === '' ? undefined : value === 'yes'
-  }
 
   function asNumber(value: string): number | undefined {
     if (value.trim() === '') {
@@ -75,46 +69,32 @@
     }),
   )
 
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({ editHint }),
-    sync: { tag: 'EditableText', getFields: () => syncFields },
-  })
-
+  
   const fields: SyncableFieldConfig[] = $derived([
-    { name: 'className', type: 'string?', defaultValue: "'text-slate-200'", editorDefaultValue: 'text-slate-200', note: 'Classes for the display label; the eye stages the customization.', editor: 'text', clearable: true, value: pgClassName, onChange: value => { pgClassName = value; pgClassNameOn = true; }, placeholder: 'text-slate-200', toggle: snippetToggle(pgClassNameOn, enabled => (pgClassNameOn = enabled)), sync: { kind: 'text' } },
-    { name: 'copyable', type: 'boolean', defaultValue: 'false', note: 'Adds a copy button beside the label; the eye stages the customization.', editor: 'boolean', value: pgCopyable, onChange: value => { pgCopyable = value as TriState; pgCopyableOn = true; }, toggle: snippetToggle(pgCopyableOn, enabled => (pgCopyableOn = enabled)), sync: { kind: 'tri' } },
-    { name: 'maxWidth', type: 'number?', defaultValue: '480', editorDefaultValue: '480', note: 'Maximum input width in px, clamped to the remaining horizontal space; the eye stages the customization.', editor: 'number', clearable: true, value: pgMaxWidth, onChange: value => { pgMaxWidth = value; pgMaxWidthOn = true; }, placeholder: '480', toggle: snippetToggle(pgMaxWidthOn, enabled => (pgMaxWidthOn = enabled)), sync: { kind: 'number' } },
-    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number", defaultValue: "'md'", note: 'Text size for the label and the input; the eye stages the customization.', editor: 'size', allowCustomValue: true, value: pgSize, onChange: value => { pgSize = value; pgSizeOn = true; }, clearLabel: 'Clear size', placeholder: 'md', toggle: snippetToggle(pgSizeOn, enabled => (pgSizeOn = enabled)), sync: { kind: 'custom', read: attrs => {
-      const attr = attrs?.get('size')
-      // Absent restores the default, like the builder omitting the line;
-      // string and numeric shapes set, anything else is custom code the
-      // playground leaves alone.
-      if (!attr) return 'md'
-      if (attr.kind === 'string') return attr.value
-      if (attr.kind === 'expression' && /^\d+(\.\d+)?$/.test(attr.value)) return attr.value
-      return undefined
-    } } },
+    textField({ name: 'className', type: 'string?', defaultValue: "'text-slate-200'", note: 'Classes for the display label.', value: pgClassName, onChange: v => (pgClassName = v), editorDefaultValue: 'text-slate-200', clearable: true, placeholder: 'text-slate-200', enabled: pgClassNameOn, setEnabled: v => (pgClassNameOn = v) }),
+    boolField({ name: 'copyable', defaultValue: 'false', note: 'Adds a copy button beside the label.', value: pgCopyable, onChange: v => (pgCopyable = v as TriState), enabled: pgCopyableOn, setEnabled: v => (pgCopyableOn = v) }),
+    { name: 'maxWidth', type: 'number?', defaultValue: '480', editorDefaultValue: '480', note: 'Maximum input width in px, clamped to the remaining horizontal space.', editor: 'number', clearable: true, value: pgMaxWidth, onChange: value => { pgMaxWidth = value; pgMaxWidthOn = true; }, placeholder: '480', toggle: snippetToggle(pgMaxWidthOn, enabled => (pgMaxWidthOn = enabled)), sync: { kind: 'number' } },
+    sizeField({ note: 'Text size for the label and the input.', value: pgSize, onChange: v => (pgSize = v), enabled: pgSizeOn, setEnabled: v => (pgSizeOn = v) }),
     { name: 'text', type: 'string', defaultValue: '—', note: 'Displayed value; double-click or use the edit button to change it (required); the eye resets to the default.', editor: 'text', clearable: true, value: pgValue, onChange: value => { pgValue = value; pgValueOn = true; }, toggle: resetToggle(pgValueOn, enabled => (pgValueOn = enabled), () => (pgValue = DEFAULT_TEXT)), sync: { kind: 'script', attr: 'value' } },
     { name: 'onChange', type: '(text: string) => void | boolean', defaultValue: '—', note: 'Called with the committed value; return false to reject it and keep editing.' },
   ])
 
-  const syncFields = $derived(syncFieldsOf(fields))
 
   // The hint reads the locale from scope, which reseeding never refreshes;
   // recompile the draft on those scope changes without touching the editor
   // text.
-  useScopeRefresh(preview, () => [editHint])
-</script>
+  </script>
 
 <ShowcasePage
     {fields}
     title="EditableText"
     {code}
-    {preview}
     onReset={clearPlayground}
     scope={{ editHint }}
->
+
+    sync={{ tag: 'EditableText' }}
+    scopeRefresh={() => [editHint]}
+  >
     <div class="group flex flex-wrap items-center gap-2">
       <EditableText
         text={pgValue}

@@ -1,11 +1,11 @@
 <script lang="ts">
+  import { flagOn } from '$lib/showcase/snippet-build'
   import TextArea from '$lib/components/TextArea.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
   import { parseSizeValue } from '$lib/showcase/size-input'
-  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { resetToggle, snippetToggle } from '$lib/showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { textField, boolField, sizeField, resetToggle, snippetToggle } from '$lib/showcase/snippet-field'
   import { buildTextAreaSnippet, type TriState } from './demo-snippet'
 
   const i18n = getI18nContext()
@@ -32,11 +32,6 @@
   let pgIdOn = $state(false)
   let pgInputClass = $state('')
   let pgInputClassOn = $state(false)
-
-  // Unset renders the component default; Yes/No force the value.
-  function flagOn(value: TriState): boolean | undefined {
-    return value === '' ? undefined : value === 'yes'
-  }
 
   function asRows(value: string): number | undefined {
     if (value.trim() === '') {
@@ -95,34 +90,20 @@
     }),
   )
 
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({ applyLabel: i18n.t('common.apply') }),
-    sync: { tag: 'TextArea', getFields: () => syncFields },
-  })
-
+  
   // Editable rows first (primitives and plain data, A–Z), then the function
   // props (A–Z). The bound value edits through the Value column like the
   // TextInput's.
   const fields: SyncableFieldConfig[] = $derived([
-    { name: 'ariaLabel', type: 'string', defaultValue: '—', note: 'Required accessible name; the eye stages the customization.', editor: 'text', clearable: true, value: pgAriaLabel, onChange: value => { pgAriaLabel = value; pgAriaLabelOn = true; }, toggle: snippetToggle(pgAriaLabelOn, enabled => (pgAriaLabelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'applyLabel' } },
-    { name: 'disabled', type: 'boolean', defaultValue: 'false', note: 'Disables the field; the eye stages the customization.', editor: 'boolean', value: pgDisabled, onChange: value => { pgDisabled = value as TriState; pgDisabledOn = true; }, toggle: snippetToggle(pgDisabledOn, enabled => (pgDisabledOn = enabled)), sync: { kind: 'tri' } },
-    { name: 'id', type: 'string?', defaultValue: '—', note: 'Native textarea id; the eye stages the customization.', editor: 'text', clearable: true, value: pgId, onChange: value => { pgId = value; pgIdOn = true; }, toggle: snippetToggle(pgIdOn, enabled => (pgIdOn = enabled)), sync: { kind: 'text' } },
-    { name: 'inputClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the default textarea classes; the eye stages the customization.', editor: 'text', clearable: true, value: pgInputClass, onChange: value => { pgInputClass = value; pgInputClassOn = true; }, toggle: snippetToggle(pgInputClassOn, enabled => (pgInputClassOn = enabled)), sync: { kind: 'text' } },
+    { name: 'ariaLabel', type: 'string', defaultValue: '—', note: 'Required accessible name.', editor: 'text', clearable: true, value: pgAriaLabel, onChange: value => { pgAriaLabel = value; pgAriaLabelOn = true; }, toggle: snippetToggle(pgAriaLabelOn, enabled => (pgAriaLabelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'applyLabel' } },
+    boolField({ name: 'disabled', defaultValue: 'false', note: 'Disables the field.', value: pgDisabled, onChange: v => (pgDisabled = v as TriState), enabled: pgDisabledOn, setEnabled: v => (pgDisabledOn = v) }),
+    textField({ name: 'id', type: 'string?', defaultValue: '—', note: 'Native textarea id.', value: pgId, onChange: v => (pgId = v), clearable: true, enabled: pgIdOn, setEnabled: v => (pgIdOn = v) }),
+    textField({ name: 'inputClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the default textarea classes.', value: pgInputClass, onChange: v => (pgInputClass = v), clearable: true, enabled: pgInputClassOn, setEnabled: v => (pgInputClassOn = v) }),
     { name: 'inputRef', type: 'HTMLTextAreaElement | null', defaultValue: 'null', note: 'Bindable native textarea.' },
-    { name: 'placeholder', type: 'string?', defaultValue: '—', note: 'Native placeholder; the eye stages the customization.', editor: 'text', clearable: true, value: pgPlaceholder, onChange: value => { pgPlaceholder = value; pgPlaceholderOn = true; }, toggle: snippetToggle(pgPlaceholderOn, enabled => (pgPlaceholderOn = enabled)), sync: { kind: 'text' } },
-    { name: 'readonly', type: 'boolean', defaultValue: 'false', note: 'Read-only field; the eye stages the customization.', editor: 'boolean', value: pgReadonly, onChange: value => { pgReadonly = value as TriState; pgReadonlyOn = true; }, toggle: snippetToggle(pgReadonlyOn, enabled => (pgReadonlyOn = enabled)), sync: { kind: 'tri' } },
-    { name: 'rows', type: 'number?', defaultValue: '3', editorDefaultValue: '3', note: 'Visible text rows; the eye stages the customization.', editor: 'number', clearable: true, value: pgRows, onChange: value => { pgRows = value; pgRowsOn = true; }, placeholder: '3', toggle: snippetToggle(pgRowsOn, enabled => (pgRowsOn = enabled)), sync: { kind: 'number', pattern: /^\d+$/ } },
-    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number", defaultValue: "'md'", note: 'Control scale; numbers are icon-scale pixels interpolated between the steps; the eye stages the customization.', editor: 'size', allowCustomValue: true, value: pgSize, onChange: value => { pgSize = value; pgSizeOn = true; }, clearLabel: 'Clear size', placeholder: 'md', toggle: snippetToggle(pgSizeOn, enabled => (pgSizeOn = enabled)), sync: { kind: 'custom', read: attrs => {
-      const attr = attrs?.get('size')
-      // Absent restores the default, like the builder omitting the line;
-      // string and numeric shapes set, anything else is custom code the
-      // playground leaves alone.
-      if (!attr) return 'md'
-      if (attr.kind === 'string') return attr.value
-      if (attr.kind === 'expression' && /^\d+(\.\d+)?$/.test(attr.value)) return attr.value
-      return undefined
-    } } },
+    textField({ name: 'placeholder', type: 'string?', defaultValue: '—', note: 'Native placeholder.', value: pgPlaceholder, onChange: v => (pgPlaceholder = v), clearable: true, enabled: pgPlaceholderOn, setEnabled: v => (pgPlaceholderOn = v) }),
+    boolField({ name: 'readonly', defaultValue: 'false', note: 'Read-only field.', value: pgReadonly, onChange: v => (pgReadonly = v as TriState), enabled: pgReadonlyOn, setEnabled: v => (pgReadonlyOn = v) }),
+    { name: 'rows', type: 'number?', defaultValue: '3', editorDefaultValue: '3', note: 'Visible text rows.', editor: 'number', clearable: true, value: pgRows, onChange: value => { pgRows = value; pgRowsOn = true; }, placeholder: '3', toggle: snippetToggle(pgRowsOn, enabled => (pgRowsOn = enabled)), sync: { kind: 'number', pattern: /^\d+$/ } },
+    sizeField({ note: 'Control scale; numbers are icon-scale pixels interpolated between the steps.', value: pgSize, onChange: v => (pgSize = v), enabled: pgSizeOn, setEnabled: v => (pgSizeOn = v) }),
     { name: 'value', type: 'string', defaultValue: '—', note: 'Bindable field value; the eye resets it to empty.', editor: 'text', clearable: true, value: pgValue, onChange: value => { pgValue = value; pgValueOn = true; }, toggle: resetToggle(pgValueOn, enabled => (pgValueOn = enabled), () => (pgValue = '')), sync: { kind: 'script' } },
     { name: 'onblur', type: '(event: FocusEvent) => void', defaultValue: '—', note: 'Blur callback.' },
     { name: 'onfocus', type: '(event: FocusEvent) => void', defaultValue: '—', note: 'Focus callback.' },
@@ -130,17 +111,17 @@
     { name: 'onkeydown', type: '(event: KeyboardEvent) => void', defaultValue: '—', note: 'Keydown callback.' },
   ])
 
-  const syncFields = $derived(syncFieldsOf(fields))
 </script>
 
 <ShowcasePage
     {fields}
     title="TextArea"
     {code}
-    {preview}
     onReset={clearPlayground}
     scope={{ applyLabel: i18n.t('common.apply') }}
->
+
+    sync={{ tag: 'TextArea' }}
+  >
     <div class="flex flex-col gap-1">
       <TextArea
         bind:value={pgValue}

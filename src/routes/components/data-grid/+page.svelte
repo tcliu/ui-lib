@@ -1,13 +1,12 @@
 <script lang="ts">
+  import { flagOn } from '$lib/showcase/snippet-build'
   import DataGrid from '$lib/components/DataGrid.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import ShowcaseStage from '$lib/showcase/ShowcaseStage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
-  import { useScopeRefresh } from '$lib/showcase/use-scope-refresh.svelte'
   import { parseSizeValue } from '$lib/showcase/size-input'
-  import { jsonField, snippetToggle } from '$lib/showcase/snippet-field'
-  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { textField, boolField, sizeField, jsonField, snippetToggle } from '$lib/showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
   import { DEMO_VALUE, buildDataGridSnippet, parseColumnLabelsJson, parseColumnLabelsValue, parseColumnWidthsJson, parseColumnWidthsValue, parseGridValueJson, type TriState } from './demo-snippet'
 
   const i18n = getI18nContext()
@@ -43,11 +42,6 @@
   let pgStorageKeyOn = $state(false)
   let pgSize = $state('md')
   let pgSizeOn = $state(false)
-
-  // Unset renders the component default; Yes/No force the value.
-  function flagOn(value: TriState): boolean | undefined {
-    return value === '' ? undefined : value === 'yes'
-  }
 
   const editable = $derived(pgEditableOn ? flagOn(pgEditable) : undefined)
   const showHeaders = $derived(pgShowHeadersOn ? flagOn(pgShowHeaders) : undefined)
@@ -109,12 +103,7 @@
     }),
   )
 
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({ value: pgValue }),
-    sync: { tag: 'DataGrid', getFields: () => syncFields },
-  })
-
+  
   // Each editable row declares its Value editor and its snippet write-back
   // shape once; the sync table below derives from the same declarations.
   // Snippet edits surface in the Value column, and `syncSeed` holds the
@@ -138,8 +127,8 @@
       toggle: snippetToggle(pgColumnLabelsEnabled, enabled => (pgColumnLabelsEnabled = enabled)),
       sync: { kind: 'scriptJson', parseJson: parseColumnLabelsValue, setJson: value => (pgColumnLabels = value as typeof pgColumnLabels) },
     }),
-    { name: 'editable', type: 'boolean', defaultValue: 'true', note: 'Enables in-place cell editing and structure edits; the eye stages the customization.', editor: 'boolean', value: pgEditable, onChange: value => { pgEditable = value as TriState; pgEditableOn = true; }, toggle: snippetToggle(pgEditableOn, enabled => (pgEditableOn = enabled)), sync: { kind: 'tri' } },
-    { name: 'hideHeaderToggle', type: 'boolean', defaultValue: 'false', note: 'Hides the toolbar header toggle; the eye stages the customization.', editor: 'boolean', value: pgHideHeaderToggle, onChange: value => { pgHideHeaderToggle = value as TriState; pgHideHeaderToggleOn = true; }, toggle: snippetToggle(pgHideHeaderToggleOn, enabled => (pgHideHeaderToggleOn = enabled)), sync: { kind: 'tri' } },
+    boolField({ name: 'editable', defaultValue: 'true', note: 'Enables in-place cell editing and structure edits.', value: pgEditable, onChange: v => (pgEditable = v as TriState), enabled: pgEditableOn, setEnabled: v => (pgEditableOn = v) }),
+    boolField({ name: 'hideHeaderToggle', defaultValue: 'false', note: 'Hides the toolbar header toggle.', value: pgHideHeaderToggle, onChange: v => (pgHideHeaderToggle = v as TriState), enabled: pgHideHeaderToggleOn, setEnabled: v => (pgHideHeaderToggleOn = v) }),
     jsonField({
       name: 'initialColumnWidths',
       type: 'string[]',
@@ -156,10 +145,10 @@
       toggle: snippetToggle(pgInitialColumnWidthsEnabled, enabled => (pgInitialColumnWidthsEnabled = enabled)),
       sync: { kind: 'scriptJson', parseJson: parseColumnWidthsValue, setJson: value => (pgInitialColumnWidths = value as typeof pgInitialColumnWidths) },
     }),
-    { name: 'maxColumns', type: 'number?', defaultValue: '—', note: 'Locks the column count (e.g. key/value grids); the eye stages the customization.', editor: 'number', clearable: true, value: pgMaxColumns, onChange: value => { pgMaxColumns = value; pgMaxColumnsOn = true; }, toggle: snippetToggle(pgMaxColumnsOn, enabled => (pgMaxColumnsOn = enabled)), sync: { kind: 'number', pattern: /^\d+$/ } },
-    { name: 'showHeaders', type: 'boolean', defaultValue: 'true', note: 'Treats the first row as a header (bindable); the eye stages the customization.', editor: 'boolean', value: pgShowHeaders, onChange: value => { pgShowHeaders = value as TriState; pgShowHeadersOn = true; }, toggle: snippetToggle(pgShowHeadersOn, enabled => (pgShowHeadersOn = enabled)), sync: { kind: 'tri' } },
-    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number", defaultValue: "'md'", note: 'Toolbar scale; numbers are icon-scale pixels interpolated between the steps; the eye stages the customization.', editor: 'size', allowCustomValue: true, value: pgSize, onChange: value => { pgSize = value; pgSizeOn = true; }, clearLabel: 'Clear size', placeholder: 'md', toggle: snippetToggle(pgSizeOn, enabled => (pgSizeOn = enabled)), sync: { kind: 'custom', read: attrs => { const attr = attrs?.get('size'); if (!attr) return 'md'; if (attr.kind === 'string') return attr.value; if (attr.kind === 'expression' && /^\d+(\.\d+)?$/.test(attr.value)) return attr.value; return undefined } } },
-    { name: 'storageKey', type: 'string?', defaultValue: '—', note: 'Persists resized widths under this localStorage key; the eye stages the customization.', editor: 'text', clearable: true, value: pgStorageKey, onChange: value => { pgStorageKey = value; pgStorageKeyOn = true; }, toggle: snippetToggle(pgStorageKeyOn, enabled => (pgStorageKeyOn = enabled)), sync: { kind: 'text' } },
+    { name: 'maxColumns', type: 'number?', defaultValue: '—', note: 'Locks the column count (e.g. key/value grids).', editor: 'number', clearable: true, value: pgMaxColumns, onChange: value => { pgMaxColumns = value; pgMaxColumnsOn = true; }, toggle: snippetToggle(pgMaxColumnsOn, enabled => (pgMaxColumnsOn = enabled)), sync: { kind: 'number', pattern: /^\d+$/ } },
+    boolField({ name: 'showHeaders', defaultValue: 'true', note: 'Treats the first row as a header (bindable).', value: pgShowHeaders, onChange: v => (pgShowHeaders = v as TriState), enabled: pgShowHeadersOn, setEnabled: v => (pgShowHeadersOn = v) }),
+    sizeField({ note: 'Toolbar scale; numbers are icon-scale pixels interpolated between the steps.', value: pgSize, onChange: v => (pgSize = v), enabled: pgSizeOn, setEnabled: v => (pgSizeOn = v) }),
+    textField({ name: 'storageKey', type: 'string?', defaultValue: '—', note: 'Persists resized widths under this localStorage key.', value: pgStorageKey, onChange: v => (pgStorageKey = v), clearable: true, enabled: pgStorageKeyOn, setEnabled: v => (pgStorageKeyOn = v) }),
     jsonField({
       name: 'value',
       type: 'string[][]',
@@ -178,22 +167,22 @@
     { name: 'onChange', type: '(rows: string[][]) => void', defaultValue: '—', note: 'Called with the whole grid after every edit.' },
   ])
 
-  const syncFields = $derived(syncFieldsOf(fields))
 
   // The seed covers every override except the cell data (the snippet reads it
   // from scope), so only grid edits need a scope refresh; everything else
   // reseeds. The refresh preserves the editor text by recompiling the draft.
-  useScopeRefresh(preview, () => [pgValue])
-</script>
+  </script>
 
 <ShowcasePage
     {fields}
     title="DataGrid"
     {code}
-    {preview}
     onReset={clearPlayground}
     scope={{ value: pgValue }}
->
+
+    sync={{ tag: 'DataGrid' }}
+    scopeRefresh={() => [pgValue]}
+  >
     <ShowcaseStage paneClass="h-72 w-full">
       <DataGrid value={pgValueEnabled ? pgValue : undefined} onChange={next => (pgValue = next)} {editable} {showHeaders} {hideHeaderToggle} columnLabels={pgColumnLabelsEnabled && pgColumnLabels.length ? pgColumnLabels : undefined} initialColumnWidths={pgInitialColumnWidthsEnabled && pgInitialColumnWidths.length ? pgInitialColumnWidths : undefined} maxColumns={demoMaxColumns} storageKey={pgStorageKeyOn && pgStorageKey ? pgStorageKey : undefined} size={demoSize} />
     </ShowcaseStage>

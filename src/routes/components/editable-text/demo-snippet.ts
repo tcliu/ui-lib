@@ -4,6 +4,7 @@
 // value lives in a local `$state` so the live snippet keeps its own edits and
 // still starts from the demo's displayed text.
 
+import { escapeAttr } from '$lib/showcase/snippet-build'
 import { sizeAttributeLine } from '$lib/showcase/size-input'
 export type TriState = '' | 'yes' | 'no'
 
@@ -21,10 +22,6 @@ export interface EditableTextSnippetState {
   classNameOn: boolean
   maxWidth: string
   maxWidthOn: boolean
-}
-
-function escapeAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 }
 
 // The value is baked into a single-quoted JS string in the snippet's leading

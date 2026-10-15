@@ -3,9 +3,8 @@
   import SelectDropdown from '$lib/components/SelectDropdown.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
-  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { snippetToggle } from '$lib/showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { sizeField, snippetToggle } from '$lib/showcase/snippet-field'
   import { buildIconsSnippet, ICON_COMPONENTS, ICON_ENTRIES, iconClassFor, iconLabel } from './demo-snippet'
   import { parseSizeValue } from '$lib/showcase/size-input'
 
@@ -54,12 +53,7 @@
   // resolves through the preamble's shared imports and needs no scope: passing
   // the component map would collide with the preamble (its `Menu` key
   // re-declares the imported `Menu` component).
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({}),
-    sync: { tag: 'CheckIcon', getFields: () => syncFields },
-  })
-
+  
   // Each editable row declares its Value editor and its snippet write-back
   // shape once; the sync table below derives from the same declarations.
   // Snippet edits surface in the Value column, and `syncSeed` holds the
@@ -74,7 +68,7 @@
       type: 'string?',
       defaultValue: "''",
       editorDefaultValue: '',
-      note: 'Color and extra classes; explicit size classes win over the size attributes; the eye stages the customization.',
+      note: 'Color and extra classes; explicit size classes win over the size attributes.',
       editor: 'text',
       clearable: true,
       value: pgClassName,
@@ -84,39 +78,9 @@
       },
       toggle: snippetToggle(pgClassNameOn, enabled => (pgClassNameOn = enabled)),
     },
-    {
-      name: 'size',
-      type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number",
-      defaultValue: "'md'",
-      note: 'Width/height attributes (12/16/20/24px for names, passthrough for numbers); composes with className; the eye stages the customization.',
-      editor: 'size',
-      allowCustomValue: true,
-      options: sizeOptions,
-      value: pgSize,
-      onChange: value => {
-        pgSize = value
-        pgSizeOn = true
-      },
-      placeholder: 'md',
-      clearLabel: 'Clear size',
-      toggle: snippetToggle(pgSizeOn, enabled => (pgSizeOn = enabled)),
-      sync: {
-        kind: 'custom',
-        read: attrs => {
-          const attr = attrs?.get('size')
-          // Absent restores the default, like the builder omitting the fragment;
-          // string and numeric shapes set, anything else is custom code the
-          // playground leaves alone.
-          if (!attr) return 'md'
-          if (attr.kind === 'string') return attr.value
-          if (attr.kind === 'expression' && /^\d+(\.\d+)?$/.test(attr.value)) return attr.value
-          return undefined
-        },
-      },
-    },
+    sizeField({ note: 'Width/height attributes (12/16/20/24px for names, passthrough for numbers); composes with className.', value: pgSize, onChange: v => (pgSize = v), enabled: pgSizeOn, setEnabled: v => (pgSizeOn = v), options: sizeOptions }),
   ])
 
-  const syncFields = $derived(syncFieldsOf(fields))
 </script>
 
 {#snippet settingsPanel()}
@@ -135,7 +99,10 @@
   </div>
 {/snippet}
 
-<ShowcasePage {fields} title="Icons" {code} {preview} onReset={clearPlayground} configPanel={settingsPanel}>
+<ShowcasePage {fields} title="Icons" {code} onReset={clearPlayground} configPanel={settingsPanel}
+    sync={{ tag: 'CheckIcon' }}
+    scope={{}}
+  >
   <div
     class="grid grid-cols-4 gap-3 text-xs text-slate-400 sm:grid-cols-8 [&>span]:flex [&>span]:flex-col [&>span]:items-center [&>span]:gap-1">
     {#each ICON_ENTRIES as entry (iconLabel(entry))}

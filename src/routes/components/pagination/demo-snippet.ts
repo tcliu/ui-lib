@@ -3,6 +3,7 @@
 // this, so the editor always shows the markup behind the demo above. The
 // paging interaction state (total, pageSize, currentPage) reads from scope,
 // so it has no sync write-back on the page.
+import { escapeAttr, escapeText } from '$lib/showcase/snippet-build'
 import { sizeAttributeLine } from '$lib/showcase/size-input'
 import type { PaginationLabels } from '$lib/components/pagination-labels'
 
@@ -98,14 +99,7 @@ export function parseLabelsJson(text: string): PaginationLabels | null {
   }
 }
 
-function escapeAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
-}
-
 // Element text for the trailing span below.
-function escapeText(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-}
 
 // A string attribute line, omitted while unset.
 function attrLine(name: string, value: string): string[] {

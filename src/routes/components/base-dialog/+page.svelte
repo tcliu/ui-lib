@@ -5,9 +5,8 @@
   import Copyable from '$lib/components/Copyable.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
-  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { snippetDialog, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { enumField, textField, snippetDialog, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
   import { buildHeaderLine, parseHeaderMarkup } from '$lib/showcase/snippet-header'
   import {
     DISMISS_HANDLER,
@@ -185,18 +184,7 @@
     }),
   )
 
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({
-      open: pgOpen,
-      openDialogLabel: i18n.t('showcase.openDialog'),
-      dialogTitle: i18n.t('showcase.dialogTitle'),
-      cancelLabel: i18n.t('common.cancel'),
-      okLabel: i18n.t('common.ok'),
-    }),
-    sync: { tag: 'BaseDialog', getFields: () => syncFields },
-  })
-
+  
   const fields: SyncableFieldConfig[] = $derived([
     snippetField({
       name: 'children',
@@ -225,8 +213,8 @@
       ),
       toggle: snippetToggle(pgChildrenOn, enabled => (pgChildrenOn = enabled)),
     }),
-    { name: 'className', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Extra classes for the dialog panel; the eye stages the customization.', editor: 'text', clearable: true, value: pgClassName, onChange: value => { pgClassName = value; pgClassNameOn = true; }, toggle: snippetToggle(pgClassNameOn, enabled => (pgClassNameOn = enabled)), sync: { kind: 'text' } },
-    { name: 'closeLabel', type: 'string?', defaultValue: 'locale', note: 'Overrides the close accessible name; the eye stages the customization.', editor: 'text', clearable: true, value: pgCloseLabel, onChange: value => { pgCloseLabel = value; pgCloseLabelOn = true; }, toggle: snippetToggle(pgCloseLabelOn, enabled => (pgCloseLabelOn = enabled)), sync: { kind: 'text' } },
+    textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes for the dialog panel.', value: pgClassName, onChange: v => (pgClassName = v), editorDefaultValue: '', clearable: true, enabled: pgClassNameOn, setEnabled: v => (pgClassNameOn = v) }),
+    textField({ name: 'closeLabel', type: 'string?', defaultValue: 'locale', note: 'Overrides the close accessible name.', value: pgCloseLabel, onChange: v => (pgCloseLabel = v), clearable: true, enabled: pgCloseLabelOn, setEnabled: v => (pgCloseLabelOn = v) }),
     snippetField({
       name: 'footer',
       note: 'Fixed action row below the body; one Buttons block of plain-label Button lines, committing applies it. Demo buttons dismiss.',
@@ -261,14 +249,13 @@
       ),
       toggle: snippetToggle(pgHeaderOn, enabled => (pgHeaderOn = enabled)),
     }),
-    { name: 'heightVariant', type: "'auto' | 'xs' | … | '7xl'", defaultValue: "'auto'", note: 'Panel height step; auto hugs the content; the eye stages the customization.', editor: 'enum', options: heightVariantOptions, value: pgHeightVariant, onChange: value => { pgHeightVariant = value; pgHeightVariantOn = true; }, placeholder: 'auto', clearLabel: 'Clear height', toggle: snippetToggle(pgHeightVariantOn, enabled => (pgHeightVariantOn = enabled)), sync: { kind: 'text' } },
-    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | '7xl'", defaultValue: '—', note: 'Shorthand setting both width and height; an explicit variant wins; the eye stages the customization.', editor: 'enum', options: sizeOptions, value: pgSize, onChange: value => { pgSize = value; pgSizeOn = true; }, clearLabel: 'Clear size', toggle: snippetToggle(pgSizeOn, enabled => (pgSizeOn = enabled)), sync: { kind: 'text' } },
-    { name: 'title', type: 'string?', defaultValue: '—', note: 'Dialog heading; the eye stages the customization.', editor: 'text', clearable: true, value: pgTitle || i18n.t('showcase.dialogTitle'), onChange: value => { pgTitle = value === i18n.t('showcase.dialogTitle') ? '' : value; pgTitleOn = true; }, toggle: snippetToggle(pgTitleOn, enabled => (pgTitleOn = enabled)), sync: { kind: 'text' } },
-    { name: 'widthVariant', type: "'xs' | … | '7xl' | 'fit' | 'wide'", defaultValue: "'md'", note: 'Panel width variant; the eye stages the customization.', editor: 'enum', options: widthVariantOptions, value: pgWidthVariant, onChange: value => { pgWidthVariant = value; pgWidthVariantOn = true; }, placeholder: 'md', clearLabel: 'Clear width', toggle: snippetToggle(pgWidthVariantOn, enabled => (pgWidthVariantOn = enabled)), sync: { kind: 'text' } },
+    enumField({ name: 'heightVariant', type: "'auto' | 'xs' | … | '7xl'", defaultValue: "'auto'", note: 'Panel height step; auto hugs the content.', options: heightVariantOptions, value: pgHeightVariant, onChange: v => (pgHeightVariant = v), placeholder: 'auto', clearLabel: 'Clear height', enabled: pgHeightVariantOn, setEnabled: v => (pgHeightVariantOn = v) }),
+    enumField({ name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | '7xl'", defaultValue: '—', note: 'Shorthand setting both width and height; an explicit variant wins.', options: sizeOptions, value: pgSize, onChange: v => (pgSize = v), clearLabel: 'Clear size', enabled: pgSizeOn, setEnabled: v => (pgSizeOn = v) }),
+    { name: 'title', type: 'string?', defaultValue: '—', note: 'Dialog heading.', editor: 'text', clearable: true, value: pgTitle || i18n.t('showcase.dialogTitle'), onChange: value => { pgTitle = value === i18n.t('showcase.dialogTitle') ? '' : value; pgTitleOn = true; }, toggle: snippetToggle(pgTitleOn, enabled => (pgTitleOn = enabled)), sync: { kind: 'text' } },
+    enumField({ name: 'widthVariant', type: "'xs' | … | '7xl' | 'fit' | 'wide'", defaultValue: "'md'", note: 'Panel width variant.', options: widthVariantOptions, value: pgWidthVariant, onChange: v => (pgWidthVariant = v), placeholder: 'md', clearLabel: 'Clear width', enabled: pgWidthVariantOn, setEnabled: v => (pgWidthVariantOn = v) }),
     { name: 'onCancel', type: '() => void', defaultValue: '—', note: 'Called by every dismissal affordance.' },
   ])
 
-  const syncFields = $derived(syncFieldsOf(fields))
 
 </script>
 
@@ -290,7 +277,6 @@
     {fields}
     title="BaseDialog"
     {code}
-    {preview}
     onReset={clearPlayground}
     scope={{
       open: pgOpen,
@@ -299,7 +285,9 @@
       cancelLabel: i18n.t('common.cancel'),
       okLabel: i18n.t('common.ok'),
     }}
->
+
+    sync={{ tag: 'BaseDialog' }}
+  >
     <Button variant="primary" onClick={() => (pgOpen = true)}>{i18n.t('showcase.openDialog')}</Button>
     {#if pgOpen}
       <BaseDialog

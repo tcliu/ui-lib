@@ -1,10 +1,8 @@
 <script lang="ts">
   import Resizable from '$lib/components/Resizable.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
-  import { useScopeRefresh } from '$lib/showcase/use-scope-refresh.svelte'
-  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { resetToggle, snippetDialog, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { textField, resetToggle, snippetDialog, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
   import {
     RESIZABLE_CONTENT,
     RESIZABLE_DEFAULT_HEIGHT,
@@ -106,16 +104,7 @@
     }),
   )
 
-  const preview = new SnippetPreview({
-    getSeed: () => code,
-    getScope: () => ({
-      initialWidth: pgWidth,
-      initialHeight: pgHeight,
-      contentLabel: sizeLabel,
-    }),
-    sync: { tag: 'Resizable', getFields: () => syncFields },
-  })
-
+  
   // Each editable row declares its Value editor and its snippet write-back
   // shape once; the sync table below derives from the same declarations.
   // Snippet edits surface in the Value column, and `syncSeed` holds the
@@ -145,9 +134,9 @@
         () => (pgContentClass = ''),
       ),
     }),
-    { name: 'className', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Extra classes for the container; the eye stages the customization.', editor: 'text', clearable: true, value: pgClassName, onChange: value => { pgClassName = value; pgClassNameOn = true; }, toggle: snippetToggle(pgClassNameOn, enabled => (pgClassNameOn = enabled)), sync: { kind: 'text' } },
+    textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes for the container.', value: pgClassName, onChange: v => (pgClassName = v), editorDefaultValue: '', clearable: true, enabled: pgClassNameOn, setEnabled: v => (pgClassNameOn = v) }),
     { name: 'height', type: 'number', defaultValue: '—', note: 'Container height in pixels; drive it from onResize.', editor: 'number', value: String(pgHeight), onChange: applyHeightText }, // No eye: required live state driving onResize; omission would break the demo.
-    { name: 'maxHeight', type: "number | 'parent'?", defaultValue: 'unbounded', note: "Upper clamp for the container height; 'parent' bounds it to the parent's content box; the eye stages the customization.", editor: 'text', clearable: true, value: pgMaxHeight, onChange: value => { pgMaxHeight = value; pgMaxHeightOn = true; }, toggle: snippetToggle(pgMaxHeightOn, enabled => (pgMaxHeightOn = enabled)), sync: { kind: 'custom', read: attrs => {
+    { name: 'maxHeight', type: "number | 'parent'?", defaultValue: 'unbounded', note: "Upper clamp for the container height; 'parent' bounds it to the parent's content box.", editor: 'text', clearable: true, value: pgMaxHeight, onChange: value => { pgMaxHeight = value; pgMaxHeightOn = true; }, toggle: snippetToggle(pgMaxHeightOn, enabled => (pgMaxHeightOn = enabled)), sync: { kind: 'custom', read: attrs => {
       const attr = attrs?.get('maxHeight')
       // Absent restores the default, like the builder omitting the line;
       // 'parent' and numeric shapes set, anything else is custom code the
@@ -157,7 +146,7 @@
       if (attr.kind === 'expression' && /^\d+(\.\d+)?$/.test(attr.value)) return attr.value
       return undefined
     } } },
-    { name: 'maxWidth', type: "number | 'parent'?", defaultValue: 'unbounded', note: "Upper clamp for the container width; 'parent' bounds it to the parent's content box; the eye stages the customization.", editor: 'text', clearable: true, value: pgMaxWidth, onChange: value => { pgMaxWidth = value; pgMaxWidthOn = true; }, toggle: snippetToggle(pgMaxWidthOn, enabled => (pgMaxWidthOn = enabled)), sync: { kind: 'custom', read: attrs => {
+    { name: 'maxWidth', type: "number | 'parent'?", defaultValue: 'unbounded', note: "Upper clamp for the container width; 'parent' bounds it to the parent's content box.", editor: 'text', clearable: true, value: pgMaxWidth, onChange: value => { pgMaxWidth = value; pgMaxWidthOn = true; }, toggle: snippetToggle(pgMaxWidthOn, enabled => (pgMaxWidthOn = enabled)), sync: { kind: 'custom', read: attrs => {
       const attr = attrs?.get('maxWidth')
       // Absent restores the default, like the builder omitting the line;
       // 'parent' and numeric shapes set, anything else is custom code the
@@ -167,33 +156,33 @@
       if (attr.kind === 'expression' && /^\d+(\.\d+)?$/.test(attr.value)) return attr.value
       return undefined
     } } },
-    { name: 'minHeight', type: 'number?', defaultValue: '0', editorDefaultValue: '0', note: 'Lower clamp for the container height; the eye stages the customization.', editor: 'number', clearable: true, value: pgMinHeight, onChange: value => { pgMinHeight = value; pgMinHeightOn = true; }, placeholder: '0', toggle: snippetToggle(pgMinHeightOn, enabled => (pgMinHeightOn = enabled)), sync: { kind: 'number' } },
-    { name: 'minWidth', type: 'number?', defaultValue: '0', editorDefaultValue: '0', note: 'Lower clamp for the container width; the eye stages the customization.', editor: 'number', clearable: true, value: pgMinWidth, onChange: value => { pgMinWidth = value; pgMinWidthOn = true; }, placeholder: '0', toggle: snippetToggle(pgMinWidthOn, enabled => (pgMinWidthOn = enabled)), sync: { kind: 'number' } },
+    { name: 'minHeight', type: 'number?', defaultValue: '0', editorDefaultValue: '0', note: 'Lower clamp for the container height.', editor: 'number', clearable: true, value: pgMinHeight, onChange: value => { pgMinHeight = value; pgMinHeightOn = true; }, placeholder: '0', toggle: snippetToggle(pgMinHeightOn, enabled => (pgMinHeightOn = enabled)), sync: { kind: 'number' } },
+    { name: 'minWidth', type: 'number?', defaultValue: '0', editorDefaultValue: '0', note: 'Lower clamp for the container width.', editor: 'number', clearable: true, value: pgMinWidth, onChange: value => { pgMinWidth = value; pgMinWidthOn = true; }, placeholder: '0', toggle: snippetToggle(pgMinWidthOn, enabled => (pgMinWidthOn = enabled)), sync: { kind: 'number' } },
     { name: 'width', type: 'number', defaultValue: '—', note: 'Container width in pixels; drive it from onResize.', editor: 'number', value: String(pgWidth), onChange: applyWidthText }, // No eye: required live state driving onResize; omission would break the demo.
     { name: 'onResize', type: '(width: number, height?: number) => void', defaultValue: '—', note: 'Fires while dragging and on arrow-key nudges (`height` is `undefined` in width-only mode).' },
   ])
 
-  const syncFields = $derived(syncFieldsOf(fields))
 
   // The seed covers every override except the live size (the snippet reads it
   // from scope through script-locals), so only drags need a scope refresh;
   // everything else reseeds. The refresh preserves the editor text by
   // recompiling the draft.
-  useScopeRefresh(preview, () => [pgWidth, pgHeight])
-</script>
+  </script>
 
 <ShowcasePage
     {fields}
     title="Resizable"
     {code}
-    {preview}
     onReset={clearPlayground}
     scope={{
       initialWidth: pgWidth,
       initialHeight: pgHeight,
       contentLabel: sizeLabel,
     }}
->
+
+    sync={{ tag: 'Resizable' }}
+    scopeRefresh={() => [pgWidth, pgHeight]}
+  >
     <div class={RESIZABLE_SCROLLPORT} tabindex="-1">
       <Resizable
         width={pgWidth}

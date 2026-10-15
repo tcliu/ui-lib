@@ -4,6 +4,7 @@
 // Single-quoted lines throughout: backticks and ${} inside them stay literal,
 // so no escaping.
 
+import { escapeAttr } from '$lib/showcase/snippet-build'
 import { sizeAttributeLine } from '$lib/showcase/size-input'
 
 export type TriState = '' | 'yes' | 'no'
@@ -46,10 +47,6 @@ function optionalTextLine(name: string, value: string): string[] {
 // unset, so the localized default renders without pinning English text.
 function requiredTextLine(name: string, value: string, scopeRef: string): string[] {
   return value ? [`    ${name}="${escapeAttr(value)}"`] : [`    ${name}={${scopeRef}}`]
-}
-
-function escapeAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 }
 
 // A tri-state line: omitted while unset or at the component default, bare

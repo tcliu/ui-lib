@@ -2,6 +2,7 @@
 // the playground form state: the section regenerates the editor text from
 // this, so the editor always shows the markup behind the demo above.
 
+import { escapeAttr, escapeText } from '$lib/showcase/snippet-build'
 import { sizeAttributeLine } from '$lib/showcase/size-input'
 
 export interface CopyableSnippetState {
@@ -22,14 +23,7 @@ export interface CopyableSnippetState {
   sizeOn: boolean
 }
 
-function escapeAttr(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
-}
-
 // Element text for the children span below.
-function escapeText(value: string): string {
-  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-}
 
 export function buildCopyableSnippet({ text, textOn, copyPosition, copyPositionOn, textClass, textClassOn, containerClass, containerClassOn, ariaLabel, ariaLabelOn, tooltip, tooltipOn, children, size, sizeOn }: CopyableSnippetState): string {
   const hasChildren = children !== ''
