@@ -48,6 +48,7 @@ describe('buildSource', () => {
       declarations: 'const rows = []',
       scopeKeys: ['rows', 'foo'],
       declaredNames: new Set(['rows']),
+      componentImports: '',
     })
     expect(source).toContain('let foo = $state(__scope.foo)')
     expect(source).not.toContain('$state(__scope.rows)')
@@ -61,6 +62,7 @@ describe('buildSource', () => {
       declarations: 'const a = 1',
       scopeKeys: ['a'],
       declaredNames: new Set(['a']),
+      componentImports: '',
     })
     expect(source).not.toContain('__scope')
   })
@@ -71,6 +73,7 @@ describe('buildSource', () => {
       declarations: '',
       scopeKeys: ['value'],
       declaredNames: new Set(),
+      componentImports: '',
     })
     expect(source).toContain('let value = $state(__scope.value)')
     expect(source).toContain('</script>\n<span />')

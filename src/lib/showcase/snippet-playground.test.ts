@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildSource } from './snippet-source'
-import { createSnippetComponent } from './snippet-playground'
+import { SNIPPET_PREAMBLE_IMPORTS, createSnippetComponent } from './snippet-playground'
 
 describe('snippet playground registry', () => {
   it('injects the ColumnsIcon import into the compiled preamble', () => {
@@ -9,6 +9,7 @@ describe('snippet playground registry', () => {
       declarations: '',
       scopeKeys: [],
       declaredNames: new Set<string>(),
+      componentImports: SNIPPET_PREAMBLE_IMPORTS,
     })
     expect(source).toContain('import ColumnsIcon from "ui/ColumnsIcon.svelte"')
   })

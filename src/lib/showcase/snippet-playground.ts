@@ -192,6 +192,16 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/structure-value.ts': structureValue,
 }
 
+// Preamble imports derived from the registry, so the two can never drift: every
+// `ui/*.svelte` entry becomes `import <Base> from "ui/<Base>.svelte"` and
+// `rewriteImports` re-binds it to the `__mods` lookup. The non-component
+// `ui/structure-value.ts` entry is excluded (it is imported by name, not
+// default).
+export const SNIPPET_PREAMBLE_IMPORTS = Object.keys(MODULE_REGISTRY)
+  .filter(specifier => /^ui\/.+\.svelte$/.test(specifier))
+  .map(specifier => `  import ${specifier.slice(3, -'.svelte'.length)} from "${specifier}"`)
+  .join('\n')
+
 // Compile the snippet and evaluate the resulting factory. Throws with a concise
 // message (no stack) so the caller can show it inline and keep the previous
 // render.
@@ -202,11 +212,20 @@ export async function createSnippetComponent(snippet: string, scope: Record<stri
     const { declarations, markup } = splitLeadingScript(snippet)
     const ast = parse(`<script>${declarations}</script>`, { modern: true })
     const declaredNames = ast.instance ? collectDeclaredNames(ast.instance.content) : new Set<string>()
-    compiled = compile(buildSource({ markup, declarations, scopeKeys: Object.keys(scope), declaredNames }), {
-      generate: 'client',
-      dev: false,
-      filename: 'ShowcaseSnippet.svelte',
-    }).js.code
+    compiled = compile(
+      buildSource({
+        markup,
+        declarations,
+        scopeKeys: Object.keys(scope),
+        declaredNames,
+        componentImports: SNIPPET_PREAMBLE_IMPORTS,
+      }),
+      {
+        generate: 'client',
+        dev: false,
+        filename: 'ShowcaseSnippet.svelte',
+      },
+    ).js.code
   } catch (error) {
     throw new Error(snippetErrorMessage(error))
   }

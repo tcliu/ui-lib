@@ -1,91 +1,10 @@
 import type { Node, Program } from 'estree'
 
-// Pure source assembly for the showcase playground: no component imports and no
-// compiler import, so this module unit-tests without a browser or the Svelte
-// compiler. `snippet-playground.ts` supplies the parsed `Program` and the
-// component registry; this module only splits and assembles text.
-
-// Imports injected into every compiled snippet preamble. Components resolve
-// through `MODULE_REGISTRY` after `rewriteImports` rewrites these specifiers.
-const COMPONENT_IMPORTS = [
-  '  import AppShell from "ui/AppShell.svelte"',
-  '  import AutoComplete from "ui/AutoComplete.svelte"',
-  '  import BaseDialog from "ui/BaseDialog.svelte"',
-  '  import Button from "ui/Button.svelte"',
-  '  import Buttons from "ui/Buttons.svelte"',
-  '  import Checkbox from "ui/Checkbox.svelte"',
-  '  import Chip from "ui/Chip.svelte"',
-  '  import ChipDropdown from "ui/ChipDropdown.svelte"',
-  '  import CodeEditor from "ui/CodeEditor.svelte"',
-  '  import ColumnChooser from "ui/ColumnChooser.svelte"',
-  '  import ConfirmDialog from "ui/ConfirmDialog.svelte"',
-  '  import Copyable from "ui/Copyable.svelte"',
-  '  import CopyButton from "ui/CopyButton.svelte"',
-  '  import DataGrid from "ui/DataGrid.svelte"',
-  '  import DataTable from "ui/DataTable.svelte"',
-  '  import DateRangePicker from "ui/DateRangePicker.svelte"',
-  '  import EditableText from "ui/EditableText.svelte"',
-  '  import EditDialog from "ui/EditDialog.svelte"',
-  '  import FieldTable from "ui/FieldTable.svelte"',
-  '  import FormField from "ui/FormField.svelte"',
-  '  import LazyCodeEditor from "ui/LazyCodeEditor.svelte"',
-  '  import Menu from "ui/Menu.svelte"',
-  '  import NumberInput from "ui/NumberInput.svelte"',
-  '  import Pagination from "ui/Pagination.svelte"',
-  '  import PasswordInput from "ui/PasswordInput.svelte"',
-  '  import Resizable from "ui/Resizable.svelte"',
-  '  import SearchInput from "ui/SearchInput.svelte"',
-  '  import SelectDropdown from "ui/SelectDropdown.svelte"',
-  '  import Spinner from "ui/Spinner.svelte"',
-  '  import Splitter from "ui/Splitter.svelte"',
-  '  import StructureTree from "ui/StructureTree.svelte"',
-  '  import Tabs from "ui/Tabs.svelte"',
-  '  import TagInput from "ui/TagInput.svelte"',
-  '  import TextArea from "ui/TextArea.svelte"',
-  '  import TextInput from "ui/TextInput.svelte"',
-  '  import Toast from "ui/Toast.svelte"',
-  '  import Tooltip from "ui/Tooltip.svelte"',
-  '  import CheckIcon from "ui/CheckIcon.svelte"',
-  '  import ChevronDownIcon from "ui/ChevronDownIcon.svelte"',
-  '  import ChevronLeftIcon from "ui/ChevronLeftIcon.svelte"',
-  '  import ChevronRightIcon from "ui/ChevronRightIcon.svelte"',
-  '  import ChevronUpIcon from "ui/ChevronUpIcon.svelte"',
-  '  import CloseIcon from "ui/CloseIcon.svelte"',
-  '  import CloudIcon from "ui/CloudIcon.svelte"',
-  '  import CodeIcon from "ui/CodeIcon.svelte"',
-  '  import ColumnsIcon from "ui/ColumnsIcon.svelte"',
-  '  import CopyIcon from "ui/CopyIcon.svelte"',
-  '  import DeleteIcon from "ui/DeleteIcon.svelte"',
-  '  import DocumentIcon from "ui/DocumentIcon.svelte"',
-  '  import DownloadIcon from "ui/DownloadIcon.svelte"',
-  '  import ExportIcon from "ui/ExportIcon.svelte"',
-  '  import EyeIcon from "ui/EyeIcon.svelte"',
-  '  import EyeSlashIcon from "ui/EyeSlashIcon.svelte"',
-  '  import FireIcon from "ui/FireIcon.svelte"',
-  '  import ForestIcon from "ui/ForestIcon.svelte"',
-  '  import GlobeIcon from "ui/GlobeIcon.svelte"',
-  '  import InfoIcon from "ui/InfoIcon.svelte"',
-  '  import KebabIcon from "ui/KebabIcon.svelte"',
-  '  import LavenderIcon from "ui/LavenderIcon.svelte"',
-  '  import LightBulbIcon from "ui/LightBulbIcon.svelte"',
-  '  import MenuIcon from "ui/MenuIcon.svelte"',
-  '  import MidnightIcon from "ui/MidnightIcon.svelte"',
-  '  import MintIcon from "ui/MintIcon.svelte"',
-  '  import MoonIcon from "ui/MoonIcon.svelte"',
-  '  import PaletteIcon from "ui/PaletteIcon.svelte"',
-  '  import PlusIcon from "ui/PlusIcon.svelte"',
-  '  import RefreshIcon from "ui/RefreshIcon.svelte"',
-  '  import ResetIcon from "ui/ResetIcon.svelte"',
-  '  import SaveIcon from "ui/SaveIcon.svelte"',
-  '  import SearchIcon from "ui/SearchIcon.svelte"',
-  '  import SettingsIcon from "ui/SettingsIcon.svelte"',
-  '  import SignOutIcon from "ui/SignOutIcon.svelte"',
-  '  import SortAscIcon from "ui/SortAscIcon.svelte"',
-  '  import SortDescIcon from "ui/SortDescIcon.svelte"',
-  '  import SparklesIcon from "ui/SparklesIcon.svelte"',
-  '  import SunIcon from "ui/SunIcon.svelte"',
-  '  import UploadIcon from "ui/UploadIcon.svelte"',
-].join('\n')
+// Pure source assembly for the showcase playground: no component or compiler
+// import, so this module unit-tests without a browser or the Svelte compiler.
+// `snippet-playground.ts` supplies the parsed `Program`, the component
+// registry, and the preamble import block it derives from that registry; this
+// module only splits and assembles text.
 
 const LEADING_SCRIPT = /^\s*<script([^>]*)>([\s\S]*?)<\/script>/
 const STRAY_SCRIPT = /<script(\s|>)/i
@@ -122,6 +41,10 @@ export interface BuildSourceOptions {
   declarations: string
   scopeKeys: string[]
   declaredNames: Set<string>
+  // The component import block injected into the preamble. Derived from the
+  // playground's `MODULE_REGISTRY` so the registry and the preamble cannot
+  // drift; components resolve through it after `rewriteImports`.
+  componentImports: string
 }
 
 // Assemble the compilable source: the preamble imports, per-key reactive state
@@ -131,12 +54,18 @@ export interface BuildSourceOptions {
 // bindings stay reactive to snippet-side writes even when a snippet-declared
 // `<script>` flips the component into runes mode (where a bare `let` copy
 // would silently stop updating).
-export function buildSource({ markup, declarations, scopeKeys, declaredNames }: BuildSourceOptions): string {
+export function buildSource({
+  markup,
+  declarations,
+  scopeKeys,
+  declaredNames,
+  componentImports,
+}: BuildSourceOptions): string {
   const names = scopeKeys.filter(key => !declaredNames.has(key))
   const scopeLine = names.length > 0 ? `${names.map(key => `  let ${key} = $state(__scope.${key})`).join('\n')}\n` : ''
   const body = declarations.replace(/^\s*\n/, '').replace(/\s+$/, '')
   const declarationLines = body.length > 0 ? `${body}\n` : ''
-  return `<script>\n${COMPONENT_IMPORTS}\n${scopeLine}${declarationLines}</script>\n${markup}`
+  return `<script>\n${componentImports}\n${scopeLine}${declarationLines}</script>\n${markup}`
 }
 
 // Collect the top-level binding names a parsed snippet `<script>` declares, so
