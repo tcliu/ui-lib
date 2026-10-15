@@ -1,15 +1,15 @@
 <script lang="ts">
   import Button from '$lib/components/Button.svelte'
-  import Buttons from '$lib/components/Buttons.svelte'
   import FormField from '$lib/components/FormField.svelte'
   import SelectDropdown from '$lib/components/SelectDropdown.svelte'
   import Tabs from '$lib/components/Tabs.svelte'
-  import ResetIcon from '$lib/icons/ResetIcon.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import PropsTable, { type PropRow } from '$lib/showcase/PropsTable.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
-  import { STYLED_HEADER, STYLED_TAB, buildTabsSnippet } from './demo-snippet'
+  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
+  import { useScopeRefresh } from '$lib/showcase/use-scope-refresh.svelte'
+  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { snippetToggle } from '$lib/showcase/snippet-field'
+  import { buildTabsSnippet } from './demo-snippet'
 
   const i18n = getI18nContext()
 
@@ -19,48 +19,81 @@
 
   const demoState: DemoState = { note: 'shared state' }
 
-  // Customizer playground state. Every curated option starts unset (the
-  // component default renders), so the cleared form applies no overrides.
+  // Customizer playground state. Every curated option starts at the
+  // component default (the Value column shows it), so the cleared form
+  // applies no overrides and Show-code omits the defaults. Clearing a Value
+  // unsets it; Reset restores the defaults below.
+  // `pgRouteMode` is demo-only branching with no prop row, so it keeps a
+  // settings panel below; `pgRoutePath` is interaction state.
   let pgRoutePath = $state('#overview')
   let pgRouteMode = $state('')
-  let pgStyled = $state('')
-  let pgHeaderClass = $state('')
-  let pgTabClass = $state('')
+  let pgClassName = $state('')
+  let pgClassNameOn = $state(false)
+  let pgAriaLabel = $state('Components')
+  let pgAriaLabelOn = $state(true)
+  let pgPathname = $state('')
+  let pgPathnameOn = $state(false)
 
   const modeOptions = [{ value: 'yes', label: 'Route mode' }]
-  const styleOptions = [{ value: 'yes', label: 'Styled' }]
 
   const overviewPath = $derived(pgRouteMode ? '#overview' : 'overview')
   const detailsPath = $derived(pgRouteMode ? '#details' : 'details')
 
-  const isCustomized = $derived(pgRouteMode !== '' || pgStyled !== '' || pgHeaderClass !== '' || pgTabClass !== '')
-  const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
-
   function clearPlayground() {
     pgRoutePath = '#overview'
     pgRouteMode = ''
-    pgStyled = ''
-    pgHeaderClass = ''
-    pgTabClass = ''
+    pgClassName = ''
+    pgClassNameOn = false
+    pgAriaLabel = 'Components'
+    pgAriaLabelOn = true
+    pgPathname = ''
+    pgPathnameOn = false
   }
 
   const code = $derived.by(() =>
-    buildTabsSnippet({ routeMode: pgRouteMode, headerClass: pgHeaderClass, tabClass: pgTabClass }),
+    buildTabsSnippet({ routeMode: pgRouteMode, className: pgClassName, classNameOn: pgClassNameOn, ariaLabel: pgAriaLabel, ariaLabelOn: pgAriaLabelOn, pathname: pgPathname, pathnameOn: pgPathnameOn }),
   )
 
-  const props: PropRow[] = [
-    {
-      name: 'tabs',
-      type: 'Tab<TState>[]',
-      defaultValue: '—',
-      note: 'Label, path, optional toolbar snippet, content snippet.',
-    },
+  // The page owns the preview so the shell can host the code toggle (and the
+  // playground Reset) in the sticky title row while it renders the demo and
+  // the editor below. Scope keys are demo-owned names that never collide
+  // with the preamble's shared imports.
+  const preview = new SnippetPreview({
+    getSeed: () => code,
+    getScope: () => ({
+      overviewContent,
+      overviewToolbar,
+      detailsContent,
+      demoState,
+      routePath: pgRoutePath,
+      defaultLabel: i18n.t('showcase.default'),
+      customizedLabel: i18n.t('showcase.customized'),
+      componentsLabel: i18n.t('showcase.components'),
+    }),
+    sync: { tag: 'Tabs', getFields: () => syncFields },
+  })
+
+  // Each editable row declares its Value editor and its snippet write-back
+  // shape once; the sync table below derives from the same declarations.
+  // Snippet edits surface in the Value column, and `syncSeed` holds the
+  // regenerated seed back so the editor keeps the user's text. The tab list
+  // and its snippets are demo data with no prop row.
+  const fields: SyncableFieldConfig[] = $derived([
+    { name: 'ariaLabel', type: 'string?', defaultValue: "'Tabs'", editorDefaultValue: 'Tabs', note: 'Accessible name for the nav; the eye stages the customization.', editor: 'text', clearable: true, value: pgAriaLabel, onChange: value => { pgAriaLabel = value; pgAriaLabelOn = true; }, placeholder: 'Tabs', toggle: snippetToggle(pgAriaLabelOn, enabled => (pgAriaLabelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'componentsLabel' } },
+    { name: 'className', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Extra classes appended to the header row; the eye stages the customization.', editor: 'text', clearable: true, value: pgClassName, onChange: value => { pgClassName = value; pgClassNameOn = true; }, toggle: snippetToggle(pgClassNameOn, enabled => (pgClassNameOn = enabled)), sync: { kind: 'text' } },
+    { name: 'pathname', type: 'string?', defaultValue: '—', note: 'Route mode: active path drives link rendering; the eye stages the customization.', editor: 'text', clearable: true, value: pgPathname, onChange: value => { pgPathname = value; pgPathnameOn = true; }, toggle: snippetToggle(pgPathnameOn, enabled => (pgPathnameOn = enabled)), sync: { kind: 'text' } },
+    // Read-only: the generic demo state object has no literal editor.
     { name: 'state', type: 'TState', defaultValue: '—', note: 'Passed to the toolbar/content snippets.' },
-    { name: 'pathname', type: 'string', defaultValue: '—', note: 'Route mode: active path drives link rendering.' },
-    { name: 'ariaLabel', type: 'string', defaultValue: "'Tabs'", note: 'Accessible name for the nav.' },
-    { name: 'class', type: 'string', defaultValue: "''", note: 'Extra classes for the header row.' },
-    { name: 'headerClass', type: 'string', defaultValue: 'built-in', note: 'Replaces the header row classes.' },
-  ]
+    { name: 'tabs', type: 'Tab<TState>[]', defaultValue: '—', note: 'Label, path, optional toolbar snippet, content snippet.' },
+  ])
+
+  const syncFields = $derived(syncFieldsOf(fields))
+
+  // The seed covers every override except the route interaction state (the
+  // snippet reads it from scope), so only path edits need a scope refresh;
+  // everything else reseeds. The refresh preserves the editor text by
+  // recompiling the draft.
+  useScopeRefresh(preview, () => [pgRoutePath])
 </script>
 
 {#snippet overviewContent(state: DemoState)}
@@ -75,18 +108,7 @@
   <p class="text-sm text-slate-300">details content — {state.note}</p>
 {/snippet}
 
-{#snippet resetIcon()}
-  <ResetIcon size="sm" />
-{/snippet}
-
-{#snippet propsSnippet()}
-  <PropsTable rows={props} />
-{/snippet}
-
 {#snippet settingsPanel()}
-  <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
-  </Buttons>
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Mode">
       <SelectDropdown
@@ -99,47 +121,16 @@
         clearLabel="Clear mode"
         onClear={() => (pgRouteMode = '')} />
     </FormField>
-    <FormField label="Style">
-      <SelectDropdown
-        buttonLabel={pgStyled ? 'Styled' : 'Default'}
-        activeValue={pgStyled}
-        ariaLabel="Style"
-        options={styleOptions}
-        onSelect={value => {
-          pgStyled = value
-          pgHeaderClass = STYLED_HEADER
-          pgTabClass = STYLED_TAB
-        }}
-        clearable
-        clearLabel="Clear style"
-        onClear={() => {
-          pgStyled = ''
-          pgHeaderClass = ''
-          pgTabClass = ''
-        }} />
-    </FormField>
-    <FormField label="Header class" htmlFor="pg-headerclass">
-      <input
-        id="pg-headerclass"
-        bind:value={pgHeaderClass}
-        placeholder="(none)"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
-    </FormField>
-    <FormField label="Class" htmlFor="pg-class">
-      <input
-        id="pg-class"
-        bind:value={pgTabClass}
-        placeholder="(none)"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
-    </FormField>
   </div>
 {/snippet}
 
-<ShowcasePage name="Tabs" props={propsSnippet}>
-  <ShowcaseSection
-    title={sectionTitle}
+<ShowcasePage
+    {fields}
+    title="Tabs"
     {code}
-    footer={settingsPanel}
+    {preview}
+    onReset={clearPlayground}
+    configPanel={settingsPanel}
     scope={{
       overviewContent,
       overviewToolbar,
@@ -149,7 +140,8 @@
       defaultLabel: i18n.t('showcase.default'),
       customizedLabel: i18n.t('showcase.customized'),
       componentsLabel: i18n.t('showcase.components'),
-    }}>
+    }}
+>
     {#if pgRouteMode}
       <Button onClick={() => (pgRoutePath = pgRoutePath === '#overview' ? '#details' : '#overview')}>
         pathname: {pgRoutePath}
@@ -166,9 +158,7 @@
         { label: i18n.t('showcase.customized'), path: detailsPath, content: detailsContent },
       ]}
       state={demoState}
-      pathname={pgRouteMode ? pgRoutePath : undefined}
-      headerClass={pgHeaderClass || undefined}
-      class={pgTabClass || undefined}
-      ariaLabel={i18n.t('showcase.components')} />
-  </ShowcaseSection>
-</ShowcasePage>
+      pathname={pgPathnameOn && pgPathname ? pgPathname : (pgRouteMode ? pgRoutePath : undefined)}
+      className={pgClassNameOn && pgClassName ? pgClassName : undefined}
+      ariaLabel={pgAriaLabelOn && pgAriaLabel ? pgAriaLabel : i18n.t('showcase.components')} />
+  </ShowcasePage>

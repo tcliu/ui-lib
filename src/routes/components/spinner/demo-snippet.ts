@@ -5,13 +5,17 @@
 import { sizeAttributeFragment } from '$lib/showcase/size-input'
 export interface SpinnerSnippetState {
   size: string
+  sizeOn: boolean
   tint: string
+  tintOn: boolean
 }
 
-export function buildSpinnerSnippet({ size, tint }: SpinnerSnippetState): string {
-  const attrs = [sizeAttributeFragment(size), ...(tint ? [` className="${tint}"`] : [])].join('')
+export function buildSpinnerSnippet({ size, sizeOn, tint, tintOn }: SpinnerSnippetState): string {
+  // The size Value prefills the component default; the builder omits it so
+  // Show-code stays minimal.
+  const sizeFragment = sizeOn && size !== '' && size !== 'md' ? sizeAttributeFragment(size) : ''
+  const attrs = [sizeFragment, ...(tintOn && tint ? [` className="${tint}"`] : [])].join('')
   return [
-    `<Spinner${attrs} />`,
     '<span class="inline-flex items-center gap-2 text-sm text-slate-300">',
     `  <Spinner${attrs} /> {reloadLabel}`,
     '</span>',

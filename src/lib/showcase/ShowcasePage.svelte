@@ -1,82 +1,305 @@
 <script lang="ts">
-  import type { Snippet } from 'svelte'
-  import { page } from '$app/state'
-  import Chip from '$lib/components/Chip.svelte'
+  import { onDestroy, untrack, type Snippet } from 'svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import { getRelatedComponents } from '$lib/showcase-components'
+  import Button from '$lib/components/Button.svelte'
+  import Buttons from '$lib/components/Buttons.svelte'
+  import FieldTable, { type FieldConfig } from '$lib/components/FieldTable.svelte'
+  import LazyCodeEditor from '$lib/components/LazyCodeEditor.svelte'
+  import Resizable from '$lib/components/Resizable.svelte'
+  import CodeIcon from '$lib/icons/CodeIcon.svelte'
+  import CopyIcon from '$lib/icons/CopyIcon.svelte'
+  import EyeIcon from '$lib/icons/EyeIcon.svelte'
+  import EyeSlashIcon from '$lib/icons/EyeSlashIcon.svelte'
+  import ResetIcon from '$lib/icons/ResetIcon.svelte'
+  import RelatedNav from './RelatedNav.svelte'
+  import { docsHeaders } from './docs-headers'
+  import { SnippetPreview } from './use-snippet-preview.svelte'
 
-  interface Props {
-    name: string
-    children: Snippet
-    props?: Snippet
-    // Right-aligned controls on the component-name row (e.g. the code toggle
-    // when a page hosts it beside the title instead of in its section).
-    actions?: Snippet
-    wide?: boolean
+  // Optional resizable demo stage. The page supplies only its demo content and
+  // the frame bounds; the shell owns the host/Resizable/pane chrome, so the
+  // harness is written once instead of per page. The frame wraps the live
+  // instance too, so the live mount is the pane rather than a sibling node.
+  interface StageConfig {
+    minWidth: number
+    maxWidth?: number | 'parent'
   }
 
-  let { name, children, props, actions, wide = false }: Props = $props()
+  interface Props {
+    title: string
+    children: Snippet
+    code?: string
+    scope?: Record<string, unknown>
+    // Renders the demo inside the shared resizable stage frame.
+    stage?: StageConfig
+    // Stage width; a page binds it so its Reset can restore the seeded width.
+    stageWidth?: number
+    // Optional config panel pinned directly under the demo, with no
+    // separator between them. It stays mounted while the live snippet swaps
+    // the demo, so snippet reproductions keep comparing demo text only.
+    configPanel?: Snippet
+    // Caller-owned preview; the shell renders the code toggle and the
+    // playground reset (when `onReset` is given) in the title row.
+    preview?: SnippetPreview
+    // Clears the page's playground state from the header Reset, which the
+    // shell renders beside the code toggle. Omitted when a page has no
+    // playground state to reset.
+    onReset?: () => void
+    // The converted page's props-table rows; the shell renders them as the
+    // shared FieldTable, so every page carries the same section chrome.
+    fields?: FieldConfig[]
+  }
+
+  let {
+    title,
+    children,
+    code,
+    scope,
+    stage,
+    stageWidth = $bindable(0),
+    configPanel,
+    preview: externalPreview,
+    onReset,
+    fields,
+  }: Props = $props()
   const i18n = getI18nContext()
-  // Unique per instance so two mounted pages never collide on the related
-  // nav's label id.
-  const relatedId = $props.id()
-  const relatedLabelId = `${relatedId}-related`
 
-  // Each related chip takes the next color so a page's row reads as distinct
-  // pills; the palette cycles if a component ever has more relations. The
-  // shared base (shape + hover) is repeated so every entry is a literal class
-  // string Tailwind can see.
-  const RELATED_CHIP_CLASSES = [
-    'rounded-full border border-cyan-700/60 bg-cyan-500/15 px-2 py-0.5 text-xs text-cyan-200 transition hover:brightness-110 motion-reduce:transition-none',
-    'rounded-full border border-amber-700/60 bg-amber-500/15 px-2 py-0.5 text-xs text-amber-200 transition hover:brightness-110 motion-reduce:transition-none',
-    'rounded-full border border-violet-700/60 bg-violet-500/15 px-2 py-0.5 text-xs text-violet-200 transition hover:brightness-110 motion-reduce:transition-none',
-    'rounded-full border border-emerald-700/60 bg-emerald-500/15 px-2 py-0.5 text-xs text-emerald-200 transition hover:brightness-110 motion-reduce:transition-none',
-    'rounded-full border border-rose-700/60 bg-rose-500/15 px-2 py-0.5 text-xs text-rose-200 transition hover:brightness-110 motion-reduce:transition-none',
-    'rounded-full border border-sky-700/60 bg-sky-500/15 px-2 py-0.5 text-xs text-sky-200 transition hover:brightness-110 motion-reduce:transition-none',
-    'rounded-full border border-indigo-700/60 bg-indigo-500/15 px-2 py-0.5 text-xs text-indigo-200 transition hover:brightness-110 motion-reduce:transition-none',
-    'rounded-full border border-teal-700/60 bg-teal-500/15 px-2 py-0.5 text-xs text-teal-200 transition hover:brightness-110 motion-reduce:transition-none',
-    'rounded-full border border-fuchsia-700/60 bg-fuchsia-500/15 px-2 py-0.5 text-xs text-fuchsia-200 transition hover:brightness-110 motion-reduce:transition-none',
-    'rounded-full border border-orange-700/60 bg-orange-500/15 px-2 py-0.5 text-xs text-orange-200 transition hover:brightness-110 motion-reduce:transition-none',
-  ]
+  // The stage chrome: the same hook/host/pane classes the container-sensitive
+  // pages used to spell inline, kept here so the harness is written once.
+  const FRAME_ROW = 'flex flex-wrap items-start gap-4'
+  const FRAME_HOST = 'w-full overflow-hidden'
+  const FRAME_PANE = 'flex w-full min-w-0 flex-wrap items-start gap-4'
 
-  // The routed slug drives relatedness, so a page needs no extra prop. A
-  // non-component route (or an unrelated slug) yields no related row.
-  const related = $derived.by(() => {
-    const match = /^\/components\/([^/]+)/.exec(page.url.pathname)
-    return match ? getRelatedComponents(match[1]) : []
+  // Only build an owned preview when the caller passes none. The preview prop
+  // is read once at init (`untrack`), so no redundant preview registers effects.
+  const preview =
+    untrack(() => externalPreview) ?? new SnippetPreview({ getSeed: () => code ?? '', getScope: () => scope ?? {} })
+
+  let feedback = $state('')
+  let copyTimer: ReturnType<typeof setTimeout> | null = null
+  // Demo visibility is interaction state (defaults on), owned here so every
+  // page gets the toggle without repeating it.
+  let showDemo = $state(true)
+
+  // The stage frame needs an explicit height, so the shell fits it to the
+  // content: a ResizeObserver tracks the pane while drags set it directly. A
+  // width drag reflows the content taller and the frame follows; a height
+  // drag leaves the content box unchanged, so it sticks until the content
+  // itself changes.
+  let stageHeight = $state(0)
+  let stageContentEl = $state<HTMLElement | null>(null)
+
+  $effect(() => {
+    const content = preview.live ? preview.liveEl : stageContentEl
+    if (!stage || !content) return
+    const fit = () => {
+      stageHeight = content.offsetHeight
+    }
+    fit()
+    const observer = new ResizeObserver(fit)
+    observer.observe(content)
+    return () => observer.disconnect()
   })
+
+  onDestroy(() => {
+    if (copyTimer) {
+      clearTimeout(copyTimer)
+      copyTimer = null
+    }
+  })
+
+  function flash(message: string) {
+    feedback = message
+    if (copyTimer) clearTimeout(copyTimer)
+    copyTimer = setTimeout(() => {
+      copyTimer = null
+      feedback = ''
+    }, 1500)
+  }
+
+  function resetEditor() {
+    preview.draft = code ?? ''
+  }
+
+  function copyEditor() {
+    const writeText = navigator.clipboard?.writeText
+    if (!writeText) {
+      flash(i18n.t('showcase.copyFailed'))
+      return
+    }
+    writeText.call(navigator.clipboard, preview.draft).then(
+      () => flash(i18n.t('showcase.copied')),
+      () => flash(i18n.t('showcase.copyFailed')),
+    )
+  }
 </script>
 
-<div class={`mx-auto flex w-full flex-col gap-6 px-4 py-6 ${wide ? 'max-w-5xl' : 'max-w-3xl'}`}>
-  <div class="flex flex-col gap-3">
-    <header class="flex flex-col gap-3">
-      <div class="flex items-start justify-between gap-3">
-        <h1 class="text-base font-semibold tracking-tight sm:text-lg">{name}</h1>
-        {#if actions}
-          {@render actions()}
+{#snippet resetIcon()}
+  <ResetIcon />
+{/snippet}
+
+{#snippet codeIcon()}
+  <CodeIcon />
+{/snippet}
+
+{#snippet copyIcon()}
+  <CopyIcon />
+{/snippet}
+
+{#snippet demoVisibleIcon()}
+  <EyeIcon />
+{/snippet}
+
+{#snippet demoHiddenIcon()}
+  <EyeSlashIcon />
+{/snippet}
+
+{#snippet demoStage()}
+  {#if stage}
+    <!-- The shell owns the resize harness so every container-sensitive demo
+      shares one frame and its Show-code snippet stays content-only. The pane is
+      the live mount (below), so the frame survives the live compile. -->
+    <div
+      data-showcase-demo
+      class={preview.live ? `${FRAME_ROW} [contain:paint]` : FRAME_ROW}
+      style={showDemo ? undefined : 'display:none'}>
+      <div class={FRAME_HOST}>
+        <Resizable
+          width={stageWidth}
+          height={stageHeight}
+          minWidth={stage.minWidth}
+          maxWidth={stage.maxWidth ?? 'parent'}
+          onResize={(nextWidth, nextHeight) => {
+            stageWidth = nextWidth
+            stageHeight = nextHeight
+          }}>
+          {#if !preview.live}
+            <div class={FRAME_PANE} bind:this={stageContentEl}>
+              {@render children()}
+            </div>
+          {:else}
+            <!-- Live-only mount: `replaceChildren` here can never drop the
+              `{#if}` anchors that the static branch needs to come back. -->
+            <div class={FRAME_PANE} bind:this={preview.liveEl}></div>
+          {/if}
+        </Resizable>
+      </div>
+    </div>
+  {:else if preview.live}
+    <div
+      bind:this={preview.liveEl}
+      data-showcase-demo
+      class="flex flex-wrap items-start gap-4 [contain:paint]"
+      style={showDemo ? undefined : 'display:none'}></div>
+  {:else}
+    <div
+      data-showcase-demo
+      class="flex flex-wrap items-start gap-4"
+      style={showDemo ? undefined : 'display:none'}>
+      {@render children()}
+    </div>
+  {/if}
+  {#if code && preview.open}
+    <!-- Vertical cap only: x clips (icon-button hit areas overhang the row
+      edge and would otherwise force a horizontal scrollbar). -->
+    <div tabindex="-1" class="max-h-[60dvh] overflow-x-clip overflow-y-auto">
+      {#if preview.error}
+        <p
+          role="alert"
+          class="mb-2 rounded-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 font-mono text-xs text-rose-200">
+          {preview.error}
+        </p>
+      {/if}
+      <section aria-label={i18n.t('showcase.code')}>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <p class="text-xs text-slate-500">{i18n.t('showcase.codeNote')}</p>
+          <span class="flex items-center gap-2">
+            <span role="status" aria-live="polite" class="text-xs text-slate-400">{feedback}</span>
+            <Button
+              variant="ghost"
+              icon={resetIcon}
+              ariaLabel={i18n.t('common.reset')}
+              tooltip={i18n.t('common.reset')}
+              onClick={resetEditor} />
+            <Button
+              variant="ghost"
+              icon={copyIcon}
+              ariaLabel={i18n.t('showcase.copyCode')}
+              tooltip={i18n.t('showcase.copyCode')}
+              onClick={copyEditor} />
+          </span>
+        </div>
+        <div class="mt-2">
+          <LazyCodeEditor
+            bind:content={preview.draft}
+            docType="html"
+            editorAriaLabel={i18n.t('showcase.code')}
+            containerClass="h-64 overflow-hidden rounded-md border border-slate-700 bg-slate-950"
+            editorClass="h-full" />
+        </div>
+      </section>
+    </div>
+  {/if}
+{/snippet}
+
+<!-- Page container: the above-tbody block (title, demo, editor, panel) is
+  fixed at its natural height and only the props table's tbody below
+  scrolls, so the page never scrolls in the main column — the body
+  scrollport takes the leftover height. The code editor caps at 60dvh so a
+  long file scrolls inside instead of crowding the table out. If the fixed
+  block alone overflows a short viewport, the main column scrolls as a
+  fallback. -->
+<div
+  data-showcase-block
+  class="mx-auto flex h-full w-full flex-col gap-3 px-4 pt-6 max-w-7xl">
+  <div class="flex flex-none flex-col gap-3">
+    <header data-showcase-titlebar class="flex items-start justify-between gap-3">
+      <h1 class="text-lg font-semibold tracking-tight sm:text-xl">{title}</h1>
+      <div class="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          icon={showDemo ? demoVisibleIcon : demoHiddenIcon}
+          ariaLabel={showDemo ? i18n.t('showcase.hideDemo') : i18n.t('showcase.showDemo')}
+          ariaPressed={showDemo}
+          tooltip={showDemo ? i18n.t('showcase.hideDemo') : i18n.t('showcase.showDemo')}
+          onClick={() => (showDemo = !showDemo)} />
+        {#if code || onReset}
+          <Buttons>
+            {#if code}
+              <Button
+                variant="ghost"
+                icon={codeIcon}
+                ariaLabel={preview.open ? i18n.t('showcase.hideCode') : i18n.t('showcase.showCode')}
+                ariaExpanded={preview.open}
+                tooltip={preview.open ? i18n.t('showcase.hideCode') : i18n.t('showcase.showCode')}
+                onClick={() => preview.toggle()} />
+            {/if}
+            {#if onReset}
+              <Button
+                variant="ghost"
+                icon={resetIcon}
+                ariaLabel={i18n.t('common.reset')}
+                tooltip={i18n.t('common.reset')}
+                onClick={onReset} />
+            {/if}
+          </Buttons>
         {/if}
       </div>
-      {#if related.length > 0}
-        <nav aria-labelledby={relatedLabelId} class="flex flex-wrap items-center gap-2">
-          <span id={relatedLabelId} class="text-xs text-slate-500">{i18n.t('showcase.related')}</span>
-          {#each related as component, index (component.slug)}
-            <a
-              href={`/components/${component.slug}`}
-              class="inline-flex rounded-full outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40">
-              <Chip label={component.name} chipClass={RELATED_CHIP_CLASSES[index % RELATED_CHIP_CLASSES.length]} />
-            </a>
-          {/each}
-        </nav>
-      {/if}
     </header>
-    {@render children()}
+    <RelatedNav />
+    {@render demoStage()}
+    {#if configPanel}
+      {@render configPanel()}
+    {/if}
   </div>
-  {#if props}
-    <section aria-labelledby="showcase-props-heading">
-      <h2 id="showcase-props-heading" class="mb-3 text-md font-semibold text-slate-100">
-        {i18n.t('showcase.props')}
-      </h2>
-      {@render props()}
+  {#if fields}
+    <!-- Props table only: the table below (FieldTable) scrolls in the
+      leftover height. The section carries its accessible name directly (no
+      visible heading), so `region` locators keep resolving "Props". -->
+    <section
+      data-showcase-props
+      aria-label={i18n.t('showcase.props')}
+      class="flex min-h-40 flex-1 flex-col">
+      <FieldTable {fields} {...docsHeaders(i18n)} />
     </section>
   {/if}
 </div>

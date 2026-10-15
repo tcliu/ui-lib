@@ -8,6 +8,7 @@ import {
   splitLeadingScript,
 } from './snippet-source'
 import AppShell from '$lib/components/AppShell.svelte'
+import AutoComplete from '$lib/components/AutoComplete.svelte'
 import BaseDialog from '$lib/components/BaseDialog.svelte'
 import Button from '$lib/components/Button.svelte'
 import Buttons from '$lib/components/Buttons.svelte'
@@ -24,6 +25,7 @@ import DataTable from '$lib/components/DataTable.svelte'
 import DateRangePicker from '$lib/components/DateRangePicker.svelte'
 import EditableText from '$lib/components/EditableText.svelte'
 import EditDialog from '$lib/components/EditDialog.svelte'
+import FieldTable from '$lib/components/FieldTable.svelte'
 import FormField from '$lib/components/FormField.svelte'
 import LazyCodeEditor from '$lib/components/LazyCodeEditor.svelte'
 import Menu from '$lib/components/Menu.svelte'
@@ -35,8 +37,10 @@ import SearchInput from '$lib/components/SearchInput.svelte'
 import SelectDropdown from '$lib/components/SelectDropdown.svelte'
 import Spinner from '$lib/components/Spinner.svelte'
 import Splitter from '$lib/components/Splitter.svelte'
+import StructureTree from '$lib/components/StructureTree.svelte'
 import Tabs from '$lib/components/Tabs.svelte'
 import TagInput from '$lib/components/TagInput.svelte'
+import TextArea from '$lib/components/TextArea.svelte'
 import TextInput from '$lib/components/TextInput.svelte'
 import Toast from '$lib/components/Toast.svelte'
 import Tooltip from '$lib/components/Tooltip.svelte'
@@ -46,17 +50,27 @@ import ChevronLeftIcon from '$lib/icons/ChevronLeftIcon.svelte'
 import ChevronRightIcon from '$lib/icons/ChevronRightIcon.svelte'
 import ChevronUpIcon from '$lib/icons/ChevronUpIcon.svelte'
 import CloseIcon from '$lib/icons/CloseIcon.svelte'
+import CloudIcon from '$lib/icons/CloudIcon.svelte'
 import CodeIcon from '$lib/icons/CodeIcon.svelte'
 import ColumnsIcon from '$lib/icons/ColumnsIcon.svelte'
 import CopyIcon from '$lib/icons/CopyIcon.svelte'
 import DeleteIcon from '$lib/icons/DeleteIcon.svelte'
+import DocumentIcon from '$lib/icons/DocumentIcon.svelte'
 import DownloadIcon from '$lib/icons/DownloadIcon.svelte'
+import ExportIcon from '$lib/icons/ExportIcon.svelte'
 import EyeIcon from '$lib/icons/EyeIcon.svelte'
 import EyeSlashIcon from '$lib/icons/EyeSlashIcon.svelte'
+import FireIcon from '$lib/icons/FireIcon.svelte'
 import ForestIcon from '$lib/icons/ForestIcon.svelte'
 import GlobeIcon from '$lib/icons/GlobeIcon.svelte'
+import InfoIcon from '$lib/icons/InfoIcon.svelte'
 import KebabIcon from '$lib/icons/KebabIcon.svelte'
+import LavenderIcon from '$lib/icons/LavenderIcon.svelte'
+import LightBulbIcon from '$lib/icons/LightBulbIcon.svelte'
 import MenuIcon from '$lib/icons/MenuIcon.svelte'
+import MidnightIcon from '$lib/icons/MidnightIcon.svelte'
+import MintIcon from '$lib/icons/MintIcon.svelte'
+import MoonIcon from '$lib/icons/MoonIcon.svelte'
 import PaletteIcon from '$lib/icons/PaletteIcon.svelte'
 import PlusIcon from '$lib/icons/PlusIcon.svelte'
 import RefreshIcon from '$lib/icons/RefreshIcon.svelte'
@@ -64,16 +78,22 @@ import ResetIcon from '$lib/icons/ResetIcon.svelte'
 import SaveIcon from '$lib/icons/SaveIcon.svelte'
 import SearchIcon from '$lib/icons/SearchIcon.svelte'
 import SettingsIcon from '$lib/icons/SettingsIcon.svelte'
+import SignOutIcon from '$lib/icons/SignOutIcon.svelte'
 import SortAscIcon from '$lib/icons/SortAscIcon.svelte'
 import SortDescIcon from '$lib/icons/SortDescIcon.svelte'
+import SparklesIcon from '$lib/icons/SparklesIcon.svelte'
+import SunIcon from '$lib/icons/SunIcon.svelte'
+import UploadIcon from '$lib/icons/UploadIcon.svelte'
+import * as structureValue from '$lib/components/structure-value'
 
 // The showcase's live playground compiles an edited snippet in the browser and
 // renders it. `svelte/compiler` is imported dynamically so it lands in its own
 // lazy chunk and never enters the initial bundle.
 //
 // Mechanism: the snippet text is combined with a fixed `<script>` preamble that
-// imports the shared primitives (from synthetic `ui/*` specifiers) and
-// destructures the page-supplied scope out of a `__scope` parameter. The
+// imports the shared primitives (from synthetic `ui/*` specifiers) and seeds
+// per-key `$state` from a `__scope` parameter holding the page-supplied scope
+// values. The
 // compiler's client output is then evaluated with `new Function`, not as a real
 // ES module. Because of that, its `import` statements cannot resolve — so every
 // import is rewritten by `rewriteImports` into a lookup in `MODULE_REGISTRY`,
@@ -91,6 +111,7 @@ import SortDescIcon from '$lib/icons/SortDescIcon.svelte'
 const MODULE_REGISTRY: Record<string, unknown> = {
   'svelte/internal/client': svelteClient,
   'ui/AppShell.svelte': { default: AppShell },
+  'ui/AutoComplete.svelte': { default: AutoComplete },
   'ui/BaseDialog.svelte': { default: BaseDialog },
   'ui/Button.svelte': { default: Button },
   'ui/Buttons.svelte': { default: Buttons },
@@ -107,6 +128,7 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/DateRangePicker.svelte': { default: DateRangePicker },
   'ui/EditableText.svelte': { default: EditableText },
   'ui/EditDialog.svelte': { default: EditDialog },
+  'ui/FieldTable.svelte': { default: FieldTable },
   'ui/FormField.svelte': { default: FormField },
   'ui/LazyCodeEditor.svelte': { default: LazyCodeEditor },
   'ui/Menu.svelte': { default: Menu },
@@ -118,8 +140,10 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/SelectDropdown.svelte': { default: SelectDropdown },
   'ui/Spinner.svelte': { default: Spinner },
   'ui/Splitter.svelte': { default: Splitter },
+  'ui/StructureTree.svelte': { default: StructureTree },
   'ui/Tabs.svelte': { default: Tabs },
   'ui/TagInput.svelte': { default: TagInput },
+  'ui/TextArea.svelte': { default: TextArea },
   'ui/TextInput.svelte': { default: TextInput },
   'ui/Toast.svelte': { default: Toast },
   'ui/Tooltip.svelte': { default: Tooltip },
@@ -129,17 +153,27 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/ChevronRightIcon.svelte': { default: ChevronRightIcon },
   'ui/ChevronUpIcon.svelte': { default: ChevronUpIcon },
   'ui/CloseIcon.svelte': { default: CloseIcon },
+  'ui/CloudIcon.svelte': { default: CloudIcon },
   'ui/CodeIcon.svelte': { default: CodeIcon },
   'ui/ColumnsIcon.svelte': { default: ColumnsIcon },
   'ui/CopyIcon.svelte': { default: CopyIcon },
   'ui/DeleteIcon.svelte': { default: DeleteIcon },
+  'ui/DocumentIcon.svelte': { default: DocumentIcon },
   'ui/DownloadIcon.svelte': { default: DownloadIcon },
+  'ui/ExportIcon.svelte': { default: ExportIcon },
   'ui/EyeIcon.svelte': { default: EyeIcon },
   'ui/EyeSlashIcon.svelte': { default: EyeSlashIcon },
+  'ui/FireIcon.svelte': { default: FireIcon },
   'ui/ForestIcon.svelte': { default: ForestIcon },
   'ui/GlobeIcon.svelte': { default: GlobeIcon },
+  'ui/InfoIcon.svelte': { default: InfoIcon },
   'ui/KebabIcon.svelte': { default: KebabIcon },
+  'ui/LavenderIcon.svelte': { default: LavenderIcon },
+  'ui/LightBulbIcon.svelte': { default: LightBulbIcon },
   'ui/MenuIcon.svelte': { default: MenuIcon },
+  'ui/MidnightIcon.svelte': { default: MidnightIcon },
+  'ui/MintIcon.svelte': { default: MintIcon },
+  'ui/MoonIcon.svelte': { default: MoonIcon },
   'ui/PaletteIcon.svelte': { default: PaletteIcon },
   'ui/PlusIcon.svelte': { default: PlusIcon },
   'ui/RefreshIcon.svelte': { default: RefreshIcon },
@@ -147,8 +181,15 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/SaveIcon.svelte': { default: SaveIcon },
   'ui/SearchIcon.svelte': { default: SearchIcon },
   'ui/SettingsIcon.svelte': { default: SettingsIcon },
+  'ui/SignOutIcon.svelte': { default: SignOutIcon },
   'ui/SortAscIcon.svelte': { default: SortAscIcon },
   'ui/SortDescIcon.svelte': { default: SortDescIcon },
+  'ui/SparklesIcon.svelte': { default: SparklesIcon },
+  'ui/SunIcon.svelte': { default: SunIcon },
+  'ui/UploadIcon.svelte': { default: UploadIcon },
+  // Shared tree helpers for StructureTree snippets (pure functions only:
+  // no stores, no fetch, no DOM access).
+  'ui/structure-value.ts': structureValue,
 }
 
 // Compile the snippet and evaluate the resulting factory. Throws with a concise

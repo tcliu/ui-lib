@@ -1,38 +1,24 @@
 <script lang="ts">
-  import Button from '$lib/components/Button.svelte'
-  import Buttons from '$lib/components/Buttons.svelte'
-  import Checkbox from '$lib/components/Checkbox.svelte'
-  import EditDialog from '$lib/components/EditDialog.svelte'
-  import LazyCodeEditor from '$lib/components/LazyCodeEditor.svelte'
-  import Resizable from '$lib/components/Resizable.svelte'
-  import SelectDropdown from '$lib/components/SelectDropdown.svelte'
   import TagInput from '$lib/components/TagInput.svelte'
-  import TextInput from '$lib/components/TextInput.svelte'
-  import CodeIcon from '$lib/icons/CodeIcon.svelte'
-  import EditIcon from '$lib/icons/EditIcon.svelte'
-  import ResetIcon from '$lib/icons/ResetIcon.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import PropsTable, { type PropRow } from '$lib/showcase/PropsTable.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
   import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
-  import { extractComponentAttributes, extractScriptJsonConst } from '$lib/showcase/snippet-attributes'
-  import { splitLeadingScript } from '$lib/showcase/snippet-source'
+  import { parseSizeValue } from '$lib/showcase/size-input'
+  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { jsonField, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
   import {
     buildTagInputSnippet,
     parseTagListJson,
     parseTagListValue,
     TAG_STAGE_DEFAULT_WIDTH,
-    TAG_STAGE_HOST,
     TAG_STAGE_MIN_WIDTH,
-    TAG_STAGE_PANE,
     type TriState,
   } from './demo-snippet'
 
   const i18n = getI18nContext()
 
   const INITIAL_TAGS = ['svelte', 'kit']
-  const DEFAULT_AVAILABLE_TAGS = ['svelte', 'kit', 'icons', 'forms', 'tables']
+  const DEFAULT_OPTIONS = ['svelte', 'kit', 'icons', 'forms', 'tables']
 
   // An alternate palette, to show the `palette` prop overriding the built-in
   // per-tag colours.
@@ -42,16 +28,43 @@
     'border-fuchsia-700 bg-fuchsia-950/50 text-fuchsia-200',
   ]
 
-  // Customizer playground state. The tag lists are committed state seeded from
-  // the defaults above; every other override starts unset (the component
-  // default renders), so the cleared form applies no overrides.
+  // Customizer playground state. Every curated option starts at the
+  // component default (the Value column shows it), so the cleared form
+  // applies no overrides and Show-code omits the defaults. Clearing a Value
+  // unsets it; Reset restores the defaults below. The tag lists are committed
+  // state seeded from the defaults above.
   let pgValue = $state([...INITIAL_TAGS])
-  let pgAvailableTags = $state([...DEFAULT_AVAILABLE_TAGS])
+  let pgOptions = $state([...DEFAULT_OPTIONS])
+  // The tag lists apply only while their eye toggle is on (both on, so the
+  // cleared form renders the current demo).
+  let pgValueEnabled = $state(true)
+  let pgOptionsEnabled = $state(true)
   let pgPlaceholder = $state('')
+  let pgPlaceholderOn = $state(false)
+  let pgSize = $state('md')
+  let pgSizeOn = $state(false)
   let pgPalette = $state('')
-  let pgDisabled = $state<TriState>('')
-  let pgInputId = $state('')
+  let pgPaletteOn = $state(false)
+  let pgDisabled = $state<TriState>('no')
+  let pgDisabledOn = $state(false)
+  let pgId = $state('')
+  let pgIdOn = $state(false)
   let pgChipClass = $state('')
+  let pgChipClassOn = $state(false)
+  let pgChipPrefix = $state('')
+  let pgChipOn = $state(false)
+  let pgOptionPrefix = $state('')
+  let pgOptionOn = $state(false)
+  let pgDefaultValue = $state<string[]>([])
+  // The default list applies only while its eye toggle is on (off, so the
+  // cleared form renders the component default).
+  let pgDefaultValueOn = $state(false)
+  let pgClearable = $state<TriState>('no')
+  let pgClearableOn = $state(false)
+  let pgClearLabel = $state('Clear tags')
+  let pgClearLabelOn = $state(false)
+  let pgClearPlacement = $state('auto')
+  let pgClearPlacementOn = $state(false)
   // Stage width is interaction state, not a curated option; Reset restores it.
   let pgStageWidth = $state(TAG_STAGE_DEFAULT_WIDTH)
 
@@ -60,342 +73,255 @@
     return value === '' ? undefined : value === 'yes'
   }
 
-  const disabled = $derived(flagOn(pgDisabled))
+  const disabled = $derived(pgDisabledOn ? flagOn(pgDisabled) : undefined)
+  const clearable = $derived(pgClearableOn ? flagOn(pgClearable) : undefined)
+  const demoClearLabel = $derived(pgClearLabelOn && pgClearLabel ? pgClearLabel : undefined)
+  const demoClearPlacement = $derived(
+    pgClearPlacementOn
+      ? ((pgClearPlacement || undefined) as 'auto' | 'inside' | 'outside' | undefined)
+      : undefined,
+  )
+  const demoDefaultValue = $derived(pgDefaultValueOn ? pgDefaultValue : undefined)
+
+  const demoSize = $derived(pgSizeOn ? parseSizeValue(pgSize) : undefined)
 
   const paletteOptions = [{ value: 'alt', label: 'Alt palette' }]
 
+  const clearPlacementOptions = [
+    { value: 'auto', label: 'auto' },
+    { value: 'inside', label: 'inside' },
+    { value: 'outside', label: 'outside' },
+  ]
+
   function clearPlayground() {
     pgValue = [...INITIAL_TAGS]
-    pgAvailableTags = [...DEFAULT_AVAILABLE_TAGS]
+    pgOptions = [...DEFAULT_OPTIONS]
+    pgValueEnabled = true
+    pgOptionsEnabled = true
     pgPlaceholder = ''
+    pgPlaceholderOn = false
+    pgSize = 'md'
+    pgSizeOn = false
     pgPalette = ''
-    pgDisabled = ''
-    pgInputId = ''
+    pgPaletteOn = false
+    pgDisabled = 'no'
+    pgDisabledOn = false
+    pgId = ''
+    pgIdOn = false
     pgChipClass = ''
+    pgChipClassOn = false
+    pgChipPrefix = ''
+    pgChipOn = false
+    pgOptionPrefix = ''
+    pgOptionOn = false
+    pgDefaultValue = []
+    pgDefaultValueOn = false
+    pgClearable = 'no'
+    pgClearableOn = false
+    pgClearLabel = 'Clear tags'
+    pgClearLabelOn = false
+    pgClearPlacement = 'auto'
+    pgClearPlacementOn = false
     pgStageWidth = TAG_STAGE_DEFAULT_WIDTH
-    pgValueOpen = false
-    pgAvailableOpen = false
-  }
-
-  // Tag-list JSON editor dialogs. Each draft is seeded on open and only
-  // committed on OK, so cancelling (or a dirty-dismiss) never touches the live
-  // lists.
-  let pgValueOpen = $state(false)
-  let pgValueDraft = $state('')
-  const parsedValue = $derived(parseTagListJson(pgValueDraft))
-  const valueDirty = $derived(pgValueDraft !== JSON.stringify(pgValue, null, 2))
-
-  let pgAvailableOpen = $state(false)
-  let pgAvailableDraft = $state('')
-  const parsedAvailable = $derived(parseTagListJson(pgAvailableDraft))
-  const availableDirty = $derived(pgAvailableDraft !== JSON.stringify(pgAvailableTags, null, 2))
-
-  function openValueEditor() {
-    pgValueDraft = JSON.stringify(pgValue, null, 2)
-    pgValueOpen = true
-  }
-
-  function openAvailableEditor() {
-    pgAvailableDraft = JSON.stringify(pgAvailableTags, null, 2)
-    pgAvailableOpen = true
-  }
-
-  function saveValueEditor() {
-    if (!parsedValue) return
-    pgValue = parsedValue
-    pgValueOpen = false
-  }
-
-  function saveAvailableEditor() {
-    if (!parsedAvailable) return
-    pgAvailableTags = parsedAvailable
-    pgAvailableOpen = false
   }
 
   const code = $derived.by(() =>
     buildTagInputSnippet({
       value: pgValue,
-      availableTags: pgAvailableTags,
+      valueEnabled: pgValueEnabled,
+      options: pgOptions,
+      optionsEnabled: pgOptionsEnabled,
       placeholder: pgPlaceholder,
+      placeholderOn: pgPlaceholderOn,
+      size: pgSize,
+      sizeOn: pgSizeOn,
       palette: pgPalette,
+      paletteOn: pgPaletteOn,
       disabled: pgDisabled,
-      inputId: pgInputId,
+      disabledOn: pgDisabledOn,
+      id: pgId,
+      idOn: pgIdOn,
       chipClass: pgChipClass,
+      chipClassOn: pgChipClassOn,
+      chip: pgChipOn ? pgChipPrefix : '',
+      option: pgOptionOn ? pgOptionPrefix : '',
+      defaultValue: pgDefaultValue,
+      defaultValueOn: pgDefaultValueOn,
+      clearable: pgClearable,
+      clearableOn: pgClearableOn,
+      clearLabel: pgClearLabel,
+      clearLabelOn: pgClearLabelOn,
+      clearPlacement: pgClearPlacement,
+      clearPlacementOn: pgClearPlacementOn,
     }),
   )
 
-  // The page owns the preview so its code toggle can sit in the component-title
-  // row (ShowcasePage's `actions`) while the section renders the demo and the
-  // editor below.
   const preview = new SnippetPreview({
     getSeed: () => code,
     getScope: () => ({ altPalette: ALT_PALETTE }),
-    onCompiled: syncPlaygroundFromSnippet,
+    sync: { tag: 'TagInput', getFields: () => syncFields },
   })
-
-  // Write a compiled snippet's recognized demo-tag attributes back into
-  // playground state, so snippet edits show up in the Value column. Only
-  // canonical shapes map (literals, the `altPalette` scope ref, bare flags);
-  // custom expressions are left alone, and a draft without a complete demo tag
-  // (a free-form experiment) touches nothing. Absent means unset, matching
-  // what the builder omits — including the default placeholder, which reads as
-  // unset. `syncSeed` then holds the regenerated seed back so the editor keeps
-  // the user's text.
-  function syncPlaygroundFromSnippet(source: string) {
-    const attrs = extractComponentAttributes(source, 'TagInput')
-    if (!attrs) {
-      return
-    }
-    const placeholder = attrs.get('placeholder')
-    if (!placeholder) {
-      pgPlaceholder = ''
-    } else if (placeholder.kind === 'string') {
-      pgPlaceholder = placeholder.value === 'Add a tag' ? '' : placeholder.value
-    }
-    const palette = attrs.get('palette')
-    if (!palette || (palette.kind === 'expression' && palette.value === 'altPalette')) {
-      pgPalette = ''
-    }
-    const disabled = attrs.get('disabled')
-    if (!disabled) {
-      pgDisabled = ''
-    } else if (disabled.kind === 'bare') {
-      pgDisabled = 'yes'
-    } else if (disabled.kind === 'expression' && (disabled.value === 'true' || disabled.value === 'false')) {
-      pgDisabled = disabled.value === 'true' ? 'yes' : 'no'
-    }
-    const inputId = attrs.get('inputId')
-    if (!inputId) {
-      pgInputId = ''
-    } else if (inputId.kind === 'string') {
-      pgInputId = inputId.value
-    }
-    const chipClass = attrs.get('chipClass')
-    if (!chipClass) {
-      pgChipClass = ''
-    } else if (chipClass.kind === 'string') {
-      pgChipClass = chipClass.value
-    }
-    const declarations = splitLeadingScript(source).declarations
-    const value = parseTagListValue(extractScriptJsonConst(declarations, 'value'))
-    if (value) {
-      pgValue = value
-    }
-    const availableTags = parseTagListValue(extractScriptJsonConst(declarations, 'availableTags'))
-    if (availableTags) {
-      pgAvailableTags = availableTags
-    }
-    preview.syncSeed()
-  }
 
   // Editable rows first (primitives, plain data, and snippets, A–Z), then the
   // function props (A–Z). Snippet rows keep no Value editor yet; the snippet
   // playground remains their customization surface.
-  const props: PropRow[] = [
-    { name: 'availableTags', type: 'string[]', defaultValue: '[]', note: 'Suggestions offered while typing.' },
-    { name: 'chip', type: 'Snippet<[tag, remove]>', defaultValue: '—', note: 'Custom chip renderer.' },
+  const fields: SyncableFieldConfig[] = $derived([
+    snippetField({
+      type: 'Snippet<[tag, remove]>',
+      name: 'chip',
+      note: 'Custom chip renderer; committing applies it, and the dialog edits its prefix text.',
+      value: pgChipPrefix,
+      onChange: value => (pgChipPrefix = value),
+      toggle: snippetToggle(pgChipOn, enabled => (pgChipOn = enabled)),
+    }),
     {
       name: 'chipClass',
-      type: 'string',
+      type: 'string | ((tag: string) => string)?',
       defaultValue: '—',
-      note: 'Uniform classes for every chip; wins over the palette.',
-    },
-    { name: 'disabled', type: 'boolean', defaultValue: 'false', note: 'Disables the input.' },
-    { name: 'inputId', type: 'string', defaultValue: '—', note: 'Native input id.' },
-    { name: 'option', type: 'Snippet<[tag]>', defaultValue: '—', note: 'Custom suggestion renderer.' },
+      note: 'Chip classes; a string applies to all, a function overrides per tag (wins over the palette); the eye stages the customization.', editor: 'text', clearable: true, value: pgChipClass, onChange: value => { pgChipClass = value; pgChipClassOn = true; }, toggle: snippetToggle(pgChipClassOn, enabled => (pgChipClassOn = enabled)), sync: { kind: 'text' } },
+    {
+      name: 'clearLabel',
+      type: 'string?',
+      defaultValue: "'Clear tags'",
+      editorDefaultValue: 'Clear tags',
+      note: 'Accessible name for the clear button; the eye stages the customization.', editor: 'text', clearable: true, value: pgClearLabel, onChange: value => { pgClearLabel = value; pgClearLabelOn = true; }, toggle: snippetToggle(pgClearLabelOn, enabled => (pgClearLabelOn = enabled)), placeholder: 'Clear tags', sync: { kind: 'text' } },
+    { name: 'clearPlacement', type: "'auto' | 'inside' | 'outside'", defaultValue: "'auto'", note: 'Inside overlays the box edge; outside sits after it; auto renders inside with the tags; the eye stages the customization.', editor: 'enum', options: clearPlacementOptions, value: pgClearPlacement, onChange: value => { pgClearPlacement = value; pgClearPlacementOn = true; }, placeholder: 'auto', clearLabel: 'Clear placement', toggle: snippetToggle(pgClearPlacementOn, enabled => (pgClearPlacementOn = enabled)), sync: { kind: 'text' } },
+    {
+      name: 'clearable',
+      type: 'boolean',
+      defaultValue: 'false',
+      note: 'Appends a cross button that resets the tags to the default value; the eye stages the customization.', editor: 'boolean', value: pgClearable, onChange: value => { pgClearable = value as TriState; pgClearableOn = true; }, toggle: snippetToggle(pgClearableOn, enabled => (pgClearableOn = enabled)), sync: { kind: 'tri' } },
+    jsonField({
+      name: 'defaultValue',
+      type: 'string[]',
+      note: 'Baseline the clear button compares against; the cross hides while the tags match it; the eye applies the list.',
+      value: JSON.stringify(pgDefaultValue, null, 2),
+      onChange: (draft: string) => {
+        const parsed = parseTagListJson(draft)
+        if (parsed) {
+          pgDefaultValue = parsed
+          pgDefaultValueOn = true
+        }
+      },
+      dialog: { valid: (draft: string) => parseTagListJson(draft) != null, invalidMessage: 'Invalid default-value JSON. Use an array of strings.', title: 'Edit default value' },
+      toggle: snippetToggle(pgDefaultValueOn, enabled => (pgDefaultValueOn = enabled)),
+      sync: { kind: 'scriptJson', parseJson: parseTagListValue, setJson: value => (pgDefaultValue = value as typeof pgDefaultValue) },
+    }),
+    { name: 'disabled', type: 'boolean', defaultValue: 'false', note: 'Disables the input; the eye stages the customization.', editor: 'boolean', value: pgDisabled, onChange: value => { pgDisabled = value as TriState; pgDisabledOn = true; }, toggle: snippetToggle(pgDisabledOn, enabled => (pgDisabledOn = enabled)), sync: { kind: 'tri' } },
+    { name: 'id', type: 'string?', defaultValue: '—', note: 'Native input id; the eye stages the customization.', editor: 'text', clearable: true, value: pgId, onChange: value => { pgId = value; pgIdOn = true; }, toggle: snippetToggle(pgIdOn, enabled => (pgIdOn = enabled)), sync: { kind: 'text' } },
+    snippetField({
+      type: 'Snippet<[tag]>',
+      name: 'option',
+      note: 'Custom suggestion renderer; committing applies it, and the dialog edits its prefix text.',
+      value: pgOptionPrefix,
+      onChange: value => (pgOptionPrefix = value),
+      toggle: snippetToggle(pgOptionOn, enabled => (pgOptionOn = enabled)),
+    }),
+    jsonField({
+      name: 'options',
+      type: 'string[]',
+      note: 'Suggestions offered while typing; the eye applies the list.',
+      value: JSON.stringify(pgOptions, null, 2),
+      onChange: (draft: string) => {
+        const parsed = parseTagListJson(draft)
+        if (parsed) {
+          pgOptions = parsed
+          pgOptionsEnabled = true
+        }
+      },
+      dialog: { valid: (draft: string) => parseTagListJson(draft) != null, invalidMessage: 'Invalid options JSON. Use an array of strings.', title: 'Edit options' },
+      toggle: snippetToggle(pgOptionsEnabled, enabled => (pgOptionsEnabled = enabled)),
+      sync: { kind: 'scriptJson', parseJson: parseTagListValue, setJson: value => (pgOptions = value as typeof pgOptions) },
+    }),
     {
       name: 'palette',
       type: 'readonly string[]',
       defaultValue: 'built-in',
-      note: 'Per-tag colour classes; replaces the built-in palette.',
-    },
-    { name: 'placeholder', type: 'string', defaultValue: '—', note: 'Placeholder text.' },
-    { name: 'value', type: 'string[]', defaultValue: '[]', note: 'Selected tags.' },
+      note: 'Per-tag colour classes; replaces the built-in palette; the eye stages the customization.', editor: 'enum', options: paletteOptions, value: pgPalette, onChange: value => { pgPalette = value; pgPaletteOn = true; }, clearLabel: 'Clear palette', toggle: snippetToggle(pgPaletteOn, enabled => (pgPaletteOn = enabled)), sync: { kind: 'scopeReset', scopeRef: 'altPalette' } },
+    { name: 'placeholder', type: 'string?', defaultValue: '—', note: 'Placeholder text; the eye stages the customization.', editor: 'text', clearable: true, value: pgPlaceholder, onChange: value => { pgPlaceholder = value; pgPlaceholderOn = true; }, toggle: snippetToggle(pgPlaceholderOn, enabled => (pgPlaceholderOn = enabled)), sync: { kind: 'text' } },
     {
-      name: 'chipClassFor',
-      type: '(tag: string) => string',
-      defaultValue: '—',
-      note: 'Per-tag chip classes; wins over chipClass.',
-    },
+      name: 'size',
+      type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number",
+      defaultValue: "'md'",
+      note: 'Control scale; numbers are icon-scale pixels interpolated between the steps; the eye stages the customization.', editor: 'size', allowCustomValue: true, value: pgSize, onChange: value => { pgSize = value; pgSizeOn = true; }, clearLabel: 'Clear size', placeholder: 'md', toggle: snippetToggle(pgSizeOn, enabled => (pgSizeOn = enabled)), sync: { kind: 'custom', read: attrs => {
+        const attr = attrs?.get('size')
+        // Absent restores the default, like the builder omitting the line;
+        // string and numeric shapes set, anything else is custom code the
+        // playground leaves alone.
+        if (!attr) return 'md'
+        if (attr.kind === 'string') return attr.value
+        if (attr.kind === 'expression' && /^\d+(\.\d+)?$/.test(attr.value)) return attr.value
+        return undefined
+      } } },
+    jsonField({
+      name: 'value',
+      type: 'string[]',
+      note: 'Selected tags; the eye applies the list (hiding the readout while off).',
+      value: JSON.stringify(pgValue, null, 2),
+      onChange: (draft: string) => {
+        const parsed = parseTagListJson(draft)
+        if (parsed) {
+          pgValue = parsed
+          pgValueEnabled = true
+        }
+      },
+      dialog: { valid: (draft: string) => parseTagListJson(draft) != null, invalidMessage: 'Invalid value JSON. Use an array of strings.', title: 'Edit value' },
+      toggle: snippetToggle(pgValueEnabled, enabled => (pgValueEnabled = enabled)),
+      sync: { kind: 'scriptJson', parseJson: parseTagListValue, setJson: value => (pgValue = value as typeof pgValue) },
+    }),
     { name: 'onChange', type: '(next: string[]) => void', defaultValue: '—', note: 'Called with the new tag list.' },
+    {
+      name: 'onClear',
+      type: '() => void',
+      defaultValue: 'onChange(default)',
+      note: 'Clear handler; resets to the default value when omitted.',
+    },
     {
       name: 'onQueryChange',
       type: '(query: string) => void',
       defaultValue: '—',
-      note: 'Called on every keystroke; supply externally filtered availableTags.',
-    },
-  ]
+      note: 'Called on every keystroke; supply externally filtered options.',
+    }
+  ])
+
+  const syncFields = $derived(syncFieldsOf(fields))
 </script>
 
-{#snippet resetIcon()}
-  <ResetIcon size="sm" />
+{#snippet demoChip(tag: string, remove: () => void)}
+  <span>{pgChipPrefix}{tag} <button type="button" onclick={remove} aria-label="Remove {tag}">×</button></span>
 {/snippet}
 
-{#snippet codeIcon()}
-  <CodeIcon size="sm" />
+{#snippet demoOption(tag: string)}
+  <span>{pgOptionPrefix}{tag}</span>
 {/snippet}
 
-{#snippet editIcon()}
-  <EditIcon size="sm" />
-{/snippet}
-
-{#snippet pageActions()}
-  <Button
-    variant="ghost"
-    size="sm"
-    icon={codeIcon}
-    ariaLabel={preview.open ? i18n.t('showcase.hideCode') : i18n.t('showcase.showCode')}
-    ariaExpanded={preview.open}
-    tooltip={preview.open ? i18n.t('showcase.hideCode') : i18n.t('showcase.showCode')}
-    onClick={() => preview.toggle()} />
-{/snippet}
-
-{#snippet propValue(row: PropRow)}
-  {#if row.name === 'value'}
-    <Button
-      variant="ghost"
-      size="sm"
-      icon={editIcon}
-      ariaLabel="Edit value"
-      tooltip="Edit value as JSON"
-      onClick={openValueEditor} />
-  {:else if row.name === 'availableTags'}
-    <Button
-      variant="ghost"
-      size="sm"
-      icon={editIcon}
-      ariaLabel="Edit available tags"
-      tooltip="Edit available tags as JSON"
-      onClick={openAvailableEditor} />
-  {:else if row.name === 'placeholder'}
-    <TextInput bind:value={pgPlaceholder} ariaLabel="placeholder value" placeholder="Add a tag" />
-  {:else if row.name === 'disabled'}
-    <Checkbox
-      checked={disabled ?? false}
-      ariaLabel="disabled value"
-      onChange={value => (pgDisabled = value ? 'yes' : 'no')} />
-  {:else if row.name === 'inputId'}
-    <TextInput bind:value={pgInputId} ariaLabel="inputId value" placeholder="(none)" />
-  {:else if row.name === 'chipClass'}
-    <TextInput bind:value={pgChipClass} ariaLabel="chipClass value" placeholder="(none)" />
-  {:else if row.name === 'palette'}
-    <SelectDropdown
-      buttonLabel={pgPalette ? 'Alt palette' : 'Default'}
-      activeValue={pgPalette}
-      ariaLabel="palette value"
-      options={paletteOptions}
-      onSelect={value => (pgPalette = value)}
-      clearable
-      clearLabel="Clear palette"
-      onClear={() => (pgPalette = '')} />
-  {:else}
-    <span class="text-slate-500">—</span>
-  {/if}
-{/snippet}
-
-{#snippet propsSnippet()}
-  <PropsTable rows={props} value={propValue} />
-{/snippet}
-
-{#snippet settingsPanel()}
-  <!-- Single-prop editing lives in the props table's Value column; this panel
-    keeps only Reset (and any future composite preset that drives several props
-    at once). -->
-  <Buttons className="flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
-  </Buttons>
-{/snippet}
-
-<ShowcasePage name="TagInput" props={propsSnippet} actions={pageActions} wide>
-  <ShowcaseSection
+<ShowcasePage
+    {fields}
     title="TagInput"
     {code}
     {preview}
-    showHeader={false}
-    bordered={false}
-    footer={settingsPanel}
-    scope={{ altPalette: ALT_PALETTE }}>
-    <div class={TAG_STAGE_HOST}>
-      <Resizable
-        width={pgStageWidth}
-        minWidth={TAG_STAGE_MIN_WIDTH}
-        maxWidth="parent"
-        onResize={nextWidth => (pgStageWidth = nextWidth)}>
-        <div class={TAG_STAGE_PANE}>
-          <TagInput
-            value={pgValue}
-            availableTags={pgAvailableTags}
-            placeholder={pgPlaceholder || 'Add a tag'}
-            palette={pgPalette === 'alt' ? ALT_PALETTE : undefined}
-            {disabled}
-            inputId={pgInputId || undefined}
-            chipClass={pgChipClass || undefined}
-            onChange={next => (pgValue = next)} />
-          <span class="text-sm text-slate-400">tags: {pgValue.join(', ')}</span>
-        </div>
-      </Resizable>
-    </div>
-  </ShowcaseSection>
-</ShowcasePage>
-
-{#if pgValueOpen}
-  <EditDialog
-    title="Edit value"
-    maxWidth="2xl"
-    closeLabel={i18n.t('common.close')}
-    saveLabel={i18n.t('common.ok')}
-    resetLabel={i18n.t('common.reset')}
-    discardTitle={i18n.t('showcase.discardTitle')}
-    discardMessage={i18n.t('showcase.discardMessage')}
-    discardLabel={i18n.t('showcase.discard')}
-    dirty={valueDirty}
-    saveDisabled={!parsedValue}
-    onSave={saveValueEditor}
-    onReset={() => (pgValueDraft = JSON.stringify(pgValue, null, 2))}
-    onClose={() => (pgValueOpen = false)}>
-    <div class="flex min-h-0 flex-col gap-3">
-      <LazyCodeEditor
-        bind:content={pgValueDraft}
-        docType="json"
-        editorAriaLabel="Value JSON"
-        containerClass="h-96 overflow-hidden rounded-md border border-slate-700 bg-slate-950"
-        editorClass="h-full" />
-      {#if !parsedValue}
-        <p role="alert" class="rounded-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
-          Invalid value JSON. Use an array of strings.
-        </p>
-      {/if}
-    </div>
-  </EditDialog>
-{/if}
-
-{#if pgAvailableOpen}
-  <EditDialog
-    title="Edit available tags"
-    maxWidth="2xl"
-    closeLabel={i18n.t('common.close')}
-    saveLabel={i18n.t('common.ok')}
-    resetLabel={i18n.t('common.reset')}
-    discardTitle={i18n.t('showcase.discardTitle')}
-    discardMessage={i18n.t('showcase.discardMessage')}
-    discardLabel={i18n.t('showcase.discard')}
-    dirty={availableDirty}
-    saveDisabled={!parsedAvailable}
-    onSave={saveAvailableEditor}
-    onReset={() => (pgAvailableDraft = JSON.stringify(pgAvailableTags, null, 2))}
-    onClose={() => (pgAvailableOpen = false)}>
-    <div class="flex min-h-0 flex-col gap-3">
-      <LazyCodeEditor
-        bind:content={pgAvailableDraft}
-        docType="json"
-        editorAriaLabel="Available tags JSON"
-        containerClass="h-96 overflow-hidden rounded-md border border-slate-700 bg-slate-950"
-        editorClass="h-full" />
-      {#if !parsedAvailable}
-        <p role="alert" class="rounded-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
-          Invalid available-tags JSON. Use an array of strings.
-        </p>
-      {/if}
-    </div>
-  </EditDialog>
-{/if}
+    onReset={clearPlayground}
+    scope={{ altPalette: ALT_PALETTE }}
+    stage={{ minWidth: TAG_STAGE_MIN_WIDTH }}
+    bind:stageWidth={pgStageWidth}
+>
+    <TagInput
+      value={pgValueEnabled ? pgValue : undefined}
+      defaultValue={demoDefaultValue}
+      options={pgOptionsEnabled ? pgOptions : undefined}
+      placeholder={pgPlaceholderOn && pgPlaceholder ? pgPlaceholder : undefined}
+      size={demoSize}
+      palette={pgPaletteOn && pgPalette === 'alt' ? ALT_PALETTE : undefined}
+      disabled={disabled}
+      clearable={clearable}
+      clearLabel={demoClearLabel}
+      clearPlacement={demoClearPlacement}
+      id={pgIdOn && pgId ? pgId : undefined}
+      chipClass={pgChipClassOn && pgChipClass ? pgChipClass : undefined}
+      chip={pgChipOn && pgChipPrefix ? demoChip : undefined}
+      option={pgOptionOn && pgOptionPrefix ? demoOption : undefined}
+      onChange={next => (pgValue = next)} />
+    {#if pgValueEnabled}
+      <span class="text-sm text-slate-400">tags: {pgValue.join(', ')}</span>
+    {/if}
+  </ShowcasePage>

@@ -4,14 +4,21 @@
 
 export interface TabsSnippetState {
   routeMode: string
-  headerClass: string
-  tabClass: string
+  className: string
+  classNameOn: boolean
+  ariaLabel: string
+  ariaLabelOn: boolean
+  pathname: string
+  pathnameOn: boolean
 }
 
 export const STYLED_HEADER = 'flex w-full items-center gap-2 rounded-lg border border-cyan-500/40 p-2'
-export const STYLED_TAB = 'text-cyan-300'
 
-export function buildTabsSnippet({ routeMode, headerClass, tabClass }: TabsSnippetState): string {
+function escapeAttr(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+}
+
+export function buildTabsSnippet({ routeMode, className, classNameOn, ariaLabel, ariaLabelOn, pathname, pathnameOn }: TabsSnippetState): string {
   const overviewPath = routeMode ? '#overview' : 'overview'
   const detailsPath = routeMode ? '#details' : 'details'
   const lines = [
@@ -28,10 +35,12 @@ export function buildTabsSnippet({ routeMode, headerClass, tabClass }: TabsSnipp
     `    { label: customizedLabel, path: '${detailsPath}', content: detailsContent },`,
     '  ]}',
     '  state={demoState}',
-    ...(routeMode ? ['  pathname={routePath}'] : []),
-    ...(headerClass ? [`  headerClass="${headerClass}"`] : []),
-    ...(tabClass ? [`  class="${tabClass}"`] : []),
-    '  ariaLabel={componentsLabel} />',
+    // A literal pathname wins; unset, route mode reads the path from scope.
+    ...(pathnameOn && pathname ? [`  pathname="${escapeAttr(pathname)}"`] : routeMode ? ['  pathname={routePath}'] : []),
+    ...(classNameOn && className ? [`  className="${className}"`] : []),
+    // A custom label renders as a literal; unset, the nav reads the scope label.
+    ...(ariaLabelOn && ariaLabel ? [`  ariaLabel="${escapeAttr(ariaLabel)}"`] : ['  ariaLabel={componentsLabel}']),
+    '/>',
   ]
   return lines.join('\n')
 }

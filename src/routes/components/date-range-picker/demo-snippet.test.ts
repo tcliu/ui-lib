@@ -3,15 +3,17 @@ import { createSnippetComponent } from '$lib/showcase/snippet-playground'
 import { buildDateRangePickerSnippet } from './demo-snippet'
 
 describe('buildDateRangePickerSnippet', () => {
-  it('seeds the range as script-local state inside the resizable stage', () => {
+  it('emits content-only markup and omits unset overrides', () => {
     const source = buildDateRangePickerSnippet({ from: '', to: '' })
-    expect(source).toContain('<Resizable')
-    expect(source).toContain('width={stageWidth}')
-    expect(source).not.toContain('stageHeight')
+    // The resize harness is ShowcasePage-owned chrome, never in the snippet.
+    expect(source).not.toContain('<Resizable')
+    expect(source).not.toContain('stageWidth')
     expect(source).toContain('let from = $state("")')
     expect(source).toContain('let to = $state("")')
     expect(source).toContain('from={from}')
     expect(source).toContain('to={to}')
+    expect(source).toContain('onFrom={value => (from = value)}')
+    expect(source).toContain('onTo={value => (to = value)}')
   })
 
   it('seeds literal dates as valid script state', () => {
@@ -20,7 +22,14 @@ describe('buildDateRangePickerSnippet', () => {
     expect(source).toContain('let to = $state("2026-09-19")')
   })
 
-  it('compiles the generated stage snippet', { timeout: 30000 }, async () => {
+  it('omits component defaults (the Value column prefills the empty range)', () => {
+    const source = buildDateRangePickerSnippet({ from: '', to: '' })
+    expect(source).toContain('let from = $state("")')
+    expect(source).toContain('let to = $state("")')
+    expect(source).not.toContain('theme=')
+  })
+
+  it('compiles the generated snippet', { timeout: 30000 }, async () => {
     const component = await createSnippetComponent(buildDateRangePickerSnippet({ from: '', to: '' }), {})
     expect(typeof component).toBe('function')
   })

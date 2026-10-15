@@ -6,49 +6,123 @@ import { sizeAttributeLine } from '$lib/showcase/size-input'
 export type TriState = '' | 'yes' | 'no'
 
 export interface ButtonSnippetState {
+  label: string
+  childrenEnabled: boolean
   variant: string
+  variantOn: boolean
   accent: string
+  accentOn: boolean
   size: string
+  sizeOn: boolean
   disabled: TriState
+  disabledOn: boolean
   pending: TriState
-  icon: string
-  badge: string
+  pendingOn: boolean
+  iconOn: boolean
   className: string
+  classNameOn: boolean
+  ariaLabel: string
+  ariaLabelOn: boolean
+  ariaExpanded: TriState
+  ariaExpandedOn: boolean
+  ariaPressed: TriState
+  ariaPressedOn: boolean
+  tooltip: string
+  tooltipOn: boolean
+  tooltipAlign: string
+  tooltipAlignOn: boolean
+  buttonType: string
+  buttonTypeOn: boolean
+  focusRing: TriState
+  focusRingOn: boolean
+  preventFocusSteal: TriState
+  preventFocusStealOn: boolean
 }
 
 function escapeAttr(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 }
 
-// A tri-state line: omitted while unset, bare while Yes, ={false} while No.
-function flagLine(name: string, value: TriState): string[] {
-  if (value === '') {
+// A JS string literal for the leading script. JSON.stringify handles quotes and
+// backslashes; escaping every `<` as `\u003c` stops a label from closing the
+// surrounding `<script>` block or being mistaken for the demo tag by the
+// snippet scanner. `\u003c` is valid JSON, so the literal parses back to the
+// original text.
+function scriptString(value: string): string {
+  return JSON.stringify(value).replace(/</g, '\\u003c')
+}
+
+// A tri-state line: omitted while unset or at the component default, bare
+// while Yes, ={false} while No.
+function flagLine(name: string, value: TriState, def: TriState = ''): string[] {
+  if (value === '' || value === def) {
     return []
   }
   return [`  ${name}${value === 'yes' ? '' : '={false}'}`]
 }
 
 export function buildButtonSnippet({
+  label,
+  childrenEnabled,
   variant,
+  variantOn,
   accent,
+  accentOn,
   size,
+  sizeOn,
   disabled,
+  disabledOn,
   pending,
-  icon,
-  badge,
+  pendingOn,
+  iconOn,
   className,
+  classNameOn,
+  ariaLabel,
+  ariaLabelOn,
+  ariaExpanded,
+  ariaExpandedOn,
+  ariaPressed,
+  ariaPressedOn,
+  tooltip,
+  tooltipOn,
+  tooltipAlign,
+  tooltipAlignOn,
+  buttonType,
+  buttonTypeOn,
+  focusRing,
+  focusRingOn,
+  preventFocusSteal,
+  preventFocusStealOn,
 }: ButtonSnippetState): string {
   const lines = [
+    // A custom label becomes a leading script-local; unset, the children read
+    // the localized default from scope. `buildSource` drops the same-named
+    // scope key once the snippet declares it, so the local value wins. The eye
+    // toggle off means the children snippet is not applied at all.
+    ...(childrenEnabled && label ? ['<script>', `  let label = $state(${scriptString(label)})`, '</script>'] : []),
     '<Button',
-    ...(variant ? [`  variant="${variant}"`] : []),
-    ...(accent ? [`  accent="${accent}"`] : []),
-    ...sizeAttributeLine(size),
-    ...flagLine('disabled', disabled),
-    ...flagLine('pending', pending),
-    ...(icon ? ['  icon={checkIcon}'] : []),
-    ...(badge ? [`  badge="${escapeAttr(badge)}"`] : []),
-    ...(className ? [`  className="${escapeAttr(className)}"`] : []),
-    '  onClick={() => (clicks += 1)}>{label} ({clicks})',
+    // Enum rows prefill their component default in the Value column; the
+    // builder omits the default so Show-code stays minimal.
+    ...(variantOn && variant && variant !== 'secondary' ? [`  variant="${variant}"`] : []),
+    ...(accentOn && accent && accent !== 'cyan' ? [`  accent="${accent}"`] : []),
+    ...(sizeOn && size !== '' && size !== 'md' ? sizeAttributeLine(size) : []),
+    ...(disabledOn ? flagLine('disabled', disabled, 'no') : []),
+    ...(pendingOn ? flagLine('pending', pending, 'no') : []),
+    ...(classNameOn && className ? [`  className="${escapeAttr(className)}"`] : []),
+    ...(ariaLabelOn && ariaLabel ? [`  ariaLabel="${escapeAttr(ariaLabel)}"`] : []),
+    ...(ariaExpandedOn ? flagLine('ariaExpanded', ariaExpanded) : []),
+    ...(ariaPressedOn ? flagLine('ariaPressed', ariaPressed) : []),
+    ...(tooltipOn && tooltip ? [`  tooltip="${escapeAttr(tooltip)}"`] : []),
+    ...(tooltipAlignOn && tooltipAlign && tooltipAlign !== 'center' ? [`  tooltipAlign="${tooltipAlign}"`] : []),
+    ...(buttonTypeOn && buttonType && buttonType !== 'button' ? [`  type="${buttonType}"`] : []),
+    ...(focusRingOn ? flagLine('focusRing', focusRing, 'yes') : []),
+    ...(preventFocusStealOn ? flagLine('preventFocusSteal', preventFocusSteal, 'no') : []),
+    ...(childrenEnabled
+      ? ['  onClick={() => (clicks += 1)}>{label} ({clicks})']
+      : ['  onClick={() => (clicks += 1)}>']),
+    ...(iconOn
+      ? ['  {#snippet icon()}', '    <CheckIcon />', '  {/snippet}']
+      : []),
     '</Button>',
   ]
   return lines.join('\n')

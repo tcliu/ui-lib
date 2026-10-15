@@ -2,124 +2,134 @@
 // over the playground form state: the section regenerates the editor text from
 // this, so the editor always shows the markup behind the demo above.
 //
-// The demo sits in a width-only `Resizable` frame so the panel placement can be
-// inspected as the container narrows. The host is non-scrolling and the frame
-// is bounded to it, so no scrollbar can appear over the frame handle. These
-// literals are shared with the page and its tests so the rendered stage and
-// the reviewed source stay identical.
+// The resize harness is ShowcasePage-owned chrome (its `stage` prop), so the
+// snippet carries only the demo content the page authors inside that frame.
 
 export type TriState = '' | 'yes' | 'no'
 
-export const CHIP_STAGE_HOST = 'w-full overflow-hidden'
-export const CHIP_STAGE_PANE = 'flex w-full min-w-0 flex-wrap items-start gap-4'
 export const CHIP_STAGE_DEFAULT_WIDTH = 560
 export const CHIP_STAGE_MIN_WIDTH = 240
 
-// The snippet's local size state, seeded to the default so the live stage
-// matches the static demo before the first drag.
-export function chipStageStateLine(indent: string): string {
-  return `${indent}let stageWidth = $state(${CHIP_STAGE_DEFAULT_WIDTH})`
-}
-
-export function chipStageOpenLines(indent: string): string[] {
-  return [
-    `${indent}<div class="${CHIP_STAGE_HOST}">`,
-    `${indent}  <Resizable`,
-    `${indent}    width={stageWidth}`,
-    `${indent}    minWidth={${CHIP_STAGE_MIN_WIDTH}}`,
-    `${indent}    maxWidth="parent"`,
-    `${indent}    onResize={nextWidth => (stageWidth = nextWidth)}`,
-    `${indent}  >`,
-    `${indent}    <div class="${CHIP_STAGE_PANE}">`,
-  ]
-}
-
-export function chipStageCloseLines(indent: string): string[] {
-  return [`${indent}    </div>`, `${indent}  </Resizable>`, `${indent}</div>`]
-}
+// Seeded accessible name for the trigger; the cleared form renders this while
+// the ariaLabel eye is off, so the required prop always has a value.
+export const DEFAULT_CHIP_DROPDOWN_ARIA_LABEL = 'Set status'
 
 export interface ChipDropdownSnippetState {
   label: string
+  labelOn: boolean
   ariaLabel: string
-  // Committed value, seeded as script-local state (like the stage size) so the
-  // snippet text tracks activeValue edits instead of hiding the value in scope.
+  ariaLabelOn: boolean
+  // Committed value, seeded as script-local state so the snippet text tracks
+  // activeValue edits instead of hiding the value in scope.
   value: string
+  valueOn: boolean
+  defaultValue: string
+  defaultValueOn: boolean
   variant: string
+  variantOn: boolean
   filterable: TriState
+  filterableOn: boolean
   disabled: TriState
+  disabledOn: boolean
   align: string
+  alignOn: boolean
   filterPlaceholder: string
+  filterPlaceholderOn: boolean
   buttonClass: string
+  buttonClassOn: boolean
   emptyText: string
+  emptyTextOn: boolean
+  clearable: TriState
+  clearableOn: boolean
+  clearLabel: string
+  clearLabelOn: boolean
   autoPlace: TriState
+  autoPlaceOn: boolean
   panelClass: string
+  panelClassOn: boolean
 }
 
 function escapeAttr(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 }
 
-// A tri-state line: omitted while unset, bare while Yes, ={false} while No.
-function flagLine(name: string, value: TriState, indent: string): string[] {
-  if (value === '') {
+// A tri-state line: omitted while unset or at the component default, bare
+// while Yes, ={false} while No.
+function flagLine(name: string, value: TriState, indent: string, def: TriState = ''): string[] {
+  if (value === '' || value === def) {
     return []
   }
   return [`${indent}${name}${value === 'yes' ? '' : '={false}'}`]
 }
 
-// A string attribute line, omitted while unset.
-function textLine(name: string, value: string, indent: string): string[] {
-  return value ? [`${indent}${name}="${escapeAttr(value)}"`] : []
-}
-
 export function buildChipDropdownSnippet({
   label,
+  labelOn,
   ariaLabel,
+  ariaLabelOn,
   value,
+  valueOn,
+  defaultValue,
+  defaultValueOn,
   variant,
+  variantOn,
   filterable,
+  filterableOn,
   disabled,
+  disabledOn,
   align,
+  alignOn,
   filterPlaceholder,
+  filterPlaceholderOn,
   buttonClass,
+  buttonClassOn,
   emptyText,
+  emptyTextOn,
+  clearable,
+  clearableOn,
+  clearLabel,
+  clearLabelOn,
   autoPlace,
+  autoPlaceOn,
   panelClass,
+  panelClassOn,
 }: ChipDropdownSnippetState): string {
-  // The component sits at 6 spaces; its attributes and the trailing value line
-  // at 8, matching the stage's inner pane.
-  const componentIndent = '      '
-  const attributeIndent = '        '
+  // The frame is shell chrome, so the component sits at the snippet root with
+  // its attributes one step in; the committed value is script-local state.
+  const indent = '  '
   const attributes = [
-    // A custom label renders as a literal; unset, the trigger derives its
-    // label from the committed value through the scope helper.
-    ...(label
-      ? [`${attributeIndent}label="${escapeAttr(label)}"`]
-      : [`${attributeIndent}label={labelFor(options, value)}`]),
-    `${attributeIndent}activeValue={value}`,
-    `${attributeIndent}ariaLabel="${escapeAttr(ariaLabel)}"`,
-    ...(variant ? [`${attributeIndent}variant="${variant}"`] : []),
-    ...flagLine('filterable', filterable, attributeIndent),
-    ...flagLine('disabled', disabled, attributeIndent),
-    ...(align ? [`${attributeIndent}align="${align}"`] : []),
-    ...textLine('filterPlaceholder', filterPlaceholder, attributeIndent),
-    ...textLine('buttonClass', buttonClass, attributeIndent),
-    ...textLine('emptyText', emptyText, attributeIndent),
-    ...flagLine('autoPlace', autoPlace, attributeIndent),
-    ...textLine('panelClass', panelClass, attributeIndent),
-    `${attributeIndent}options={options}`,
-    `${attributeIndent}onSelect={next => (value = next)} />`,
+    // A custom label renders as a literal while its eye is on; otherwise the
+    // trigger derives its label from the committed value through the scope helper.
+    ...((labelOn && label)
+      ? [`${indent}label="${escapeAttr(label)}"`]
+      : [`${indent}label={labelFor(options, value)}`]),
+    ...(valueOn ? [`${indent}activeValue={value}`] : []),
+    // Baseline the clear button compares against; the eye stages it.
+    ...(defaultValueOn && defaultValue ? [`${indent}defaultValue="${escapeAttr(defaultValue)}"`] : []),
+    `${indent}ariaLabel="${escapeAttr(ariaLabelOn && ariaLabel ? ariaLabel : DEFAULT_CHIP_DROPDOWN_ARIA_LABEL)}"`,
+    // Enum rows prefill their component default in the Value column; the
+    // builder omits the default so Show-code stays minimal.
+    ...(variantOn && variant && variant !== 'violet' ? [`${indent}variant="${variant}"`] : []),
+    ...(filterableOn ? flagLine('filterable', filterable, indent, 'no') : []),
+    ...(disabledOn ? flagLine('disabled', disabled, indent, 'no') : []),
+    ...(alignOn && align && align !== 'left' ? [`${indent}align="${align}"`] : []),
+    ...(filterPlaceholderOn && filterPlaceholder ? [`${indent}filterPlaceholder="${escapeAttr(filterPlaceholder)}"`] : []),
+    ...(buttonClassOn && buttonClass ? [`${indent}buttonClass="${escapeAttr(buttonClass)}"`] : []),
+    ...(emptyTextOn && emptyText ? [`${indent}emptyText="${escapeAttr(emptyText)}"`] : []),
+    ...(clearableOn ? flagLine('clearable', clearable, indent, 'no') : []),
+    ...(clearLabelOn && clearLabel ? [`${indent}clearLabel="${escapeAttr(clearLabel)}"`] : []),
+    ...(autoPlaceOn ? flagLine('autoPlace', autoPlace, indent, 'yes') : []),
+    ...(panelClassOn && panelClass ? [`${indent}panelClass="${escapeAttr(panelClass)}"`] : []),
+    `${indent}options={options}`,
+    `${indent}onSelect={next => (value = next)} />`,
   ]
   return [
     '<script>',
-    chipStageStateLine('  '),
     // JSON.stringify keeps the literal valid no matter what the value holds.
-    `  let value = $state(${JSON.stringify(value)})`,
+    `${indent}let value = $state(${JSON.stringify(value)})`,
     '</script>',
-    ...chipStageOpenLines(''),
-    `${componentIndent}<ChipDropdown`,
+    '<ChipDropdown',
     ...attributes,
-    `${componentIndent}<span class="text-sm text-slate-400">value: {value}</span>`,
-    ...chipStageCloseLines(''),
+    '<span class="text-sm text-slate-400">value: {value}</span>',
   ].join('\n')
 }

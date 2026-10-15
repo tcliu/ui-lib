@@ -1,43 +1,63 @@
 <script lang="ts">
   import Button from '$lib/components/Button.svelte'
-  import Buttons from '$lib/components/Buttons.svelte'
-  import Checkbox from '$lib/components/Checkbox.svelte'
-  import FormField from '$lib/components/FormField.svelte'
-  import SelectDropdown from '$lib/components/SelectDropdown.svelte'
-  import TextInput from '$lib/components/TextInput.svelte'
   import CheckIcon from '$lib/icons/CheckIcon.svelte'
-  import CodeIcon from '$lib/icons/CodeIcon.svelte'
-  import ResetIcon from '$lib/icons/ResetIcon.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import PropsTable, { type PropRow } from '$lib/showcase/PropsTable.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
   import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
+  import { useScopeRefresh } from '$lib/showcase/use-scope-refresh.svelte'
   import { parseSizeValue } from '$lib/showcase/size-input'
-  import { extractComponentAttributes } from '$lib/showcase/snippet-attributes'
-  import { buildButtonSnippet, type TriState } from './demo-snippet'
+  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { snippetDialog, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
+  import {
+    buildButtonSnippet,
+    type TriState,
+  } from './demo-snippet'
 
   const i18n = getI18nContext()
 
-  // Customizer playground state. Every curated option starts unset (the
-  // component default renders), so the cleared form applies no overrides.
-  // The label edits the demo content (which carries no functions, but stays
-  // in the footer as demo data); `clicks` is interaction state.
+  // Customizer playground state. Every curated option starts at the
+  // component default (the Value column shows it), so the cleared form
+  // applies no overrides and Show-code omits the defaults. Clearing a Value
+  // unsets it; Reset restores the defaults below.
+  // The label edits the demo content through the children row's code dialog;
+  // `clicks` is interaction state.
   let pgClicks = $state(0)
-  let pgVariant = $state('')
-  let pgAccent = $state('')
-  let pgSize = $state('')
-  let pgDisabled = $state<TriState>('')
-  let pgPending = $state<TriState>('')
-  let pgIcon = $state('')
-  let pgBadge = $state('')
-  let pgLabel = $state('')
+  let pgVariant = $state('secondary')
+  let pgVariantOn = $state(false)
+  let pgAccent = $state('cyan')
+  let pgAccentOn = $state(false)
+  let pgSize = $state('md')
+  let pgSizeOn = $state(false)
+  let pgDisabled = $state<TriState>('no')
+  let pgDisabledOn = $state(false)
+  let pgPending = $state<TriState>('no')
+  let pgPendingOn = $state(false)
+  let pgIconOn = $state(false)
+  let pgLabel = $state('Apply')
+  let pgChildrenEnabled = $state(true)
   let pgClassName = $state('')
+  let pgClassNameOn = $state(false)
+  let pgAriaLabel = $state('')
+  let pgAriaLabelOn = $state(false)
+  let pgAriaExpanded = $state<TriState>('')
+  let pgAriaExpandedOn = $state(false)
+  let pgAriaPressed = $state<TriState>('')
+  let pgAriaPressedOn = $state(false)
+  let pgTooltip = $state('')
+  let pgTooltipOn = $state(false)
+  let pgTooltipAlign = $state('center')
+  let pgTooltipAlignOn = $state(false)
+  let pgType = $state('button')
+  let pgTypeOn = $state(false)
+  let pgFocusRing = $state<TriState>('yes')
+  let pgFocusRingOn = $state(true)
+  let pgPreventFocusSteal = $state<TriState>('no')
+  let pgPreventFocusStealOn = $state(false)
 
   const variants = ['primary', 'secondary', 'danger', 'outline', 'ghost']
   const accents = ['cyan', 'emerald', 'amber', 'violet', 'rose']
-  const sizes = ['xs', 'sm', 'md', 'lg']
-  const iconOptions = [{ value: 'yes', label: 'Check icon' }]
+  const tooltipAligns = ['center', 'left', 'right']
+  const types = ['button', 'submit', 'reset']
 
   // Unset renders the component default; Yes/No force the value.
   function flagOn(value: TriState): boolean | undefined {
@@ -45,278 +65,192 @@
   }
 
   const demoVariant = $derived(
-    (pgVariant || undefined) as 'primary' | 'secondary' | 'danger' | 'outline' | 'ghost' | undefined,
+    pgVariantOn
+      ? ((pgVariant || undefined) as 'primary' | 'secondary' | 'danger' | 'outline' | 'ghost' | undefined)
+      : undefined,
   )
-  const demoAccent = $derived((pgAccent || undefined) as 'cyan' | 'emerald' | 'amber' | 'violet' | 'rose' | undefined)
-  const demoSize = $derived(parseSizeValue(pgSize))
-  const disabled = $derived(flagOn(pgDisabled))
-  const pending = $derived(flagOn(pgPending))
+  const demoAccent = $derived(
+    pgAccentOn
+      ? ((pgAccent || undefined) as 'cyan' | 'emerald' | 'amber' | 'violet' | 'rose' | undefined)
+      : undefined,
+  )
+  const demoSize = $derived(pgSizeOn ? parseSizeValue(pgSize) : undefined)
+  const disabled = $derived(pgDisabledOn ? flagOn(pgDisabled) : undefined)
+  const pending = $derived(pgPendingOn ? flagOn(pgPending) : undefined)
+  const ariaExpanded = $derived(pgAriaExpandedOn ? flagOn(pgAriaExpanded) : undefined)
+  const ariaPressed = $derived(pgAriaPressedOn ? flagOn(pgAriaPressed) : undefined)
+  const demoTooltipAlign = $derived(
+    pgTooltipAlignOn ? ((pgTooltipAlign || undefined) as 'center' | 'left' | 'right' | undefined) : undefined,
+  )
+  const demoType = $derived(pgTypeOn ? ((pgType || undefined) as 'button' | 'submit' | 'reset' | undefined) : undefined)
+  const demoFocusRing = $derived(pgFocusRingOn ? (pgFocusRing === '' ? undefined : pgFocusRing === 'yes') : undefined)
+  const demoPreventFocusSteal = $derived(pgPreventFocusStealOn ? flagOn(pgPreventFocusSteal) : undefined)
   const demoLabel = $derived(pgLabel || i18n.t('common.apply'))
 
   function clearPlayground() {
     pgClicks = 0
-    pgVariant = ''
-    pgAccent = ''
-    pgSize = ''
-    pgDisabled = ''
-    pgPending = ''
-    pgIcon = ''
-    pgBadge = ''
-    pgLabel = ''
+    pgVariant = 'secondary'
+    pgVariantOn = false
+    pgAccent = 'cyan'
+    pgAccentOn = false
+    pgSize = 'md'
+    pgSizeOn = false
+    pgDisabled = 'no'
+    pgDisabledOn = false
+    pgPending = 'no'
+    pgPendingOn = false
+    pgIconOn = false
+    pgLabel = 'Apply'
+    pgChildrenEnabled = true
     pgClassName = ''
+    pgClassNameOn = false
+    pgAriaLabel = ''
+    pgAriaLabelOn = false
+    pgAriaExpanded = ''
+    pgAriaExpandedOn = false
+    pgAriaPressed = ''
+    pgAriaPressedOn = false
+    pgTooltip = ''
+    pgTooltipOn = false
+    pgTooltipAlign = 'center'
+    pgTooltipAlignOn = false
+    pgType = 'button'
+    pgTypeOn = false
+    pgFocusRing = 'yes'
+    pgFocusRingOn = true
+    pgPreventFocusSteal = 'no'
+    pgPreventFocusStealOn = false
   }
 
   const code = $derived.by(() =>
     buildButtonSnippet({
+      label: pgLabel,
+      childrenEnabled: pgChildrenEnabled,
       variant: pgVariant,
+      variantOn: pgVariantOn,
       accent: pgAccent,
+      accentOn: pgAccentOn,
       size: pgSize,
+      sizeOn: pgSizeOn,
       disabled: pgDisabled,
+      disabledOn: pgDisabledOn,
       pending: pgPending,
-      icon: pgIcon,
-      badge: pgBadge,
+      pendingOn: pgPendingOn,
+      iconOn: pgIconOn,
       className: pgClassName,
+      classNameOn: pgClassNameOn,
+      ariaLabel: pgAriaLabel,
+      ariaLabelOn: pgAriaLabelOn,
+      ariaExpanded: pgAriaExpanded,
+      ariaExpandedOn: pgAriaExpandedOn,
+      ariaPressed: pgAriaPressed,
+      ariaPressedOn: pgAriaPressedOn,
+      tooltip: pgTooltip,
+      tooltipOn: pgTooltipOn,
+      tooltipAlign: pgTooltipAlign,
+      tooltipAlignOn: pgTooltipAlignOn,
+      buttonType: pgType,
+      buttonTypeOn: pgTypeOn,
+      focusRing: pgFocusRing,
+      focusRingOn: pgFocusRingOn,
+      preventFocusSteal: pgPreventFocusSteal,
+      preventFocusStealOn: pgPreventFocusStealOn,
     }),
   )
 
-  // The page owns the preview so its code toggle can sit in the component-title
-  // row (ShowcasePage's `actions`) while the section renders the demo and the
-  // editor below.
   const preview = new SnippetPreview({
     getSeed: () => code,
-    getScope: () => ({ clicks: pgClicks, label: demoLabel, checkIcon }),
-    onCompiled: syncPlaygroundFromSnippet,
+    getScope: () => ({ clicks: pgClicks, label: demoLabel }),
+    sync: { tag: 'Button', getFields: () => syncFields },
   })
 
-  // Write a compiled snippet's recognized demo-tag attributes back into
-  // playground state, so snippet edits show up in the Value column. Only
-  // canonical shapes map (literals, bare flags, `{true}`/`{false}`, and the
-  // `icon={checkIcon}` scope ref); custom expressions are left alone, and a
-  // draft without a complete demo tag (a free-form experiment) touches
-  // nothing. Absent means unset, matching what the builder omits. `syncSeed`
-  // then holds the regenerated seed back so the editor keeps the user's text.
-  function syncPlaygroundFromSnippet(source: string) {
-    const attrs = extractComponentAttributes(source, 'Button')
-    if (!attrs) {
-      return
-    }
-    const text = (name: string): string | undefined => {
-      if (!attrs.has(name)) {
-        return ''
-      }
-      const attr = attrs.get(name)!
-      return attr.kind === 'string' ? attr.value : undefined
-    }
-    const tri = (name: string): TriState | undefined => {
-      if (!attrs.has(name)) {
-        return ''
-      }
-      const attr = attrs.get(name)!
-      if (attr.kind === 'bare') {
-        return 'yes'
-      }
-      if (attr.kind === 'expression' && (attr.value === 'true' || attr.value === 'false')) {
-        return attr.value === 'true' ? 'yes' : 'no'
-      }
+  const fields: SyncableFieldConfig[] = $derived([
+    { name: 'accent', type: "'cyan' | 'emerald' | 'amber' | 'violet' | 'rose'", defaultValue: "'cyan'", note: 'Tint for primary and outline; the eye stages the customization.', editor: 'enum', options: accents.map(value => ({ value, label: value })), value: pgAccent, onChange: value => { pgAccent = value; pgAccentOn = true; }, placeholder: 'cyan', clearLabel: 'Clear accent', toggle: snippetToggle(pgAccentOn, enabled => (pgAccentOn = enabled)), sync: { kind: 'text' } },
+    { name: 'ariaExpanded', type: 'boolean', defaultValue: '—', note: 'Disclosure state for popover triggers; the eye stages the customization.', editor: 'boolean', value: pgAriaExpanded, onChange: value => { pgAriaExpanded = value as TriState; pgAriaExpandedOn = true; }, toggle: snippetToggle(pgAriaExpandedOn, enabled => (pgAriaExpandedOn = enabled)), sync: { kind: 'tri' } },
+    { name: 'ariaLabel', type: 'string?', defaultValue: '—', note: 'Accessible name for icon-only buttons; the eye stages the customization.', editor: 'text', clearable: true, value: pgAriaLabel, onChange: value => { pgAriaLabel = value; pgAriaLabelOn = true; }, toggle: snippetToggle(pgAriaLabelOn, enabled => (pgAriaLabelOn = enabled)), sync: { kind: 'text' } },
+    { name: 'ariaPressed', type: 'boolean', defaultValue: '—', note: 'Toggle state for pressable buttons; the eye stages the customization.', editor: 'boolean', value: pgAriaPressed, onChange: value => { pgAriaPressed = value as TriState; pgAriaPressedOn = true; }, toggle: snippetToggle(pgAriaPressedOn, enabled => (pgAriaPressedOn = enabled)), sync: { kind: 'tri' } },
+    snippetField({
+      name: 'children',
+      note: 'Button label/content; committing applies it.',
+      value: demoLabel,
+      onChange: value => (pgLabel = value, pgChildrenEnabled = true),
+      sync: { kind: 'script', attr: 'label', unsetAbsent: true, set: value => { if (pgChildrenEnabled) pgLabel = value } },
+      toggle: snippetToggle(pgChildrenEnabled, enabled => (pgChildrenEnabled = enabled)),
+    }),
+    { name: 'className', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Extra classes appended to the button; the eye stages the customization.', editor: 'text', clearable: true, value: pgClassName, onChange: value => { pgClassName = value; pgClassNameOn = true; }, toggle: snippetToggle(pgClassNameOn, enabled => (pgClassNameOn = enabled)), sync: { kind: 'text' } },
+    { name: 'disabled', type: 'boolean', defaultValue: 'false', note: 'Native disabled + reduced opacity; the eye stages the customization.', editor: 'boolean', value: pgDisabled, onChange: value => { pgDisabled = value as TriState; pgDisabledOn = true; }, toggle: snippetToggle(pgDisabledOn, enabled => (pgDisabledOn = enabled)), sync: { kind: 'tri' } },
+    { name: 'focusRing', type: 'boolean', defaultValue: 'true', note: 'Keyboard focus ring; disable only when focus stays visible another way; the eye stages the customization.', editor: 'boolean', value: pgFocusRing, onChange: value => { pgFocusRing = value as TriState; pgFocusRingOn = true; }, toggle: snippetToggle(pgFocusRingOn, enabled => (pgFocusRingOn = enabled)), sync: { kind: 'tri' } },
+    snippetField({
+      name: 'icon',
+      note: 'Leading icon; icon-only when no children. Button sizes it from its own size, so the glyph stays bare.',
+      value: '<CheckIcon />',
+      // The glyph is fixed: only the bare line validates, so a commit changes
+      // nothing and the eye is the row's real control.
+      onChange: () => {},
+      dialog: snippetDialog(
+        (draft: string) => (draft.trim() === '<CheckIcon />' ? '' : null),
+        'Invalid icon markup. Keep the bare <CheckIcon /> line; Button sizes it from its own size.',
+      ),
+      toggle: snippetToggle(pgIconOn, enabled => (pgIconOn = enabled)),
+    }),
+    { name: 'pending', type: 'boolean', defaultValue: 'false', note: 'Disabled state with a spinner slot; the eye stages the customization.', editor: 'boolean', value: pgPending, onChange: value => { pgPending = value as TriState; pgPendingOn = true; }, toggle: snippetToggle(pgPendingOn, enabled => (pgPendingOn = enabled)), sync: { kind: 'tri' } },
+    { name: 'preventFocusSteal', type: 'boolean', defaultValue: 'false', note: 'Keeps focus on the current element when clicked; the eye stages the customization.', editor: 'boolean', value: pgPreventFocusSteal, onChange: value => { pgPreventFocusSteal = value as TriState; pgPreventFocusStealOn = true; }, toggle: snippetToggle(pgPreventFocusStealOn, enabled => (pgPreventFocusStealOn = enabled)), sync: { kind: 'tri' } },
+    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number", defaultValue: "'md'", note: 'Control scale; numbers are icon-scale pixels interpolated between the steps; the eye stages the customization.', editor: 'size', allowCustomValue: true, value: pgSize, onChange: value => { pgSize = value; pgSizeOn = true; }, placeholder: 'md', clearLabel: 'Clear size', toggle: snippetToggle(pgSizeOn, enabled => (pgSizeOn = enabled)), sync: { kind: 'custom', read: attrs => {
+      const attr = attrs?.get('size')
+      // Absent restores the default, like the builder omitting the line;
+      // string and numeric shapes set, anything else is custom code the
+      // playground leaves alone.
+      if (!attr) return 'md'
+      if (attr.kind === 'string') return attr.value
+      if (attr.kind === 'expression' && /^\d+(\.\d+)?$/.test(attr.value)) return attr.value
       return undefined
-    }
-    const applyText = (name: string, assign: (value: string) => void) => {
-      const next = text(name)
-      if (next !== undefined) {
-        assign(next)
-      }
-    }
-    const applyTri = (name: string, assign: (value: TriState) => void) => {
-      const next = tri(name)
-      if (next !== undefined) {
-        assign(next)
-      }
-    }
-    applyText('variant', value => (pgVariant = value))
-    applyText('accent', value => (pgAccent = value))
-    applyText('size', value => (pgSize = value))
-    applyText('badge', value => (pgBadge = value))
-    applyText('className', value => (pgClassName = value))
-    applyTri('disabled', value => (pgDisabled = value))
-    applyTri('pending', value => (pgPending = value))
-    // An `icon={checkIcon}` scope ref means set, like the builder emits;
-    // any other shape (or absence) leaves the playground alone unless the
-    // attribute is gone entirely.
-    const icon = attrs.get('icon')
-    if (!icon) {
-      pgIcon = ''
-    } else if (icon.kind === 'expression' && icon.value === 'checkIcon') {
-      pgIcon = 'yes'
-    }
-    preview.syncSeed()
-  }
-
-  // The seed covers every override except the label (the snippet reads it
-  // from scope), so only label edits need a scope refresh; everything else
-  // reseeds. The refresh preserves the editor text by recompiling the draft.
-  $effect(() => {
-    demoLabel
-    if (preview.live) preview.refresh()
-  })
-
-  // Editable rows first (primitives and plain data, A–Z), then the function
-  // props (A–Z). Snippet rows keep no Value editor yet; the snippet playground
-  // remains their customization surface.
-  const props: PropRow[] = [
-    { name: 'accent', type: "'cyan' | 'emerald' | 'amber' | 'violet' | 'rose'", defaultValue: "'cyan'", note: 'Tint for primary, outline, and badge.' },
-    { name: 'ariaExpanded', type: 'boolean', defaultValue: '—', note: 'Disclosure state for popover triggers.' },
-    { name: 'ariaLabel', type: 'string', defaultValue: '—', note: 'Accessible name for icon-only buttons.' },
-    { name: 'ariaPressed', type: 'boolean', defaultValue: '—', note: 'Toggle state for pressable buttons.' },
-    { name: 'badge', type: 'string | number', defaultValue: '—', note: 'Count pill overhanging the top-right corner.' },
+    } } },
+    { name: 'tooltip', type: 'string?', defaultValue: '—', note: 'Wraps the button with the positioned Tooltip; the eye stages the customization.', editor: 'text', clearable: true, value: pgTooltip, onChange: value => { pgTooltip = value; pgTooltipOn = true; }, toggle: snippetToggle(pgTooltipOn, enabled => (pgTooltipOn = enabled)), sync: { kind: 'text' } },
+    { name: 'tooltipAlign', type: "'center' | 'left' | 'right'", defaultValue: "'center'", note: 'Tooltip alignment; the eye stages the customization.', editor: 'enum', options: tooltipAligns.map(value => ({ value, label: value })), value: pgTooltipAlign, onChange: value => { pgTooltipAlign = value; pgTooltipAlignOn = true; }, placeholder: 'center', clearLabel: 'Clear tooltip align', toggle: snippetToggle(pgTooltipAlignOn, enabled => (pgTooltipAlignOn = enabled)), sync: { kind: 'text' } },
+    { name: 'type', type: "'button' | 'submit' | 'reset'", defaultValue: "'button'", note: 'Native button type; the eye stages the customization.', editor: 'enum', options: types.map(value => ({ value, label: value })), value: pgType, onChange: value => { pgType = value; pgTypeOn = true; }, placeholder: 'button', clearLabel: 'Clear type', toggle: snippetToggle(pgTypeOn, enabled => (pgTypeOn = enabled)), sync: { kind: 'text' } },
+    { name: 'variant', type: "'primary' | 'secondary' | 'danger' | 'outline' | 'ghost'", defaultValue: "'secondary'", note: 'Visual treatment; the eye stages the customization.', editor: 'enum', options: variants.map(value => ({ value, label: value })), value: pgVariant, onChange: value => { pgVariant = value; pgVariantOn = true; }, placeholder: 'secondary', clearLabel: 'Clear variant', toggle: snippetToggle(pgVariantOn, enabled => (pgVariantOn = enabled)), sync: { kind: 'text' } },
     { name: 'buttonEl', type: 'HTMLButtonElement | null', defaultValue: 'null', note: 'Bindable native button element.' },
-    { name: 'children', type: 'Snippet', defaultValue: '—', note: 'Button label/content.' },
-    { name: 'className', type: 'string', defaultValue: "''", note: 'Extra classes appended to the button.' },
-    { name: 'dataTip', type: 'string', defaultValue: '—', note: 'data-tip attribute for the host tooltip engine.' },
-    { name: 'disabled', type: 'boolean', defaultValue: 'false', note: 'Native disabled + reduced opacity.' },
-    { name: 'focusRing', type: 'boolean', defaultValue: 'true', note: 'Keyboard focus ring; disable only when focus stays visible another way.' },
-    { name: 'icon', type: 'Snippet', defaultValue: '—', note: 'Leading icon; icon-only when no children.' },
-    { name: 'iconClass', type: 'string', defaultValue: '—', note: 'Overrides the icon box class (defaults to the size geometry).' },
-    { name: 'pending', type: 'boolean', defaultValue: 'false', note: 'Disabled state with a spinner slot.' },
-    { name: 'preventFocusSteal', type: 'boolean', defaultValue: 'false', note: 'Keeps focus on the current element when clicked.' },
-    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | number", defaultValue: "'md'", note: 'Control scale; numbers are icon-scale pixels interpolated between the steps.' },
-    { name: 'tooltip', type: 'string', defaultValue: '—', note: 'Wraps the button with the positioned Tooltip.' },
-    { name: 'tooltipAlign', type: "'center' | 'left' | 'right'", defaultValue: "'center'", note: 'Tooltip alignment.' },
-    { name: 'type', type: "'button' | 'submit' | 'reset'", defaultValue: "'button'", note: 'Native button type.' },
-    { name: 'variant', type: "'primary' | 'secondary' | 'danger' | 'outline' | 'ghost'", defaultValue: "'secondary'", note: 'Visual treatment.' },
     { name: 'onClick', type: '(event: MouseEvent) => void', defaultValue: '—', note: 'Click handler.' },
     { name: 'onKeyDown', type: '(event: KeyboardEvent) => void', defaultValue: '—', note: 'Keydown handler.' },
-  ]
+  ])
+
+  const syncFields = $derived(syncFieldsOf(fields))
+
+  // With an unset label the demo reads the localized default from scope, which
+  // reseeding never refreshes; recompile the draft on those scope changes
+  // without touching the editor text. Customized labels ride the seed instead.
+  useScopeRefresh(preview, () => [demoLabel], () => pgLabel === '')
 </script>
 
-{#snippet checkIcon()}
-  <CheckIcon size="sm" />
+{#snippet demoButtonIcon()}
+  <CheckIcon />
 {/snippet}
 
-{#snippet resetIcon()}
-  <ResetIcon size="sm" />
-{/snippet}
-
-{#snippet codeIcon()}
-  <CodeIcon size="sm" />
-{/snippet}
-
-{#snippet pageActions()}
-  <Button
-    variant="ghost"
-    size="sm"
-    icon={codeIcon}
-    ariaLabel={preview.open ? i18n.t('showcase.hideCode') : i18n.t('showcase.showCode')}
-    ariaExpanded={preview.open}
-    tooltip={preview.open ? i18n.t('showcase.hideCode') : i18n.t('showcase.showCode')}
-    onClick={() => preview.toggle()} />
-{/snippet}
-
-{#snippet propValue(row: PropRow)}
-  {#if row.name === 'variant'}
-    <SelectDropdown
-      buttonLabel={pgVariant || 'Default'}
-      activeValue={pgVariant}
-      ariaLabel="variant value"
-      options={variants.map(value => ({ value, label: value }))}
-      onSelect={value => (pgVariant = value)}
-      clearable
-      clearLabel="Clear variant"
-      onClear={() => (pgVariant = '')} />
-  {:else if row.name === 'accent'}
-    <SelectDropdown
-      buttonLabel={pgAccent || 'Default'}
-      activeValue={pgAccent}
-      ariaLabel="accent value"
-      options={accents.map(value => ({ value, label: value }))}
-      onSelect={value => (pgAccent = value)}
-      clearable
-      clearLabel="Clear accent"
-      onClear={() => (pgAccent = '')} />
-  {:else if row.name === 'size'}
-    <SelectDropdown
-      buttonLabel={pgSize || 'Default'}
-      activeValue={pgSize}
-      ariaLabel="size value"
-      options={sizes.map(value => ({ value, label: value }))}
-      filterable
-      allowCustomValue
-      onSelect={value => (pgSize = value)}
-      clearable
-      clearLabel="Clear size"
-      onClear={() => (pgSize = '')} />
-  {:else if row.name === 'disabled'}
-    <Checkbox
-      checked={disabled ?? false}
-      ariaLabel="disabled value"
-      onChange={value => (pgDisabled = value ? 'yes' : 'no')} />
-  {:else if row.name === 'pending'}
-    <Checkbox
-      checked={pending ?? false}
-      ariaLabel="pending value"
-      onChange={value => (pgPending = value ? 'yes' : 'no')} />
-  {:else if row.name === 'icon'}
-    <SelectDropdown
-      buttonLabel={pgIcon ? 'Check icon' : 'Default'}
-      activeValue={pgIcon}
-      ariaLabel="icon value"
-      options={iconOptions}
-      onSelect={value => (pgIcon = value)}
-      clearable
-      clearLabel="Clear icon"
-      onClear={() => (pgIcon = '')} />
-  {:else if row.name === 'badge'}
-    <TextInput bind:value={pgBadge} ariaLabel="badge value" placeholder="(none)" />
-  {:else if row.name === 'className'}
-    <TextInput bind:value={pgClassName} ariaLabel="className value" placeholder="(none)" />
-  {:else}
-    <span class="text-slate-500">—</span>
-  {/if}
-{/snippet}
-
-{#snippet propsSnippet()}
-  <PropsTable rows={props} value={propValue} />
-{/snippet}
-
-{#snippet settingsPanel()}
-  <!-- Single-prop editing lives in the props table's Value column; the label
-    below edits the demo content (demo data, like the menu item labels).
-    Reset restores everything. -->
-  <div class="flex flex-col gap-3">
-    <Buttons className="flex shrink-0 flex-wrap items-center gap-3">
-      <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
-    </Buttons>
-    <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
-      <FormField label="Label" htmlFor="pg-label">
-        <TextInput
-          id="pg-label"
-          bind:value={pgLabel}
-          placeholder={i18n.t('common.apply')}
-          ariaLabel="Label" />
-      </FormField>
-    </div>
-  </div>
-{/snippet}
-
-<ShowcasePage name="Button" props={propsSnippet} actions={pageActions}>
-  <ShowcaseSection
+<ShowcasePage
+    {fields}
     title="Button"
     {code}
     {preview}
-    showHeader={false}
-    bordered={false}
-    footer={settingsPanel}
-    scope={{ clicks: pgClicks, label: demoLabel, checkIcon }}>
+    onReset={clearPlayground}
+    scope={{ clicks: pgClicks, label: demoLabel }}
+>
     <Button
       variant={demoVariant}
       accent={demoAccent}
       size={demoSize}
       {disabled}
       {pending}
-      icon={pgIcon ? checkIcon : undefined}
-      badge={pgBadge || undefined}
-      className={pgClassName || undefined}
+      icon={pgIconOn ? demoButtonIcon : undefined}
+      className={pgClassNameOn && pgClassName ? pgClassName : undefined}
+      ariaLabel={pgAriaLabelOn && pgAriaLabel ? pgAriaLabel : undefined}
+      ariaExpanded={ariaExpanded}
+      ariaPressed={ariaPressed}
+      tooltip={pgTooltipOn && pgTooltip ? pgTooltip : undefined}
+      tooltipAlign={demoTooltipAlign}
+      type={demoType}
+      focusRing={demoFocusRing}
+      preventFocusSteal={demoPreventFocusSteal}
       onClick={() => (pgClicks += 1)}>
-      {demoLabel} ({pgClicks})
+      {#if pgChildrenEnabled}{demoLabel} ({pgClicks}){/if}
     </Button>
-  </ShowcaseSection>
-</ShowcasePage>
+  </ShowcasePage>

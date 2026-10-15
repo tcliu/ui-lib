@@ -1,6 +1,7 @@
 import { mount, onDestroy, tick, unmount } from 'svelte'
 import { createSnippetComponent } from './snippet-playground'
 import { snippetErrorMessage } from './snippet-source'
+import { syncSnippetToState, type SyncField } from './snippet-sync'
 
 interface SnippetPreviewOptions {
   // Current seed source for the panel; read synchronously so seed edits
@@ -14,6 +15,11 @@ interface SnippetPreviewOptions {
   // into page state (then calls `syncSeed`), so the panel stays coherent with
   // snippet edits. Never runs on failure.
   onCompiled?: (source: string) => void
+  // Writes a compiled excerpt's recognized attributes back into page state and
+  // reseeds, so the editor keeps the user's text. A converted page passes its
+  // sync table here instead of hand-rolling an `onCompiled`. `getFields` is
+  // read per compile so later field edits are honored.
+  sync?: { tag: string | null; getFields: () => SyncField[] }
 }
 
 // Live-playground state for one showcase section. The section renders its
@@ -142,17 +148,29 @@ export class SnippetPreview {
       }
       const nodes = Array.from(staging.childNodes)
       if (!this.live) {
+        // A compile that went stale (or outlived the open panel) must never
+        // claim the live slot: setting live while closed strands the demo on
+        // an empty live container after Hide code.
+        if (generation !== this.generation || this.disposed || !this.open) {
+          void unmount(instance)
+          return
+        }
         this.live = true
         await tick()
       }
       if (generation !== this.generation || this.disposed || !this.open) {
         void unmount(instance)
+        if (!this.open) this.live = false
         return
       }
       this.teardownInstance()
       this.instance = instance
       this.liveEl?.replaceChildren(...nodes)
       this.error = ''
+      const sync = this.options.sync
+      if (sync) {
+        syncSnippetToState(source, { tag: sync.tag, fields: sync.getFields(), onDone: () => this.syncSeed() })
+      }
       this.options.onCompiled?.(source)
     } catch (failure) {
       if (generation !== this.generation || this.disposed) return

@@ -6,6 +6,7 @@ export interface ShowcaseComponent {
 // Single source of truth for the index list and the per-component routes.
 export const SHOWCASE_COMPONENTS: ShowcaseComponent[] = [
   { slug: 'app-shell', name: 'AppShell' },
+  { slug: 'autocomplete', name: 'AutoComplete' },
   { slug: 'base-dialog', name: 'BaseDialog' },
   { slug: 'button', name: 'Button' },
   { slug: 'buttons', name: 'Buttons' },
@@ -22,6 +23,7 @@ export const SHOWCASE_COMPONENTS: ShowcaseComponent[] = [
   { slug: 'date-range-picker', name: 'DateRangePicker' },
   { slug: 'edit-dialog', name: 'EditDialog' },
   { slug: 'editable-text', name: 'EditableText' },
+  { slug: 'field-table', name: 'FieldTable' },
   { slug: 'form-field', name: 'FormField' },
   { slug: 'icons', name: 'Icons' },
   { slug: 'lazy-code-editor', name: 'LazyCodeEditor' },
@@ -34,9 +36,11 @@ export const SHOWCASE_COMPONENTS: ShowcaseComponent[] = [
   { slug: 'select-dropdown', name: 'SelectDropdown' },
   { slug: 'spinner', name: 'Spinner' },
   { slug: 'splitter', name: 'Splitter' },
+  { slug: 'structure-tree', name: 'StructureTree' },
   { slug: 'tabs', name: 'Tabs' },
   { slug: 'tag-input', name: 'TagInput' },
   { slug: 'text-input', name: 'TextInput' },
+  { slug: 'textarea', name: 'TextArea' },
   { slug: 'toast', name: 'Toast' },
   { slug: 'tooltip', name: 'Tooltip' },
 ]
@@ -47,19 +51,19 @@ export const SHOWCASE_COMPONENTS: ShowcaseComponent[] = [
 // together, which makes the relation symmetric by construction.
 export const SHOWCASE_COMPONENT_GROUPS: Record<string, readonly string[]> = {
   // Overlay selectors built on the shared dropdown engine.
-  selectors: ['select-dropdown', 'chip-dropdown', 'menu', 'column-chooser', 'date-range-picker'],
+  selectors: ['select-dropdown', 'autocomplete', 'chip-dropdown', 'menu', 'column-chooser', 'date-range-picker'],
   // Surfaces where typing filters the option list.
-  textFilter: ['select-dropdown', 'tag-input'],
+  textFilter: ['select-dropdown', 'autocomplete', 'tag-input'],
   // Chip and tag editing surfaces.
   tags: ['chip', 'tag-input', 'chip-dropdown'],
   // Modal dialogs.
   dialogs: ['base-dialog', 'confirm-dialog', 'edit-dialog'],
   // Form inputs.
-  inputs: ['number-input', 'search-input', 'text-input', 'password-input', 'editable-text', 'form-field', 'tag-input', 'checkbox'],
+  inputs: ['number-input', 'search-input', 'text-input', 'autocomplete', 'textarea', 'password-input', 'editable-text', 'form-field', 'tag-input', 'checkbox'],
   // Click/action affordances.
   actions: ['button', 'buttons', 'copy-button', 'copyable'],
   // Tabular data display.
-  tables: ['data-grid', 'data-table', 'pagination', 'column-chooser'],
+  tables: ['data-grid', 'data-table', 'field-table', 'pagination', 'column-chooser', 'structure-tree'],
   // Code editing.
   code: ['code-editor', 'lazy-code-editor'],
   // Shell and layout primitives.

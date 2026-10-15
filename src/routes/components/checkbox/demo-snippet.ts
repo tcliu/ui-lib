@@ -7,25 +7,33 @@ export type TriState = '' | 'yes' | 'no'
 
 export interface CheckboxSnippetState {
   label: string
+  labelOn: boolean
   size: string
+  sizeOn: boolean
   disabled: TriState
+  disabledOn: boolean
   indeterminate: TriState
-  labelClass: string
+  indeterminateOn: boolean
   wrapperClass: string
-  boxClass: string
+  wrapperClassOn: boolean
+  ariaLabel: string
+  ariaLabelOn: boolean
+  name: string
+  nameOn: boolean
+  stopPropagation: TriState
+  stopPropagationOn: boolean
 }
 
-export const STYLED_LABEL = 'text-cyan-300'
 export const STYLED_WRAPPER = 'rounded-md border border-slate-700 px-3 py-2'
-export const STYLED_BOX = 'rounded-full'
 
 function escapeAttr(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 }
 
-// A tri-state line: omitted while unset, bare while Yes, ={false} while No.
-function flagLine(name: string, value: TriState): string[] {
-  if (value === '') {
+// A tri-state line: omitted while unset or at the component default, bare
+// while Yes, ={false} while No.
+function flagLine(name: string, value: TriState, def: TriState = ''): string[] {
+  if (value === '' || value === def) {
     return []
   }
   return [`  ${name}${value === 'yes' ? '' : '={false}'}`]
@@ -33,23 +41,35 @@ function flagLine(name: string, value: TriState): string[] {
 
 export function buildCheckboxSnippet({
   label,
+  labelOn,
   size,
+  sizeOn,
   disabled,
+  disabledOn,
   indeterminate,
-  labelClass,
+  indeterminateOn,
   wrapperClass,
-  boxClass,
+  wrapperClassOn,
+  ariaLabel,
+  ariaLabelOn,
+  name,
+  nameOn,
+  stopPropagation,
+  stopPropagationOn,
 }: CheckboxSnippetState): string {
   const lines = [
     '<Checkbox',
     '  bind:checked={checked}',
-    ...(label ? [`  label="${escapeAttr(label)}"`] : ['  label={applyLabel}']),
-    ...sizeAttributeLine(size),
-    ...flagLine('disabled', disabled),
-    ...flagLine('indeterminate', indeterminate),
-    ...(labelClass ? [`  labelClass="${escapeAttr(labelClass)}"`] : []),
-    ...(wrapperClass ? [`  wrapperClass="${escapeAttr(wrapperClass)}"`] : []),
-    ...(boxClass ? [`  boxClass="${escapeAttr(boxClass)}"`] : []),
+    ...(labelOn && label ? [`  label="${escapeAttr(label)}"`] : ['  label={applyLabel}']),
+    ...(ariaLabelOn && ariaLabel ? [`  ariaLabel="${escapeAttr(ariaLabel)}"`] : []),
+    ...(nameOn && name ? [`  name="${escapeAttr(name)}"`] : []),
+    // Enum rows prefill their component default in the Value column; the
+    // builder omits the default so Show-code stays minimal.
+    ...(sizeOn && size !== '' && size !== 'md' ? sizeAttributeLine(size) : []),
+    ...(disabledOn ? flagLine('disabled', disabled, 'no') : []),
+    ...(indeterminateOn ? flagLine('indeterminate', indeterminate, 'no') : []),
+    ...(stopPropagationOn ? flagLine('stopPropagation', stopPropagation, 'yes') : []),
+    ...(wrapperClassOn && wrapperClass ? [`  wrapperClass="${escapeAttr(wrapperClass)}"`] : []),
     '  onChange={checked => (lastChange = String(checked))} />',
     '<p class="text-sm text-slate-400">checked: {checked}, lastChange: {lastChange}</p>',
   ]

@@ -1,233 +1,156 @@
 <script lang="ts">
-  import Button from '$lib/components/Button.svelte'
-  import Buttons from '$lib/components/Buttons.svelte'
   import Checkbox from '$lib/components/Checkbox.svelte'
-  import FormField from '$lib/components/FormField.svelte'
-  import SelectDropdown from '$lib/components/SelectDropdown.svelte'
-  import ResetIcon from '$lib/icons/ResetIcon.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import PropsTable, { type PropRow } from '$lib/showcase/PropsTable.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
-  import { STYLED_BOX, STYLED_LABEL, STYLED_WRAPPER, buildCheckboxSnippet, type TriState } from './demo-snippet'
+  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
+  import { useScopeRefresh } from '$lib/showcase/use-scope-refresh.svelte'
+  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { resetToggle, snippetToggle } from '$lib/showcase/snippet-field'
+  import { buildCheckboxSnippet, type TriState } from './demo-snippet'
   import { parseSizeValue } from '$lib/showcase/size-input'
 
   const i18n = getI18nContext()
 
-  // Customizer playground state. Every curated option starts unset (the
-  // component default renders), so the cleared form applies no overrides.
-  // Style is a preset that fills the three class fields below.
+  // Customizer playground state. Every curated option starts at the
+  // component default (the Value column shows it), so the cleared form
+  // applies no overrides and Show-code omits the defaults. Clearing a Value
+  // unsets it; Reset restores the defaults below.
+  // `pgChecked`/`pgLastChange` are interaction state, not curated options.
   let pgChecked = $state(true)
+  let pgCheckedOn = $state(true)
   let pgLastChange = $state('—')
-  let pgLabel = $state('')
-  let pgSize = $state('')
-  let pgDisabled = $state<TriState>('')
-  let pgIndeterminate = $state<TriState>('')
-  let pgStyled = $state('')
-  let pgLabelClass = $state('')
+  let pgLabel = $state('Apply')
+  let pgLabelOn = $state(true)
+  let pgSize = $state('md')
+  let pgSizeOn = $state(false)
+  let pgDisabled = $state<TriState>('no')
+  let pgDisabledOn = $state(false)
+  let pgIndeterminate = $state<TriState>('no')
+  let pgIndeterminateOn = $state(false)
   let pgWrapperClass = $state('')
-  let pgBoxClass = $state('')
+  let pgWrapperClassOn = $state(false)
+  let pgAriaLabel = $state('')
+  let pgAriaLabelOn = $state(false)
+  let pgName = $state('')
+  let pgNameOn = $state(false)
+  let pgStopPropagation = $state<TriState>('yes')
+  let pgStopPropagationOn = $state(true)
 
   // Unset renders the component default; Yes/No force the value.
   function flagOn(value: TriState): boolean | undefined {
     return value === '' ? undefined : value === 'yes'
   }
 
-  const demoSize = $derived(parseSizeValue(pgSize))
-  const disabled = $derived(flagOn(pgDisabled))
-  const indeterminate = $derived(flagOn(pgIndeterminate))
-
-  const sizeOptions = [{ value: 'sm', label: 'sm' }]
-  const styledOptions = [{ value: 'yes', label: 'Styled' }]
-  const yesNoOptions = [
-    { value: 'yes', label: 'Yes' },
-    { value: 'no', label: 'No' },
-  ]
-
-  function triLabel(value: TriState): string {
-    return value === '' ? 'Default' : value === 'yes' ? 'Yes' : 'No'
-  }
-
-  const isCustomized = $derived(
-    pgLabel !== '' ||
-      pgSize !== '' ||
-      pgDisabled !== '' ||
-      pgIndeterminate !== '' ||
-      pgStyled !== '' ||
-      pgLabelClass !== '' ||
-      pgWrapperClass !== '' ||
-      pgBoxClass !== '',
-  )
-  const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
+  const demoSize = $derived(pgSizeOn ? parseSizeValue(pgSize) : undefined)
+  const disabled = $derived(pgDisabledOn ? flagOn(pgDisabled) : undefined)
+  const indeterminate = $derived(pgIndeterminateOn ? flagOn(pgIndeterminate) : undefined)
+  const stopPropagation = $derived(pgStopPropagationOn ? flagOn(pgStopPropagation) : undefined)
+  const demoLabel = $derived(pgLabelOn && pgLabel ? pgLabel : i18n.t('common.apply'))
+  const demoAriaLabel = $derived(pgAriaLabelOn && pgAriaLabel ? pgAriaLabel : undefined)
+  const demoName = $derived(pgNameOn && pgName ? pgName : undefined)
 
   function clearPlayground() {
     pgChecked = true
+    pgCheckedOn = true
     pgLastChange = '—'
-    pgLabel = ''
-    pgSize = ''
-    pgDisabled = ''
-    pgIndeterminate = ''
-    pgStyled = ''
-    pgLabelClass = ''
+    pgLabel = 'Apply'
+    pgLabelOn = true
+    pgSize = 'md'
+    pgSizeOn = false
+    pgDisabled = 'no'
+    pgDisabledOn = false
+    pgIndeterminate = 'no'
+    pgIndeterminateOn = false
     pgWrapperClass = ''
-    pgBoxClass = ''
+    pgWrapperClassOn = false
+    pgAriaLabel = ''
+    pgAriaLabelOn = false
+    pgName = ''
+    pgNameOn = false
+    pgStopPropagation = 'yes'
+    pgStopPropagationOn = true
   }
 
   const code = $derived.by(() =>
     buildCheckboxSnippet({
       label: pgLabel,
+      labelOn: pgLabelOn,
       size: pgSize,
+      sizeOn: pgSizeOn,
       disabled: pgDisabled,
+      disabledOn: pgDisabledOn,
       indeterminate: pgIndeterminate,
-      labelClass: pgLabelClass,
+      indeterminateOn: pgIndeterminateOn,
       wrapperClass: pgWrapperClass,
-      boxClass: pgBoxClass,
+      wrapperClassOn: pgWrapperClassOn,
+      ariaLabel: pgAriaLabel,
+      ariaLabelOn: pgAriaLabelOn,
+      name: pgName,
+      nameOn: pgNameOn,
+      stopPropagation: pgStopPropagation,
+      stopPropagationOn: pgStopPropagationOn,
     }),
   )
 
-  const props: PropRow[] = [
-    { name: 'checked', type: 'boolean', defaultValue: '—', note: 'Bindable checked state.' },
-    { name: 'label', type: 'string', defaultValue: '—', note: 'Visible label; also the accessible name.' },
-    { name: 'ariaLabel', type: 'string', defaultValue: '—', note: 'Accessible name when no visible label.' },
-    { name: 'name', type: 'string', defaultValue: '—', note: 'Native input name.' },
-    { name: 'disabled', type: 'boolean', defaultValue: 'false', note: 'Disables the input.' },
-    { name: 'indeterminate', type: 'boolean', defaultValue: 'false', note: 'Mixed state glyph.' },
-    {
-      name: 'stopPropagation',
-      type: 'boolean',
-      defaultValue: 'true',
-      note: 'Stops the click bubbling to clickable rows.',
-    },
-    { name: 'size', type: "'sm' | 'md' | number", defaultValue: "'md'", note: 'Box and label size; numbers settle on the nearest tier.' },
-    { name: 'labelClass', type: 'string', defaultValue: '—', note: 'Extra classes for the label text.' },
-    { name: 'wrapperClass', type: 'string', defaultValue: "''", note: 'Extra classes for the wrapping label.' },
-    { name: 'boxClass', type: 'string', defaultValue: "''", note: 'Extra classes for the box span.' },
+  const preview = new SnippetPreview({
+    getSeed: () => code,
+    getScope: () => ({
+      checked: pgChecked,
+      lastChange: pgLastChange,
+      applyLabel: i18n.t('common.apply'),
+    }),
+    sync: { tag: 'Checkbox', getFields: () => syncFields },
+  })
+
+  const fields: SyncableFieldConfig[] = $derived([
+    { name: 'ariaLabel', type: 'string?', defaultValue: '—', note: 'Accessible name when no visible label; the eye stages the customization.', editor: 'text', clearable: true, value: pgAriaLabel, onChange: value => { pgAriaLabel = value; pgAriaLabelOn = true; }, toggle: snippetToggle(pgAriaLabelOn, enabled => (pgAriaLabelOn = enabled)), sync: { kind: 'text' } },
+    { name: 'checked', type: 'boolean', defaultValue: '—', note: 'Bindable checked state; drives the live demo (the seed reads it from scope); the eye resets to the default state.', editor: 'boolean', value: pgChecked ? 'yes' : 'no', onChange: value => { pgChecked = value === 'yes'; pgCheckedOn = true; }, toggle: resetToggle(pgCheckedOn, enabled => (pgCheckedOn = enabled), () => (pgChecked = true)) },
+    { name: 'disabled', type: 'boolean', defaultValue: 'false', note: 'Disables the input; the eye stages the customization.', editor: 'boolean', value: pgDisabled, onChange: value => { pgDisabled = value as TriState; pgDisabledOn = true; }, toggle: snippetToggle(pgDisabledOn, enabled => (pgDisabledOn = enabled)), sync: { kind: 'tri' } },
+    { name: 'indeterminate', type: 'boolean', defaultValue: 'false', note: 'Mixed state glyph; the eye stages the customization.', editor: 'boolean', value: pgIndeterminate, onChange: value => { pgIndeterminate = value as TriState; pgIndeterminateOn = true; }, toggle: snippetToggle(pgIndeterminateOn, enabled => (pgIndeterminateOn = enabled)), sync: { kind: 'tri' } },
+    { name: 'label', type: 'string?', defaultValue: '—', note: 'Visible label; also the accessible name; the eye stages the customization.', editor: 'text', clearable: true, value: pgLabel, onChange: value => { pgLabel = value; pgLabelOn = true; }, toggle: snippetToggle(pgLabelOn, enabled => (pgLabelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'applyLabel' } },
+    { name: 'name', type: 'string?', defaultValue: '—', note: 'Native input name; the eye stages the customization.', editor: 'text', clearable: true, value: pgName, onChange: value => { pgName = value; pgNameOn = true; }, toggle: snippetToggle(pgNameOn, enabled => (pgNameOn = enabled)), sync: { kind: 'text' } },
+    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number", defaultValue: "'md'", note: 'Box and label size; numbers settle on the nearest tier; the eye stages the customization.', editor: 'size', allowCustomValue: true, value: pgSize, onChange: value => { pgSize = value; pgSizeOn = true; }, clearLabel: 'Clear size', placeholder: 'md', toggle: snippetToggle(pgSizeOn, enabled => (pgSizeOn = enabled)), sync: { kind: 'custom', read: attrs => {
+      const attr = attrs?.get('size')
+    // Absent restores the default, like the builder omitting the line;
+      // string and numeric shapes set, anything else is custom code the
+      // playground leaves alone.
+      if (!attr) return 'md'
+      if (attr.kind === 'string') return attr.value
+      if (attr.kind === 'expression' && /^\d+(\.\d+)?$/.test(attr.value)) return attr.value
+      return undefined
+    } } },
+    { name: 'stopPropagation', type: 'boolean', defaultValue: 'true', note: 'Stops the click bubbling to clickable rows; the eye stages the customization.', editor: 'boolean', value: pgStopPropagation, onChange: value => { pgStopPropagation = value as TriState; pgStopPropagationOn = true; }, toggle: snippetToggle(pgStopPropagationOn, enabled => (pgStopPropagationOn = enabled)), sync: { kind: 'tri' } },
+    { name: 'wrapperClass', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Extra classes for the wrapping label; the eye stages the customization.', editor: 'text', clearable: true, value: pgWrapperClass, onChange: value => { pgWrapperClass = value; pgWrapperClassOn = true; }, toggle: snippetToggle(pgWrapperClassOn, enabled => (pgWrapperClassOn = enabled)), sync: { kind: 'text' } },
     { name: 'inputRef', type: 'HTMLInputElement | null', defaultValue: 'null', note: 'Bindable native input element.' },
-    {
-      name: 'onChange',
-      type: '(checked: boolean) => void',
-      defaultValue: '—',
-      note: 'Called with the next checked value.',
-    },
-  ]
+    { name: 'onChange', type: '(checked: boolean) => void', defaultValue: '—', note: 'Called with the next checked value.' },
+  ])
+
+  const syncFields = $derived(syncFieldsOf(fields))
+
+  // With an unset label the demo reads the localized default from scope, which
+  // reseeding never refreshes; recompile the draft on those scope changes
+  // without touching the editor text. Customized labels ride the seed instead.
+  useScopeRefresh(preview, () => [demoLabel], () => pgLabel === '')
 </script>
 
-{#snippet resetIcon()}
-  <ResetIcon size="sm" />
-{/snippet}
-
-{#snippet propsSnippet()}
-  <PropsTable rows={props} />
-{/snippet}
-
-{#snippet settingsPanel()}
-  <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
-  </Buttons>
-  <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
-    <FormField label="Label" htmlFor="pg-label">
-      <input
-        id="pg-label"
-        bind:value={pgLabel}
-        placeholder="Apply"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
-    </FormField>
-    <FormField label="Size">
-      <SelectDropdown
-        buttonLabel={pgSize || 'Default'}
-        activeValue={pgSize}
-        ariaLabel="Size"
-        options={sizeOptions}
-        filterable
-        allowCustomValue
-        onSelect={value => (pgSize = value)}
-        clearable
-        clearLabel="Clear size"
-        onClear={() => (pgSize = '')} />
-    </FormField>
-    <FormField label="Disabled">
-      <SelectDropdown
-        buttonLabel={triLabel(pgDisabled)}
-        activeValue={pgDisabled}
-        ariaLabel="Disabled"
-        options={yesNoOptions}
-        onSelect={value => (pgDisabled = value as TriState)}
-        clearable
-        clearLabel="Clear disabled"
-        onClear={() => (pgDisabled = '')} />
-    </FormField>
-    <FormField label="Indeterminate">
-      <SelectDropdown
-        buttonLabel={triLabel(pgIndeterminate)}
-        activeValue={pgIndeterminate}
-        ariaLabel="Indeterminate"
-        options={yesNoOptions}
-        onSelect={value => (pgIndeterminate = value as TriState)}
-        clearable
-        clearLabel="Clear indeterminate"
-        onClear={() => (pgIndeterminate = '')} />
-    </FormField>
-    <FormField label="Style">
-      <SelectDropdown
-        buttonLabel={pgStyled ? 'Styled' : 'Default'}
-        activeValue={pgStyled}
-        ariaLabel="Style"
-        options={styledOptions}
-        onSelect={value => {
-          pgStyled = value
-          pgLabelClass = STYLED_LABEL
-          pgWrapperClass = STYLED_WRAPPER
-          pgBoxClass = STYLED_BOX
-        }}
-        clearable
-        clearLabel="Clear style"
-        onClear={() => {
-          pgStyled = ''
-          pgLabelClass = ''
-          pgWrapperClass = ''
-          pgBoxClass = ''
-        }} />
-    </FormField>
-    <FormField label="Label class" htmlFor="pg-labelclass">
-      <input
-        id="pg-labelclass"
-        bind:value={pgLabelClass}
-        placeholder="(none)"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
-    </FormField>
-    <FormField label="Wrapper class" htmlFor="pg-wrapperclass">
-      <input
-        id="pg-wrapperclass"
-        bind:value={pgWrapperClass}
-        placeholder="(none)"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
-    </FormField>
-    <FormField label="Box class" htmlFor="pg-boxclass">
-      <input
-        id="pg-boxclass"
-        bind:value={pgBoxClass}
-        placeholder="(none)"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
-    </FormField>
-  </div>
-{/snippet}
-
-<ShowcasePage name="Checkbox" props={propsSnippet}>
-  <ShowcaseSection
-    title={sectionTitle}
+<ShowcasePage
+    {fields}
+    title="Checkbox"
     {code}
-    footer={settingsPanel}
-    scope={{ checked: pgChecked, lastChange: pgLastChange, applyLabel: i18n.t('common.apply') }}>
+    {preview}
+    onReset={clearPlayground}
+    scope={{ checked: pgChecked, lastChange: pgLastChange, applyLabel: i18n.t('common.apply') }}
+>
     <Checkbox
       bind:checked={pgChecked}
-      label={pgLabel || i18n.t('common.apply')}
+      label={demoLabel}
+      ariaLabel={demoAriaLabel}
+      name={demoName}
+      stopPropagation={stopPropagation}
       size={demoSize}
-      {disabled}
-      {indeterminate}
-      labelClass={pgLabelClass || undefined}
-      wrapperClass={pgWrapperClass || undefined}
-      boxClass={pgBoxClass || undefined}
+      disabled={disabled}
+      indeterminate={indeterminate}
+      wrapperClass={pgWrapperClassOn && pgWrapperClass ? pgWrapperClass : undefined}
       onChange={checked => (pgLastChange = String(checked))} />
     <p class="text-sm text-slate-400">checked: {pgChecked}, lastChange: {pgLastChange}</p>
-  </ShowcaseSection>
-</ShowcasePage>
+  </ShowcasePage>

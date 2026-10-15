@@ -1,212 +1,213 @@
 <script lang="ts">
-  import Button from '$lib/components/Button.svelte'
-  import Buttons from '$lib/components/Buttons.svelte'
-  import FormField from '$lib/components/FormField.svelte'
   import Resizable from '$lib/components/Resizable.svelte'
-  import ResetIcon from '$lib/icons/ResetIcon.svelte'
-  import { getI18nContext } from '$lib/i18n.svelte'
-  import PropsTable, { type PropRow } from '$lib/showcase/PropsTable.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
+  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
+  import { useScopeRefresh } from '$lib/showcase/use-scope-refresh.svelte'
+  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { resetToggle, snippetDialog, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
   import {
     RESIZABLE_CONTENT,
     RESIZABLE_DEFAULT_HEIGHT,
     RESIZABLE_DEFAULT_WIDTH,
     RESIZABLE_SCROLLPORT,
+    buildResizableChildrenMarkup,
     buildResizableSnippet,
     parseBound,
+    parseMaxBound,
+    parseResizableChildrenMarkup,
   } from './demo-snippet'
 
-  const i18n = getI18nContext()
-
-  // Customizer playground state. Every bound starts unset (the component
-  // default renders), so the cleared form applies no overrides.
-  let pgMinWidth = $state('')
-  let pgMinHeight = $state('')
+  // Customizer playground state. Every bound starts at the component
+  // default (the Value column shows it), so the cleared form applies no
+  // overrides and Show-code omits the defaults. Clearing a Value unsets it;
+  // Reset restores the defaults below. The max bounds carry the non-numeric
+  // marker (unbounded), so only the numeric `0` minimums prefill; the live
+  // width/height stay interaction state.
+  let pgMinWidth = $state('0')
+  let pgMinWidthOn = $state(false)
+  let pgMinHeight = $state('0')
+  let pgMinHeightOn = $state(false)
   let pgMaxWidth = $state('')
+  let pgMaxWidthOn = $state(false)
   let pgMaxHeight = $state('')
-  // Size is interaction state, not a curated option, so it stays out of
-  // isCustomized.
+  let pgMaxHeightOn = $state(false)
+  // The content div class edits through the dialog; the label reads live size
+  // from state, so the class is the only facet.
+  let pgContentClass = $state('')
+  // The component requires children, so the eye resets to the default class
+  // instead of omitting; committing re-applies.
+  let pgChildrenEnabled = $state(true)
+  // Size is interaction state, not a curated option, so it stays out of the
+  // curated form.
   let pgWidth = $state(RESIZABLE_DEFAULT_WIDTH)
   let pgHeight = $state(RESIZABLE_DEFAULT_HEIGHT)
+  // Unset, the container renders no extra classes.
+  let pgClassName = $state('')
+  let pgClassNameOn = $state(false)
 
-  const minWidth = $derived(parseBound(pgMinWidth) ?? undefined)
-  const minHeight = $derived(parseBound(pgMinHeight) ?? undefined)
-  const maxWidth = $derived(parseBound(pgMaxWidth) ?? undefined)
-  const maxHeight = $derived(parseBound(pgMaxHeight) ?? undefined)
+  const minWidth = $derived(pgMinWidthOn ? (parseBound(pgMinWidth) ?? undefined) : undefined)
+  const minHeight = $derived(pgMinHeightOn ? (parseBound(pgMinHeight) ?? undefined) : undefined)
+  const maxWidth = $derived(pgMaxWidthOn ? (parseMaxBound(pgMaxWidth) ?? undefined) : undefined)
+  const maxHeight = $derived(pgMaxHeightOn ? (parseMaxBound(pgMaxHeight) ?? undefined) : undefined)
 
   // Drag deltas are fractional, so round to the nearest pixel for display.
   const sizeLabel = $derived(`${Math.round(pgWidth)} × ${Math.round(pgHeight)}`)
+  const demoContentClass = $derived(pgContentClass || RESIZABLE_CONTENT)
+  const childrenMarkup = $derived(buildResizableChildrenMarkup(demoContentClass))
+  const demoClassName = $derived(pgClassNameOn && pgClassName ? pgClassName : undefined)
 
-  // Customized only when a bound actually applies: invalid text parses to
-  // undefined and leaves the demo at its defaults.
-  const isCustomized = $derived(
-    minWidth !== undefined || minHeight !== undefined || maxWidth !== undefined || maxHeight !== undefined,
-  )
-  const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
+  // The size cells ride the live interaction state, so drags refresh them;
+  // the seed reads the size from scope, so they carry no snippet sync. Empty
+  // or non-numeric text keeps the current size.
+  function applyWidthText(value: string): void {
+    const parsed = Number(value)
+    if (value.trim() !== '' && Number.isFinite(parsed) && parsed >= 0) {
+      pgWidth = parsed
+    }
+  }
+
+  function applyHeightText(value: string): void {
+    const parsed = Number(value)
+    if (value.trim() !== '' && Number.isFinite(parsed) && parsed >= 0) {
+      pgHeight = parsed
+    }
+  }
 
   function clearPlayground(): void {
-    pgMinWidth = ''
-    pgMinHeight = ''
+    pgMinWidth = '0'
+    pgMinWidthOn = false
+    pgMinHeight = '0'
+    pgMinHeightOn = false
     pgMaxWidth = ''
+    pgMaxWidthOn = false
     pgMaxHeight = ''
+    pgMaxHeightOn = false
+    pgContentClass = ''
+    pgChildrenEnabled = true
     pgWidth = RESIZABLE_DEFAULT_WIDTH
     pgHeight = RESIZABLE_DEFAULT_HEIGHT
+    pgClassName = ''
+    pgClassNameOn = false
   }
 
   const code = $derived.by(() =>
     buildResizableSnippet({
       minWidth: pgMinWidth,
+      minWidthOn: pgMinWidthOn,
       minHeight: pgMinHeight,
+      minHeightOn: pgMinHeightOn,
       maxWidth: pgMaxWidth,
+      maxWidthOn: pgMaxWidthOn,
       maxHeight: pgMaxHeight,
+      maxHeightOn: pgMaxHeightOn,
+      contentClass: pgContentClass,
+      className: pgClassName,
+      classNameOn: pgClassNameOn,
     }),
   )
 
-  const props: PropRow[] = [
-    {
-      name: 'width',
-      type: 'number',
-      defaultValue: '—',
-      note: 'Container width in pixels; drive it from onResize.',
-    },
-    {
-      name: 'height',
-      type: 'number',
-      defaultValue: 'auto',
-      note: 'Container height in pixels; drive it from onResize. Omitted, the frame hugs its content and only the width handle renders.',
-    },
-    {
-      name: 'minWidth',
-      type: 'number',
-      defaultValue: '0',
-      note: 'Lower clamp for the container width.',
-    },
-    {
-      name: 'minHeight',
-      type: 'number',
-      defaultValue: '0',
-      note: 'Lower clamp for the container height.',
-    },
-    {
-      name: 'maxWidth',
-      type: "number | 'parent'",
-      defaultValue: 'unbounded',
-      note: "Upper clamp for the container width; 'parent' bounds it to the parent's content box.",
-    },
-    {
-      name: 'maxHeight',
-      type: "number | 'parent'",
-      defaultValue: 'unbounded',
-      note: "Upper clamp for the container height; 'parent' bounds it to the parent's content box.",
-    },
-    {
-      name: 'onResize',
-      type: '(width: number, height: number | undefined) => void',
-      defaultValue: '—',
-      note: 'Fires while dragging and on arrow-key nudges (`height` is `undefined` in width-only mode).',
-    },
-    {
-      name: 'onResizeEnd',
-      type: '() => void',
-      defaultValue: '—',
-      note: 'Fires after a drag or keyboard nudge completes.',
-    },
-    {
-      name: 'resizeWidthLabel',
-      type: 'string',
-      defaultValue: "i18n 'resizable.resizeWidth'",
-      note: 'Accessible name for the right-edge handle.',
-    },
-    {
-      name: 'resizeHeightLabel',
-      type: 'string',
-      defaultValue: "i18n 'resizable.resizeHeight'",
-      note: 'Accessible name for the bottom-edge handle.',
-    },
-    {
-      name: 'resizeBothLabel',
-      type: 'string',
-      defaultValue: "i18n 'resizable.resizeBoth'",
-      note: 'Accessible name for the corner handle.',
-    },
-    { name: 'className', type: 'string', defaultValue: "''", note: 'Extra classes for the container.' },
-    { name: 'children', type: 'Snippet', defaultValue: '—', note: 'Content rendered inside the container.' },
-  ]
+  const preview = new SnippetPreview({
+    getSeed: () => code,
+    getScope: () => ({
+      initialWidth: pgWidth,
+      initialHeight: pgHeight,
+      contentLabel: sizeLabel,
+    }),
+    sync: { tag: 'Resizable', getFields: () => syncFields },
+  })
+
+  // Each editable row declares its Value editor and its snippet write-back
+  // shape once; the sync table below derives from the same declarations.
+  // Snippet edits surface in the Value column, and `syncSeed` holds the
+  // regenerated seed back so the editor keeps the user's text. The bounds
+  // emit as numeric expressions, so they sync as numbers; className emits only
+  // when set, so it syncs as text; the live size rides scope through
+  // script-locals, so the width/height cells carry no sync.
+  const fields: SyncableFieldConfig[] = $derived([
+    snippetField({
+      name: 'children',
+      note: 'Content rendered inside the container; the size label reads live, so the dialog edits its class, and the eye resets to the default class.',
+      value: childrenMarkup,
+      onChange: (draft: string) => {
+        const parsed = parseResizableChildrenMarkup(draft)
+        if (parsed !== null) {
+          pgContentClass = parsed === RESIZABLE_CONTENT ? '' : parsed
+          pgChildrenEnabled = true
+        }
+      },
+      dialog: snippetDialog(
+        parseResizableChildrenMarkup,
+        'Invalid content markup. Keep the single size-label <div> with its class.',
+      ),
+      toggle: resetToggle(
+        pgChildrenEnabled,
+        enabled => (pgChildrenEnabled = enabled),
+        () => (pgContentClass = ''),
+      ),
+    }),
+    { name: 'className', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Extra classes for the container; the eye stages the customization.', editor: 'text', clearable: true, value: pgClassName, onChange: value => { pgClassName = value; pgClassNameOn = true; }, toggle: snippetToggle(pgClassNameOn, enabled => (pgClassNameOn = enabled)), sync: { kind: 'text' } },
+    { name: 'height', type: 'number', defaultValue: '—', note: 'Container height in pixels; drive it from onResize.', editor: 'number', value: String(pgHeight), onChange: applyHeightText }, // No eye: required live state driving onResize; omission would break the demo.
+    { name: 'maxHeight', type: "number | 'parent'?", defaultValue: 'unbounded', note: "Upper clamp for the container height; 'parent' bounds it to the parent's content box; the eye stages the customization.", editor: 'text', clearable: true, value: pgMaxHeight, onChange: value => { pgMaxHeight = value; pgMaxHeightOn = true; }, toggle: snippetToggle(pgMaxHeightOn, enabled => (pgMaxHeightOn = enabled)), sync: { kind: 'custom', read: attrs => {
+      const attr = attrs?.get('maxHeight')
+      // Absent restores the default, like the builder omitting the line;
+      // 'parent' and numeric shapes set, anything else is custom code the
+      // playground leaves alone.
+      if (!attr) return ''
+      if (attr.kind === 'string' && attr.value === 'parent') return 'parent'
+      if (attr.kind === 'expression' && /^\d+(\.\d+)?$/.test(attr.value)) return attr.value
+      return undefined
+    } } },
+    { name: 'maxWidth', type: "number | 'parent'?", defaultValue: 'unbounded', note: "Upper clamp for the container width; 'parent' bounds it to the parent's content box; the eye stages the customization.", editor: 'text', clearable: true, value: pgMaxWidth, onChange: value => { pgMaxWidth = value; pgMaxWidthOn = true; }, toggle: snippetToggle(pgMaxWidthOn, enabled => (pgMaxWidthOn = enabled)), sync: { kind: 'custom', read: attrs => {
+      const attr = attrs?.get('maxWidth')
+      // Absent restores the default, like the builder omitting the line;
+      // 'parent' and numeric shapes set, anything else is custom code the
+      // playground leaves alone.
+      if (!attr) return ''
+      if (attr.kind === 'string' && attr.value === 'parent') return 'parent'
+      if (attr.kind === 'expression' && /^\d+(\.\d+)?$/.test(attr.value)) return attr.value
+      return undefined
+    } } },
+    { name: 'minHeight', type: 'number?', defaultValue: '0', editorDefaultValue: '0', note: 'Lower clamp for the container height; the eye stages the customization.', editor: 'number', clearable: true, value: pgMinHeight, onChange: value => { pgMinHeight = value; pgMinHeightOn = true; }, placeholder: '0', toggle: snippetToggle(pgMinHeightOn, enabled => (pgMinHeightOn = enabled)), sync: { kind: 'number' } },
+    { name: 'minWidth', type: 'number?', defaultValue: '0', editorDefaultValue: '0', note: 'Lower clamp for the container width; the eye stages the customization.', editor: 'number', clearable: true, value: pgMinWidth, onChange: value => { pgMinWidth = value; pgMinWidthOn = true; }, placeholder: '0', toggle: snippetToggle(pgMinWidthOn, enabled => (pgMinWidthOn = enabled)), sync: { kind: 'number' } },
+    { name: 'width', type: 'number', defaultValue: '—', note: 'Container width in pixels; drive it from onResize.', editor: 'number', value: String(pgWidth), onChange: applyWidthText }, // No eye: required live state driving onResize; omission would break the demo.
+    { name: 'onResize', type: '(width: number, height?: number) => void', defaultValue: '—', note: 'Fires while dragging and on arrow-key nudges (`height` is `undefined` in width-only mode).' },
+  ])
+
+  const syncFields = $derived(syncFieldsOf(fields))
+
+  // The seed covers every override except the live size (the snippet reads it
+  // from scope through script-locals), so only drags need a scope refresh;
+  // everything else reseeds. The refresh preserves the editor text by
+  // recompiling the draft.
+  useScopeRefresh(preview, () => [pgWidth, pgHeight])
 </script>
 
-{#snippet resetIcon()}
-  <ResetIcon size="sm" />
-{/snippet}
-
-{#snippet propsSnippet()}
-  <PropsTable rows={props} />
-{/snippet}
-
-{#snippet settingsPanel()}
-  <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
-  </Buttons>
-  <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
-    <FormField label="Min width" htmlFor="pg-resizable-min-width">
-      <input
-        id="pg-resizable-min-width"
-        bind:value={pgMinWidth}
-        placeholder="0"
-        inputmode="numeric"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
-    </FormField>
-    <FormField label="Min height" htmlFor="pg-resizable-min-height">
-      <input
-        id="pg-resizable-min-height"
-        bind:value={pgMinHeight}
-        placeholder="0"
-        inputmode="numeric"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
-    </FormField>
-    <FormField label="Max width" htmlFor="pg-resizable-max-width">
-      <input
-        id="pg-resizable-max-width"
-        bind:value={pgMaxWidth}
-        placeholder="Unbounded"
-        inputmode="numeric"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
-    </FormField>
-    <FormField label="Max height" htmlFor="pg-resizable-max-height">
-      <input
-        id="pg-resizable-max-height"
-        bind:value={pgMaxHeight}
-        placeholder="Unbounded"
-        inputmode="numeric"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
-    </FormField>
-  </div>
-{/snippet}
-
-<ShowcasePage name="Resizable" props={propsSnippet}>
-  <ShowcaseSection
-    title={sectionTitle}
+<ShowcasePage
+    {fields}
+    title="Resizable"
     {code}
-    footer={settingsPanel}
+    {preview}
+    onReset={clearPlayground}
     scope={{
       initialWidth: pgWidth,
       initialHeight: pgHeight,
       contentLabel: sizeLabel,
-    }}>
+    }}
+>
     <div class={RESIZABLE_SCROLLPORT} tabindex="-1">
       <Resizable
         width={pgWidth}
         height={pgHeight}
         onResize={(nextWidth, nextHeight) => {
           pgWidth = nextWidth
-          if (nextHeight !== undefined) pgHeight = nextHeight
+          pgHeight = nextHeight
         }}
         {minWidth}
         {minHeight}
         {maxWidth}
-        {maxHeight}>
-        <div class={RESIZABLE_CONTENT}>{sizeLabel}</div>
+        {maxHeight}
+        className={demoClassName}>
+        <div class={demoContentClass}>{sizeLabel}</div>
       </Resizable>
     </div>
-  </ShowcaseSection>
-</ShowcasePage>
+  </ShowcasePage>

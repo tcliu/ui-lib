@@ -1,19 +1,14 @@
 // Show-code source for the ColumnChooser demo section. Pure string building
 // over the playground form state: the section regenerates the editor text from
 // this, so the editor always shows the markup behind the demo above. The column
-// list is seeded as script-local state (like the stage size) so the snippet is
-// self-contained and its text tracks Value edits instead of hiding the entries
-// in scope.
+// list is seeded as script-local state so the snippet is self-contained and its
+// text tracks Value edits instead of hiding the entries in scope.
 //
-// The demo sits in a width-only `Resizable` frame so the panel placement can be
-// inspected as the container narrows. The host is non-scrolling and the frame
-// is bounded to it, so no scrollbar can appear over the frame handle. These
-// literals are shared with the page and its tests so the rendered stage and
-// the reviewed source stay identical.
+// The resize harness is ShowcasePage-owned chrome (its `stage` prop), so the
+// snippet carries only the demo content the page authors inside that frame.
+import { sizeAttributeLine } from '$lib/showcase/size-input'
 import type { ChooserColumn } from '$lib/components/ColumnChooser.svelte'
 
-export const COLUMNS_STAGE_HOST = 'w-full overflow-hidden'
-export const COLUMNS_STAGE_PANE = 'flex w-full min-w-0 flex-wrap items-start gap-4'
 export const COLUMNS_STAGE_DEFAULT_WIDTH = 560
 export const COLUMNS_STAGE_MIN_WIDTH = 240
 
@@ -74,44 +69,24 @@ export function parseColumnsJson(text: string): ChooserColumn[] | null {
   }
 }
 
-// The snippet's local size state, seeded to the default so the live stage
-// matches the static demo before the first drag.
-export function columnsStageStateLine(indent: string): string {
-  return `${indent}let stageWidth = $state(${COLUMNS_STAGE_DEFAULT_WIDTH})`
-}
-
-export function columnsStageOpenLines(indent: string): string[] {
-  return [
-    `${indent}<div class="${COLUMNS_STAGE_HOST}">`,
-    `${indent}  <Resizable`,
-    `${indent}    width={stageWidth}`,
-    `${indent}    minWidth={${COLUMNS_STAGE_MIN_WIDTH}}`,
-    `${indent}    maxWidth="parent"`,
-    `${indent}    onResize={nextWidth => (stageWidth = nextWidth)}`,
-    `${indent}  >`,
-    `${indent}    <div class="${COLUMNS_STAGE_PANE}">`,
-  ]
-}
-
-export function columnsStageCloseLines(indent: string): string[] {
-  return [`${indent}    </div>`, `${indent}  </Resizable>`, `${indent}</div>`]
-}
-
 export interface ColumnChooserSnippetState {
-  label: string
-  resetLabel: string
+  triggerLabel: string
+  triggerLabelOn: boolean
+  resetAriaLabel: string
+  resetAriaLabelOn: boolean
   columns: ChooserColumn[]
+  size: string
+  sizeOn: boolean
 }
 
 function escapeAttr(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 }
 
-export function buildColumnChooserSnippet({ label, resetLabel, columns }: ColumnChooserSnippetState): string {
-  // The component and the trailing readout sit at 6 spaces; attributes at 8,
-  // matching the stage's inner pane.
-  const componentIndent = '      '
-  const attributeIndent = '        '
+export function buildColumnChooserSnippet({ triggerLabel, triggerLabelOn, resetAriaLabel, resetAriaLabelOn, columns, size, sizeOn }: ColumnChooserSnippetState): string {
+  // The frame is shell chrome, so the component sits at the snippet root with
+  // its attributes one step in.
+  const indent = '  '
   // Pretty JSON reindented under the state line, so the seeded list stays
   // readable and editable in place.
   const columnsJson = JSON.stringify(columns, null, 2)
@@ -120,7 +95,6 @@ export function buildColumnChooserSnippet({ label, resetLabel, columns }: Column
     .join('\n')
   return [
     '<script>',
-    columnsStageStateLine('  '),
     `  let columns = $state(${columnsJson});`,
     '  function handleToggleColumn(key, checked) {',
     '    columns = columns.map(column => (column.key === key ? { ...column, checked } : column))',
@@ -129,16 +103,17 @@ export function buildColumnChooserSnippet({ label, resetLabel, columns }: Column
     '    columns = columns.map(column => ({ ...column, checked: true }))',
     '  }',
     '</script>',
-    ...columnsStageOpenLines(''),
-    `${componentIndent}<ColumnChooser`,
-    label ? `${attributeIndent}label="${escapeAttr(label)}"` : `${attributeIndent}label={chooserLabel}`,
-    resetLabel
-      ? `${attributeIndent}resetLabel="${escapeAttr(resetLabel)}"`
-      : `${attributeIndent}resetLabel={resetLabel}`,
-    `${attributeIndent}columns={columns}`,
-    `${attributeIndent}onToggle={handleToggleColumn}`,
-    `${attributeIndent}onReset={handleResetColumns} />`,
-    `${componentIndent}<span class="text-sm text-slate-400">hidden: {columns.filter(column => !column.checked).length}</span>`,
-    ...columnsStageCloseLines(''),
+    '<ColumnChooser',
+    triggerLabelOn && triggerLabel ? `${indent}triggerLabel="${escapeAttr(triggerLabel)}"` : `${indent}triggerLabel={chooserLabel}`,
+    resetAriaLabelOn && resetAriaLabel
+      ? `${indent}resetAriaLabel="${escapeAttr(resetAriaLabel)}"`
+      : `${indent}resetAriaLabel={resetLabel}`,
+    `${indent}columns={columns}`,
+    // The size prefills its component default in the Value column; the
+    // builder omits the default so Show-code stays minimal.
+    ...(sizeOn && size !== '' && size !== 'md' ? sizeAttributeLine(size, indent) : []),
+    `${indent}onToggle={handleToggleColumn}`,
+    `${indent}onReset={handleResetColumns} />`,
+    '<span class="text-sm text-slate-400">hidden: {columns.filter(column => !column.checked).length}</span>',
   ].join('\n')
 }

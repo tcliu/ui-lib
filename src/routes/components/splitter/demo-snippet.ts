@@ -11,9 +11,24 @@ export type SplitterUnit = 'px' | '%'
 
 export interface SplitterSnippetState {
   orientation: '' | SplitterOrientation
+  orientationOn: boolean
   unit: '' | SplitterUnit
+  unitOn: boolean
   ariaLabel: string
+  ariaLabelOn: boolean
+  className: string
+  classNameOn: boolean
+  lineClass: string
+  lineClassOn: boolean
+  invert: TriState
+  invertOn: boolean
+  min: string
+  minOn: boolean
+  max: string
+  maxOn: boolean
 }
+
+export type TriState = '' | 'yes' | 'no'
 
 // Bounded stage the demo renders into: the splitter can only clamp against a
 // parent with a definite size. The snippet emits this same wrapper so the static
@@ -42,12 +57,36 @@ function escapeAttr(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 }
 
-export function buildSplitterSnippet({ orientation, unit, ariaLabel }: SplitterSnippetState): string {
+// A playground bound: empty or non-numeric text means unset, so the cleared
+// form applies no overrides. The page parses with this same helper, so the
+// static demo, Show-code, and live render stay in step.
+export function parseSplitterBound(text: string): number | null {
+  if (text.trim() === '') {
+    return null
+  }
+  const parsed = Number(text)
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null
+}
+
+// A tri-state line: omitted while unset or at the component default, bare
+// while Yes, ={false} while No.
+function flagLine(name: string, value: TriState, def: TriState = ''): string[] {
+  if (value === '' || value === def) {
+    return []
+  }
+  return [`        ${name}${value === 'yes' ? '' : '={false}'}`]
+}
+
+export function buildSplitterSnippet({ orientation, orientationOn, unit, unitOn, ariaLabel, ariaLabelOn, className, classNameOn, lineClass, lineClassOn, invert, invertOn, min, minOn, max, maxOn }: SplitterSnippetState): string {
   const resolvedOrientation: SplitterOrientation = orientation || 'vertical'
   const resolvedUnit: SplitterUnit = unit || 'px'
   const preset = splitterPreset(resolvedOrientation, resolvedUnit)
   const wrapperClass = resolvedOrientation === 'horizontal' ? `${SPLITTER_WRAPPER} flex-col` : SPLITTER_WRAPPER
   const paneSide = resolvedOrientation === 'horizontal' ? 'height' : 'width'
+  // Bounds are required props, so the seed always carries a literal: the
+  // playground override when set, the orientation/unit preset otherwise.
+  const resolvedMin = parseSplitterBound(min) ?? preset.min
+  const resolvedMax = parseSplitterBound(max) ?? preset.max
   // Built by concatenation so the `${split}` expression stays literal text.
   const paneLine =
     '      <div class="' + SPLITTER_PANE + '" style={`' + paneSide + ':${split}' + resolvedUnit + '`}>{leftLabel}</div>'
@@ -60,12 +99,20 @@ export function buildSplitterSnippet({ orientation, unit, ariaLabel }: SplitterS
     paneLine,
     '      <Splitter',
     '        value={split}',
-    `        min={${preset.min}}`,
-    `        max={${preset.max}}`,
+    // Bounds are required props, so the seed carries a literal while the eye
+    // is on: the playground override when set, the orientation/unit preset
+    // otherwise. Eye off omits the line so the component default renders.
+    ...(minOn ? [`        min={${resolvedMin}}`] : []),
+    ...(maxOn ? [`        max={${resolvedMax}}`] : []),
     '        onChange={next => (split = next)}',
-    ...(orientation ? [`        orientation="${orientation}"`] : []),
-    ...(unit ? [`        unit="${unit}"`] : []),
-    ...(ariaLabel ? [`        ariaLabel="${escapeAttr(ariaLabel)}"`] : []),
+    // Orientation and unit Values prefill their component defaults; the
+    // builder omits the defaults so Show-code stays minimal.
+    ...(orientationOn && orientation && orientation !== 'vertical' ? [`        orientation="${orientation}"`] : []),
+    ...(unitOn && unit && unit !== 'px' ? [`        unit="${unit}"`] : []),
+    ...(ariaLabelOn && ariaLabel ? [`        ariaLabel="${escapeAttr(ariaLabel)}"`] : []),
+    ...(classNameOn && className ? [`        className="${escapeAttr(className)}"`] : []),
+    ...(invertOn ? flagLine('invert', invert, 'no') : []),
+    ...(lineClassOn && lineClass ? [`        lineClass="${escapeAttr(lineClass)}"`] : []),
     '      />',
     `      <div class="${SPLITTER_MAIN}">{rightLabel}</div>`,
     '    </div>',

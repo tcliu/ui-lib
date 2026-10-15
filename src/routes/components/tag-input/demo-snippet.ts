@@ -1,71 +1,67 @@
 // Show-code source for the TagInput demo section. Pure string building over the
 // playground form state: the section regenerates the editor text from this, so
 // the editor always shows the markup behind the demo above. The tag lists are
-// seeded as script-local state (like the stage size) so the snippet is
-// self-contained and its text tracks Value edits instead of hiding the lists
-// in scope. The alternate palette stays a symbolic scope helper (`altPalette`).
+// seeded as script-local state so the snippet is self-contained and its text
+// tracks Value edits instead of hiding the lists in scope. The alternate palette
+// stays a symbolic scope helper (`altPalette`).
 //
-// The demo sits in a width-only `Resizable` frame so narrow-container behavior
-// can be inspected without resizing the window. The host is non-scrolling and
-// the frame is bounded to it, so no scrollbar can appear over the frame
-// handle. These literals are shared with the page and its tests so the
-// rendered stage and the reviewed source stay identical.
+// The resize harness is ShowcasePage-owned chrome (its `stage` prop), so the
+// snippet carries only the demo content the page authors inside that frame.
+
+import { sizeAttributeLine } from '$lib/showcase/size-input'
 
 export type TriState = '' | 'yes' | 'no'
 
-export const TAG_STAGE_HOST = 'w-full overflow-hidden'
-export const TAG_STAGE_PANE = 'flex w-full min-w-0 flex-wrap items-start gap-4'
 export const TAG_STAGE_DEFAULT_WIDTH = 560
 export const TAG_STAGE_MIN_WIDTH = 240
 
-// The snippet's local size state, seeded to the default so the live stage
-// matches the static demo before the first drag.
-export function tagStageStateLine(indent: string): string {
-  return `${indent}let stageWidth = $state(${TAG_STAGE_DEFAULT_WIDTH})`
-}
-
-export function tagStageOpenLines(indent: string): string[] {
-  return [
-    `${indent}<div class="${TAG_STAGE_HOST}">`,
-    `${indent}  <Resizable`,
-    `${indent}    width={stageWidth}`,
-    `${indent}    minWidth={${TAG_STAGE_MIN_WIDTH}}`,
-    `${indent}    maxWidth="parent"`,
-    `${indent}    onResize={nextWidth => (stageWidth = nextWidth)}`,
-    `${indent}  >`,
-    `${indent}    <div class="${TAG_STAGE_PANE}">`,
-  ]
-}
-
-export function tagStageCloseLines(indent: string): string[] {
-  return [`${indent}    </div>`, `${indent}  </Resizable>`, `${indent}</div>`]
-}
-
 export interface TagInputSnippetState {
   value: string[]
-  availableTags: string[]
+  // The tag lists apply only while their eye toggle is on, mirroring the
+  // page (off omits the prop; the committed lists stay in the dialog).
+  valueEnabled: boolean
+  options: string[]
+  optionsEnabled: boolean
+  defaultValue: string[]
+  defaultValueOn: boolean
   placeholder: string
+  placeholderOn: boolean
+  size: string
+  sizeOn: boolean
   palette: string
+  paletteOn: boolean
   disabled: TriState
-  inputId: string
+  disabledOn: boolean
+  clearable: TriState
+  clearableOn: boolean
+  clearLabel: string
+  clearLabelOn: boolean
+  clearPlacement: string
+  clearPlacementOn: boolean
+  id: string
+  idOn: boolean
   chipClass: string
+  chipClassOn: boolean
+  chip: string
+  option: string
 }
 
 function escapeAttr(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 }
 
-// A tri-state line: omitted while unset, bare while Yes, ={false} while No.
-function flagLine(name: string, value: TriState, indent: string): string[] {
-  if (value === '') {
+// Element text for the chip/option prefix spans below.
+function escapeText(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+// A tri-state line: omitted while unset or at the component default, bare
+// while Yes, ={false} while No.
+function flagLine(name: string, value: TriState, indent: string, def: TriState = ''): string[] {
+  if (value === '' || value === def) {
     return []
   }
   return [`${indent}${name}${value === 'yes' ? '' : '={false}'}`]
-}
-
-// A string attribute line, omitted while unset.
-function textLine(name: string, value: string, indent: string): string[] {
-  return value ? [`${indent}${name}="${escapeAttr(value)}"`] : []
 }
 
 // Validate unknown data into a tag list (every entry a string). Returns null
@@ -91,37 +87,85 @@ export function parseTagListJson(text: string): string[] | null {
 
 export function buildTagInputSnippet({
   value,
-  availableTags,
+  valueEnabled,
+  options,
+  optionsEnabled,
+  defaultValue,
+  defaultValueOn,
   placeholder,
+  placeholderOn,
+  size,
+  sizeOn,
   palette,
+  paletteOn,
   disabled,
-  inputId,
+  disabledOn,
+  clearable,
+  clearableOn,
+  clearLabel,
+  clearLabelOn,
+  clearPlacement,
+  clearPlacementOn,
+  id,
+  idOn,
   chipClass,
+  chipClassOn,
+  chip,
+  option,
 }: TagInputSnippetState): string {
-  // The component and the trailing readout sit at 6 spaces; attributes at 8,
-  // matching the stage's inner pane. JSON.stringify keeps the seeded lists
-  // valid no matter what the tags hold.
-  const componentIndent = '      '
-  const attributeIndent = '        '
+  // The frame is shell chrome, so the component sits at the snippet root with
+  // its attributes one step in; the tag lists are script-local state.
+  // JSON.stringify keeps the seeded lists valid no matter what the tags hold.
+  const indent = '  '
   const seedList = (name: string, list: string[], mutable: boolean): string =>
-    `  ${mutable ? 'let' : 'const'} ${name} = ${mutable ? '$state(' : ''}${JSON.stringify(list)}${mutable ? ')' : ''};`
+    `${indent}${mutable ? 'let' : 'const'} ${name} = ${mutable ? '$state(' : ''}${JSON.stringify(list)}${mutable ? ')' : ''};`
+  const hasRenderers = chip !== '' || option !== ''
   return [
     '<script>',
-    tagStageStateLine('  '),
-    seedList('value', value, true),
-    seedList('availableTags', availableTags, false),
+    ...(valueEnabled ? [seedList('value', value, true)] : []),
+    ...(optionsEnabled ? [seedList('options', options, false)] : []),
+    // The default list is a read-only baseline: seeded like the other lists
+    // (so snippet edits round-trip through the same parse-back) but never
+    // reassigned in the demo.
+    ...(defaultValueOn ? [seedList('defaultValue', defaultValue, true)] : []),
     '</script>',
-    ...tagStageOpenLines(''),
-    `${componentIndent}<TagInput`,
-    `${attributeIndent}value={value}`,
-    `${attributeIndent}availableTags={availableTags}`,
-    `${attributeIndent}placeholder="${escapeAttr(placeholder || 'Add a tag')}"`,
-    ...(palette ? [`${attributeIndent}palette={altPalette}`] : []),
-    ...flagLine('disabled', disabled, attributeIndent),
-    ...textLine('inputId', inputId, attributeIndent),
-    ...textLine('chipClass', chipClass, attributeIndent),
-    `${attributeIndent}onChange={next => (value = next)} />`,
-    `${componentIndent}<span class="text-sm text-slate-400">tags: {value.join(', ')}</span>`,
-    ...tagStageCloseLines(''),
+    '<TagInput',
+    ...(valueEnabled ? [`${indent}value={value}`] : []),
+    ...(optionsEnabled ? [`${indent}options={options}`] : []),
+    ...(defaultValueOn ? [`${indent}defaultValue={defaultValue}`] : []),
+    ...(placeholderOn && placeholder ? [`${indent}placeholder="${escapeAttr(placeholder)}"`] : []),
+    // The size row prefills its component default in the Value column; the
+    // builder omits the default so Show-code stays minimal.
+    ...(sizeOn && size !== '' && size !== 'md' ? sizeAttributeLine(size, indent) : []),
+    ...(paletteOn && palette ? [`${indent}palette={altPalette}`] : []),
+    ...(disabledOn ? flagLine('disabled', disabled, indent, 'no') : []),
+    ...(clearableOn ? flagLine('clearable', clearable, indent, 'no') : []),
+    ...(clearLabelOn && clearLabel ? [`${indent}clearLabel="${escapeAttr(clearLabel)}"`] : []),
+    ...(clearPlacementOn && clearPlacement !== '' && clearPlacement !== 'auto' ? [`${indent}clearPlacement="${escapeAttr(clearPlacement)}"`] : []),
+    ...(idOn && id ? [`${indent}id="${escapeAttr(id)}"`] : []),
+    ...(chipClassOn && chipClass ? [`${indent}chipClass="${escapeAttr(chipClass)}"`] : []),
+    ...(chip ? [`${indent}chip={chip}`] : []),
+    ...(option ? [`${indent}option={option}`] : []),
+    ...(hasRenderers
+      ? [
+          ...(valueEnabled ? [`${indent}onChange={next => (value = next)}>`] : [`${indent}>`]),
+          ...(chip
+            ? [
+                `${indent}{#snippet chip(tag, remove)}`,
+                `${indent}  <span>${escapeText(chip)}{tag} <button type="button" onclick={remove}>×</button></span>`,
+                `${indent}{/snippet}`,
+              ]
+            : []),
+          ...(option
+            ? [
+                `${indent}{#snippet option(tag)}`,
+                `${indent}  <span>${escapeText(option)}{tag}</span>`,
+                `${indent}{/snippet}`,
+              ]
+            : []),
+          `</TagInput>`,
+        ]
+      : [...(valueEnabled ? [`${indent}onChange={next => (value = next)} />`] : [`${indent}/>`])]),
+    ...(valueEnabled ? [`<span class="text-sm text-slate-400">tags: {value.join(', ')}</span>`] : []),
   ].join('\n')
 }

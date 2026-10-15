@@ -1,215 +1,202 @@
 <script lang="ts">
-  import Button from '$lib/components/Button.svelte'
-  import Buttons from '$lib/components/Buttons.svelte'
-  import Checkbox from '$lib/components/Checkbox.svelte'
-  import TextInput from '$lib/components/TextInput.svelte'
-  import CodeIcon from '$lib/icons/CodeIcon.svelte'
-  import ResetIcon from '$lib/icons/ResetIcon.svelte'
+  import { onMount } from 'svelte'
+  import type { HTMLInputAttributes } from 'svelte/elements'
   import { getI18nContext } from '$lib/i18n.svelte'
   import PasswordInput from '$lib/components/PasswordInput.svelte'
-  import PropsTable, { type PropRow } from '$lib/showcase/PropsTable.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
   import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
-  import { extractComponentAttributes, extractScriptValue } from '$lib/showcase/snippet-attributes'
-  import { splitLeadingScript } from '$lib/showcase/snippet-source'
+  import { parseSizeValue } from '$lib/showcase/size-input'
+  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { snippetToggle, resetToggle } from '$lib/showcase/snippet-field'
   import { buildPasswordInputSnippet, type TriState } from './demo-snippet'
 
   const i18n = getI18nContext()
 
-  // Customizer playground state. Every option starts unset (the component
-  // default renders), so the cleared form applies no overrides.
+  // Customizer playground state. Every curated option starts at the
+  // component default (the Value column shows it), so the cleared form
+  // applies no overrides and Show-code omits the defaults. Clearing a Value
+  // unsets it; Reset restores the defaults below.
   let pgValue = $state('')
+  let pgValueOn = $state(true)
   let pgPlaceholder = $state('')
+  let pgPlaceholderOn = $state(false)
+  let pgSize = $state('md')
+  let pgSizeOn = $state(false)
   let pgShowLabel = $state('')
+  let pgShowLabelOn = $state(false)
   let pgHideLabel = $state('')
-  let pgDisabled = $state<TriState>('')
-  let pgRequired = $state<TriState>('')
+  let pgHideLabelOn = $state(false)
+  let pgDisabled = $state<TriState>('no')
+  let pgDisabledOn = $state(false)
+  let pgRequired = $state<TriState>('no')
+  let pgRequiredOn = $state(false)
+  let pgClearable = $state<TriState>('no')
+  let pgClearableOn = $state(false)
+  let pgClearLabel = $state('Clear')
+  let pgClearLabelOn = $state(false)
+  let pgClearPlacement = $state('auto')
+  let pgClearPlacementOn = $state(false)
+  let pgDefaultValue = $state('')
+  let pgDefaultValueOn = $state(false)
   let pgClassName = $state('')
+  let pgClassNameOn = $state(false)
+  let pgAutocomplete = $state('current-password')
+  let pgAutocompleteOn = $state(false)
+  let pgId = $state('')
+  let pgIdOn = $state(false)
+  let pgName = $state('')
+  let pgNameOn = $state(false)
+  let pwdDemo = $state<{ focus: () => void } | null>(null)
+
+  onMount(() => {
+    pwdDemo?.focus()
+  })
 
   // Unset renders the component default; Yes/No force the value.
   function flagOn(value: TriState): boolean | undefined {
     return value === '' ? undefined : value === 'yes'
   }
 
-  const disabled = $derived(flagOn(pgDisabled))
-  const required = $derived(flagOn(pgRequired))
+  const clearPlacementOptions = [
+    { value: 'auto', label: 'auto' },
+    { value: 'inside', label: 'inside' },
+    { value: 'outside', label: 'outside' },
+  ]
+
+  const disabled = $derived(pgDisabledOn ? flagOn(pgDisabled) : undefined)
+  const required = $derived(pgRequiredOn ? flagOn(pgRequired) : undefined)
+  const clearable = $derived(pgClearableOn ? flagOn(pgClearable) : undefined)
+  const demoClearLabel = $derived(pgClearLabelOn && pgClearLabel ? pgClearLabel : undefined)
+  const demoClearPlacement = $derived(
+    pgClearPlacementOn
+      ? ((pgClearPlacement || undefined) as 'auto' | 'inside' | 'outside' | undefined)
+      : undefined,
+  )
+  const demoDefaultValue = $derived(pgDefaultValueOn && pgDefaultValue ? pgDefaultValue : undefined)
+  const demoAutocomplete = $derived((pgAutocompleteOn && pgAutocomplete ? pgAutocomplete : undefined) as HTMLInputAttributes['autocomplete'])
+  const demoSize = $derived(pgSizeOn ? parseSizeValue(pgSize) : undefined)
 
   function clearPlayground() {
     pgValue = ''
+    pgValueOn = true
     pgPlaceholder = ''
+    pgPlaceholderOn = false
+    pgSize = 'md'
+    pgSizeOn = false
     pgShowLabel = ''
+    pgShowLabelOn = false
     pgHideLabel = ''
-    pgDisabled = ''
-    pgRequired = ''
+    pgHideLabelOn = false
+    pgDisabled = 'no'
+    pgDisabledOn = false
+    pgRequired = 'no'
+    pgRequiredOn = false
+    pgClearable = 'no'
+    pgClearableOn = false
+    pgClearLabel = 'Clear'
+    pgClearLabelOn = false
+    pgClearPlacement = 'auto'
+    pgClearPlacementOn = false
+    pgDefaultValue = ''
+    pgDefaultValueOn = false
     pgClassName = ''
+    pgClassNameOn = false
+    pgAutocomplete = 'current-password'
+    pgAutocompleteOn = false
+    pgId = ''
+    pgIdOn = false
+    pgName = ''
+    pgNameOn = false
   }
 
   const code = $derived.by(() =>
     buildPasswordInputSnippet({
       value: pgValue,
       placeholder: pgPlaceholder,
+      placeholderOn: pgPlaceholderOn,
       showLabel: pgShowLabel,
+      showLabelOn: pgShowLabelOn,
       hideLabel: pgHideLabel,
+      hideLabelOn: pgHideLabelOn,
+      size: pgSize,
+      sizeOn: pgSizeOn,
       disabled: pgDisabled,
+      disabledOn: pgDisabledOn,
       required: pgRequired,
+      requiredOn: pgRequiredOn,
+      clearable: pgClearable,
+      clearableOn: pgClearableOn,
+      clearLabel: pgClearLabel,
+      clearLabelOn: pgClearLabelOn,
+      clearPlacement: pgClearPlacement,
+      clearPlacementOn: pgClearPlacementOn,
+      defaultValue: pgDefaultValue,
+      defaultValueOn: pgDefaultValueOn,
       className: pgClassName,
+      classNameOn: pgClassNameOn,
+      autocomplete: pgAutocomplete,
+      autocompleteOn: pgAutocompleteOn,
+      id: pgId,
+      idOn: pgIdOn,
+      name: pgName,
+      nameOn: pgNameOn,
     }),
   )
 
-  // The page owns the preview so its code toggle can sit in the component-title
-  // row (ShowcasePage's `actions`) while the section renders the demo and the
-  // editor below.
   const preview = new SnippetPreview({
     getSeed: () => code,
     getScope: () => ({}),
-    onCompiled: syncPlaygroundFromSnippet,
+    sync: { tag: 'PasswordInput', getFields: () => syncFields },
   })
-
-  // Write a compiled snippet's recognized demo-tag attributes back into
-  // playground state, so snippet edits show up in the Value column. Only
-  // canonical shapes map (literals, bare flags, `{true}`/`{false}`); custom
-  // expressions are left alone, and a draft without a complete demo tag (a
-  // free-form experiment) touches nothing. Absent means unset, matching what
-  // the builder omits. `syncSeed` then holds the regenerated seed back so the
-  // editor keeps the user's text.
-  function syncPlaygroundFromSnippet(source: string) {
-    const attrs = extractComponentAttributes(source, 'PasswordInput')
-    if (!attrs) {
-      return
-    }
-    const text = (name: string): string | undefined => {
-      if (!attrs.has(name)) {
-        return ''
-      }
-      const attr = attrs.get(name)!
-      return attr.kind === 'string' ? attr.value : undefined
-    }
-    const tri = (name: string): TriState | undefined => {
-      if (!attrs.has(name)) {
-        return ''
-      }
-      const attr = attrs.get(name)!
-      if (attr.kind === 'bare') {
-        return 'yes'
-      }
-      if (attr.kind === 'expression' && (attr.value === 'true' || attr.value === 'false')) {
-        return attr.value === 'true' ? 'yes' : 'no'
-      }
-      return undefined
-    }
-    const applyText = (name: string, assign: (value: string) => void) => {
-      const next = text(name)
-      if (next !== undefined) {
-        assign(next)
-      }
-    }
-    const applyTri = (name: string, assign: (value: TriState) => void) => {
-      const next = tri(name)
-      if (next !== undefined) {
-        assign(next)
-      }
-    }
-    applyText('placeholder', value => (pgPlaceholder = value))
-    applyText('showLabel', value => (pgShowLabel = value))
-    applyText('hideLabel', value => (pgHideLabel = value))
-    applyText('className', value => (pgClassName = value))
-    applyTri('disabled', value => (pgDisabled = value))
-    applyTri('required', value => (pgRequired = value))
-    // The builder seeds the value as script-local state; a hand-written
-    // `bind:value={...}` shape leaves the playground alone.
-    const scriptValue = extractScriptValue(splitLeadingScript(source).declarations, 'value')
-    if (scriptValue !== null) {
-      pgValue = scriptValue
-    }
-    preview.syncSeed()
-  }
 
   // Editable rows first (primitives and plain data, A–Z), then the function
   // props (A–Z).
-  const props: PropRow[] = [
-    { name: 'autocomplete', type: 'string', defaultValue: "'current-password'", note: 'Native autocomplete token.' },
-    { name: 'className', type: 'string', defaultValue: "''", note: 'Extra classes for the input.' },
-    { name: 'disabled', type: 'boolean', defaultValue: 'false', note: 'Disables the field and the toggle.' },
-    { name: 'hideLabel', type: 'string', defaultValue: '—', note: 'Toggle label when visible; falls back to the locale.' },
-    { name: 'id', type: 'string', defaultValue: '—', note: 'Native input id.' },
-    { name: 'name', type: 'string', defaultValue: '—', note: 'Native input name.' },
-    { name: 'placeholder', type: 'string', defaultValue: '—', note: 'Placeholder text.' },
-    { name: 'required', type: 'boolean', defaultValue: 'false', note: 'Native required flag.' },
-    { name: 'showLabel', type: 'string', defaultValue: '—', note: 'Toggle label when hidden; falls back to the locale.' },
-    { name: 'value', type: 'string', defaultValue: "''", note: 'Bindable field value.' },
-    { name: 'oninput', type: '(event: Event) => void', defaultValue: '—', note: 'Native input handler.' },
-  ]
+  const fields: SyncableFieldConfig[] = $derived([
+    { name: 'autocomplete', type: 'string?', defaultValue: "'current-password'", editorDefaultValue: 'current-password', note: 'Native autocomplete token; the eye stages the customization.', editor: 'text', clearable: true, value: pgAutocomplete, onChange: value => { pgAutocomplete = value; pgAutocompleteOn = true; }, placeholder: 'current-password', toggle: snippetToggle(pgAutocompleteOn, enabled => (pgAutocompleteOn = enabled)), sync: { kind: 'text' } },
+    { name: 'className', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Extra classes for the input; the eye stages the customization.', editor: 'text', clearable: true, value: pgClassName, onChange: value => { pgClassName = value; pgClassNameOn = true; }, toggle: snippetToggle(pgClassNameOn, enabled => (pgClassNameOn = enabled)), sync: { kind: 'text' } },
+    { name: 'clearLabel', type: 'string?', defaultValue: "'Clear'", editorDefaultValue: 'Clear', note: 'Accessible name for the clear button; the eye stages the customization.', editor: 'text', clearable: true, value: pgClearLabel, onChange: value => { pgClearLabel = value; pgClearLabelOn = true; }, toggle: snippetToggle(pgClearLabelOn, enabled => (pgClearLabelOn = enabled)), placeholder: 'Clear', sync: { kind: 'text' } },
+    { name: 'clearPlacement', type: "'auto' | 'inside' | 'outside'", defaultValue: "'auto'", note: 'Inside overlays the field edge; outside sits after it; auto renders outside because the toggle owns the right edge; the eye stages the customization.', editor: 'enum', options: clearPlacementOptions, value: pgClearPlacement, onChange: value => { pgClearPlacement = value; pgClearPlacementOn = true; }, placeholder: 'auto', clearLabel: 'Clear placement', toggle: snippetToggle(pgClearPlacementOn, enabled => (pgClearPlacementOn = enabled)), sync: { kind: 'text' } },
+    { name: 'clearable', type: 'boolean', defaultValue: 'false', note: 'Appends a cross button that clears the value; the eye stages the customization.', editor: 'boolean', value: pgClearable, onChange: value => { pgClearable = value as TriState; pgClearableOn = true; }, toggle: snippetToggle(pgClearableOn, enabled => (pgClearableOn = enabled)), sync: { kind: 'tri' } },
+    { name: 'defaultValue', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Baseline the clear button compares against; the cross hides while the value matches it; the eye stages the customization.', editor: 'text', clearable: true, value: pgDefaultValue, onChange: value => { pgDefaultValue = value; pgDefaultValueOn = true; }, toggle: snippetToggle(pgDefaultValueOn, enabled => (pgDefaultValueOn = enabled)), sync: { kind: 'text' } },
+    { name: 'disabled', type: 'boolean', defaultValue: 'false', note: 'Disables the field and the toggle; the eye stages the customization.', editor: 'boolean', value: pgDisabled, onChange: value => { pgDisabled = value as TriState; pgDisabledOn = true; }, toggle: snippetToggle(pgDisabledOn, enabled => (pgDisabledOn = enabled)), sync: { kind: 'tri' } },
+    { name: 'hideLabel', type: 'string?', defaultValue: '—', note: 'Toggle label when visible; falls back to the locale; the eye stages the customization.', editor: 'text', clearable: true, value: pgHideLabel, onChange: value => { pgHideLabel = value; pgHideLabelOn = true; }, toggle: snippetToggle(pgHideLabelOn, enabled => (pgHideLabelOn = enabled)), sync: { kind: 'text' } },
+    { name: 'id', type: 'string?', defaultValue: '—', note: 'Native input id; the eye stages the customization.', editor: 'text', clearable: true, value: pgId, onChange: value => { pgId = value; pgIdOn = true; }, toggle: snippetToggle(pgIdOn, enabled => (pgIdOn = enabled)), sync: { kind: 'text' } },
+    { name: 'name', type: 'string?', defaultValue: '—', note: 'Native input name; the eye stages the customization.', editor: 'text', clearable: true, value: pgName, onChange: value => { pgName = value; pgNameOn = true; }, toggle: snippetToggle(pgNameOn, enabled => (pgNameOn = enabled)), sync: { kind: 'text' } },
+    { name: 'placeholder', type: 'string?', defaultValue: '—', note: 'Placeholder text; the eye stages the customization.', editor: 'text', clearable: true, value: pgPlaceholder, onChange: value => { pgPlaceholder = value; pgPlaceholderOn = true; }, toggle: snippetToggle(pgPlaceholderOn, enabled => (pgPlaceholderOn = enabled)), sync: { kind: 'text' } },
+    { name: 'required', type: 'boolean', defaultValue: 'false', note: 'Native required flag; the eye stages the customization.', editor: 'boolean', value: pgRequired, onChange: value => { pgRequired = value as TriState; pgRequiredOn = true; }, toggle: snippetToggle(pgRequiredOn, enabled => (pgRequiredOn = enabled)), sync: { kind: 'tri' } },
+    { name: 'showLabel', type: 'string?', defaultValue: '—', note: 'Toggle label when hidden; falls back to the locale; the eye stages the customization.', editor: 'text', clearable: true, value: pgShowLabel, onChange: value => { pgShowLabel = value; pgShowLabelOn = true; }, toggle: snippetToggle(pgShowLabelOn, enabled => (pgShowLabelOn = enabled)), sync: { kind: 'text' } },
+    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number", defaultValue: "'md'", note: 'Control scale; numbers are icon-scale pixels scaled by fixed ratios; the eye stages the customization.', editor: 'size', allowCustomValue: true, value: pgSize, onChange: value => { pgSize = value; pgSizeOn = true; }, clearLabel: 'Clear size', placeholder: 'md', toggle: snippetToggle(pgSizeOn, enabled => (pgSizeOn = enabled)), sync: { kind: 'text' } },
+    { name: 'value', type: 'string', defaultValue: "''", editorDefaultValue: '', note: 'Bindable field value; the eye resets it to empty.', editor: 'text', clearable: true, value: pgValue, onChange: value => { pgValue = value; pgValueOn = true; }, toggle: resetToggle(pgValueOn, enabled => (pgValueOn = enabled), () => (pgValue = '')), sync: { kind: 'script' } },
+    { name: 'onClear', type: '() => void', defaultValue: 'clears value', note: 'Clear handler; falls back to clearing the bound value when omitted.' },
+    { name: 'oninput', type: '(event: Event) => void', defaultValue: '—', note: 'Native input handler.' }
+  ])
+
+  const syncFields = $derived(syncFieldsOf(fields))
 </script>
 
-{#snippet resetIcon()}
-  <ResetIcon size="sm" />
-{/snippet}
-
-{#snippet codeIcon()}
-  <CodeIcon size="sm" />
-{/snippet}
-
-{#snippet pageActions()}
-  <Button
-    variant="ghost"
-    size="sm"
-    icon={codeIcon}
-    ariaLabel={preview.open ? i18n.t('showcase.hideCode') : i18n.t('showcase.showCode')}
-    ariaExpanded={preview.open}
-    tooltip={preview.open ? i18n.t('showcase.hideCode') : i18n.t('showcase.showCode')}
-    onClick={() => preview.toggle()} />
-{/snippet}
-
-{#snippet propValue(row: PropRow)}
-  {#if row.name === 'value'}
-    <TextInput bind:value={pgValue} ariaLabel="value value" placeholder="(empty)" />
-  {:else if row.name === 'placeholder'}
-    <TextInput bind:value={pgPlaceholder} ariaLabel="placeholder value" placeholder="Password" />
-  {:else if row.name === 'showLabel'}
-    <TextInput bind:value={pgShowLabel} ariaLabel="showLabel value" placeholder="Show secret" />
-  {:else if row.name === 'hideLabel'}
-    <TextInput bind:value={pgHideLabel} ariaLabel="hideLabel value" placeholder="Hide secret" />
-  {:else if row.name === 'disabled'}
-    <Checkbox
-      checked={disabled ?? false}
-      ariaLabel="disabled value"
-      onChange={value => (pgDisabled = value ? 'yes' : 'no')} />
-  {:else if row.name === 'required'}
-    <Checkbox
-      checked={required ?? false}
-      ariaLabel="required value"
-      onChange={value => (pgRequired = value ? 'yes' : 'no')} />
-  {:else if row.name === 'className'}
-    <TextInput bind:value={pgClassName} ariaLabel="className value" placeholder="(none)" />
-  {:else}
-    <span class="text-slate-500">—</span>
-  {/if}
-{/snippet}
-
-{#snippet propsSnippet()}
-  <PropsTable rows={props} value={propValue} />
-{/snippet}
-
-{#snippet settingsPanel()}
-  <!-- Single-prop editing lives in the props table's Value column; this panel
-    keeps only Reset (and any future composite preset that drives several props
-    at once). -->
-  <Buttons className="flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
-  </Buttons>
-{/snippet}
-
-<ShowcasePage name="PasswordInput" props={propsSnippet} actions={pageActions}>
-  <ShowcaseSection title="PasswordInput" {code} {preview} showHeader={false} bordered={false} footer={settingsPanel}>
+<ShowcasePage
+    {fields}
+    title="PasswordInput"
+    {code}
+    {preview}
+    onReset={clearPlayground}
+>
     <PasswordInput
+      bind:this={pwdDemo}
       bind:value={pgValue}
-      placeholder={pgPlaceholder || 'Password'}
-      showLabel={pgShowLabel || undefined}
-      hideLabel={pgHideLabel || undefined}
+      placeholder={pgPlaceholderOn && pgPlaceholder ? pgPlaceholder : 'Password'}
+      size={demoSize}
+      showLabel={pgShowLabelOn && pgShowLabel ? pgShowLabel : undefined}
+      hideLabel={pgHideLabelOn && pgHideLabel ? pgHideLabel : undefined}
       {disabled}
       {required}
-      className={pgClassName || undefined} />
+      autocomplete={demoAutocomplete}
+      id={pgIdOn && pgId ? pgId : undefined}
+      name={pgNameOn && pgName ? pgName : undefined}
+      className={pgClassNameOn && pgClassName ? pgClassName : undefined}
+      {clearable}
+      clearLabel={demoClearLabel}
+      clearPlacement={demoClearPlacement}
+      defaultValue={demoDefaultValue} />
     <span class="text-sm text-slate-400">length: {pgValue.length}</span>
-  </ShowcaseSection>
-</ShowcasePage>
+  </ShowcasePage>

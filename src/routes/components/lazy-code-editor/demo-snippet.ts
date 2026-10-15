@@ -5,9 +5,9 @@
 // Single-quoted lines throughout: backticks and ${} inside them stay literal,
 // so no escaping.
 
-// Curated playground option: unset renders the component default, Yes/No force
-// the value. Every option starts unset, so the cleared form applies no
-// overrides.
+// Curated playground option: unset or the component default renders the
+// default, Yes/No force the value. Options start at the default, so the
+// cleared form applies no overrides.
 export type TriState = '' | 'yes' | 'no'
 
 // The document types the wrapped editor loads a language pack for (see
@@ -36,27 +36,63 @@ export const DEFAULT_CONTENT = ['# Lazy editor', '', 'Language packs load on dem
 
 export interface LazyCodeEditorSnippetState {
   docType: string
+  docTypeOn: boolean
   editable: TriState
+  editableOn: boolean
+  containerClass: string
+  containerClassOn: boolean
+  editorClass: string
+  editorClassOn: boolean
+  maxContentLength: string
+  maxContentLengthOn: boolean
+  autoFocus: TriState
+  autoFocusOn: boolean
+  editorAriaLabel: string
+  editorAriaLabelOn: boolean
+  recreateKey: string
+  recreateKeyOn: boolean
 }
 
-// A tri-state line: omitted while unset, bare while Yes, ={false} while No.
-function flagLine(name: string, value: TriState, indent: number): string[] {
-  if (value === '') {
+// A tri-state line: omitted while unset or at the component default, bare
+// while Yes, ={false} while No.
+function flagLine(name: string, value: TriState, indent: number, def: TriState = ''): string[] {
+  if (value === '' || value === def) {
     return []
   }
   return [`${' '.repeat(indent)}${name}${value === 'yes' ? '' : '={false}'}`]
 }
 
-export function buildLazyCodeEditorSnippet({ docType, editable }: LazyCodeEditorSnippetState): string {
+function escapeAttr(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+}
+
+// A max-length line: omitted while unset, at the component default (`0`
+// disables the cap), or non-numeric.
+function maxLengthLine(value: string, indent: number, def = ''): string[] {
+  if (value === '' || value === def) {
+    return []
+  }
+  const parsed = Number(value)
+  return Number.isInteger(parsed) && parsed >= 0 ? [`${' '.repeat(indent)}maxContentLength={${parsed}}`] : []
+}
+
+export function buildLazyCodeEditorSnippet({ docType, docTypeOn, editable, editableOn, containerClass, containerClassOn, editorClass, editorClassOn, maxContentLength, maxContentLengthOn, autoFocus, autoFocusOn, editorAriaLabel, editorAriaLabelOn, recreateKey, recreateKeyOn }: LazyCodeEditorSnippetState): string {
   const resolvedDocType = docType || DEFAULT_DOC_TYPE
   return [
     '<div class="h-64 w-full max-w-xl">',
     '  <LazyCodeEditor',
     '    bind:content={content}',
-    `    docType="${resolvedDocType}"`,
-    ...flagLine('editable', editable, 4),
-    '    containerClass="h-full overflow-hidden rounded-md border border-slate-700 bg-slate-950"',
-    '    editorClass="h-full"',
+    // The docType Value prefills the component default (`text`, which loads no
+    // pack); the builder omits it so Show-code stays minimal, while unset
+    // keeps the Markdown demo baseline.
+    ...(docTypeOn && resolvedDocType !== 'text' ? [`    docType="${resolvedDocType}"`] : []),
+    ...(editableOn ? flagLine('editable', editable, 4, 'yes') : []),
+    ...(containerClassOn && containerClass ? [`    containerClass="${escapeAttr(containerClass)}"`] : []),
+    ...(editorClassOn && editorClass ? [`    editorClass="${escapeAttr(editorClass)}"`] : []),
+    ...(maxContentLengthOn ? maxLengthLine(maxContentLength, 4, '0') : []),
+    ...(autoFocusOn ? flagLine('autoFocus', autoFocus, 4, 'no') : []),
+    ...(editorAriaLabelOn && editorAriaLabel ? [`    editorAriaLabel="${escapeAttr(editorAriaLabel)}"`] : []),
+    ...(recreateKeyOn && recreateKey ? [`    recreateKey="${escapeAttr(recreateKey)}"`] : []),
     '  />',
     '</div>',
   ].join('\n')

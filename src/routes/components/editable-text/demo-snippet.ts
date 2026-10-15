@@ -14,8 +14,13 @@ export const DEFAULT_TEXT = 'Untitled project'
 export interface EditableTextSnippetState {
   value: string
   size: string
+  sizeOn: boolean
   copyable: TriState
+  copyableOn: boolean
   className: string
+  classNameOn: boolean
+  maxWidth: string
+  maxWidthOn: boolean
 }
 
 function escapeAttr(value: string): string {
@@ -28,15 +33,25 @@ function escapeScriptString(value: string): string {
   return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/\r/g, '\\r')
 }
 
-// A tri-state line: omitted while unset, bare while Yes, ={false} while No.
-function flagLine(name: string, value: TriState): string[] {
-  if (value === '') {
+// A tri-state line: omitted while unset or at the component default, bare
+// while Yes, ={false} while No.
+function flagLine(name: string, value: TriState, def: TriState = ''): string[] {
+  if (value === '' || value === def) {
     return []
   }
   return [`    ${name}${value === 'yes' ? '' : '={false}'}`]
 }
 
-export function buildEditableTextSnippet({ value, size, copyable, className }: EditableTextSnippetState): string {
+// A numeric line: omitted while unset or non-numeric.
+function numberLine(name: string, value: string): string[] {
+  if (value.trim() === '') {
+    return []
+  }
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? [`    ${name}={${parsed}}`] : []
+}
+
+export function buildEditableTextSnippet({ value, size, sizeOn, copyable, copyableOn, className, classNameOn, maxWidth, maxWidthOn }: EditableTextSnippetState): string {
   return [
     '<script>',
     `  let value = $state('${escapeScriptString(value || DEFAULT_TEXT)}')`,
@@ -45,9 +60,12 @@ export function buildEditableTextSnippet({ value, size, copyable, className }: E
     '  <EditableText',
     '    text={value}',
     '    onChange={next => { value = next }}',
-    ...sizeAttributeLine(size, '    '),
-    ...flagLine('copyable', copyable),
-    ...(className ? [`    className="${escapeAttr(className)}"`] : []),
+    // Size and maxWidth rows prefill their component defaults in the Value
+    // column; the builder omits the defaults so Show-code stays minimal.
+    ...(sizeOn && size !== '' && size !== 'md' ? sizeAttributeLine(size, '    ') : []),
+    ...(copyableOn ? flagLine('copyable', copyable, 'no') : []),
+    ...(classNameOn && className ? [`    className="${escapeAttr(className)}"`] : []),
+    ...(maxWidthOn && maxWidth !== '' && maxWidth !== '480' ? numberLine('maxWidth', maxWidth) : []),
     '  />',
     '  <span class="text-xs text-slate-500">{editHint}</span>',
     '</div>',

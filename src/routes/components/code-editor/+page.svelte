@@ -1,14 +1,11 @@
 <script lang="ts">
-  import Button from '$lib/components/Button.svelte'
-  import Buttons from '$lib/components/Buttons.svelte'
   import CodeEditor from '$lib/components/CodeEditor.svelte'
-  import FormField from '$lib/components/FormField.svelte'
-  import SelectDropdown from '$lib/components/SelectDropdown.svelte'
-  import ResetIcon from '$lib/icons/ResetIcon.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import PropsTable, { type PropRow } from '$lib/showcase/PropsTable.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
+  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
+  import { useScopeRefresh } from '$lib/showcase/use-scope-refresh.svelte'
+  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { resetToggle, snippetToggle } from '$lib/showcase/snippet-field'
   import {
     DEFAULT_CONTENT,
     DEFAULT_DOC_TYPE,
@@ -20,13 +17,36 @@
 
   const i18n = getI18nContext()
 
-  // Customizer playground state. Every curated option starts unset, so the
-  // cleared form applies no overrides beyond the demo baseline: the content
-  // seeds from the shared default and the language field falls back to JSON.
+  // Customizer playground state. Every curated option starts at the
+  // component default (the Value column shows it), so the cleared form
+  // applies no overrides and Show-code omits the defaults. Clearing a Value
+  // unsets it; Reset restores the defaults below. The content
+  // seeds from the shared default and the eye-gated classes stage their
+  // defaults while off.
   let pgContent = $state(DEFAULT_CONTENT)
-  let pgDocType = $state('')
-  let pgEditable = $state<TriState>('')
-  let pgTheme = $state('')
+  // The component requires content, so the eye resets to the default document
+  // instead of omitting; committing re-applies.
+  let pgContentEnabled = $state(true)
+  let pgDocType = $state('text')
+  let pgDocTypeOn = $state(true)
+  let pgEditable = $state<TriState>('yes')
+  let pgEditableOn = $state(true)
+  let pgTheme = $state('dark')
+  let pgThemeOn = $state(false)
+  let pgContainerClass = $state('h-full overflow-hidden rounded-lg border border-slate-700 bg-slate-950')
+  let pgContainerClassOn = $state(false)
+  let pgEditorClass = $state('h-full')
+  let pgEditorClassOn = $state(false)
+  let pgMaxContentLength = $state('0')
+  let pgMaxContentLengthOn = $state(false)
+  let pgSelectionEnabled = $state<TriState>('yes')
+  let pgSelectionEnabledOn = $state(true)
+  let pgAutoFocus = $state<TriState>('no')
+  let pgAutoFocusOn = $state(false)
+  let pgEditorAriaLabel = $state('')
+  let pgEditorAriaLabelOn = $state(false)
+  let pgRecreateKey = $state('')
+  let pgRecreateKeyOn = $state(false)
 
   const themeOptions = [
     { value: 'dark', label: 'Dark' },
@@ -38,151 +58,119 @@
     return value === '' ? undefined : value === 'yes'
   }
 
-  const editable = $derived(flagOn(pgEditable))
-  const demoDocType = $derived((pgDocType || DEFAULT_DOC_TYPE) as DocType)
-  const demoTheme = $derived(pgTheme || undefined)
+  const editable = $derived(pgEditableOn ? flagOn(pgEditable) : undefined)
+  const demoDocType = $derived((pgDocTypeOn && pgDocType ? pgDocType : DEFAULT_DOC_TYPE) as DocType)
+  const demoTheme = $derived(pgThemeOn ? pgTheme || undefined : undefined)
+  const demoContainerClass = $derived(pgContainerClassOn && pgContainerClass ? pgContainerClass : undefined)
+  const demoEditorClass = $derived(pgEditorClassOn && pgEditorClass ? pgEditorClass : undefined)
+  const selectionEnabled = $derived(pgSelectionEnabledOn ? flagOn(pgSelectionEnabled) : undefined)
 
-  function docTypeLabel(value: string): string {
-    return DOC_TYPE_OPTIONS.find(option => option.value === value)?.label ?? 'JSON'
+  function asMaxLength(value: string): number | undefined {
+    if (value.trim() === '') {
+      return undefined
+    }
+    const parsed = Number(value)
+    return Number.isInteger(parsed) && parsed >= 0 ? parsed : undefined
   }
 
-  function themeLabel(value: string): string {
-    return value === 'light' ? 'Light' : 'Dark'
-  }
-
-  const isCustomized = $derived(pgDocType !== '' || pgEditable !== '' || pgTheme !== '')
-  const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
+  const demoMaxContentLength = $derived(pgMaxContentLengthOn ? asMaxLength(pgMaxContentLength) : undefined)
+  const demoAutoFocus = $derived(pgAutoFocusOn ? flagOn(pgAutoFocus) : undefined)
+  const demoEditorAriaLabel = $derived(pgEditorAriaLabelOn && pgEditorAriaLabel ? pgEditorAriaLabel : undefined)
+  const demoRecreateKey = $derived(pgRecreateKeyOn && pgRecreateKey ? pgRecreateKey : undefined)
 
   function clearPlayground() {
     pgContent = DEFAULT_CONTENT
-    pgDocType = ''
-    pgEditable = ''
-    pgTheme = ''
+    pgContentEnabled = true
+    pgDocType = 'text'
+    pgDocTypeOn = true
+    pgEditable = 'yes'
+    pgEditableOn = true
+    pgTheme = 'dark'
+    pgThemeOn = false
+    pgContainerClass = 'h-full overflow-hidden rounded-lg border border-slate-700 bg-slate-950'
+    pgContainerClassOn = false
+    pgEditorClass = 'h-full'
+    pgEditorClassOn = false
+    pgMaxContentLength = '0'
+    pgMaxContentLengthOn = false
+    pgSelectionEnabled = 'yes'
+    pgSelectionEnabledOn = true
+    pgAutoFocus = 'no'
+    pgAutoFocusOn = false
+    pgEditorAriaLabel = ''
+    pgEditorAriaLabelOn = false
+    pgRecreateKey = ''
+    pgRecreateKeyOn = false
   }
 
-  const code = $derived.by(() => buildCodeEditorSnippet({ docType: pgDocType, editable: pgEditable, theme: pgTheme }))
+  const code = $derived.by(() => buildCodeEditorSnippet({ docType: pgDocType, docTypeOn: pgDocTypeOn, editable: pgEditable, editableOn: pgEditableOn, theme: pgTheme, themeOn: pgThemeOn, containerClass: pgContainerClass, containerClassOn: pgContainerClassOn, editorClass: pgEditorClass, editorClassOn: pgEditorClassOn, maxContentLength: pgMaxContentLength, maxContentLengthOn: pgMaxContentLengthOn, selectionEnabled: pgSelectionEnabled, selectionEnabledOn: pgSelectionEnabledOn, autoFocus: pgAutoFocus, autoFocusOn: pgAutoFocusOn, editorAriaLabel: pgEditorAriaLabel, editorAriaLabelOn: pgEditorAriaLabelOn, recreateKey: pgRecreateKey, recreateKeyOn: pgRecreateKeyOn }))
 
-  const props: PropRow[] = [
-    { name: 'content', type: 'string', defaultValue: '—', note: 'Bindable editor document.' },
-    { name: 'editable', type: 'boolean', defaultValue: 'true', note: 'Enables typing; false renders read-only.' },
-    {
-      name: 'docType',
-      type: 'string',
-      defaultValue: "'text'",
-      note: "Language pack key: json, javascript, html, markdown, yaml, or xml (loaded on demand). 'text' loads none.",
-    },
-    { name: 'selectionEnabled', type: 'boolean', defaultValue: 'true', note: 'Allows text selection and copy.' },
-    {
-      name: 'theme',
-      type: 'string',
-      defaultValue: "'dark'",
-      note: "'dark' uses githubDark, any other value githubLight.",
-    },
-    {
-      name: 'containerClass',
-      type: 'string',
-      defaultValue: "''",
-      note: 'Classes for the outer wrapper; give it a bounded height.',
-    },
-    {
-      name: 'editorClass',
-      type: 'string',
-      defaultValue: "''",
-      note: 'Classes for the CodeMirror host; use h-full inside a sized wrapper.',
-    },
-    {
-      name: 'editorAriaLabel',
-      type: 'string',
-      defaultValue: "'Content'",
-      note: 'Accessible name for the editor textbox.',
-    },
-    { name: 'autoFocus', type: 'boolean', defaultValue: 'false', note: 'Focuses the editor once it mounts.' },
-    { name: 'recreateKey', type: 'string', defaultValue: "''", note: 'Changing it destroys and rebuilds the editor.' },
-    {
-      name: 'maxContentLength',
-      type: 'number',
-      defaultValue: '0',
-      note: 'Caps the document length; 0 disables the cap.',
-    },
-    { name: 'onReady', type: '() => void', defaultValue: '—', note: 'Called once the EditorView exists.' },
+  const preview = new SnippetPreview({
+    getSeed: () => code,
+    getScope: () => ({ content: pgContent }),
+    sync: { tag: 'CodeEditor', getFields: () => syncFields },
+  })
+
+  // Each editable row declares its Value editor and its snippet write-back
+  // shape once; the sync table below derives from the same declarations.
+  // Snippet edits surface in the Value column, and `syncSeed` holds the
+  // regenerated seed back so the editor keeps the user's text. The document
+  // itself is edited in the demo editor and rides scope, so it has no Value
+  // editor; `docType` is always emitted (falling back to JSON), so the JSON
+  // literal maps back to unset.
+  const fields: SyncableFieldConfig[] = $derived([
+    { name: 'autoFocus', type: 'boolean', defaultValue: 'false', note: 'Focuses the editor once it mounts; the eye stages the customization.', editor: 'boolean', value: pgAutoFocus, onChange: value => { pgAutoFocus = value as TriState; pgAutoFocusOn = true; }, toggle: snippetToggle(pgAutoFocusOn, enabled => (pgAutoFocusOn = enabled)), sync: { kind: 'tri' } },
+    { name: 'containerClass', type: 'string?', defaultValue: "'h-full overflow-hidden rounded-lg border border-slate-700 bg-slate-950'", editorDefaultValue: 'h-full overflow-hidden rounded-lg border border-slate-700 bg-slate-950', note: 'Classes for the outer wrapper; the default renders the framed editor box (override for a light theme); the eye stages the customization.', editor: 'text', clearable: true, value: pgContainerClass, onChange: value => { pgContainerClass = value; pgContainerClassOn = true; }, toggle: snippetToggle(pgContainerClassOn, enabled => (pgContainerClassOn = enabled)), placeholder: 'h-full overflow-hidden rounded-lg border border-slate-700 bg-slate-950', sync: { kind: 'text' } },
+    { name: 'content', type: 'string', defaultValue: '—', note: 'Bindable editor document. The eye resets to the default content.', editor: 'snippet', value: pgContent, onChange: value => {
+      pgContent = value
+      pgContentEnabled = true
+    }, dialog: { docType: 'html', title: 'Edit content' }, toggle: resetToggle(
+      pgContentEnabled,
+      enabled => (pgContentEnabled = enabled),
+      () => (pgContent = DEFAULT_CONTENT),
+    ) },
+    { name: 'docType', type: 'string', defaultValue: "'text'", note: "Language pack key: json, javascript, html, markdown, yaml, or xml (loaded on demand). 'text' loads none; the eye stages the customization.", editor: 'enum', options: DOC_TYPE_OPTIONS, value: pgDocType, onChange: value => { pgDocType = value; pgDocTypeOn = true; }, placeholder: 'text', clearLabel: 'Clear document type', toggle: snippetToggle(pgDocTypeOn, enabled => (pgDocTypeOn = enabled)), sync: { kind: 'text', unsetValues: ['json'] } },
+    { name: 'editable', type: 'boolean', defaultValue: 'true', note: 'Enables typing; false renders read-only; the eye stages the customization.', editor: 'boolean', value: pgEditable, onChange: value => { pgEditable = value as TriState; pgEditableOn = true; }, toggle: snippetToggle(pgEditableOn, enabled => (pgEditableOn = enabled)), sync: { kind: 'tri' } },
+    { name: 'editorAriaLabel', type: 'string?', defaultValue: "'Content'", note: 'Accessible name for the editor textbox; the eye stages the customization.', editor: 'text', clearable: true, value: pgEditorAriaLabel, onChange: value => { pgEditorAriaLabel = value; pgEditorAriaLabelOn = true; }, toggle: snippetToggle(pgEditorAriaLabelOn, enabled => (pgEditorAriaLabelOn = enabled)), placeholder: 'Content', sync: { kind: 'text' } },
+    { name: 'editorClass', type: 'string?', defaultValue: "'h-full'", editorDefaultValue: 'h-full', note: 'Classes for the CodeMirror host; it fills the wrapper by default; the eye stages the customization.', editor: 'text', clearable: true, value: pgEditorClass, onChange: value => { pgEditorClass = value; pgEditorClassOn = true; }, toggle: snippetToggle(pgEditorClassOn, enabled => (pgEditorClassOn = enabled)), placeholder: 'h-full', sync: { kind: 'text' } },
+    { name: 'maxContentLength', type: 'number?', defaultValue: '0', editorDefaultValue: '0', note: 'Caps the document length; 0 disables the cap; the eye stages the customization.', editor: 'number', clearable: true, value: pgMaxContentLength, onChange: value => { pgMaxContentLength = value; pgMaxContentLengthOn = true; }, placeholder: '0', toggle: snippetToggle(pgMaxContentLengthOn, enabled => (pgMaxContentLengthOn = enabled)), sync: { kind: 'number', pattern: /^\d+$/ } },
+    { name: 'recreateKey', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Changing it destroys and rebuilds the editor; the eye stages the customization.', editor: 'text', clearable: true, value: pgRecreateKey, onChange: value => { pgRecreateKey = value; pgRecreateKeyOn = true; }, toggle: snippetToggle(pgRecreateKeyOn, enabled => (pgRecreateKeyOn = enabled)), sync: { kind: 'text' } },
+    { name: 'selectionEnabled', type: 'boolean', defaultValue: 'true', note: 'Allows text selection and copy; the eye stages the customization.', editor: 'boolean', value: pgSelectionEnabled, onChange: value => { pgSelectionEnabled = value as TriState; pgSelectionEnabledOn = true; }, toggle: snippetToggle(pgSelectionEnabledOn, enabled => (pgSelectionEnabledOn = enabled)), sync: { kind: 'tri' } },
+    { name: 'theme', type: 'string', defaultValue: "'dark'", note: "'dark' uses githubDark, any other value githubLight; the eye stages the customization.", editor: 'enum', options: themeOptions, value: pgTheme, onChange: value => { pgTheme = value; pgThemeOn = true; }, placeholder: 'dark', clearLabel: 'Clear theme', toggle: snippetToggle(pgThemeOn, enabled => (pgThemeOn = enabled)), sync: { kind: 'text' } },
     { name: 'onAutoFocused', type: '() => void', defaultValue: '—', note: 'Called after an autofocus.' },
-    {
-      name: 'onContentChange',
-      type: '(content: string) => void',
-      defaultValue: '—',
-      note: 'Called with the document after every edit.',
-    },
-    {
-      name: 'onSelectionChange',
-      type: '(range: { from; to } | null) => void',
-      defaultValue: '—',
-      note: 'Called with the selection range, or null when collapsed.',
-    },
-  ]
+    { name: 'onContentChange', type: '(content: string) => void', defaultValue: '—', note: 'Called with the document after every edit.' },
+    { name: 'onReady', type: '() => void', defaultValue: '—', note: 'Called once the EditorView exists.' },
+    { name: 'onSelectionChange', type: '(range: { from; to } | null) => void', defaultValue: '—', note: 'Called with the selection range, or null when collapsed.' },
+  ])
+
+  const syncFields = $derived(syncFieldsOf(fields))
+
+  // The seed covers every override except the document (the snippet reads it
+  // from scope), so only content edits need a scope refresh; everything else
+  // reseeds. The refresh preserves the editor text by recompiling the draft.
+  useScopeRefresh(preview, () => [pgContent])
 </script>
 
-{#snippet resetIcon()}
-  <ResetIcon size="sm" />
-{/snippet}
-
-{#snippet propsSnippet()}
-  <PropsTable rows={props} />
-{/snippet}
-
-{#snippet settingsPanel()}
-  <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
-  </Buttons>
-  <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
-    <FormField label="Document type">
-      <SelectDropdown
-        buttonLabel={docTypeLabel(pgDocType)}
-        activeValue={pgDocType}
-        ariaLabel="Document type"
-        options={DOC_TYPE_OPTIONS}
-        onSelect={value => (pgDocType = value)}
-        clearable
-        clearLabel="Clear document type"
-        onClear={() => (pgDocType = '')} />
-    </FormField>
-    <FormField label="Editable">
-      <SelectDropdown
-        buttonLabel={pgEditable === '' ? 'Default' : pgEditable === 'yes' ? 'Yes' : 'No'}
-        activeValue={pgEditable}
-        ariaLabel="Editable"
-        options={[
-          { value: 'yes', label: 'Yes' },
-          { value: 'no', label: 'No' },
-        ]}
-        onSelect={value => (pgEditable = value as TriState)}
-        clearable
-        clearLabel="Clear editable"
-        onClear={() => (pgEditable = '')} />
-    </FormField>
-    <FormField label="Theme">
-      <SelectDropdown
-        buttonLabel={themeLabel(pgTheme)}
-        activeValue={pgTheme}
-        ariaLabel="Theme"
-        options={themeOptions}
-        onSelect={value => (pgTheme = value)}
-        clearable
-        clearLabel="Clear theme"
-        onClear={() => (pgTheme = '')} />
-    </FormField>
-  </div>
-{/snippet}
-
-<ShowcasePage name="CodeEditor" props={propsSnippet}>
-  <ShowcaseSection title={sectionTitle} {code} footer={settingsPanel} scope={{ content: pgContent }}>
+<ShowcasePage
+    {fields}
+    title="CodeEditor"
+    {code}
+    {preview}
+    onReset={clearPlayground}
+    scope={{ content: pgContent }}
+>
     <div class="h-64 w-full max-w-xl">
       <CodeEditor
         bind:content={pgContent}
         docType={demoDocType}
         {editable}
+        autoFocus={demoAutoFocus}
+        editorAriaLabel={demoEditorAriaLabel}
+        recreateKey={demoRecreateKey}
         theme={demoTheme}
-        containerClass="h-full overflow-hidden rounded-md border border-slate-700 bg-slate-950"
-        editorClass="h-full" />
+        containerClass={demoContainerClass}
+        editorClass={demoEditorClass}
+        maxContentLength={demoMaxContentLength}
+        {selectionEnabled} />
     </div>
-  </ShowcaseSection>
-</ShowcasePage>
+  </ShowcasePage>

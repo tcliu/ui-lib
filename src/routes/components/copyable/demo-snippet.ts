@@ -2,34 +2,49 @@
 // the playground form state: the section regenerates the editor text from
 // this, so the editor always shows the markup behind the demo above.
 
-export type TriState = '' | 'yes' | 'no'
+import { sizeAttributeLine } from '$lib/showcase/size-input'
 
 export interface CopyableSnippetState {
   text: string
+  textOn: boolean
   copyPosition: string
-  alwaysVisible: TriState
-  className: string
+  copyPositionOn: boolean
+  textClass: string
+  textClassOn: boolean
+  containerClass: string
+  containerClassOn: boolean
+  ariaLabel: string
+  ariaLabelOn: boolean
+  tooltip: string
+  tooltipOn: boolean
+  children: string
+  size: string
+  sizeOn: boolean
 }
 
 function escapeAttr(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 }
 
-// A tri-state line: omitted while unset, bare while Yes, ={false} while No.
-function flagLine(name: string, value: TriState): string[] {
-  if (value === '') {
-    return []
-  }
-  return [`  ${name}${value === 'yes' ? '' : '={false}'}`]
+// Element text for the children span below.
+function escapeText(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
-export function buildCopyableSnippet({ text, copyPosition, alwaysVisible, className }: CopyableSnippetState): string {
+export function buildCopyableSnippet({ text, textOn, copyPosition, copyPositionOn, textClass, textClassOn, containerClass, containerClassOn, ariaLabel, ariaLabelOn, tooltip, tooltipOn, children, size, sizeOn }: CopyableSnippetState): string {
+  const hasChildren = children !== ''
+  const resolvedText = textOn && text ? text : 'Copy me'
   return [
     '<Copyable',
-    `  text="${escapeAttr(text || 'Copy me')}"`,
-    ...(copyPosition ? [`  copyPosition="${copyPosition}"`] : []),
-    ...flagLine('alwaysVisible', alwaysVisible),
-    ...(className ? [`  className="${escapeAttr(className)}"`] : []),
-    '/>',
+    `  text="${escapeAttr(resolvedText)}"`,
+    // The size and position Values prefill their component defaults; the
+    // builder omits the defaults so Show-code stays minimal.
+    ...(sizeOn && size !== '' && size !== 'md' ? sizeAttributeLine(size, '  ') : []),
+    ...(copyPositionOn && copyPosition && copyPosition !== 'inline' ? [`  copyPosition="${copyPosition}"`] : []),
+    ...(textClassOn && textClass ? [`  textClass="${escapeAttr(textClass)}"`] : []),
+    ...(containerClassOn && containerClass ? [`  containerClass="${escapeAttr(containerClass)}"`] : []),
+    ...(ariaLabelOn && ariaLabel ? [`  ariaLabel="${escapeAttr(ariaLabel)}"`] : []),
+    ...(tooltipOn && tooltip ? [`  tooltip="${escapeAttr(tooltip)}"`] : []),
+    ...(hasChildren ? ['>', `  <span>${escapeText(children)}</span>`, '</Copyable>'] : ['/>']),
   ].join('\n')
 }

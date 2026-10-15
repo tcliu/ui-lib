@@ -1,25 +1,41 @@
 <script lang="ts">
-  import Button from '$lib/components/Button.svelte'
-  import Buttons from '$lib/components/Buttons.svelte'
   import Chip from '$lib/components/Chip.svelte'
   import FormField from '$lib/components/FormField.svelte'
   import SelectDropdown from '$lib/components/SelectDropdown.svelte'
-  import ResetIcon from '$lib/icons/ResetIcon.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import PropsTable, { type PropRow } from '$lib/showcase/PropsTable.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
+  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
+  import { useScopeRefresh } from '$lib/showcase/use-scope-refresh.svelte'
+  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { snippetToggle } from '$lib/showcase/snippet-field'
   import { DEFAULT_CHIP_CLASS, buildChipSnippet, type TriState } from './demo-snippet'
 
   const i18n = getI18nContext()
 
-  // Customizer playground state. Every option starts unset (the component
-  // default renders), so the cleared form applies no overrides.
+  // Customizer playground state. Every curated option starts at the
+  // component default (the Value column shows it), so the cleared form
+  // applies no overrides and Show-code omits the defaults. Clearing a Value
+  // unsets it; Reset restores the defaults below.
+  // `pgMode` is demo-only branching with no prop row, so it keeps a settings
+  // panel below; `pgRemoved` is interaction state.
   let pgMode = $state('')
-  let pgLabel = $state('')
+  let pgLabel = $state('Default')
+  let pgLabelOn = $state(true)
   let pgChipClass = $state('')
-  let pgActive = $state<TriState>('')
+  let pgChipClassOn = $state(false)
   let pgRemoved = $state(false)
+  let pgAriaLabel = $state('')
+  let pgAriaLabelOn = $state(false)
+  let pgDisabled = $state<TriState>('no')
+  let pgDisabledOn = $state(false)
+  let pgRemoveButtonClass = $state('')
+  let pgRemoveButtonClassOn = $state(false)
+  let pgRemoveButtonStyle = $state('')
+  let pgRemoveButtonStyleOn = $state(false)
+  let pgStyle = $state('')
+  let pgStyleOn = $state(false)
+  let pgTooltip = $state('')
+  let pgTooltipOn = $state(false)
 
   // Unset renders the component default; Yes/No force the value.
   function flagOn(value: TriState): boolean | undefined {
@@ -28,73 +44,96 @@
 
   const modeOptions = [
     { value: 'removable', label: 'Removable' },
-    { value: 'toggle', label: 'Toggle' },
-  ]
-  const yesNoOptions = [
-    { value: 'yes', label: 'Yes' },
-    { value: 'no', label: 'No' },
   ]
 
-  function triLabel(value: TriState): string {
-    return value === '' ? 'Default' : value === 'yes' ? 'Yes' : 'No'
-  }
-
-  const demoLabel = $derived(pgLabel || i18n.t('showcase.default'))
-  const demoChipClass = $derived(pgChipClass || DEFAULT_CHIP_CLASS)
-  const active = $derived(flagOn(pgActive))
-  const chipActive = $derived(pgActive === 'yes')
-
-  const isCustomized = $derived(pgMode !== '' || pgLabel !== '' || pgChipClass !== '' || pgActive !== '')
-  const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
+  const demoLabel = $derived(pgLabelOn && pgLabel ? pgLabel : i18n.t('showcase.default'))
+  const demoChipClass = $derived(pgChipClassOn && pgChipClass ? pgChipClass : DEFAULT_CHIP_CLASS)
+  const disabled = $derived(pgDisabledOn ? flagOn(pgDisabled) : undefined)
+  const demoAriaLabel = $derived(pgAriaLabelOn && pgAriaLabel ? pgAriaLabel : undefined)
+  const demoRemoveButtonClass = $derived(pgRemoveButtonClassOn && pgRemoveButtonClass ? pgRemoveButtonClass : undefined)
+  const demoRemoveButtonStyle = $derived(pgRemoveButtonStyleOn && pgRemoveButtonStyle ? pgRemoveButtonStyle : undefined)
+  const demoStyle = $derived(pgStyleOn && pgStyle ? pgStyle : undefined)
+  const demoTooltip = $derived(pgTooltipOn && pgTooltip ? pgTooltip : undefined)
 
   function clearPlayground() {
     pgMode = ''
-    pgLabel = ''
+    pgLabel = 'Default'
+    pgLabelOn = true
     pgChipClass = ''
-    pgActive = ''
+    pgChipClassOn = false
     pgRemoved = false
+    pgAriaLabel = ''
+    pgAriaLabelOn = false
+    pgDisabled = 'no'
+    pgDisabledOn = false
+    pgRemoveButtonClass = ''
+    pgRemoveButtonClassOn = false
+    pgRemoveButtonStyle = ''
+    pgRemoveButtonStyleOn = false
+    pgStyle = ''
+    pgStyleOn = false
+    pgTooltip = ''
+    pgTooltipOn = false
   }
 
   const code = $derived.by(() =>
-    buildChipSnippet({ mode: pgMode, label: pgLabel, chipClass: pgChipClass, active: pgActive }),
+    buildChipSnippet({
+      mode: pgMode,
+      label: pgLabel,
+      labelOn: pgLabelOn,
+      chipClass: pgChipClass,
+      chipClassOn: pgChipClassOn,
+      removeLabel: pgAriaLabel,
+      removeLabelOn: pgAriaLabelOn,
+      disabled: pgDisabled,
+      disabledOn: pgDisabledOn,
+      removeButtonClass: pgRemoveButtonClass,
+      removeButtonClassOn: pgRemoveButtonClassOn,
+      removeButtonStyle: pgRemoveButtonStyle,
+      removeButtonStyleOn: pgRemoveButtonStyleOn,
+      style: pgStyle,
+      styleOn: pgStyleOn,
+      tooltip: pgTooltip,
+      tooltipOn: pgTooltipOn,
+    }),
   )
 
-  const props: PropRow[] = [
-    { name: 'label', type: 'string', defaultValue: '—', note: 'Pill text.' },
-    { name: 'chipClass', type: 'string', defaultValue: '—', note: 'Color and shape classes.' },
-    { name: 'style', type: 'string', defaultValue: "''", note: 'Inline style for the pill.' },
-    { name: 'ariaLabel', type: 'string', defaultValue: 'locale', note: 'Accessible name for the remove button.' },
-    { name: 'removeButtonClass', type: 'string', defaultValue: "''", note: 'Extra classes for the remove button.' },
-    { name: 'removeButtonStyle', type: 'string', defaultValue: "''", note: 'Inline style for the remove button.' },
-    { name: 'tooltip', type: 'string', defaultValue: '—', note: 'Tooltip text for the pill.' },
-    { name: 'disabled', type: 'boolean', defaultValue: 'false', note: 'Disables the remove/toggle button.' },
+  const preview = new SnippetPreview({
+    getSeed: () => code,
+    getScope: () => ({
+      defaultLabel: i18n.t('showcase.default'),
+      removed: pgRemoved,
+    }),
+    sync: { tag: 'Chip', getFields: () => syncFields },
+  })
+
+  // `chipClass` is always emitted (falling back to the default), so the
+  // default literal maps back to unset.
+  const fields: SyncableFieldConfig[] = $derived([
+    { name: 'chipClass', type: 'string', defaultValue: '—', note: 'Color and shape classes; the eye stages the customization.', editor: 'text', clearable: true, value: pgChipClass, onChange: value => { pgChipClass = value; pgChipClassOn = true; }, toggle: snippetToggle(pgChipClassOn, enabled => (pgChipClassOn = enabled)), sync: { kind: 'text', unsetValues: [DEFAULT_CHIP_CLASS] } },
+    { name: 'disabled', type: 'boolean', defaultValue: 'false', note: 'Disables the remove button. Applies in removable mode; the eye stages the customization.', editor: 'boolean', value: pgDisabled, onChange: value => { pgDisabled = value as TriState; pgDisabledOn = true; }, toggle: snippetToggle(pgDisabledOn, enabled => (pgDisabledOn = enabled)), sync: { kind: 'tri' } },
+    { name: 'label', type: 'string', defaultValue: '—', note: 'Pill text; the eye stages the customization.', editor: 'text', clearable: true, value: pgLabel, onChange: value => { pgLabel = value; pgLabelOn = true; }, toggle: snippetToggle(pgLabelOn, enabled => (pgLabelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'defaultLabel' } },
+    { name: 'removeButtonClass', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Extra classes for the remove button; the eye stages the customization. Applies in removable mode.', editor: 'text', clearable: true, value: pgRemoveButtonClass, onChange: value => { pgRemoveButtonClass = value; pgRemoveButtonClassOn = true; }, toggle: snippetToggle(pgRemoveButtonClassOn, enabled => (pgRemoveButtonClassOn = enabled)), sync: { kind: 'text' } },
+    { name: 'removeButtonStyle', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Inline style for the remove button; the eye stages the customization. Applies in removable mode.', editor: 'text', clearable: true, value: pgRemoveButtonStyle, onChange: value => { pgRemoveButtonStyle = value; pgRemoveButtonStyleOn = true; }, toggle: snippetToggle(pgRemoveButtonStyleOn, enabled => (pgRemoveButtonStyleOn = enabled)), sync: { kind: 'text' } },
+    { name: 'removeLabel', type: 'string?', defaultValue: 'locale', note: 'Accessible name for the remove button; the eye stages the customization. Applies in removable mode.', editor: 'text', clearable: true, value: pgAriaLabel, onChange: value => { pgAriaLabel = value; pgAriaLabelOn = true; }, toggle: snippetToggle(pgAriaLabelOn, enabled => (pgAriaLabelOn = enabled)), sync: { kind: 'text' } },
+    { name: 'style', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Inline style for the pill; the eye stages the customization.', editor: 'text', clearable: true, value: pgStyle, onChange: value => { pgStyle = value; pgStyleOn = true; }, toggle: snippetToggle(pgStyleOn, enabled => (pgStyleOn = enabled)), sync: { kind: 'text' } },
+    { name: 'tooltip', type: 'string?', defaultValue: '—', note: 'Tooltip text for the pill; the eye stages the customization.', editor: 'text', clearable: true, value: pgTooltip, onChange: value => { pgTooltip = value; pgTooltipOn = true; }, toggle: snippetToggle(pgTooltipOn, enabled => (pgTooltipOn = enabled)), sync: { kind: 'text' } },
     { name: 'onRemove', type: '() => void', defaultValue: '—', note: 'Renders the remove button.' },
-    { name: 'active', type: 'boolean', defaultValue: 'false', note: 'Pressed state in toggle mode.' },
-    {
-      name: 'onclick',
-      type: '() => void',
-      defaultValue: '—',
-      note: 'Renders the toggle button instead of the static pill.',
-    },
-  ]
+  ])
+
+  const syncFields = $derived(syncFieldsOf(fields))
+
+  // With an unset label the demo reads the localized default from scope, which
+  // reseeding never refreshes; recompile the draft on those scope changes
+  // without touching the editor text. Customized labels ride the seed instead.
+  useScopeRefresh(preview, () => [demoLabel], () => pgLabel === '')
 </script>
 
-{#snippet resetIcon()}
-  <ResetIcon size="sm" />
-{/snippet}
-
-{#snippet propsSnippet()}
-  <PropsTable rows={props} />
-{/snippet}
-
 {#snippet settingsPanel()}
-  <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
-  </Buttons>
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Mode">
       <SelectDropdown
-        buttonLabel={pgMode ? (pgMode === 'removable' ? 'Removable' : 'Toggle') : 'Static'}
+        buttonLabel={pgMode ? 'Removable' : 'Static'}
         activeValue={pgMode}
         ariaLabel="Mode"
         options={modeOptions}
@@ -106,52 +145,32 @@
           pgRemoved = false
         }} />
     </FormField>
-    <FormField label="Label" htmlFor="pg-label">
-      <input
-        id="pg-label"
-        bind:value={pgLabel}
-        placeholder="Default"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
-    </FormField>
-    <FormField label="Chip class" htmlFor="pg-chipclass">
-      <input
-        id="pg-chipclass"
-        bind:value={pgChipClass}
-        placeholder="(none)"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
-    </FormField>
-    <FormField label="Active">
-      <SelectDropdown
-        buttonLabel={triLabel(pgActive)}
-        activeValue={pgActive}
-        ariaLabel="Active"
-        options={yesNoOptions}
-        onSelect={value => (pgActive = value as TriState)}
-        clearable
-        clearLabel="Clear active"
-        onClear={() => (pgActive = '')} />
-    </FormField>
   </div>
 {/snippet}
 
-<ShowcasePage name="Chip" props={propsSnippet}>
-  <ShowcaseSection
-    title={sectionTitle}
+<ShowcasePage
+    {fields}
+    title="Chip"
     {code}
-    footer={settingsPanel}
-    scope={{ defaultLabel: i18n.t('showcase.default'), chipActive, removed: pgRemoved }}>
+    {preview}
+    onReset={clearPlayground}
+    configPanel={settingsPanel}
+    scope={{ defaultLabel: i18n.t('showcase.default'), removed: pgRemoved }}
+>
     {#if pgMode === 'removable'}
       {#if !pgRemoved}
-        <Chip label={demoLabel} chipClass={demoChipClass} onRemove={() => (pgRemoved = true)} />
+        <Chip
+          label={demoLabel}
+          chipClass={demoChipClass}
+          removeLabel={demoAriaLabel}
+          {disabled}
+          removeButtonClass={demoRemoveButtonClass}
+          removeButtonStyle={demoRemoveButtonStyle}
+          style={demoStyle}
+          tooltip={demoTooltip}
+          onRemove={() => (pgRemoved = true)} />
       {/if}
-    {:else if pgMode === 'toggle'}
-      <Chip
-        label={demoLabel}
-        chipClass={demoChipClass}
-        {active}
-        onclick={() => (pgActive = pgActive === 'yes' ? 'no' : 'yes')} />
     {:else}
-      <Chip label={demoLabel} chipClass={demoChipClass} />
+      <Chip label={demoLabel} chipClass={demoChipClass} style={demoStyle} tooltip={demoTooltip} />
     {/if}
-  </ShowcaseSection>
-</ShowcasePage>
+  </ShowcasePage>

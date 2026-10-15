@@ -5,28 +5,34 @@
 import { sizeAttributeLine } from '$lib/showcase/size-input'
 export interface ToastSnippetState {
   message: string
+  messageOn: boolean
   toastType: string
+  toastTypeOn: boolean
   position: string
+  positionOn: boolean
   size: string
+  sizeOn: boolean
   action: string
+  closeLabel: string
+  closeLabelOn: boolean
 }
 
 function escapeAttr(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 }
 
-export function buildToastSnippet({ message, toastType, position, size, action }: ToastSnippetState): string {
+export function buildToastSnippet({ message, messageOn, toastType, toastTypeOn, position, positionOn, size, sizeOn, action, closeLabel, closeLabelOn }: ToastSnippetState): string {
   const lines = [
     '<Button variant="primary" onClick={() => (open = true)}>{showLabel}</Button>',
     '',
     '{#if open}',
     '  <Toast',
-    ...(message ? [`    message="${escapeAttr(message)}"`] : ['    message={defaultMessage}']),
-    '    closeLabel={closeLabel}',
-    ...(toastType ? [`    type="${toastType}"`] : []),
-    ...(position ? [`    position="${position}"`] : []),
-    ...sizeAttributeLine(size, '    '),
-    ...(action ? [`    actionLabel="${escapeAttr(action)}"`, '    onAction={() => (actionTaken = actionLabel)}'] : []),
+    ...(messageOn && message ? [`    message="${escapeAttr(message)}"`] : ['    message={defaultMessage}']),
+    ...(closeLabelOn && closeLabel ? [`    closeLabel="${escapeAttr(closeLabel)}"`] : ['    closeLabel={closeLabel}']),
+    ...(toastTypeOn && toastType && toastType !== 'info' ? [`    type="${toastType}"`] : []),
+    ...(positionOn && position && position !== 'bottom-right' ? [`    position="${position}"`] : []),
+    ...(sizeOn && size !== '' && size !== 'md' ? sizeAttributeLine(size, '    ') : []),
+    ...(action ? [`    action={{ label: "${escapeAttr(action)}", onClick: () => (actionTaken = actionLabel) }}`] : []),
     '    onClose={() => (open = false)} />',
     '{/if}',
     `<span class="text-sm text-slate-400">action: {actionTaken || '—'}</span>`,

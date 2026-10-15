@@ -1,138 +1,144 @@
 <script lang="ts">
-  import Button from '$lib/components/Button.svelte'
-  import Buttons from '$lib/components/Buttons.svelte'
   import Copyable from '$lib/components/Copyable.svelte'
-  import FormField from '$lib/components/FormField.svelte'
-  import SelectDropdown from '$lib/components/SelectDropdown.svelte'
-  import ResetIcon from '$lib/icons/ResetIcon.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import PropsTable, { type PropRow } from '$lib/showcase/PropsTable.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
-  import { buildCopyableSnippet, type TriState } from './demo-snippet'
+  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
+  import { parseSizeValue } from '$lib/showcase/size-input'
+  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { snippetField, snippetToggle } from '$lib/showcase/snippet-field'
+  import { buildCopyableSnippet } from './demo-snippet'
 
   const i18n = getI18nContext()
 
-  // Customizer playground state. Every option starts unset (the component
-  // default renders), so the cleared form applies no overrides.
+  // Customizer playground state. Every option starts at the component
+  // default (the Value column shows it), so the cleared form applies no
+  // overrides and Show-code omits the defaults. Clearing a Value unsets it;
+  // Reset restores the defaults below. The children
+  // text is applied only while its eye toggle is on.
   let pgText = $state('')
-  let pgPosition = $state('')
-  let pgAlwaysVisible = $state<TriState>('')
-  let pgClassName = $state('')
+  let pgTextOn = $state(false)
+  let pgPosition = $state('inline')
+  let pgPositionOn = $state(false)
+  let pgTextClass = $state('text-slate-400')
+  let pgTextClassOn = $state(false)
+  let pgContainerClass = $state('')
+  let pgContainerClassOn = $state(false)
+  let pgAriaLabel = $state('')
+  let pgAriaLabelOn = $state(false)
+  let pgTooltip = $state('')
+  let pgTooltipOn = $state(false)
+  let pgChildren = $state('')
+  let pgChildrenOn = $state(false)
+  let pgSize = $state('md')
+  let pgSizeOn = $state(false)
 
-  // Unset renders the component default; Yes/No force the value.
-  function flagOn(value: TriState): boolean | undefined {
-    return value === '' ? undefined : value === 'yes'
-  }
-
-  const demoPosition = $derived((pgPosition || undefined) as 'inline' | 'top-right' | undefined)
-  const alwaysVisible = $derived(flagOn(pgAlwaysVisible))
-  const demoClassName = $derived(pgClassName || undefined)
+  const demoPosition = $derived(pgPositionOn ? ((pgPosition || undefined) as 'inline' | 'top-right' | undefined) : undefined)
+  const demoTextClass = $derived(pgTextClassOn && pgTextClass ? pgTextClass : undefined)
+  const demoContainerClass = $derived(pgContainerClassOn && pgContainerClass ? pgContainerClass : undefined)
+  const demoAriaLabel = $derived(pgAriaLabelOn && pgAriaLabel ? pgAriaLabel : undefined)
+  const demoTooltip = $derived(pgTooltipOn && pgTooltip ? pgTooltip : undefined)
+  const demoText = $derived(pgTextOn && pgText ? pgText : 'Copy me')
+  const demoSize = $derived(pgSizeOn ? parseSizeValue(pgSize) : undefined)
 
   const positionOptions = [
     { value: 'inline', label: 'inline' },
     { value: 'top-right', label: 'top-right' },
   ]
-  const yesNoOptions = [
-    { value: 'yes', label: 'Yes' },
-    { value: 'no', label: 'No' },
-  ]
-
-  function triLabel(value: TriState): string {
-    return value === '' ? 'Default' : value === 'yes' ? 'Yes' : 'No'
-  }
-
-  const isCustomized = $derived(pgText !== '' || pgPosition !== '' || pgAlwaysVisible !== '' || pgClassName !== '')
-  const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
 
   function clearPlayground() {
     pgText = ''
-    pgPosition = ''
-    pgAlwaysVisible = ''
-    pgClassName = ''
+    pgTextOn = false
+    pgPosition = 'inline'
+    pgPositionOn = false
+    pgTextClass = 'text-slate-400'
+    pgTextClassOn = false
+    pgContainerClass = ''
+    pgContainerClassOn = false
+    pgAriaLabel = ''
+    pgAriaLabelOn = false
+    pgTooltip = ''
+    pgTooltipOn = false
+    pgChildren = ''
+    pgChildrenOn = false
+    pgSize = 'md'
+    pgSizeOn = false
   }
 
   const code = $derived.by(() =>
     buildCopyableSnippet({
       text: pgText,
+      textOn: pgTextOn,
       copyPosition: pgPosition,
-      alwaysVisible: pgAlwaysVisible,
-      className: pgClassName,
+      copyPositionOn: pgPositionOn,
+      textClass: pgTextClass,
+      textClassOn: pgTextClassOn,
+      containerClass: pgContainerClass,
+      containerClassOn: pgContainerClassOn,
+      ariaLabel: pgAriaLabel,
+      ariaLabelOn: pgAriaLabelOn,
+      tooltip: pgTooltip,
+      tooltipOn: pgTooltipOn,
+      children: pgChildrenOn ? pgChildren : '',
+      size: pgSize,
+      sizeOn: pgSizeOn,
     }),
   )
 
-  const props: PropRow[] = [
-    { name: 'text', type: 'string', defaultValue: '—', note: 'Text to render (or wrap children instead).' },
-    { name: 'copyText', type: 'string', defaultValue: 'text', note: 'Copied text; defaults to the rendered text.' },
-    { name: 'className', type: 'string', defaultValue: "'text-slate-400'", note: 'Classes for the rendered text.' },
-    { name: 'containerClass', type: 'string', defaultValue: "''", note: 'Extra classes for the wrapper.' },
-    { name: 'copyAriaLabel', type: 'string', defaultValue: 'locale', note: 'Accessible name for the copy button.' },
-    { name: 'copyTooltip', type: 'string', defaultValue: 'locale', note: 'Tooltip for the copy button.' },
-    {
-      name: 'alwaysVisible',
-      type: 'boolean',
-      defaultValue: 'false',
-      note: 'Keeps the copy button visible (top-right mode implies it).',
-    },
-    { name: 'copyPosition', type: "'inline' | 'top-right'", defaultValue: "'inline'", note: 'Copy button placement.' },
-    { name: 'children', type: 'Snippet', defaultValue: '—', note: 'Renders instead of text when passed.' },
-  ]
+  const preview = new SnippetPreview({
+    getSeed: () => code,
+    getScope: () => ({}),
+    sync: { tag: 'Copyable', getFields: () => syncFields },
+  })
+
+  // Each editable row declares its Value editor and its snippet write-back
+  // shape once; the sync table below derives from the same declarations.
+  // Snippet edits surface in the Value column, and `syncSeed` holds the
+  // regenerated seed back so the editor keeps the user's text. The text is
+  // always emitted (falling back to the demo default), so the default literal
+  // maps back to unset.
+  const fields: SyncableFieldConfig[] = $derived([
+    { name: 'ariaLabel', type: 'string?', defaultValue: 'locale', note: 'Accessible name for the copy button; the eye stages the customization.', editor: 'text', clearable: true, value: pgAriaLabel, onChange: value => { pgAriaLabel = value; pgAriaLabelOn = true; }, toggle: snippetToggle(pgAriaLabelOn, enabled => (pgAriaLabelOn = enabled)), sync: { kind: 'text' } },
+    snippetField({
+      name: 'children',
+      note: 'Renders instead of text when passed; committing applies it, and the dialog edits its text.',
+      value: pgChildren,
+      onChange: value => {
+        pgChildren = value
+        pgChildrenOn = true
+      },
+      toggle: snippetToggle(pgChildrenOn, enabled => (pgChildrenOn = enabled)),
+      dialog: { docType: 'text' },
+    }),
+    { name: 'containerClass', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Extra classes for the wrapper; the eye stages the customization.', editor: 'text', clearable: true, value: pgContainerClass, onChange: value => { pgContainerClass = value; pgContainerClassOn = true; }, toggle: snippetToggle(pgContainerClassOn, enabled => (pgContainerClassOn = enabled)), sync: { kind: 'text' } },
+    { name: 'copyPosition', type: "'inline' | 'top-right'", defaultValue: "'inline'", note: 'Copy button placement; the eye stages the customization.', editor: 'enum', options: positionOptions, value: pgPosition, onChange: value => { pgPosition = value; pgPositionOn = true; }, placeholder: 'inline', clearLabel: 'Clear copy position', toggle: snippetToggle(pgPositionOn, enabled => (pgPositionOn = enabled)), sync: { kind: 'text' } },
+    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number", defaultValue: "'md'", note: 'Copy button scale; numbers are icon-scale pixels interpolated between the steps; the eye stages the customization.', editor: 'size', allowCustomValue: true, value: pgSize, onChange: value => { pgSize = value; pgSizeOn = true; }, placeholder: 'md', clearLabel: 'Clear size', toggle: snippetToggle(pgSizeOn, enabled => (pgSizeOn = enabled)), sync: { kind: 'custom', read: attrs => { const attr = attrs?.get('size'); if (!attr) return 'md'; if (attr.kind === 'string') return attr.value; if (attr.kind === 'expression' && /^\d+(\.\d+)?$/.test(attr.value)) return attr.value; return undefined } } },
+    { name: 'text', type: 'string?', defaultValue: '—', note: 'Text to render (or wrap children instead); the eye stages the customization.', editor: 'text', clearable: true, value: pgText, onChange: value => { pgText = value; pgTextOn = true; }, toggle: snippetToggle(pgTextOn, enabled => (pgTextOn = enabled)), sync: { kind: 'text', unsetValues: ['Copy me'] } },
+    { name: 'textClass', type: 'string?', defaultValue: "'text-slate-400'", editorDefaultValue: 'text-slate-400', note: 'Classes for the rendered text; the eye stages the customization.', editor: 'text', clearable: true, value: pgTextClass, onChange: value => { pgTextClass = value; pgTextClassOn = true; }, toggle: snippetToggle(pgTextClassOn, enabled => (pgTextClassOn = enabled)), placeholder: 'text-slate-400', sync: { kind: 'text' } },
+    { name: 'tooltip', type: 'string?', defaultValue: 'locale', note: 'Tooltip for the copy button; the eye stages the customization.', editor: 'text', clearable: true, value: pgTooltip, onChange: value => { pgTooltip = value; pgTooltipOn = true; }, toggle: snippetToggle(pgTooltipOn, enabled => (pgTooltipOn = enabled)), sync: { kind: 'text' } },
+  ])
+
+  const syncFields = $derived(syncFieldsOf(fields))
+
 </script>
 
-{#snippet resetIcon()}
-  <ResetIcon size="sm" />
+{#snippet demoChildren()}
+  <span>{pgChildren}</span>
 {/snippet}
 
-{#snippet propsSnippet()}
-  <PropsTable rows={props} />
-{/snippet}
-
-{#snippet settingsPanel()}
-  <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
-  </Buttons>
-  <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
-    <FormField label="Text" htmlFor="pg-text">
-      <input
-        id="pg-text"
-        bind:value={pgText}
-        placeholder="Copy me"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
-    </FormField>
-    <FormField label="Copy position">
-      <SelectDropdown
-        buttonLabel={pgPosition || 'Default'}
-        activeValue={pgPosition}
-        ariaLabel="Copy position"
-        options={positionOptions}
-        onSelect={value => (pgPosition = value)}
-        clearable
-        clearLabel="Clear copy position"
-        onClear={() => (pgPosition = '')} />
-    </FormField>
-    <FormField label="Always visible">
-      <SelectDropdown
-        buttonLabel={triLabel(pgAlwaysVisible)}
-        activeValue={pgAlwaysVisible}
-        ariaLabel="Always visible"
-        options={yesNoOptions}
-        onSelect={value => (pgAlwaysVisible = value as TriState)}
-        clearable
-        clearLabel="Clear always visible"
-        onClear={() => (pgAlwaysVisible = '')} />
-    </FormField>
-    <FormField label="Class name" htmlFor="pg-classname">
-      <input
-        id="pg-classname"
-        bind:value={pgClassName}
-        placeholder="(none)"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
-    </FormField>
-  </div>
-{/snippet}
-
-<ShowcasePage name="Copyable" props={propsSnippet}>
-  <ShowcaseSection title={sectionTitle} {code} footer={settingsPanel}>
-    <Copyable text={pgText || 'Copy me'} copyPosition={demoPosition} {alwaysVisible} className={demoClassName} />
-  </ShowcaseSection>
-</ShowcasePage>
+<ShowcasePage
+    {fields}
+    title="Copyable"
+    {code}
+    {preview}
+    onReset={clearPlayground}
+>
+    <Copyable
+      text={demoText}
+      size={demoSize}
+      copyPosition={demoPosition}
+      textClass={demoTextClass}
+      containerClass={demoContainerClass}
+      ariaLabel={demoAriaLabel}
+      tooltip={demoTooltip}
+      children={pgChildrenOn && pgChildren ? demoChildren : undefined} />
+  </ShowcasePage>

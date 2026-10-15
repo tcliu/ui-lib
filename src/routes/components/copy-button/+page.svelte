@@ -1,133 +1,102 @@
 <script lang="ts">
   import Button from '$lib/components/Button.svelte'
-  import Buttons from '$lib/components/Buttons.svelte'
   import CopyButton from '$lib/components/CopyButton.svelte'
-  import FormField from '$lib/components/FormField.svelte'
-  import SelectDropdown from '$lib/components/SelectDropdown.svelte'
-  import ResetIcon from '$lib/icons/ResetIcon.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import PropsTable, { type PropRow } from '$lib/showcase/PropsTable.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
-  import { DEFAULT_TEXT, buildCopyButtonSnippet, type TriState } from './demo-snippet'
+  import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
+  import { useScopeRefresh } from '$lib/showcase/use-scope-refresh.svelte'
+  import { parseSizeValue } from '$lib/showcase/size-input'
+  import { snippetToggle } from '$lib/showcase/snippet-field'
+  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { DEFAULT_TEXT, buildCopyButtonSnippet } from './demo-snippet'
 
   const i18n = getI18nContext()
 
-  // Customizer playground state. Every curated option starts unset (the
-  // component default renders), so the cleared form applies no overrides.
+  // Customizer playground state. Every curated option starts at the
+  // component default (the Value column shows it), so the cleared form
+  // applies no overrides and Show-code omits the defaults. Clearing a Value
+  // unsets it; Reset restores the defaults below.
   let pgText = $state('')
-  let pgAlwaysVisible = $state<TriState>('')
+  let pgTextOn = $state(false)
   let pgAriaLabel = $state('')
+  let pgAriaLabelOn = $state(false)
   let pgTooltip = $state('')
+  let pgTooltipOn = $state(false)
+  let pgSize = $state('md')
+  let pgSizeOn = $state(false)
 
-  // Unset renders the component default; Yes/No force the value.
-  function flagOn(value: TriState): boolean | undefined {
-    return value === '' ? undefined : value === 'yes'
-  }
-
-  const alwaysVisible = $derived(flagOn(pgAlwaysVisible))
-
-  const yesNoOptions = [
-    { value: 'yes', label: 'Yes' },
-    { value: 'no', label: 'No' },
-  ]
-
-  function triLabel(value: TriState): string {
-    return value === '' ? 'Default' : value === 'yes' ? 'Yes' : 'No'
-  }
-
-  const isCustomized = $derived(pgText !== '' || pgAlwaysVisible !== '' || pgAriaLabel !== '' || pgTooltip !== '')
-  const sectionTitle = $derived(isCustomized ? i18n.t('showcase.customized') : i18n.t('showcase.default'))
+  const demoText = $derived(pgTextOn && pgText ? pgText : DEFAULT_TEXT)
+  const copyHint = $derived(i18n.t('copy.toClipboard'))
+  const demoSize = $derived(pgSizeOn ? parseSizeValue(pgSize) : undefined)
 
   function clearPlayground() {
     pgText = ''
-    pgAlwaysVisible = ''
+    pgTextOn = false
     pgAriaLabel = ''
+    pgAriaLabelOn = false
     pgTooltip = ''
+    pgTooltipOn = false
+    pgSize = 'md'
+    pgSizeOn = false
   }
 
   const code = $derived.by(() =>
     buildCopyButtonSnippet({
       text: pgText,
-      alwaysVisible: pgAlwaysVisible,
-      copyAriaLabel: pgAriaLabel,
-      copyTooltip: pgTooltip,
+      textOn: pgTextOn,
+      ariaLabel: pgAriaLabel,
+      ariaLabelOn: pgAriaLabelOn,
+      tooltip: pgTooltip,
+      tooltipOn: pgTooltipOn,
+      size: pgSize,
+      sizeOn: pgSizeOn,
     }),
   )
 
-  const props: PropRow[] = [
-    { name: 'text', type: 'string', defaultValue: '—', note: 'Text placed on the clipboard (required).' },
-    {
-      name: 'alwaysVisible',
-      type: 'boolean',
-      defaultValue: 'false',
-      note: 'Keeps the button visible instead of revealing it on hover/focus.',
-    },
-    { name: 'copyAriaLabel', type: 'string', defaultValue: 'locale', note: 'Accessible name for the copy button.' },
-    { name: 'copyTooltip', type: 'string', defaultValue: 'locale', note: 'Tooltip shown on hover/focus.' },
-  ]
+  const preview = new SnippetPreview({
+    getSeed: () => code,
+    getScope: () => ({ copyHint }),
+    sync: { tag: 'CopyButton', getFields: () => syncFields },
+  })
+
+  // Each editable row declares its Value editor and its snippet write-back
+  // shape once; the sync table below derives from the same declarations.
+  // Snippet edits surface in the Value column, and `syncSeed` holds the
+  // regenerated seed back so the editor keeps the user's text. The text is
+  // always emitted (falling back to the default), so the default literal maps
+  // back to unset.
+  const fields: SyncableFieldConfig[] = $derived([
+    { name: 'ariaLabel', type: 'string?', defaultValue: 'locale', note: 'Accessible name for the copy button; the eye stages the customization.', editor: 'text', clearable: true, value: pgAriaLabel, onChange: value => { pgAriaLabel = value; pgAriaLabelOn = true; }, toggle: snippetToggle(pgAriaLabelOn, enabled => (pgAriaLabelOn = enabled)), sync: { kind: 'text' } },
+    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number", defaultValue: "'md'", note: 'Button scale; numbers are icon-scale pixels interpolated between the steps; the eye stages the customization.', editor: 'size', allowCustomValue: true, value: pgSize, onChange: value => { pgSize = value; pgSizeOn = true; }, placeholder: 'md', clearLabel: 'Clear size', toggle: snippetToggle(pgSizeOn, enabled => (pgSizeOn = enabled)), sync: { kind: 'custom', read: attrs => { const attr = attrs?.get('size'); if (!attr) return 'md'; if (attr.kind === 'string') return attr.value; if (attr.kind === 'expression' && /^\d+(\.\d+)?$/.test(attr.value)) return attr.value; return undefined } } },
+    { name: 'text', type: 'string', defaultValue: '—', note: 'Text placed on the clipboard (required); the eye stages the customization.', editor: 'text', clearable: true, value: pgText, onChange: value => { pgText = value; pgTextOn = true; }, toggle: snippetToggle(pgTextOn, enabled => (pgTextOn = enabled)), sync: { kind: 'text', unsetValues: [DEFAULT_TEXT] } },
+    { name: 'tooltip', type: 'string?', defaultValue: 'locale', note: 'Tooltip shown on hover/focus; the eye stages the customization.', editor: 'text', clearable: true, value: pgTooltip, onChange: value => { pgTooltip = value; pgTooltipOn = true; }, toggle: snippetToggle(pgTooltipOn, enabled => (pgTooltipOn = enabled)), sync: { kind: 'text' } },
+  ])
+
+  const syncFields = $derived(syncFieldsOf(fields))
+
+  // The hint reads the locale from scope, which reseeding never refreshes;
+  // recompile the draft on those scope changes without touching the editor
+  // text.
+  useScopeRefresh(preview, () => [copyHint])
 </script>
 
-{#snippet resetIcon()}
-  <ResetIcon size="sm" />
-{/snippet}
-
-{#snippet propsSnippet()}
-  <PropsTable rows={props} />
-{/snippet}
-
-{#snippet settingsPanel()}
-  <Buttons className="mb-4 flex shrink-0 flex-wrap items-center gap-3">
-    <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
-  </Buttons>
-  <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
-    <FormField label="Text" htmlFor="pg-text">
-      <input
-        id="pg-text"
-        bind:value={pgText}
-        placeholder={DEFAULT_TEXT}
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
-    </FormField>
-    <FormField label="Always visible">
-      <SelectDropdown
-        buttonLabel={triLabel(pgAlwaysVisible)}
-        activeValue={pgAlwaysVisible}
-        ariaLabel="Always visible"
-        options={yesNoOptions}
-        onSelect={value => (pgAlwaysVisible = value as TriState)}
-        clearable
-        clearLabel="Clear always visible"
-        onClear={() => (pgAlwaysVisible = '')} />
-    </FormField>
-    <FormField label="Aria label" htmlFor="pg-aria">
-      <input
-        id="pg-aria"
-        bind:value={pgAriaLabel}
-        placeholder="(locale)"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
-    </FormField>
-    <FormField label="Tooltip" htmlFor="pg-tooltip">
-      <input
-        id="pg-tooltip"
-        bind:value={pgTooltip}
-        placeholder="(locale)"
-        class="w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1.5 text-sm text-slate-100 transition outline-none placeholder:text-slate-500 focus-visible:border-cyan-500 motion-reduce:transition-none" />
-    </FormField>
-  </div>
-{/snippet}
-
-<ShowcasePage name="CopyButton" props={propsSnippet}>
-  <ShowcaseSection title={sectionTitle} {code} footer={settingsPanel} scope={{ copyHint: i18n.t('copy.toClipboard') }}>
+<ShowcasePage
+    {fields}
+    title="CopyButton"
+    {code}
+    {preview}
+    onReset={clearPlayground}
+    scope={{ copyHint }}
+>
     <div class="group flex flex-wrap items-center gap-3">
       <div class="flex max-w-full items-center gap-2 rounded-md border border-slate-800 bg-slate-950 px-3 py-2">
-        <span class="min-w-0 truncate font-mono text-sm text-slate-300">{pgText || DEFAULT_TEXT}</span>
+        <span class="min-w-0 truncate font-mono text-sm text-slate-300">{demoText}</span>
         <CopyButton
-          text={pgText || DEFAULT_TEXT}
-          {alwaysVisible}
-          copyAriaLabel={pgAriaLabel || undefined}
-          copyTooltip={pgTooltip || undefined} />
+          text={demoText}
+          size={demoSize}
+          ariaLabel={pgAriaLabelOn && pgAriaLabel ? pgAriaLabel : undefined}
+          tooltip={pgTooltipOn && pgTooltip ? pgTooltip : undefined} />
       </div>
-      <span class="text-xs text-slate-500">{i18n.t('copy.toClipboard')}</span>
+      <span class="text-xs text-slate-500">{copyHint}</span>
     </div>
-  </ShowcaseSection>
-</ShowcasePage>
+  </ShowcasePage>

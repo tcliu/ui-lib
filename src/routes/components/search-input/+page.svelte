@@ -1,48 +1,76 @@
 <script lang="ts">
-  import Button from '$lib/components/Button.svelte'
-  import Buttons from '$lib/components/Buttons.svelte'
+  import { onMount } from 'svelte'
   import FormField from '$lib/components/FormField.svelte'
   import SearchInput from '$lib/components/SearchInput.svelte'
   import SelectDropdown from '$lib/components/SelectDropdown.svelte'
-  import TextInput from '$lib/components/TextInput.svelte'
-  import CodeIcon from '$lib/icons/CodeIcon.svelte'
-  import ResetIcon from '$lib/icons/ResetIcon.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import PropsTable, { type PropRow } from '$lib/showcase/PropsTable.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import ShowcaseSection from '$lib/showcase/ShowcaseSection.svelte'
   import { SnippetPreview } from '$lib/showcase/use-snippet-preview.svelte'
   import { parseSizeValue } from '$lib/showcase/size-input'
-  import { extractComponentAttributes, extractScriptValue } from '$lib/showcase/snippet-attributes'
-  import { splitLeadingScript } from '$lib/showcase/snippet-source'
-  import { STYLED_INPUT, STYLED_WRAPPER, buildSearchInputSnippet } from './demo-snippet'
+  import { snippetToggle, resetToggle } from '$lib/showcase/snippet-field'
+  import { syncFieldsOf, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import { STYLED_INPUT, STYLED_WRAPPER, buildSearchInputSnippet, type TriState } from './demo-snippet'
 
   const i18n = getI18nContext()
 
-  // Customizer playground state. Every curated option starts unset (the
-  // component default renders), so the cleared form applies no overrides.
+  // Customizer playground state. Every curated option starts at the
+  // component default (the Value column shows it), so the cleared form
+  // applies no overrides and Show-code omits the defaults. Clearing a Value
+  // unsets it; Reset restores the defaults below.
   // Style is a preset that fills the wrapper/input class fields below.
   let pgQuery = $state('')
-  let pgAriaLabel = $state('')
-  let pgPlaceholder = $state('')
-  let pgSize = $state('')
+  let pgQueryOn = $state(true)
+  let pgAriaLabel = $state('Apply')
+  let pgAriaLabelOn = $state(true)
+  let pgPlaceholder = $state('Search...')
+  let pgPlaceholderOn = $state(false)
+  let pgSize = $state('md')
+  let pgSizeOn = $state(false)
   let pgStyled = $state('')
   let pgWrapperClass = $state('')
+  let pgWrapperClassOn = $state(false)
   let pgInputClass = $state('')
+  let pgInputClassOn = $state(false)
+  let pgClearable = $state<TriState>('no')
+  let pgClearableOn = $state(false)
+  let pgClearLabel = $state('Clear')
+  let pgClearLabelOn = $state(false)
+  let pgClearPlacement = $state('auto')
+  let pgClearPlacementOn = $state(false)
+  let pgDefaultValue = $state('')
+  let pgDefaultValueOn = $state(false)
+  let demoInputRef = $state<HTMLInputElement | null>(null)
+
+  onMount(() => {
+    demoInputRef?.focus()
+  })
 
   const styledOptions = [{ value: 'yes', label: 'Styled' }]
-  const sizeOptions = [
-    { value: 'xs', label: 'xs' },
-    { value: 'sm', label: 'sm' },
-    { value: 'md', label: 'md' },
-    { value: 'lg', label: 'lg' },
+
+  // Unset renders the component default; Yes/No force the value.
+  function flagOn(value: TriState): boolean | undefined {
+    return value === '' ? undefined : value === 'yes'
+  }
+
+  const clearPlacementOptions = [
+    { value: 'auto', label: 'auto' },
+    { value: 'inside', label: 'inside' },
+    { value: 'outside', label: 'outside' },
   ]
 
-  const demoAriaLabel = $derived(pgAriaLabel || i18n.t('common.apply'))
-  const demoPlaceholder = $derived(pgPlaceholder || undefined)
-  const demoSize = $derived(parseSizeValue(pgSize))
-  const demoWrapperClass = $derived(pgWrapperClass || undefined)
-  const demoInputClass = $derived(pgInputClass || undefined)
+  const demoAriaLabel = $derived(pgAriaLabelOn && pgAriaLabel ? pgAriaLabel : i18n.t('common.apply'))
+  const clearable = $derived(pgClearableOn ? flagOn(pgClearable) : undefined)
+  const demoClearLabel = $derived(pgClearLabelOn && pgClearLabel ? pgClearLabel : undefined)
+  const demoClearPlacement = $derived(
+    pgClearPlacementOn
+      ? ((pgClearPlacement || undefined) as 'auto' | 'inside' | 'outside' | undefined)
+      : undefined,
+  )
+  const demoDefaultValue = $derived(pgDefaultValueOn && pgDefaultValue ? pgDefaultValue : undefined)
+  const demoPlaceholder = $derived(pgPlaceholderOn && pgPlaceholder ? pgPlaceholder : undefined)
+  const demoSize = $derived(pgSizeOn ? parseSizeValue(pgSize) : undefined)
+  const demoWrapperClass = $derived(pgWrapperClassOn && pgWrapperClass ? pgWrapperClass : undefined)
+  const demoInputClass = $derived(pgInputClassOn && pgInputClass ? pgInputClass : undefined)
 
   function handleKeydown(event: KeyboardEvent) {
     if (event.key === 'Escape') {
@@ -52,199 +80,137 @@
 
   function clearPlayground() {
     pgQuery = ''
-    pgAriaLabel = ''
-    pgPlaceholder = ''
-    pgSize = ''
+    pgQueryOn = true
+    pgAriaLabel = 'Apply'
+    pgAriaLabelOn = true
+    pgPlaceholder = 'Search...'
+    pgPlaceholderOn = false
+    pgSize = 'md'
+    pgSizeOn = false
     pgStyled = ''
     pgWrapperClass = ''
+    pgWrapperClassOn = false
     pgInputClass = ''
+    pgInputClassOn = false
+    pgClearable = 'no'
+    pgClearableOn = false
+    pgClearLabel = 'Clear'
+    pgClearLabelOn = false
+    pgClearPlacement = 'auto'
+    pgClearPlacementOn = false
+    pgDefaultValue = ''
+    pgDefaultValueOn = false
   }
 
   const code = $derived.by(() =>
     buildSearchInputSnippet({
       ariaLabel: pgAriaLabel,
+      ariaLabelOn: pgAriaLabelOn,
       query: pgQuery,
       placeholder: pgPlaceholder,
+      placeholderOn: pgPlaceholderOn,
       size: pgSize,
+      sizeOn: pgSizeOn,
       wrapperClass: pgWrapperClass,
+      wrapperClassOn: pgWrapperClassOn,
       inputClass: pgInputClass,
+      inputClassOn: pgInputClassOn,
+      clearable: pgClearable,
+      clearableOn: pgClearableOn,
+      clearLabel: pgClearLabel,
+      clearLabelOn: pgClearLabelOn,
+      clearPlacement: pgClearPlacement,
+      clearPlacementOn: pgClearPlacementOn,
+      defaultValue: pgDefaultValue,
+      defaultValueOn: pgDefaultValueOn,
     }),
   )
 
-  // The page owns the preview so its code toggle can sit in the component-title
-  // row (ShowcasePage's `actions`) while the section renders the demo and the
-  // editor below.
   const preview = new SnippetPreview({
     getSeed: () => code,
     getScope: () => ({ applyLabel: i18n.t('common.apply'), handleKeydown }),
-    onCompiled: syncPlaygroundFromSnippet,
+    sync: { tag: 'SearchInput', getFields: () => syncFields },
   })
-
-  // Write a compiled snippet's recognized demo-tag attributes back into
-  // playground state, so snippet edits show up in the Value column. Only
-  // canonical shapes map (literals, and the `ariaLabel={applyLabel}` scope
-  // ref); custom expressions are left alone, and a draft without a complete
-  // demo tag (a free-form experiment) touches nothing. Absent means unset,
-  // matching what the builder omits. `syncSeed` then holds the regenerated
-  // seed back so the editor keeps the user's text.
-  function syncPlaygroundFromSnippet(source: string) {
-    const attrs = extractComponentAttributes(source, 'SearchInput')
-    if (!attrs) {
-      return
-    }
-    // An `ariaLabel={applyLabel}` scope ref means unset, like absence.
-    const aria = attrs.get('ariaLabel')
-    if (!aria || (aria.kind === 'expression' && aria.value === 'applyLabel')) {
-      pgAriaLabel = ''
-    } else if (aria.kind === 'string') {
-      pgAriaLabel = aria.value
-    }
-    const text = (name: string): string | undefined => {
-      if (!attrs.has(name)) {
-        return ''
-      }
-      const attr = attrs.get(name)!
-      return attr.kind === 'string' ? attr.value : undefined
-    }
-    const applyText = (name: string, assign: (value: string) => void) => {
-      const next = text(name)
-      if (next !== undefined) {
-        assign(next)
-      }
-    }
-    applyText('placeholder', value => (pgPlaceholder = value))
-    applyText('size', value => (pgSize = value))
-    applyText('wrapperClass', value => (pgWrapperClass = value))
-    applyText('inputClass', value => (pgInputClass = value))
-    // The builder seeds the query as script-local state; a hand-written
-    // `query` binding the scope key instead leaves the playground alone.
-    const scriptQuery = extractScriptValue(splitLeadingScript(source).declarations, 'query')
-    if (scriptQuery !== null) {
-      pgQuery = scriptQuery
-    }
-    preview.syncSeed()
-  }
 
   // Editable rows first (primitives and plain data, A–Z), then the function
   // props (A–Z). The bound value edits through the Value column like the
   // SelectDropdown's committed value.
-  const props: PropRow[] = [
-    { name: 'ariaLabel', type: 'string', defaultValue: '—', note: 'Required accessible name.' },
-    { name: 'inputClass', type: 'string', defaultValue: 'built-in', note: 'Replaces the default input classes.' },
+  const fields: SyncableFieldConfig[] = $derived([
+    { name: 'ariaLabel', type: 'string', defaultValue: '—', note: 'Required accessible name; the eye stages the customization.', editor: 'text', clearable: true, value: pgAriaLabel, onChange: value => { pgAriaLabel = value; pgAriaLabelOn = true; }, toggle: snippetToggle(pgAriaLabelOn, enabled => (pgAriaLabelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'applyLabel' } },
+    { name: 'clearLabel', type: 'string?', defaultValue: "'Clear'", editorDefaultValue: 'Clear', note: 'Accessible name for the clear button; the eye stages the customization.', editor: 'text', clearable: true, value: pgClearLabel, onChange: value => { pgClearLabel = value; pgClearLabelOn = true; }, toggle: snippetToggle(pgClearLabelOn, enabled => (pgClearLabelOn = enabled)), placeholder: 'Clear', sync: { kind: 'text' } },
+    { name: 'clearPlacement', type: "'auto' | 'inside' | 'outside'", defaultValue: "'auto'", note: 'Inside overlays the field edge; outside sits after it; auto stays inside (no trailing adornment); the eye stages the customization.', editor: 'enum', options: clearPlacementOptions, value: pgClearPlacement, onChange: value => { pgClearPlacement = value; pgClearPlacementOn = true; }, placeholder: 'auto', clearLabel: 'Clear placement', toggle: snippetToggle(pgClearPlacementOn, enabled => (pgClearPlacementOn = enabled)), sync: { kind: 'text' } },
+    { name: 'clearable', type: 'boolean', defaultValue: 'false', note: 'Appends a cross button that clears the value; the eye stages the customization.', editor: 'boolean', value: pgClearable, onChange: value => { pgClearable = value as TriState; pgClearableOn = true; }, toggle: snippetToggle(pgClearableOn, enabled => (pgClearableOn = enabled)), sync: { kind: 'tri' } },
+    { name: 'defaultValue', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Baseline the clear button compares against; the cross hides while the value matches it; the eye stages the customization.', editor: 'text', clearable: true, value: pgDefaultValue, onChange: value => { pgDefaultValue = value; pgDefaultValueOn = true; }, toggle: snippetToggle(pgDefaultValueOn, enabled => (pgDefaultValueOn = enabled)), sync: { kind: 'text' } },
+    { name: 'inputClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the default input classes; the eye stages the customization.', editor: 'text', clearable: true, value: pgInputClass, onChange: value => { pgInputClass = value; pgInputClassOn = true; }, toggle: snippetToggle(pgInputClassOn, enabled => (pgInputClassOn = enabled)), sync: { kind: 'text' } },
     { name: 'inputRef', type: 'HTMLInputElement | null', defaultValue: 'null', note: 'Bindable native input.' },
-    { name: 'placeholder', type: 'string', defaultValue: "'Search...'", note: 'Native placeholder.' },
-    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | number", defaultValue: "'sm'", note: 'Box, text, and icon scale together; numbers are icon-scale pixels interpolated between the steps.' },
-    { name: 'value', type: 'string', defaultValue: '—', note: 'Bindable search text.' },
-    { name: 'wrapperClass', type: 'string', defaultValue: "''", note: 'Extra classes for the outer wrapper.' },
+    { name: 'placeholder', type: 'string?', defaultValue: "'Search...'", editorDefaultValue: 'Search...', note: 'Native placeholder; the eye stages the customization.', editor: 'text', clearable: true, value: pgPlaceholder, onChange: value => { pgPlaceholder = value; pgPlaceholderOn = true; }, toggle: snippetToggle(pgPlaceholderOn, enabled => (pgPlaceholderOn = enabled)), placeholder: 'Search...', sync: { kind: 'text' } },
+    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number", defaultValue: "'md'", note: 'Box, text, and icon scale together; numbers are icon-scale pixels interpolated between the steps; the eye stages the customization.', editor: 'size', allowCustomValue: true, value: pgSize, onChange: value => { pgSize = value; pgSizeOn = true; }, clearLabel: 'Clear size', placeholder: 'md', toggle: snippetToggle(pgSizeOn, enabled => (pgSizeOn = enabled)), sync: { kind: 'text' } },
+    { name: 'value', type: 'string', defaultValue: '—', note: 'Bindable search text; the eye resets it to empty.', editor: 'text', clearable: true, value: pgQuery, onChange: value => { pgQuery = value; pgQueryOn = true; }, toggle: resetToggle(pgQueryOn, enabled => (pgQueryOn = enabled), () => (pgQuery = '')), sync: { kind: 'script', attr: 'query' } },
+    { name: 'wrapperClass', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Extra classes for the outer wrapper; the eye stages the customization.', editor: 'text', clearable: true, value: pgWrapperClass, onChange: value => { pgWrapperClass = value; pgWrapperClassOn = true; }, toggle: snippetToggle(pgWrapperClassOn, enabled => (pgWrapperClassOn = enabled)), sync: { kind: 'text' } },
+    { name: 'onClear', type: '() => void', defaultValue: 'clears value', note: 'Clear handler; falls back to clearing the bound value when omitted.' },
     { name: 'onblur', type: '(event: FocusEvent) => void', defaultValue: '—', note: 'Blur callback.' },
     { name: 'onfocus', type: '(event: FocusEvent) => void', defaultValue: '—', note: 'Focus callback.' },
     { name: 'oninput', type: '(event: Event) => void', defaultValue: '—', note: 'Input callback.' },
     { name: 'onkeydown', type: '(event: KeyboardEvent) => void', defaultValue: '—', note: 'Keydown callback; Escape clears in this demo.' },
-  ]
+  ])
+
+  const syncFields = $derived(syncFieldsOf(fields))
 </script>
-
-{#snippet resetIcon()}
-  <ResetIcon size="sm" />
-{/snippet}
-
-{#snippet codeIcon()}
-  <CodeIcon size="sm" />
-{/snippet}
-
-{#snippet pageActions()}
-  <Button
-    variant="ghost"
-    size="sm"
-    icon={codeIcon}
-    ariaLabel={preview.open ? i18n.t('showcase.hideCode') : i18n.t('showcase.showCode')}
-    ariaExpanded={preview.open}
-    tooltip={preview.open ? i18n.t('showcase.hideCode') : i18n.t('showcase.showCode')}
-    onClick={() => preview.toggle()} />
-{/snippet}
-
-{#snippet propValue(row: PropRow)}
-  {#if row.name === 'ariaLabel'}
-    <TextInput bind:value={pgAriaLabel} ariaLabel="ariaLabel value" placeholder={i18n.t('common.apply')} />
-  {:else if row.name === 'placeholder'}
-    <TextInput bind:value={pgPlaceholder} ariaLabel="placeholder value" placeholder="Search..." />
-  {:else if row.name === 'size'}
-    <SelectDropdown
-      buttonLabel={pgSize || 'Default'}
-      activeValue={pgSize}
-      ariaLabel="size value"
-      options={sizeOptions}
-      filterable
-      allowCustomValue
-      onSelect={value => (pgSize = value)}
-      clearable
-      clearLabel="Clear size"
-      onClear={() => (pgSize = '')} />
-  {:else if row.name === 'value'}
-    <TextInput bind:value={pgQuery} ariaLabel="value value" placeholder="(empty)" />
-  {:else if row.name === 'wrapperClass'}
-    <TextInput bind:value={pgWrapperClass} ariaLabel="wrapperClass value" placeholder="(built-in)" />
-  {:else if row.name === 'inputClass'}
-    <TextInput bind:value={pgInputClass} ariaLabel="inputClass value" placeholder="(built-in)" />
-  {:else}
-    <span class="text-slate-500">—</span>
-  {/if}
-{/snippet}
-
-{#snippet propsSnippet()}
-  <PropsTable rows={props} value={propValue} />
-{/snippet}
 
 {#snippet settingsPanel()}
   <!-- Single-prop editing lives in the props table's Value column; the style
     preset below drives two props at once (a composite preset), so it stays
-    here with Reset. -->
-  <div class="flex flex-col gap-3">
-    <Buttons className="flex shrink-0 flex-wrap items-center gap-3">
-      <Button size="sm" icon={resetIcon} onClick={clearPlayground}>Reset</Button>
-    </Buttons>
-    <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
-      <FormField label="Style">
-        <SelectDropdown
-          buttonLabel={pgStyled ? 'Styled' : 'Default'}
-          activeValue={pgStyled}
-          ariaLabel="Style"
-          options={styledOptions}
-          onSelect={value => {
-            pgStyled = value
-            pgWrapperClass = STYLED_WRAPPER
-            pgInputClass = STYLED_INPUT
-          }}
-          clearable
-          clearLabel="Clear style"
-          onClear={() => {
-            pgStyled = ''
-            pgWrapperClass = ''
-            pgInputClass = ''
-          }} />
-      </FormField>
-    </div>
+    here. -->
+  <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
+    <FormField label="Style">
+      <SelectDropdown
+        buttonLabel={pgStyled ? 'Styled' : 'Default'}
+        activeValue={pgStyled}
+        ariaLabel="Style"
+        options={styledOptions}
+        onSelect={value => {
+          pgStyled = value
+          pgWrapperClass = STYLED_WRAPPER
+          pgWrapperClassOn = true
+          pgInputClass = STYLED_INPUT
+          pgInputClassOn = true
+        }}
+        clearable
+        clearLabel="Clear style"
+        onClear={() => {
+          pgStyled = ''
+          pgWrapperClass = ''
+          pgWrapperClassOn = false
+          pgInputClass = ''
+          pgInputClassOn = false
+        }} />
+    </FormField>
   </div>
 {/snippet}
 
-<ShowcasePage name="SearchInput" props={propsSnippet} actions={pageActions}>
-  <ShowcaseSection
+<ShowcasePage
+    {fields}
     title="SearchInput"
     {code}
     {preview}
-    showHeader={false}
-    bordered={false}
-    footer={settingsPanel}
-    scope={{ applyLabel: i18n.t('common.apply'), handleKeydown }}>
+    onReset={clearPlayground}
+    configPanel={settingsPanel}
+    scope={{ applyLabel: i18n.t('common.apply'), handleKeydown }}
+>
     <div class="flex flex-col gap-1">
       <SearchInput
         bind:value={pgQuery}
+        bind:inputRef={demoInputRef}
         ariaLabel={demoAriaLabel}
         onkeydown={handleKeydown}
         placeholder={demoPlaceholder}
         size={demoSize}
         wrapperClass={demoWrapperClass}
-        inputClass={demoInputClass} />
+        inputClass={demoInputClass}
+        {clearable}
+        clearLabel={demoClearLabel}
+        clearPlacement={demoClearPlacement}
+        defaultValue={demoDefaultValue} />
       <span class="text-sm text-slate-400">value: {pgQuery || '—'}</span>
     </div>
-  </ShowcaseSection>
-</ShowcasePage>
+  </ShowcasePage>

@@ -9,6 +9,7 @@ import type { Node, Program } from 'estree'
 // through `MODULE_REGISTRY` after `rewriteImports` rewrites these specifiers.
 const COMPONENT_IMPORTS = [
   '  import AppShell from "ui/AppShell.svelte"',
+  '  import AutoComplete from "ui/AutoComplete.svelte"',
   '  import BaseDialog from "ui/BaseDialog.svelte"',
   '  import Button from "ui/Button.svelte"',
   '  import Buttons from "ui/Buttons.svelte"',
@@ -25,6 +26,7 @@ const COMPONENT_IMPORTS = [
   '  import DateRangePicker from "ui/DateRangePicker.svelte"',
   '  import EditableText from "ui/EditableText.svelte"',
   '  import EditDialog from "ui/EditDialog.svelte"',
+  '  import FieldTable from "ui/FieldTable.svelte"',
   '  import FormField from "ui/FormField.svelte"',
   '  import LazyCodeEditor from "ui/LazyCodeEditor.svelte"',
   '  import Menu from "ui/Menu.svelte"',
@@ -36,8 +38,10 @@ const COMPONENT_IMPORTS = [
   '  import SelectDropdown from "ui/SelectDropdown.svelte"',
   '  import Spinner from "ui/Spinner.svelte"',
   '  import Splitter from "ui/Splitter.svelte"',
+  '  import StructureTree from "ui/StructureTree.svelte"',
   '  import Tabs from "ui/Tabs.svelte"',
   '  import TagInput from "ui/TagInput.svelte"',
+  '  import TextArea from "ui/TextArea.svelte"',
   '  import TextInput from "ui/TextInput.svelte"',
   '  import Toast from "ui/Toast.svelte"',
   '  import Tooltip from "ui/Tooltip.svelte"',
@@ -47,17 +51,27 @@ const COMPONENT_IMPORTS = [
   '  import ChevronRightIcon from "ui/ChevronRightIcon.svelte"',
   '  import ChevronUpIcon from "ui/ChevronUpIcon.svelte"',
   '  import CloseIcon from "ui/CloseIcon.svelte"',
+  '  import CloudIcon from "ui/CloudIcon.svelte"',
   '  import CodeIcon from "ui/CodeIcon.svelte"',
   '  import ColumnsIcon from "ui/ColumnsIcon.svelte"',
   '  import CopyIcon from "ui/CopyIcon.svelte"',
   '  import DeleteIcon from "ui/DeleteIcon.svelte"',
+  '  import DocumentIcon from "ui/DocumentIcon.svelte"',
   '  import DownloadIcon from "ui/DownloadIcon.svelte"',
+  '  import ExportIcon from "ui/ExportIcon.svelte"',
   '  import EyeIcon from "ui/EyeIcon.svelte"',
   '  import EyeSlashIcon from "ui/EyeSlashIcon.svelte"',
+  '  import FireIcon from "ui/FireIcon.svelte"',
   '  import ForestIcon from "ui/ForestIcon.svelte"',
   '  import GlobeIcon from "ui/GlobeIcon.svelte"',
+  '  import InfoIcon from "ui/InfoIcon.svelte"',
   '  import KebabIcon from "ui/KebabIcon.svelte"',
+  '  import LavenderIcon from "ui/LavenderIcon.svelte"',
+  '  import LightBulbIcon from "ui/LightBulbIcon.svelte"',
   '  import MenuIcon from "ui/MenuIcon.svelte"',
+  '  import MidnightIcon from "ui/MidnightIcon.svelte"',
+  '  import MintIcon from "ui/MintIcon.svelte"',
+  '  import MoonIcon from "ui/MoonIcon.svelte"',
   '  import PaletteIcon from "ui/PaletteIcon.svelte"',
   '  import PlusIcon from "ui/PlusIcon.svelte"',
   '  import RefreshIcon from "ui/RefreshIcon.svelte"',
@@ -65,8 +79,12 @@ const COMPONENT_IMPORTS = [
   '  import SaveIcon from "ui/SaveIcon.svelte"',
   '  import SearchIcon from "ui/SearchIcon.svelte"',
   '  import SettingsIcon from "ui/SettingsIcon.svelte"',
+  '  import SignOutIcon from "ui/SignOutIcon.svelte"',
   '  import SortAscIcon from "ui/SortAscIcon.svelte"',
   '  import SortDescIcon from "ui/SortDescIcon.svelte"',
+  '  import SparklesIcon from "ui/SparklesIcon.svelte"',
+  '  import SunIcon from "ui/SunIcon.svelte"',
+  '  import UploadIcon from "ui/UploadIcon.svelte"',
 ].join('\n')
 
 const LEADING_SCRIPT = /^\s*<script([^>]*)>([\s\S]*?)<\/script>/
@@ -106,19 +124,23 @@ export interface BuildSourceOptions {
   declaredNames: Set<string>
 }
 
-// Assemble the compilable source: the preamble imports, a scope destructure for
-// every key the snippet does not declare itself (so a local declaration wins
-// over a same-named scope value), then the snippet declarations, then markup.
+// Assemble the compilable source: the preamble imports, per-key reactive state
+// seeded from scope for every key the snippet does not declare itself (so a
+// local declaration wins over a same-named scope value), then the snippet
+// declarations, then markup. `$state` — not a plain destructure — so scope-fed
+// bindings stay reactive to snippet-side writes even when a snippet-declared
+// `<script>` flips the component into runes mode (where a bare `let` copy
+// would silently stop updating).
 export function buildSource({ markup, declarations, scopeKeys, declaredNames }: BuildSourceOptions): string {
   const names = scopeKeys.filter(key => !declaredNames.has(key))
-  const scopeLine = names.length > 0 ? `  let { ${names.join(', ')} } = __scope\n` : ''
+  const scopeLine = names.length > 0 ? `${names.map(key => `  let ${key} = $state(__scope.${key})`).join('\n')}\n` : ''
   const body = declarations.replace(/^\s*\n/, '').replace(/\s+$/, '')
   const declarationLines = body.length > 0 ? `${body}\n` : ''
   return `<script>\n${COMPONENT_IMPORTS}\n${scopeLine}${declarationLines}</script>\n${markup}`
 }
 
 // Collect the top-level binding names a parsed snippet `<script>` declares, so
-// buildSource can omit same-named scope keys from the destructure.
+// buildSource seeds only undeclared scope keys, so a local wins.
 export function collectDeclaredNames(program: Program): Set<string> {
   const names = new Set<string>()
   for (const statement of program.body) {
