@@ -11,10 +11,11 @@
 // is left undefined (the registry falls back to the full default set) and
 // `requiredEnv` to `{}`.
 import { existsSync, readFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
 
-const CONFIG_PATH = join(dirname(fileURLToPath(import.meta.url)), '..', 'deploy.config.json')
+import { ROOT } from './lib/root.mjs'
+
+const CONFIG_PATH = join(ROOT, 'deploy.config.json')
 
 function loadConfig() {
   if (!existsSync(CONFIG_PATH)) return {}

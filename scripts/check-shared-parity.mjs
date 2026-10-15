@@ -3,7 +3,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { createRequire } from 'node:module'
 import { join, posix } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { ROOT } from './lib/root.mjs'
 
 // Drift gate for the shared UI surface. `ui-lib` is the canonical source; a
 // sibling app must carry byte-identical copies of the shared directories and
@@ -22,7 +22,6 @@ import { fileURLToPath } from 'node:url'
 // Exits non-zero so a port that was not synced back is caught in `check` rather
 // than discovered later.
 
-const ROOT = fileURLToPath(new URL('..', import.meta.url))
 const SELF = 'ui-lib'
 // Config root: the `~/.agents` checkout that carries the project registry and
 // the parser dependency.
@@ -44,7 +43,6 @@ const SHARED_DIRS = [
 // subdirectories, locales, and tests, so only these files are gated.
 const SHARED_FILES = [
   'src/lib/app-shell.ts',
-  'src/lib/cn.ts',
   'src/lib/d1-binding.mjs',
   'src/lib/dropdown-chrome.ts',
   'src/lib/position-panel.svelte.ts',

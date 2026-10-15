@@ -9,9 +9,9 @@
 //     [--sync-env|--no-sync-env] [--apply-schema|--no-apply-schema]
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
-import { parseArgs as parseCliArgs } from 'node:util'
 import { errorMessage, logEvent } from './log-event.mjs'
 import { ROOT_DIR, fail, runScript } from './_deploy/core.mjs'
+import { parseCliArgsOrExit } from './_terminal.mjs'
 import { runDeployInterview } from './_deploy/interview.mjs'
 import {
   DEFAULT_TARGET,
@@ -99,32 +99,22 @@ function resolveProdConfirmSync(profile, flag, skipNotice) {
 }
 
 function parseArgs(argv) {
-  let cli
-  try {
-    cli = parseCliArgs({
-      args: argv,
-      options: {
-        profile: { type: 'string' },
-        target: { type: 'string', multiple: true },
-        'sync-env': { type: 'boolean' },
-        'no-sync-env': { type: 'boolean' },
-        'apply-schema': { type: 'boolean' },
-        'no-apply-schema': { type: 'boolean' },
-        heartbeat: { type: 'string' },
-        project: { type: 'string' },
-        help: { type: 'boolean', short: 'h' },
-      },
-      allowPositionals: true,
-      strict: true,
-    })
-  } catch (error) {
-    fail(error.message)
-  }
-  const { values, positionals } = cli
-  if (values.help) {
-    usage()
-    process.exit(0)
-  }
+  const { values, positionals } = parseCliArgsOrExit(
+    argv,
+    {
+      profile: { type: 'string' },
+      target: { type: 'string', multiple: true },
+      'sync-env': { type: 'boolean' },
+      'no-sync-env': { type: 'boolean' },
+      'apply-schema': { type: 'boolean' },
+      'no-apply-schema': { type: 'boolean' },
+      heartbeat: { type: 'string' },
+      project: { type: 'string' },
+      help: { type: 'boolean', short: 'h' },
+    },
+    usage,
+    { onError: fail },
+  )
   if (values['sync-env'] && values['no-sync-env']) {
     fail('Conflicting --sync-env/--no-sync-env.')
   }
