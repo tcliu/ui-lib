@@ -4,11 +4,11 @@
   interface Props {
     children: Snippet
     align?: 'center' | 'left' | 'right'
-    class?: string
+    className?: string
     trigger?: HTMLElement | null
   }
 
-  let { children, align = 'center', class: extraClass = '', trigger: triggerProp = null }: Props = $props()
+  let { children, align = 'center', className: extraClass = '', trigger: triggerProp = null }: Props = $props()
 
   let anchor = $state<HTMLElement | null>(null)
   // Explicit trigger (e.g. Menu positioning) wins; otherwise fall back to the
