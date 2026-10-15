@@ -366,7 +366,9 @@ when they share a group, so the relation is symmetric by construction.
 A page composes shared pieces from `src/lib/showcase/`:
 
 - `ShowcasePage` — page container and demo block: `title`, demo `children`,
-  `code`, optional caller-owned `preview`, `scope`, `configPanel`, `stage`/
+  `code`, the `scope`/`sync` it builds its own `SnippetPreview` from (a
+  caller-owned `preview` still wins), `scopeRefresh`/`scopeRefreshWhen`,
+  `configPanel`, `stage`/
   `stageWidth`, an optional `onReset`, and the `fields` rows it renders as the
   shared `FieldTable`. The page fills the viewport (`h-full`) with the demo
   block (title row, `RelatedNav`, demo, editor, config panel) fixed in a
@@ -446,27 +448,29 @@ declared once as a `SyncableFieldConfig` and the table is derived with
 `syncFieldsOf(fields)`; a write-back with no prop row (a demo sample value, an
 item label the demo owns) is appended after it. A builder that always emits an
 attribute lists its default in that row's `sync.unsetValues`. The page passes
-its `sync: { tag, getFields }` to `SnippetPreview`, which writes compiled
+its `scope` and `sync: { tag, getFields }` to `ShowcasePage`, which owns the
+preview and writes compiled
 attributes back into page state and reseeds (`syncSeed`) so the editor keeps the
 user's text; a page whose snippet reads `scope` keys the seed does not cover
-calls `useScopeRefresh(preview, () => [keys])` (an optional `when` gate scopes
-it) to recompile over those keys while live. A Value cell prefills its
+passes `scopeRefresh` (a `scopeRefreshWhen` gate scopes it)
+to recompile over those keys while live. A Value cell prefills its
 literal component default (`boolean` as `yes`/`no`, `enum`/`size`/`text`/
 `number` literals; markers like `locale`/`built-in` and non-literals stay
 unset with a placeholder), so the table shows what the demo renders. A row's
 literal default is its `editorDefaultValue`, else the Value cell's
 `placeholder` (a marker default has none). The
 builder omits the default and `syncFieldsOf` derives the row's write-back
-setter from its `onChange`, resolving an absent attribute (an empty write) back
-to the row's own default — a `tri` row to its boolean default (yes/no), a
-`text`/`number` row to its literal default, and a row with neither to unset —
-so a page declares the row and never repeats the
+setter from its `onChange`. A row without an eye resolves an absent attribute
+(an empty write) back to the row's own default — a `tri` row to its boolean
+default (yes/no), a `text`/`number` row to its literal default, and a row with
+neither to unset — so a page declares the row and never repeats the
 fallback in a hand-written `sync.set`, which stays the escape hatch for a
-bespoke setter. A `custom` tag-attribute `read` resolves an absent attribute to
-the current state rather than a reset (a prefilled eye-less row resolves absent
-to its default instead), so unapplying with Show-code open cannot wipe committed
-data; a `scriptJson` sync needs no such guard (a missing declaration already
-skips). Clearing a Value restores the same default (unsets when the row
+bespoke setter. An eye row that prefills a literal default never stages it: an
+absent attribute writes the row's current value back (so unapplying with
+Show-code open cannot wipe committed custom data), and a write that lands on the
+default unstages the eye. A `custom` tag-attribute `read` (e.g. `size`) follows
+the same rule; a `scriptJson` sync needs no such guard (a missing declaration
+already skips). Clearing a Value restores the same default (unsets when the row
 has no literal default) and unapplies the eye, and Reset restores the curated
 playground. The
 same literal default is the editors' clear baseline, so the cross hides while
@@ -478,7 +482,11 @@ with a `dialog` editor opens `FieldTable`'s dialog
 eye) / `resetToggle` (required eye) / `snippetDialog`
 (`$lib/showcase/snippet-field.ts`), which supply its `type`/`defaultValue`/
 `editor` boilerplate, apply-eye toggle, and exact-shape dialog; only the
-row's seed and commit stay page-specific. A
+row's seed and commit stay page-specific. A non-dialog row family is built the
+same way: the `size`/`text`/`boolean`/`enum` rows are `sizeField`/`textField`/
+`boolField`/`enumField` (same module), and the Show-code
+builders share their escaping and tri-state helpers from
+`$lib/showcase/snippet-build.ts` rather than re-declaring them. A
 dialog-backed `children` row that takes free-form HTML (the
 AppShell block) accepts only well-balanced markup the demo and the compiled seed
 render identically — no expressions, component tags, directives, comments,
