@@ -219,8 +219,11 @@ of building a parallel control.
   resolveSize(size)`); font is a ratio too — the text-like controls share
   `0.8125` (Button, the input chrome, `SelectDropdown`), while text-only
   components reuse the shared `FONT_RATIO` (0.875, e.g. TagInput/Toast/
-  Checkbox/Pagination). `Button`'s icon-only padding is the same ratio
-  (`0.375 × the dimension`, via `p-[var(--btn-icon-pad)]`). The helpers
+  Checkbox/Pagination). `Button`'s icon-only padding is `padY + (line − icon) /
+  2` (`0.58035 × the dimension`, via `p-[var(--btn-icon-pad)]`), so a bordered
+  icon-only box (`icon + 2·iconPad`) is the same height as a text button's
+  (`line + 2·padY`); the icon-only shape also floors its box at the text line
+  height, so the paddingless `ghost` glyph matches the ghost text row too. The helpers
   in `size-metrics.ts` (`resolveSize`, `dimensionMetrics`,
   `sizeVarStyle`) emit the metric custom properties on the inline style while a
   static utility set consumes them; the constant ratio means no per-step

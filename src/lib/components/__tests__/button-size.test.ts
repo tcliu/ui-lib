@@ -65,6 +65,12 @@ describe('Button dimension ratios', () => {
       expect(num(style, 'pad-y') / px).toBeCloseTo(0.5)
       expect(num(style, 'radius') / px).toBeCloseTo(0.375)
       expect(num(style, 'icon') / px).toBeCloseTo(1)
+      // Icon-only padding keeps its box the text row height: icon + 2·iconPad
+      // equals line + 2·padY, so the glyph square is never shorter.
+      const icon = num(style, 'icon')
+      const line = num(style, 'line')
+      const padY = num(style, 'pad-y')
+      expect(num(style, 'icon-pad')).toBeCloseTo(padY + (line - icon) / 2)
     }
   })
 

@@ -83,7 +83,10 @@
   // constant metric:dimension ratio across the range; the icon is the dimension
   // itself (ratio 1). Font weight is an emphasis tier, not a length. The ratios
   // reproduce a compact 13px toolbar button at the default `md` dimension.
-  const BUTTON_RATIOS = { font: 0.8125, line: 1.1607, radius: 0.375, padX: 0.75, padY: 0.5, icon: 1, iconPad: 0.375 }
+  // `iconPad` is `padY + (line - icon) / 2`, so an icon-only button's box
+  // (`icon + 2·iconPad`) equals a text button's (`line + 2·padY`) and the glyph
+  // reads as a square at the text row height instead of a shorter box.
+  const BUTTON_RATIOS = { font: 0.8125, line: 1.1607, radius: 0.375, padX: 0.75, padY: 0.5, icon: 1, iconPad: 0.58035 }
 
   const metrics = $derived({ ...dimensionMetrics(size, BUTTON_RATIOS) })
   const boxStyle = $derived(sizeVarStyle('btn', metrics))
@@ -107,9 +110,11 @@
 
   const baseClass = $derived.by(() => {
     // Shape carries the layout, the interpolated metrics, and the hit-area
-    // inset (a constant per shape, not per size). Ghost drops padding only.
+    // inset (a constant per shape, not per size). Ghost drops padding only, so
+    // the icon-only box floors at the text line height: the bordered padding
+    // already fills the row, while a paddingless ghost glyph still matches it.
     const shape = isIconOnly
-      ? `${BOX_BASE} rounded-[var(--btn-radius)] max-[27.999rem]:min-h-11 max-[27.999rem]:min-w-11 before:absolute before:-inset-2 before:content-['']`
+      ? `${BOX_BASE} min-h-[var(--btn-line)] min-w-[var(--btn-line)] rounded-[var(--btn-radius)] max-[27.999rem]:min-h-11 max-[27.999rem]:min-w-11 before:absolute before:-inset-2 before:content-['']`
       : `${BOX_BASE} text-[length:var(--btn-font)] leading-[var(--btn-line)] rounded-[var(--btn-radius)] before:absolute before:-inset-1.5 before:content-['']`
     const pad =
       variant === 'ghost' ? '' : isIconOnly ? 'p-[var(--btn-icon-pad)]' : 'py-[var(--btn-pad-y)] px-[var(--btn-pad-x)]'

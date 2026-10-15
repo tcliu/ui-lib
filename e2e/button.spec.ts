@@ -82,3 +82,74 @@ test('showcase: the Button disabled eye stages the flag in Show-code', async ({ 
   await expect(editor).toContainText('disabled')
   await page.getByRole('button', { name: 'Hide code' }).click()
 })
+
+test('showcase: an icon-only Button matches the text row height in every variant', async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.goto('/components/button')
+  await page.waitForLoadState('networkidle')
+
+  // Text-only, icon + label, and icon-only in one row per variant. Bordered
+  // variants fill the row with padding; the paddingless ghost relies on the
+  // icon-only box flooring at the text line height, so ghost is the case that
+  // regresses if that floor is dropped.
+  const rows = ['primary', 'secondary', 'ghost'].flatMap(variant =>
+    [16, 20].flatMap(size => [
+      `  <div data-v="${variant}-${size}" class="flex items-center gap-3">`,
+      `    <Button variant="${variant}" size={${size}}>Label</Button>`,
+      `    <Button variant="${variant}" size={${size}}>`,
+      '      Label',
+      '      {#snippet icon()}',
+      '        <CheckIcon />',
+      '      {/snippet}',
+      '    </Button>',
+      `    <Button variant="${variant}" size={${size}} ariaLabel="icon">`,
+      '      {#snippet icon()}',
+      '        <CheckIcon />',
+      '      {/snippet}',
+      '    </Button>',
+      '  </div>',
+    ]),
+  )
+  const snippet = ['<div class="flex flex-col items-start gap-3">', ...rows, '</div>'].join('\n')
+
+  await page.locator('main header').getByRole('button', { name: 'Show code' }).click()
+  await expect(page.locator('main .cm-content').first()).toBeVisible({ timeout: 15000 })
+  await replaceSnippet(page, page.locator('main'), snippet)
+  await expect(page.locator('[data-showcase-demo] [data-v]')).toHaveCount(6)
+
+  const measured = await page.locator('[data-showcase-demo] [data-v]').evaluateAll(nodes =>
+    nodes.map(row => ({
+      variant: row.getAttribute('data-v'),
+      heights: [...row.querySelectorAll('button')].map(button => button.getBoundingClientRect().height),
+    })),
+  )
+  for (const { variant, heights } of measured) {
+    expect(heights, `${variant} renders three compositions`).toHaveLength(3)
+    // All three compositions share one row height; only sub-pixel rounding may differ.
+    for (const height of heights) expect(Math.abs(height - heights[0]!), `${variant} height ${height}`).toBeLessThan(0.5)
+  }
+})
+
+test('showcase: the children eye off renders a true icon-only Button', async ({ page }) => {
+  await page.goto('/components/button')
+  await page.waitForLoadState('networkidle')
+  const demo = page.locator('[data-showcase-demo]').first()
+  const button = demo.locator('button').first()
+  const labeled = (await button.boundingBox())!
+
+  await page.getByRole('button', { name: 'Apply icon' }).click()
+  await page.getByRole('button', { name: 'Unapply children' }).click()
+
+  // Children off omits the snippet, so the button takes the icon-only square
+  // shape instead of a padded label row, and keeps the labeled row height.
+  await expect
+    .poll(async () => {
+      const box = (await button.boundingBox())!
+      return Math.abs(box.width - box.height) < 0.5
+    })
+    .toBe(true)
+  expect(Math.abs((await button.boundingBox())!.height - labeled.height)).toBeLessThan(0.5)
+})

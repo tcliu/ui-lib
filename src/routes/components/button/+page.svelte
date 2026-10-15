@@ -175,6 +175,10 @@
   <CheckIcon />
 {/snippet}
 
+{#snippet demoChildren()}
+  {demoLabel} ({pg.clicks})
+{/snippet}
+
 <ShowcasePage
     {fields}
     title="Button"
@@ -202,7 +206,6 @@
       type={demoType}
       focusRing={demoFocusRing}
       preventFocusSteal={demoPreventFocusSteal}
-      onClick={() => (pg.clicks += 1)}>
-      {#if pg.childrenEnabled}{demoLabel} ({pg.clicks}){/if}
-    </Button>
+      onClick={() => (pg.clicks += 1)}
+      children={pg.childrenEnabled ? demoChildren : undefined} />
   </ShowcasePage>
