@@ -40,8 +40,6 @@ export const PHONE_SHEET_QUERY = `(max-width: ${PHONE_SHEET_MAX})`
  */
 export const NATIVE_SELECT_BUTTON_CLASS =
   'inline-flex cursor-pointer items-center justify-between gap-2 rounded-md border border-slate-700 bg-slate-950 px-2.25 py-1.5 text-slate-100 outline-none transition motion-reduce:transition-none hover:border-cyan-500 focus-visible:border-transparent focus-visible:ring-2 focus-visible:ring-cyan-500 text-sm leading-tight'
-export const NATIVE_SELECT_OPTION_CLASS =
-  'flex w-full cursor-pointer items-center justify-between gap-2 rounded-md px-2.25 py-1.5 text-left outline-none transition-none motion-reduce:transition-none max-[27.999rem]:min-h-11 text-sm'
 
 export const CHIP_PANEL_BASE =
   'fixed left-0 top-0 z-40 max-h-[min(50vh,20rem)] w-64 rounded-xl border border-slate-800 bg-slate-900/95 shadow-2xl shadow-slate-950/60 backdrop-blur'

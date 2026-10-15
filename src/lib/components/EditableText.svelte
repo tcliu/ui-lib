@@ -4,8 +4,8 @@
   import CopyButton from './CopyButton.svelte'
   import EditIcon from '$lib/icons/EditIcon.svelte'
   import type { SizeInput } from '$lib/size-scale'
-  import { INPUT_RATIOS } from './input-chrome'
-  import { resolveSize } from './size-metrics'
+  import { INPUT_METRIC_CLASS, INPUT_RATIOS } from './input-chrome'
+  import { dimensionMetrics, sizeVarStyle } from './size-metrics'
   import { getI18nContext } from '$lib/i18n.svelte'
   const i18n = getI18nContext()
 
@@ -161,23 +161,12 @@
     if (clickTimer) clearTimeout(clickTimer)
   })
 
-  // Text sizing follows TextInput: the size dimension (names alias the
-  // shared axis, numbers pass through, non-finite falls back to md) drives
-  // font, line, radius, and padding through the same fixed ratios, emitted
-  // as `--input-*` vars consumed by the static metric utilities below.
-  const dimension = $derived(resolveSize(size))
-  const metrics = $derived({
-    font: dimension * INPUT_RATIOS.font,
-    line: dimension * INPUT_RATIOS.line,
-    radius: dimension * INPUT_RATIOS.radius,
-    padX: dimension * INPUT_RATIOS.padX,
-    padY: dimension * INPUT_RATIOS.padY,
-  })
-  const sizeStyle = $derived(
-    `--input-font:${metrics.font}px;--input-line:${metrics.line}px;--input-radius:${metrics.radius}px;--input-pad-x:${metrics.padX}px;--input-pad-y:${metrics.padY}px`,
-  )
-  const metricClass =
-    'rounded-[var(--input-radius)] px-[var(--input-pad-x)] py-[var(--input-pad-y)] text-[length:var(--input-font)] leading-[var(--input-line)]'
+  // Text sizing follows TextInput: the shared input chrome (`input-chrome.ts`)
+  // drives font, line, radius, and padding from the size dimension, emitted as
+  // `--input-*` vars consumed by `INPUT_METRIC_CLASS` below.
+  const metrics = $derived(dimensionMetrics(size, INPUT_RATIOS))
+  const sizeStyle = $derived(sizeVarStyle('input', metrics))
+  const metricClass = INPUT_METRIC_CLASS
   const inputStyle = $derived.by(() => {
     const width = inputWidth ? `width: ${inputWidth}px; min-width: 0` : 'min-width: 0'
     return `${width}; ${sizeStyle}`

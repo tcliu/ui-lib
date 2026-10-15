@@ -20,10 +20,7 @@
     "@neondatabase/serverless": "^1.1.0",
     "@uiw/codemirror-theme-github": "^4.25.10",
     "better-sqlite3": "^13.0.3",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "svelte-sonner": "^1.1.1",
-    "tailwind-merge": "^3.7.0"
+    "svelte-sonner": "^1.1.1"
   },
   "scripts": {
     "dev": "vite dev --host",

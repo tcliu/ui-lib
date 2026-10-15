@@ -3,6 +3,7 @@
   import { getI18nContext } from '$lib/i18n.svelte'
   import { getTheme, setTheme, THEMES, type UiTheme } from '$lib/theme.svelte'
   import PaletteIcon from '$lib/icons/PaletteIcon.svelte'
+  import { menuRadioItemClass } from './menu-item-class'
 
   const i18n = getI18nContext()
   const currentTheme = $derived(getTheme())
@@ -23,15 +24,7 @@
   type ThemeOption = (typeof themeOptions)[number]
 
   function itemClass(option: ThemeOption, state: MenuItemState): string {
-    return `flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm outline-none transition-none ${
-      state.disabled
-        ? 'cursor-not-allowed text-slate-600'
-        : state.active
-          ? 'bg-slate-800 text-cyan-200'
-          : option.value === currentTheme
-            ? 'text-cyan-200'
-            : 'text-slate-300'
-    }`
+    return menuRadioItemClass(state, option.value === currentTheme)
   }
 </script>
 
