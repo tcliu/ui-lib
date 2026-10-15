@@ -445,18 +445,29 @@ describe('FieldTable', () => {
     expect(table.querySelector('button[aria-label="Unapply badge"]')).toBeNull()
   })
 
-  it('pulls a number eye over the empty outside slot so it stays against the input', () => {
-    const table = render([
-      ...fields(),
-      { name: 'qty', type: 'number?', defaultValue: '0', editorDefaultValue: '0', note: 'Count.', editor: 'number', value: '0', onChange: () => {}, clearable: true, toggle: { enabled: false, onToggle: () => {} } },
-    ])
-    const eye = table.querySelector('button[aria-label="Apply qty"]') as HTMLButtonElement
-    // The eye wrapper (the flex item) carries the negative pull; the eye
-    // itself stays unstyled.
-    expect(eye.parentElement?.parentElement).not.toBeNull()
-    const wrap = eye.parentElement?.parentElement as HTMLElement
-    expect(wrap.style.marginLeft).toBe('-22px')
-    expect(eye.style.marginLeft).toBe('')
+  it('shifts a number eye over the empty outside slot without moving the input', async () => {
+    for (const value of ['0', '5']) {
+      const table = render([
+        ...fields(),
+        { name: 'qty', type: 'number?', defaultValue: '0', editorDefaultValue: '0', note: 'Count.', editor: 'number', value, onChange: () => {}, clearable: true, toggle: { enabled: false, onToggle: () => {} } },
+      ])
+      const eye = table.querySelector('button[aria-label="Apply qty"]') as HTMLButtonElement
+      // The editor fills the remaining row width in both states, so the
+      // input keeps the same width empty and filled.
+      const shift = eye.parentElement?.parentElement as HTMLElement
+      const editorWrap = shift.previousElementSibling as HTMLElement
+      expect(editorWrap.className).toContain('flex-1')
+      if (value === '0') {
+        // Paint-only shift over the reserved slot: the eye sits against the
+        // input while its layout footprint (and the input width) never moves.
+        expect(shift.style.transform).toBe('translateX(-22px)')
+      } else {
+        expect(table.querySelector('button[aria-label="Clear qty"]')).not.toBeNull()
+        expect(shift.getAttribute('style')).toBeNull()
+      }
+      await unmount(instance!)
+      instance = null
+    }
   })
 
   it('leaves a number eye after a visible clear button', () => {
@@ -466,17 +477,16 @@ describe('FieldTable', () => {
     ])
     expect(table.querySelector('button[aria-label="Clear qty"]')).not.toBeNull()
     const eye = table.querySelector('button[aria-label="Apply qty"]') as HTMLButtonElement
-    const wrap = eye.parentElement?.parentElement as HTMLElement
-    expect(wrap.style.marginLeft).toBe('')
+    expect(eye.style.marginLeft).toBe('')
   })
 
-  it('applies no eye pull on a number row without a clear slot', () => {
+  it('applies no eye shift on a number row without a clear slot', () => {
     const table = render([
       ...fields(),
       { name: 'qty', type: 'number?', defaultValue: '0', editorDefaultValue: '0', note: 'Count.', editor: 'number', value: '0', onChange: () => {}, toggle: { enabled: false, onToggle: () => {} } },
     ])
     const eye = table.querySelector('button[aria-label="Apply qty"]') as HTMLButtonElement
     const wrap = eye.parentElement?.parentElement as HTMLElement
-    expect(wrap.style.marginLeft).toBe('')
+    expect(wrap.getAttribute('style')).toBeNull()
   })
 })

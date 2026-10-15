@@ -170,7 +170,7 @@
     return 12 + 8 + dimensionMetrics(size, { box: 1 }).box
   }
 
-  // Pull applied to a number row's eye while its outside clear slot is empty:
+  // Shift applied to a number row's eye while its outside clear slot is empty:
   // TextInput's trailer gap plus the reserved clear box (its own ratios, both
   // size-scaled like here). NumberInput always shows its steppers in this
   // table, so `auto` placement renders the clear outside beside them.
@@ -398,12 +398,17 @@
     {/if}
   {:else if field.editor === 'number'}
     {#if field.toggle}
-      <!-- The eye rides over the empty outside slot so it stays against the
-        input instead of hanging at the cell edge; while a clear button shows,
-        the eye stays after it. -->
+      <!-- The number editor fills the remaining row width, so its outside
+        clear slot (reserved even while empty) keeps the input the same width
+        whether the cross shows or not. While the slot is empty the eye shifts
+        over it with a `transform` — paint-only, so the layout (and the input
+        width) never moves — sitting against the input instead of hanging at
+        the cell edge; while a clear button shows, the eye stays after it. -->
       <div class="flex items-center gap-2">
-        {@render numberEditor(field)}
-        <span style={numberSlotEmpty(field) ? `margin-left:-${numberEyePull()}px` : undefined}>
+        <div class="min-w-0 flex-1">
+          {@render numberEditor(field)}
+        </div>
+        <span style={numberSlotEmpty(field) ? `transform:translateX(-${numberEyePull()}px)` : undefined}>
           {@render applyEye(field)}
         </span>
       </div>
