@@ -4,6 +4,7 @@ import Checkbox from '../Checkbox.svelte'
 import EditableText from '../EditableText.svelte'
 import Spinner from '../Spinner.svelte'
 import Toast from '../Toast.svelte'
+import { SIZE_PX } from '$lib/size-scale'
 
 // jsdom lacks ResizeObserver (positionPanel), matchMedia, and scrollIntoView;
 // stub them so mounting is a layout no-op.
@@ -45,28 +46,30 @@ afterEach(async () => {
 })
 
 describe('Checkbox numeric size', () => {
-  it('renders named tiers exactly as before and settles numbers on tiers', () => {
+  it('scales every metric by a constant ratio of the size', () => {
     instance = mount(Checkbox, { target, props: { checked: false, label: 'Agree', size: 'sm' } })
     flushSync()
-    expect(target.innerHTML).toContain('h-4 w-4')
-    expect(target.innerHTML).toContain('text-xs')
+    const label = target.querySelector('label')
+    expect(label?.getAttribute('style')).toContain('--cbx-box: 17.5px')
+    expect(label?.getAttribute('style')).toContain('--cbx-font: 12.25px')
   })
 
-  it('settles out-of-scale numbers on the nearest tier', async () => {
+  it('passes out-of-scale numbers through continuously', async () => {
     await unmount(instance!)
     instance = mount(Checkbox, { target, props: { checked: false, label: 'Agree', size: 100 } })
     flushSync()
-    expect(target.innerHTML).toContain('h-5 w-5')
-    expect(target.innerHTML).toContain('text-sm')
+    const label = target.querySelector('label')
+    expect(label?.getAttribute('style')).toContain('--cbx-box: 125px')
+    expect(label?.getAttribute('style')).toContain('--cbx-font: 87.5px')
   })
 })
 
 describe('Toast numeric size', () => {
-  it('renders named tiers exactly as before and settles numbers on tiers', async () => {
+  it('scales text continuously from the size dimension', async () => {
     // The toast portals to document.body, so assert there and clean it up.
     instance = mount(Toast, { target, props: { message: 'hi', closeLabel: 'Close', onClose: () => {} } })
     flushSync()
-    expect(document.body.innerHTML).toContain('text-sm')
+    expect(document.body.innerHTML).toContain('--toast-font: 14px')
     await unmount(instance!)
     instance = null
     document.body.querySelectorAll('[role="status"]').forEach(el => el.remove())
@@ -75,43 +78,50 @@ describe('Toast numeric size', () => {
       props: { message: 'hi', closeLabel: 'Close', size: 100, onClose: () => {} },
     })
     flushSync()
-    expect(document.body.innerHTML).toContain('text-base')
+    expect(document.body.innerHTML).toContain('--toast-font: 87.5px')
     document.body.querySelectorAll('[role="status"]').forEach(el => el.remove())
   })
 })
 
 describe('Spinner numeric size', () => {
-  it('maps names to its own axis and passes numbers through', async () => {
+  it('scales the shared axis by the fixed ratio for names and numbers alike', async () => {
     instance = mount(Spinner, { target, props: {} })
     flushSync()
-    expect(target.querySelector('svg')?.getAttribute('width')).toBe('16')
+    expect(target.querySelector('svg')?.getAttribute('width')).toBe(`${SIZE_PX.md * 1.5}`)
+    await unmount(instance!)
+    instance = mount(Spinner, { target, props: { size: 'xs' } })
+    flushSync()
+    expect(target.querySelector('svg')?.getAttribute('width')).toBe(`${SIZE_PX.xs * 1.5}`)
     await unmount(instance!)
     instance = mount(Spinner, { target, props: { size: 20 } })
     flushSync()
-    expect(target.querySelector('svg')?.getAttribute('width')).toBe('20')
+    expect(target.querySelector('svg')?.getAttribute('width')).toBe(`${20 * 1.5}`)
   })
 })
 
 describe('EditableText numeric size', () => {
-  it('renders names through classes and numbers through inline font', async () => {
+  it('follows TextInput metrics for names and numbers', async () => {
     instance = mount(EditableText, { target, props: { text: 'hi', onChange: () => {} } })
     flushSync()
     const display = target.querySelector('button')
-    expect(display?.className).toContain('text-md')
-    expect(display?.getAttribute('style')).toBeNull()
+    expect(display?.className).toContain('var(--input-font)')
+    expect(display?.getAttribute('style')).toContain('--input-font: 13px')
+    expect(display?.getAttribute('style')).toContain('--input-pad-x: 10px')
     await unmount(instance!)
     instance = mount(EditableText, { target, props: { text: 'hi', size: 14, onChange: () => {} } })
     flushSync()
     const custom = target.querySelector('button')
-    expect(custom?.className).not.toContain('text-md')
-    expect(custom?.getAttribute('style')).toContain('font-size: 12px')
+    expect(custom?.className).toContain('var(--input-font)')
+    expect(custom?.getAttribute('style')).toContain('--input-font: 11.375px')
+    expect(custom?.getAttribute('style')).toContain('--input-pad-x: 8.75px')
     await unmount(instance!)
     instance = null
-    // Non-finite numbers fall back to the default class, never "undefined".
+    // Non-finite numbers fall back to md, never "undefined".
     instance = mount(EditableText, { target, props: { text: 'hi', size: Number.NaN, onChange: () => {} } })
     flushSync()
     const fallback = target.querySelector('button')
-    expect(fallback?.className).toContain('text-md')
+    expect(fallback?.className).toContain('var(--input-font)')
     expect(fallback?.className).not.toContain('undefined')
+    expect(fallback?.getAttribute('style')).toContain('--input-font: 13px')
   })
 })

@@ -28,9 +28,12 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 
-const AXIS = { xs: 12, sm: 16, md: 20, lg: 24 } as const
-const styleOf = (): string => target.querySelector('.relative')?.getAttribute('style') ?? ''
-const num = (style: string, key: string): number => Number(new RegExp(`--search-${key}:\\s*([\\d.]+)`).exec(style)?.[1])
+const AXIS = { xs: 12, sm: 14, md: 16, lg: 18, xl: 20 } as const
+// The input box rides TextInput's shared `--input-*` metrics; the wrapper adds
+// the search icon's gutter metrics, so read both.
+const styleOf = (): string =>
+  `${target.querySelector('input')?.getAttribute('style') ?? ''};${target.querySelector('.relative')?.getAttribute('style') ?? ''}`
+const num = (style: string, name: string): number => Number(new RegExp(`--${name}:\\s*([\\d.]+)`).exec(style)?.[1])
 
 describe('SearchInput dimension ratios', () => {
   it('keeps font, padding, radius, icon, and offset a constant ratio of the size', async () => {
@@ -43,12 +46,12 @@ describe('SearchInput dimension ratios', () => {
       instance = mount(SearchInput, { target, props: { value: '', ariaLabel: 'Search', size: name } })
       flushSync()
       const style = styleOf()
-      expect(num(style, 'font') / px).toBeCloseTo(0.8125)
-      expect(num(style, 'pad-y') / px).toBeCloseTo(0.375)
-      expect(num(style, 'pad-left') / px).toBeCloseTo(1.75)
-      expect(num(style, 'pad-right') / px).toBeCloseTo(0.5)
-      expect(num(style, 'icon-left') / px).toBeCloseTo(0.5)
-      expect(num(style, 'radius') / px).toBeCloseTo(0.375)
+      expect(num(style, 'input-font') / px).toBeCloseTo(0.8125)
+      expect(num(style, 'input-pad-y') / px).toBeCloseTo(0.4375)
+      expect(num(style, 'input-pad-x') / px).toBeCloseTo(0.625)
+      expect(num(style, 'input-radius') / px).toBeCloseTo(0.375)
+      expect(num(style, 'search-pad-left') / px).toBeCloseTo(1.75)
+      expect(num(style, 'search-icon-left') / px).toBeCloseTo(0.5)
       // The icon glyph is the dimension itself.
       expect(Number(target.querySelector('svg')?.getAttribute('width')) / px).toBe(1)
     }

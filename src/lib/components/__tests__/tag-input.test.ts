@@ -85,29 +85,59 @@ function chipClasses(): string[] {
 
 describe('TagInput suggestions', () => {
   it('offers available tags excluding the selected ones', () => {
-    render({ value: ['svelte'], availableTags: ['svelte', 'kit', 'icons'] })
+    render({ value: ['svelte'], options: ['svelte', 'kit', 'icons'] })
     openPanel()
     expect(optionLabels()).toEqual(['kit', 'icons'])
   })
 
   it('filters suggestions by the typed query', () => {
-    render({ value: [], availableTags: ['svelte', 'kit', 'icons'] })
+    render({ value: [], options: ['svelte', 'kit', 'icons'] })
     openPanel()
     type('k')
     expect(optionLabels()).toEqual(['kit'])
   })
 
   it('dedupes suggestions case-insensitively against the selected tags', () => {
-    render({ value: ['Svelte'], availableTags: ['svelte', 'kit'] })
+    render({ value: ['Svelte'], options: ['svelte', 'kit'] })
     openPanel()
     expect(optionLabels()).toEqual(['kit'])
+  })
+
+  it('renders plain text rows instead of chips', () => {
+    render({ value: [], options: ['svelte', 'kit'] })
+    openPanel()
+    const rows = [...document.querySelectorAll('[role=listbox] [role=option]')]
+    expect(rows).toHaveLength(2)
+    for (const row of rows) {
+      expect(row.querySelector('.rounded-full')).toBeNull()
+    }
+  })
+
+  it('emphasizes the matched span while the query is ambiguous', () => {
+    render({ value: [], options: ['forms', 'forums', 'tables'] })
+    openPanel()
+    type('for')
+    const rows = [...document.querySelectorAll('[role=listbox] [role=option]')]
+    expect(rows.map(row => row.textContent?.trim())).toEqual(['forms', 'forums'])
+    for (const row of rows) {
+      expect(row.querySelector('span.font-semibold')?.textContent).toBe('for')
+    }
+  })
+
+  it('skips the emphasis for an unambiguous single match', () => {
+    render({ value: [], options: ['svelte', 'kit'] })
+    openPanel()
+    type('kit')
+    const rows = [...document.querySelectorAll('[role=listbox] [role=option]')]
+    expect(rows.map(row => row.textContent?.trim())).toEqual(['kit'])
+    expect(rows[0]!.querySelector('span.font-semibold')).toBeNull()
   })
 })
 
 describe('TagInput editing', () => {
   it('commits a comma-separated draft as several tags', () => {
     const onChange = vi.fn()
-    render({ value: ['svelte'], availableTags: [], onChange })
+    render({ value: ['svelte'], options: [], onChange })
     type('kit, icons')
     pressKey('Enter')
     expect(onChange).toHaveBeenCalledWith(['svelte', 'kit', 'icons'])
@@ -115,7 +145,7 @@ describe('TagInput editing', () => {
 
   it('skips tags already present, case-insensitively', () => {
     const onChange = vi.fn()
-    render({ value: ['svelte'], availableTags: [], onChange })
+    render({ value: ['svelte'], options: [], onChange })
     type('Svelte, kit')
     pressKey('Enter')
     expect(onChange).toHaveBeenCalledWith(['svelte', 'kit'])
@@ -123,14 +153,14 @@ describe('TagInput editing', () => {
 
   it('reports the draft through onQueryChange on every keystroke', () => {
     const onQueryChange = vi.fn()
-    render({ value: [], availableTags: [], onQueryChange })
+    render({ value: [], options: [], onQueryChange })
     type('ki')
     expect(onQueryChange).toHaveBeenLastCalledWith('ki')
   })
 
   it('removes a tag when its chip close button is clicked', () => {
     const onChange = vi.fn()
-    render({ value: ['svelte', 'kit'], availableTags: [], onChange })
+    render({ value: ['svelte', 'kit'], options: [], onChange })
     const remove = target.querySelector('button[aria-label="Remove svelte"]')
     if (!(remove instanceof HTMLButtonElement)) {
       throw new Error('remove button not found')
@@ -141,14 +171,14 @@ describe('TagInput editing', () => {
   })
 
   it('disables the input when disabled', () => {
-    render({ value: [], availableTags: [], disabled: true })
+    render({ value: [], options: [], disabled: true })
     expect(input().disabled).toBe(true)
   })
 })
 
 describe('TagInput keyboard', () => {
   it('moves the active option on ArrowDown with an instant highlight', () => {
-    render({ value: [], availableTags: ['svelte', 'kit', 'icons'] })
+    render({ value: [], options: ['svelte', 'kit', 'icons'] })
     openPanel()
     pressKey('ArrowDown')
     const activeId = input().getAttribute('aria-activedescendant')
@@ -160,7 +190,7 @@ describe('TagInput keyboard', () => {
 
   it('reports an empty query when a committed draft clears the field', () => {
     const onQueryChange = vi.fn()
-    render({ value: [], availableTags: [], onQueryChange })
+    render({ value: [], options: [], onQueryChange })
     type('kit')
     pressKey('Enter')
     expect(onQueryChange).toHaveBeenLastCalledWith('')
@@ -168,32 +198,40 @@ describe('TagInput keyboard', () => {
 
   it('clears the draft and reports it on Escape while open', () => {
     const onQueryChange = vi.fn()
-    render({ value: [], availableTags: [], onQueryChange })
+    render({ value: [], options: [], onQueryChange })
     openPanel()
     type('ki')
     onQueryChange.mockClear()
     pressKey('Escape')
     expect(onQueryChange).toHaveBeenCalledWith('')
   })
+
+  it('adds the active suggestion on Enter with an empty draft and no prior navigation', () => {
+    const onChange = vi.fn()
+    render({ value: ['svelte'], options: ['svelte', 'kit', 'icons'], onChange })
+    openPanel()
+    pressKey('Enter')
+    expect(onChange).toHaveBeenCalledWith(['svelte', 'kit'])
+  })
 })
 
 describe('TagInput chip colours', () => {
   it('colours different tags differently by default', () => {
-    render({ value: ['svelte', 'kit'], availableTags: [] })
+    render({ value: ['svelte', 'kit'], options: [] })
     const classes = chipClasses()
     expect(classes).toHaveLength(2)
     expect(classes[0]).not.toBe(classes[1])
   })
 
   it('replaces the default palette through the palette prop', () => {
-    render({ value: ['svelte', 'kit'], availableTags: [], palette: ['border-fuchsia-700'] })
+    render({ value: ['svelte', 'kit'], options: [], palette: ['border-fuchsia-700'] })
     for (const className of chipClasses()) {
       expect(className).toContain('border-fuchsia-700')
     }
   })
 
-  it('lets chipClassFor override the palette per tag', () => {
-    render({ value: ['svelte'], availableTags: [], chipClassFor: () => 'text-amber-200' })
+  it('lets a function chipClass override the palette per tag', () => {
+    render({ value: ['svelte'], options: [], chipClass: () => 'text-amber-200' })
     expect(chipClasses()[0]).toContain('text-amber-200')
   })
 })

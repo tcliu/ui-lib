@@ -49,13 +49,13 @@ describe('buildSource', () => {
       scopeKeys: ['rows', 'foo'],
       declaredNames: new Set(['rows']),
     })
-    expect(source).toContain('let { foo } = __scope')
-    expect(source).not.toContain('let { rows')
+    expect(source).toContain('let foo = $state(__scope.foo)')
+    expect(source).not.toContain('$state(__scope.rows)')
     expect(source).toContain('const rows = []')
     expect(source).toContain('</script>\n<DataTable />')
   })
 
-  it('emits no destructure when every key is declared locally', () => {
+  it('seeds every locally declared key as $state', () => {
     const source = buildSource({
       markup: '<span />',
       declarations: 'const a = 1',
@@ -72,7 +72,7 @@ describe('buildSource', () => {
       scopeKeys: ['value'],
       declaredNames: new Set(),
     })
-    expect(source).toContain('let { value } = __scope')
+    expect(source).toContain('let value = $state(__scope.value)')
     expect(source).toContain('</script>\n<span />')
   })
 })

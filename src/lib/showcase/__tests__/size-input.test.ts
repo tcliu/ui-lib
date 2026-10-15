@@ -5,6 +5,7 @@ describe('parseSizeValue', () => {
   it('parses playground size input into names, numbers, or unset', () => {
     expect(parseSizeValue('')).toBeUndefined()
     expect(parseSizeValue('sm')).toBe('sm')
+    expect(parseSizeValue('xl')).toBe('xl')
     expect(parseSizeValue('14')).toBe(14)
     expect(parseSizeValue('13.5')).toBe(13.5)
     expect(parseSizeValue('huge')).toBeUndefined()

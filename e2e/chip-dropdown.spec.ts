@@ -7,14 +7,14 @@ test('showcase: ChipDropdown hosts its code toggle in the title row beside a res
   await page.waitForLoadState('networkidle')
 
   const demo = page.locator('[data-showcase-demo]').first()
-  const toggle = page.locator('main header').getByRole('button')
+  const toggle = page.locator('main header').getByRole('button', { name: 'Show code' })
 
   await expect(page.getByRole('heading', { level: 1, name: 'ChipDropdown' })).toBeVisible()
   await expect(toggle).toHaveCount(1)
 
-  // The demo sits in a width-only resizable frame (one right-edge handle), with
-  // no pane padding so its left edge lines up with the config panel below.
-  await expect(demo.locator('[role="separator"]')).toHaveCount(1)
+  // The demo sits in a resizable frame. Resizable renders its width, height,
+  // and corner handles unconditionally.
+  await expect(demo.locator('[role="separator"]')).toHaveCount(3)
 
   // The props table appends a Value column.
   await expect(page.getByRole('columnheader', { name: 'Value' })).toBeVisible()
@@ -36,8 +36,11 @@ test('showcase: ChipDropdown search selects its text with Shift+Home', async ({ 
   // input is `sr-only` under its label, so force the check.
   await page.getByRole('checkbox', { name: 'filterable value' }).check({ force: true })
 
-  // Open the chip menu; the header search input mounts and takes focus.
-  await page.getByRole('button', { name: 'Set status' }).click()
+  // Open the chip menu; the header search input mounts and takes focus. The
+  // trigger sits under the stage's bottom resize handle, so open it from the
+  // keyboard (pointer clicks hit the overlay).
+  await page.getByRole('button', { name: 'Set status' }).focus()
+  await page.keyboard.press('Enter')
   const search = page.getByRole('combobox', { name: 'Search…' })
   await expect(search).toBeVisible()
 
@@ -83,4 +86,25 @@ test('showcase: the ChipDropdown options cell edits JSON through a dialog', asyn
   await expect(dialog).toHaveCount(0)
   // `active` matches nothing now, so the chip falls back to the raw value.
   await expect(demo).toContainText('active')
+})
+
+test('showcase: the ChipDropdown options eye resets to the defaults', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.goto('/components/chip-dropdown')
+  await page.waitForLoadState('networkidle')
+
+  const demo = page.locator('[data-showcase-demo]').first()
+
+  // Commit custom options through the dialog.
+  await page.getByRole('button', { name: 'Edit options' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Edit options' })
+  await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
+  await replaceSnippet(page, dialog, '[{"value": "on", "label": "On"}, {"value": "off"}]')
+  await dialog.getByRole('button', { name: 'OK', exact: true }).click()
+  // `active` matches nothing now, so the chip falls back to the raw value.
+  await expect(demo).toContainText('active')
+
+  // Unapplying resets to the default options; the chip resolves the label.
+  await page.getByRole('button', { name: 'Unapply options' }).click()
+  await expect(demo).toContainText('Active')
 })

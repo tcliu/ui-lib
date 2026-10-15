@@ -8,6 +8,6 @@
   let { outerOpen = true }: { outerOpen?: boolean } = $props()
 </script>
 
-<AppShell mode="floating" open={outerOpen}>
-  <AppShell mode="floating" open className="flex min-h-0 flex-1 flex-col overflow-hidden" />
+<AppShell mode="floating" left={{ open: outerOpen }}>
+  <AppShell mode="floating" left={{ open: true }} className="flex min-h-0 flex-1 flex-col overflow-hidden" />
 </AppShell>

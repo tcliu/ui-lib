@@ -1,0 +1,31 @@
+import { expect, test } from '@playwright/test'
+
+test('showcase: the Chip disabled Value cell disables the remove button', async ({ page }) => {
+  await page.goto('/components/chip')
+  await page.waitForLoadState('networkidle')
+
+  const demo = page.locator('[data-showcase-demo]').first()
+
+  // Switch to removable mode through the settings panel.
+  await page.getByRole('combobox', { name: 'Mode' }).click()
+  await page.getByRole('option', { name: 'Removable' }).click()
+  const remove = demo.getByRole('button').first()
+  await expect(remove).toBeEnabled()
+
+  // Checking the disabled Value box disables the demo remove button.
+  const disabledBox = page.getByRole('checkbox', { name: 'disabled value', exact: true })
+  await disabledBox.focus()
+  await page.keyboard.press('Space')
+  await expect(remove).toBeDisabled()
+})
+
+test('showcase: the Chip tooltip Value cell wraps the pill', async ({ page }) => {
+  await page.goto('/components/chip')
+  await page.waitForLoadState('networkidle')
+
+  const demo = page.locator('[data-showcase-demo]').first()
+  await page.getByRole('textbox', { name: 'tooltip value', exact: true }).fill('Pill tip')
+  await demo.getByText('Default', { exact: true }).hover()
+  // The tooltip box portals to document.body, so anchor on the page.
+  await expect(page.getByText('Pill tip')).toBeVisible()
+})

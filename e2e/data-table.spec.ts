@@ -1,18 +1,18 @@
 import { expect, test } from '@playwright/test'
-import { editorContains } from './helpers'
+import { editorContains, replaceSnippet } from './helpers'
 
 test('showcase: DataTable toolbar hosts search plus column selector and reset', async ({ page }) => {
   await page.goto('/components/data-table')
   await page.waitForLoadState('networkidle')
-  const section = page.getByRole('region', { name: 'Default' })
+  const section = page.locator('[data-showcase-demo]').first()
 
   // The search box precedes the column selector and reset icons in DOM order.
-  const search = section.getByRole('searchbox', { name: 'Search rows' })
+  const search = section.getByRole('searchbox', { name: 'Search' })
   await expect(search).toBeVisible()
   const order = await section.evaluate(sectionEl => {
     const pos = (name: string) =>
       [...sectionEl.querySelectorAll('*')].findIndex(el => el.getAttribute('aria-label') === name)
-    return [pos('Search rows'), pos('Choose columns'), pos('Reset columns')]
+    return [pos('Search'), pos('Choose columns'), pos('Reset columns')]
   })
   expect(order[0]).toBeGreaterThanOrEqual(0)
   expect(order[0]).toBeLessThan(order[1])
@@ -47,69 +47,224 @@ test('showcase: DataTable toolbar hosts search plus column selector and reset', 
   await expect(section.locator('nav').getByText('30 rows')).toBeVisible()
 })
 
-test('showcase: DataTable settings panel drives the demo table', async ({ page }) => {
+test('showcase: DataTable Value cells drive the demo table', async ({ page }) => {
   await page.goto('/components/data-table')
   await page.waitForLoadState('networkidle')
-  // The settings panel is a plain div below the demo: its controls are
-  // located page-wide while demo assertions stay inside the demo region,
-  // whose title flips between Default and Customized with the form state.
-  const demo = (name: string) => page.getByRole('region', { name })
+  // The converted page drives every override through the props table's Value
+  // cells; the demo lives in the `[data-showcase-demo]` hook.
+  const demo = page.locator('[data-showcase-demo]').first()
 
-  // Pristine: every field unset, the section reads Default.
-  await expect(demo('Default')).toBeVisible()
-  await expect(demo('Default').getByRole('searchbox', { name: 'Search rows' })).toBeVisible()
-  await expect(demo('Default').locator('tbody input[type="checkbox"]')).toHaveCount(0)
+  // Pristine: search visible, no selection column.
+  await expect(demo.getByRole('searchbox', { name: 'Search' })).toBeVisible()
+  await expect(demo.locator('tbody input[type="checkbox"]')).toHaveCount(0)
 
-  // Yes/No/unset tri-state: picking Yes enables selection and retitles.
-  await page.getByRole('combobox', { name: 'Selectable rows' }).click()
-  await page.getByRole('option', { name: 'Yes' }).click()
-  await expect(demo('Customized').locator('tbody input[type="checkbox"]')).toHaveCount(10)
-  await expect(demo('Customized')).toBeVisible()
+  // The selectable Value cell (default off) adds the row checkboxes. Its input
+  // is clipped, so toggle from the keyboard like a keyboard user would.
+  const selectableBox = page.getByRole('checkbox', { name: 'selectable value' })
+  await selectableBox.focus()
+  await page.keyboard.press('Space')
+  await expect(demo.locator('tbody input[type="checkbox"]')).toHaveCount(10)
 
-  // The clear cross is smaller than standard icons and returns focus.
-  const clearBox = await page.getByRole('button', { name: 'Clear selectable rows' }).locator('svg').boundingBox()
-  expect(clearBox?.width).toBe(12)
-  expect(clearBox?.height).toBe(12)
-
-  // The option panel spans at least the trigger width.
-  await page.getByRole('combobox', { name: 'Dense padding' }).click()
-  const panelWidths = await page.evaluate(() => {
-    const panel = document.querySelector('[role="listbox"]')
-    const trigger = document.querySelector('[aria-label="Dense padding"]')
-    return {
-      panel: panel?.getBoundingClientRect().width ?? 0,
-      trigger: trigger?.getBoundingClientRect().width ?? 0,
-    }
-  })
-  expect(panelWidths.trigger).toBeGreaterThan(0)
-  expect(panelWidths.panel).toBeGreaterThanOrEqual(panelWidths.trigger - 1)
-  await page.keyboard.press('Escape')
-
-  // The cross clears back to unset; the section reads Default again.
-  await page.getByRole('button', { name: 'Clear selectable rows' }).click()
-  await expect(demo('Default').locator('tbody input[type="checkbox"]')).toHaveCount(0)
-  await expect(demo('Default')).toBeVisible()
+  // Clearing it back restores the pristine table.
+  await selectableBox.focus()
+  await page.keyboard.press('Space')
+  await expect(demo.locator('tbody input[type="checkbox"]')).toHaveCount(0)
 
   // Placeholder text flows into the demo and the regenerated snippet source.
-  await page.getByLabel('Search placeholder').fill('Find rows')
-  await expect(demo('Customized').getByRole('searchbox', { name: 'Search rows' })).toHaveAttribute(
+  await page.getByRole('textbox', { name: 'searchPlaceholder value', exact: true }).fill('Find rows')
+  await expect(demo.getByRole('searchbox', { name: 'Search' })).toHaveAttribute(
     'placeholder',
     'Find rows',
   )
-  await demo('Customized').getByRole('button', { name: 'Show code' }).click()
-  await expect(demo('Customized').locator('.cm-content')).toBeVisible()
-  expect(await editorContains(page, demo('Customized'), 'searchPlaceholder="Find rows"')).toBe(true)
-  await demo('Customized').getByRole('button', { name: 'Hide code' }).click()
+  await page.locator('main header').getByRole('button', { name: 'Show code' }).click()
+  await expect(page.locator('main .cm-content').first()).toBeVisible()
+  expect(await editorContains(page, page.locator('main'), 'searchPlaceholder="Find rows"')).toBe(true)
+  await page.locator('main header').getByRole('button', { name: 'Hide code' }).click()
 
   // Reset returns every field to unset.
   await page.getByRole('button', { name: 'Reset', exact: true }).click()
-  await expect(demo('Default')).toBeVisible()
-  await expect(demo('Default').getByRole('searchbox', { name: 'Search rows' })).toHaveAttribute('placeholder', 'Search')
+  await expect(demo.getByRole('searchbox', { name: 'Search' })).toHaveAttribute('placeholder', 'Search')
 })
 
 test('showcase: the data-table demo stage has no resize handle', async ({ page }) => {
   await page.goto('/components/data-table')
   await page.waitForLoadState('networkidle')
-  const section = page.locator('main > div > section').first()
-  await expect(section.locator('[role="separator"]')).toHaveCount(0)
+  const demo = page.locator('[data-showcase-demo]').first()
+  await expect(demo).toBeVisible()
+  await expect(demo.locator('[role="separator"]')).toHaveCount(0)
+})
+
+test('showcase: the DataTable searchAriaLabel Value cell renames the search field', async ({ page }) => {
+  await page.goto('/components/data-table')
+  await page.waitForLoadState('networkidle')
+  const demo = page.locator('[data-showcase-demo]').first()
+  const main = page.locator('main')
+
+  // Unset renders the component default label.
+  await expect(demo.getByRole('searchbox', { name: 'Search' })).toBeVisible()
+  await page.getByRole('textbox', { name: 'searchAriaLabel value', exact: true }).fill('Find rows')
+  await expect(demo.getByRole('searchbox', { name: 'Find rows' })).toBeVisible()
+
+  // The regenerated snippet carries the literal.
+  await page.getByRole('button', { name: 'Show code', exact: true }).click()
+  await expect(main.locator('.cm-content').first()).toBeVisible()
+  expect(await editorContains(page, main, 'searchAriaLabel="Find rows"')).toBe(true)
+  await page.getByRole('button', { name: 'Hide code', exact: true }).click()
+
+  // Reset restores the component default label.
+  await page.getByRole('button', { name: 'Reset', exact: true }).click()
+  await expect(demo.getByRole('searchbox', { name: 'Search' })).toBeVisible()
+})
+
+test('showcase: the DataTable searchKeys dialog feeds the snippet', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.goto('/components/data-table')
+  await page.waitForLoadState('networkidle')
+  const main = page.locator('main')
+  const header = main.locator('header')
+
+  // The searchKeys dialog seeds a script-local list behind the snippet.
+  await page.getByRole('button', { name: 'Edit searchKeys' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Edit searchKeys' })
+  await expect(dialog).toBeVisible()
+  await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
+  await replaceSnippet(page, dialog, '[\n  "name"\n]')
+  await dialog.getByRole('button', { name: 'OK', exact: true }).click()
+  await expect(dialog).toHaveCount(0)
+  await header.getByRole('button', { name: 'Show code' }).click()
+  await expect(main.locator('.cm-content').first()).toBeVisible()
+  expect(await editorContains(page, main, 'searchKeys={searchKeys}')).toBe(true)
+  expect(await editorContains(page, main, 'let searchKeys = $state(["name"]);')).toBe(true)
+  await header.getByRole('button', { name: 'Hide code' }).click()
+  await page.getByRole('button', { name: 'Reset', exact: true }).click()
+})
+
+test('showcase: the DataTable rows cell edits demo data through a dialog', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.goto('/components/data-table')
+  await page.waitForLoadState('networkidle')
+  const demo = page.locator('[data-showcase-demo]').first()
+
+  await expect(demo.locator('tbody tr').first()).toContainText('Catalog')
+
+  // Invalid JSON blocks OK behind an inline error.
+  await page.getByRole('button', { name: 'Edit rows' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Edit rows' })
+  await expect(dialog).toBeVisible()
+  await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
+  const ok = dialog.getByRole('button', { name: 'OK', exact: true })
+  await replaceSnippet(page, dialog, 'nope')
+  await expect(dialog.getByRole('alert')).toBeVisible()
+  await expect(ok).toBeDisabled()
+
+  // A valid list applies on OK and the demo follows it.
+  await replaceSnippet(page, dialog, '[{"id": "t1", "name": "Test row", "status": "Active"}]')
+  await expect(dialog.getByRole('alert')).toHaveCount(0)
+  await ok.click()
+  await expect(dialog).toHaveCount(0)
+  await expect(demo.locator('tbody tr')).toHaveCount(1)
+  await expect(demo.locator('tbody tr').first()).toContainText('Test row')
+
+  // Reset restores the default rows.
+  await page.getByRole('button', { name: 'Reset', exact: true }).click()
+  await expect(demo.locator('tbody tr').first()).toContainText('Catalog')
+})
+
+test('showcase: the DataTable chooserColumns dialog drives column visibility', async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.goto('/components/data-table')
+  await page.waitForLoadState('networkidle')
+  const demo = page.locator('[data-showcase-demo]').first()
+
+  await page.getByRole('button', { name: 'Edit chooserColumns' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Edit chooserColumns' })
+  await expect(dialog).toBeVisible()
+  await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
+  const ok = dialog.getByRole('button', { name: 'OK', exact: true })
+
+  // Invalid JSON blocks OK behind an inline error.
+  await replaceSnippet(page, dialog, 'nope')
+  await expect(dialog.getByRole('alert')).toBeVisible()
+  await expect(ok).toBeDisabled()
+
+  // Renamed headers cannot round-trip (headers derive from the column defs),
+  // so OK stays blocked.
+  await replaceSnippet(
+    page,
+    dialog,
+    '[{"key": "id", "header": "ID", "checked": true}, {"key": "name", "header": "Name", "checked": true}, {"key": "status", "header": "Renamed", "checked": true}]',
+  )
+  await expect(dialog.getByRole('alert')).toBeVisible()
+  await expect(ok).toBeDisabled()
+
+  // Unchecking Status hides its column in the demo.
+  await replaceSnippet(
+    page,
+    dialog,
+    '[{"key": "id", "header": "ID", "checked": true}, {"key": "name", "header": "Name", "checked": true}, {"key": "status", "header": "Status", "checked": false}]',
+  )
+  await expect(dialog.getByRole('alert')).toHaveCount(0)
+  await ok.click()
+  await expect(dialog).toHaveCount(0)
+  await expect(demo.locator('thead th', { hasText: 'Status' })).toHaveCount(0)
+
+  // The demo's own reset restores the hidden column.
+  await demo.getByRole('button', { name: 'Reset columns' }).click()
+  await expect(demo.locator('thead th', { hasText: 'Status' })).toBeVisible()
+})
+
+test('showcase: the DataTable sortKey and sortDirection Value cells drive sorting', async ({
+  page,
+}) => {
+  await page.goto('/components/data-table')
+  await page.waitForLoadState('networkidle')
+  const demo = page.locator('[data-showcase-demo]').first()
+
+  // Unset renders insertion order (Catalog first).
+  await expect(demo.locator('tbody tr').first()).toContainText('Catalog')
+
+  // sortKey=name sorts ascending (Archive first); desc flips it (Viewer first).
+  await page.getByRole('textbox', { name: 'sortKey value', exact: true }).fill('name')
+  await expect(demo.locator('tbody tr').first()).toContainText('Archive')
+  const direction = page.getByRole('combobox', { name: 'sortDirection value' })
+  await direction.press('ArrowDown')
+  await page.getByRole('option', { name: 'desc' }).click()
+  await expect(demo.locator('tbody tr').first()).toContainText('Viewer')
+
+  // Clearing sortKey restores insertion order.
+  await page.getByRole('button', { name: 'Clear sortKey' }).click()
+  await expect(demo.locator('tbody tr').first()).toContainText('Catalog')
+})
+
+test('showcase: the DataTable rows eye resets and the searchKeys eye omits', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.goto('/components/data-table')
+  await page.waitForLoadState('networkidle')
+  const demo = page.locator('[data-showcase-demo]').first()
+
+  // Commit a custom row through the dialog.
+  await page.getByRole('button', { name: 'Edit rows' }).click()
+  const rowsDialog = page.getByRole('dialog', { name: 'Edit rows' })
+  await expect(rowsDialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
+  await replaceSnippet(page, rowsDialog, '[{"id": "t1", "name": "Test row", "status": "Active"}]')
+  await rowsDialog.getByRole('button', { name: 'OK', exact: true }).click()
+  await expect(demo.locator('tbody tr').first()).toContainText('Test row')
+
+  // Unapplying resets to the default rows.
+  await page.getByRole('button', { name: 'Unapply rows' }).click()
+  await expect(demo.locator('tbody tr').first()).toContainText('Catalog')
+
+  // Committing searchKeys applies the eye; unapplying omits the prop.
+  await page.getByRole('button', { name: 'Edit searchKeys' }).click()
+  const keysDialog = page
+    .getByRole('dialog')
+    .filter({ has: page.getByRole('heading', { name: 'Edit searchKeys' }) })
+  await expect(keysDialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
+  await replaceSnippet(page, keysDialog, '["name"]')
+  await keysDialog.getByRole('button', { name: 'OK', exact: true }).click()
+  await page.getByRole('button', { name: 'Unapply searchKeys' }).click()
+  await expect(page.getByRole('button', { name: 'Apply searchKeys' })).toBeVisible()
 })

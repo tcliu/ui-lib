@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushSync, mount, unmount } from 'svelte'
 import Button from '../Button.svelte'
-import { dimensionMetrics, dimensionWeight, resolveSize } from '../size-metrics'
+import { dimensionMetrics, resolveSize } from '../size-metrics'
 
 function installDomStubs(): void {
   vi.stubGlobal('matchMedia', () => ({
@@ -29,13 +29,13 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 
-const AXIS = { xs: 12, sm: 16, md: 20, lg: 24 } as const
+const AXIS = { xs: 12, sm: 14, md: 16, lg: 18, xl: 20 } as const
 const num = (style: string, key: string): number => Number(new RegExp(`--btn-${key}:\\s*([\\d.]+)`).exec(style)?.[1])
 
 describe('size-metrics', () => {
   it('resolves names and numbers to the dimension', () => {
     expect(resolveSize('xs')).toBe(12)
-    expect(resolveSize('lg')).toBe(24)
+    expect(resolveSize('lg')).toBe(18)
     expect(resolveSize(15)).toBe(15)
     expect(resolveSize(0)).toBe(1)
     expect(resolveSize(Number.NaN)).toBe(16)
@@ -46,11 +46,6 @@ describe('size-metrics', () => {
     const atLg = dimensionMetrics(24, { font: 0.65, pad: 0.5 })
     expect(atLg.pad).toBe(12)
     expect(atLg.font).toBeCloseTo(15.6)
-  })
-
-  it('toggles font weight at the md step', () => {
-    expect(dimensionWeight(16)).toBe(400)
-    expect(dimensionWeight(20)).toBe(600)
   })
 })
 
@@ -65,10 +60,10 @@ describe('Button dimension ratios', () => {
       instance = mount(Button, { target, props: { size: name } })
       flushSync()
       const style = target.querySelector('button')?.getAttribute('style') ?? ''
-      expect(num(style, 'font') / px).toBeCloseTo(0.65)
-      expect(num(style, 'pad-x') / px).toBeCloseTo(0.8)
+      expect(num(style, 'font') / px).toBeCloseTo(0.8125)
+      expect(num(style, 'pad-x') / px).toBeCloseTo(0.75)
       expect(num(style, 'pad-y') / px).toBeCloseTo(0.5)
-      expect(num(style, 'radius') / px).toBeCloseTo(0.4)
+      expect(num(style, 'radius') / px).toBeCloseTo(0.375)
       expect(num(style, 'icon') / px).toBeCloseTo(1)
     }
   })
@@ -81,7 +76,7 @@ describe('Button dimension ratios', () => {
     instance = mount(Button, { target, props: { size: 16 } })
     flushSync()
     const s16 = target.querySelector('button')?.getAttribute('style') ?? ''
-    expect(num(s15, 'font')).toBe(9.75)
-    expect(num(s16, 'font')).toBe(10.4)
+    expect(num(s15, 'font')).toBe(12.1875)
+    expect(num(s16, 'font')).toBe(13)
   })
 })

@@ -10,13 +10,10 @@
     minHeight?: number
     maxWidth?: number | 'parent'
     maxHeight?: number | 'parent'
-    // Width-only mode: omit the height so the frame hugs its content.
-    autoHeight?: boolean
-    onResize?: (width: number, height: number | undefined) => void
-    onResizeEnd?: () => void
+    onResize?: (width: number, height: number) => void
   }
 
-  let { minWidth, minHeight, maxWidth, maxHeight, autoHeight, onResize, onResizeEnd }: HarnessProps = $props()
+  let { minWidth, minHeight, maxWidth, maxHeight, onResize }: HarnessProps = $props()
 
   let width = $state(200)
   let height = $state(150)
@@ -24,16 +21,15 @@
 
 <Resizable
   {width}
-  height={autoHeight ? undefined : height}
+  {height}
   onResize={(nextWidth, nextHeight) => {
     width = nextWidth
-    if (nextHeight !== undefined) height = nextHeight
+    height = nextHeight
     onResize?.(nextWidth, nextHeight)
   }}
   {minWidth}
   {minHeight}
   {maxWidth}
-  {maxHeight}
-  {onResizeEnd}>
+  {maxHeight}>
   <div data-testid="resizable-content">content</div>
 </Resizable>

@@ -11,14 +11,14 @@ test('showcase: SelectDropdown hosts its code toggle in the title row beside a r
   await page.waitForLoadState('networkidle')
 
   const demo = page.locator('[data-showcase-demo]').first()
-  const toggle = page.locator('main header').getByRole('button')
+  const toggle = page.locator('main header').getByRole('button', { name: 'Show code' })
 
   await expect(page.getByRole('heading', { level: 1, name: 'SelectDropdown' })).toBeVisible()
   await expect(toggle).toHaveCount(1)
 
-  // The demo sits in a width-only resizable frame (one right-edge handle), with
-  // no pane padding so its left edge lines up with the config panel below.
-  await expect(demo.locator('[role="separator"]')).toHaveCount(1)
+  // The demo sits in a resizable frame. Resizable renders its width, height,
+  // and corner handles unconditionally.
+  await expect(demo.locator('[role="separator"]')).toHaveCount(3)
 
   // The props table appends a Value column.
   await expect(page.getByRole('columnheader', { name: 'Value' })).toBeVisible()
@@ -36,7 +36,7 @@ test('showcase: the SelectDropdown live demo follows value edits behind the open
   await page.waitForLoadState('networkidle')
 
   const demo = page.locator('[data-showcase-demo]').first()
-  await page.locator('main header button').click()
+  await page.locator('main header').getByRole('button', { name: 'Show code' }).click()
   await expect(page.locator('main .cm-content').first()).toBeVisible()
   // Wait out the initial compile so the live instance is mounted.
   await expect
@@ -60,7 +60,7 @@ test('showcase: SelectDropdown snippet edits flow back into the Value column', a
   await page.goto('/components/select-dropdown')
   await page.waitForLoadState('networkidle')
 
-  await page.locator('main header button').click()
+  await page.locator('main header').getByRole('button', { name: 'Show code' }).click()
   const editor = page.locator('main .cm-content').first()
   await expect(editor).toBeVisible()
   // Wait out the initial compile so the live instance is mounted.
@@ -139,4 +139,32 @@ test('showcase: the SelectDropdown options and activeValue cells edit the live d
   await expect(dialog).toHaveCount(0)
   // `four` matches nothing now, so the trigger falls back to the raw value.
   await expect(demo).toContainText('four value: four')
+})
+
+test('showcase: the SelectDropdown options eye resets to the defaults', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.goto('/components/select-dropdown')
+  await page.waitForLoadState('networkidle')
+
+  const demo = page.locator('[data-showcase-demo]').first()
+
+  // Commit custom options through the dialog.
+  await page.getByRole('button', { name: 'Edit options' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Edit options' })
+  await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
+  await replaceSnippet(page, dialog, '["eins", {"value": "zwei", "label": "Zwei"}]')
+  await dialog.getByRole('button', { name: 'OK', exact: true }).click()
+  // `two` matches nothing now, so the trigger falls back to the raw value.
+  await expect(demo).toContainText('two value: two')
+
+  // Unapplying resets to the default options; the trigger resolves the label.
+  await page.getByRole('button', { name: 'Unapply options' }).click()
+  await expect(demo).toContainText('Two value: two')
+
+  // Committing re-applies the eye.
+  await page.getByRole('button', { name: 'Edit options' }).click()
+  await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
+  await replaceSnippet(page, dialog, '["eins"]')
+  await dialog.getByRole('button', { name: 'OK', exact: true }).click()
+  await expect(demo).toContainText('two value: two')
 })

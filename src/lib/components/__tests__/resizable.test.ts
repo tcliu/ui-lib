@@ -92,33 +92,26 @@ describe('Resizable', () => {
     }
   })
 
-  it('renders only the width handle and hugs its content without a height', () => {
-    const onResize = vi.fn()
-    instance = mount(Harness, { target, props: { autoHeight: true, onResize } })
-    flushSync()
-    const container = target.firstElementChild as HTMLElement
-    expect(container.style.width).toBe('200px')
-    expect(container.style.height).toBe('')
-    const separators = [...target.querySelectorAll('[role="separator"]')] as HTMLElement[]
-    expect(separators).toHaveLength(1)
-    expect(separators[0].getAttribute('aria-label')).toBe('Resize width')
-    pointer(separators[0], 'pointerdown', 100, 50)
-    pointer(separators[0], 'pointermove', 150, 90)
-    expect(onResize).toHaveBeenLastCalledWith(250, undefined)
-  })
-
   it('drags the right edge to widen without changing the height', () => {
     const onResize = vi.fn()
-    const onResizeEnd = vi.fn()
-    instance = mount(Harness, { target, props: { onResize, onResizeEnd } })
+    instance = mount(Harness, { target, props: { onResize } })
     flushSync()
     const { width } = handles(target)
     pointer(width, 'pointerdown', 100, 50)
     pointer(width, 'pointermove', 150, 90)
     expect(onResize).toHaveBeenLastCalledWith(250, 150)
     pointer(width, 'pointerup', 150, 90)
-    expect(onResizeEnd).toHaveBeenCalledTimes(1)
     expect((target.firstElementChild as HTMLElement).style.width).toBe('250px')
+  })
+
+  it('rounds fractional drag deltas to whole pixels', () => {
+    const onResize = vi.fn()
+    instance = mount(Harness, { target, props: { onResize } })
+    flushSync()
+    const { both } = handles(target)
+    pointer(both, 'pointerdown', 100, 100)
+    pointer(both, 'pointermove', 130.7, 70.4)
+    expect(onResize).toHaveBeenLastCalledWith(231, 120)
   })
 
   it('clamps the drag to the configured bounds', () => {
@@ -144,33 +137,26 @@ describe('Resizable', () => {
   })
 
   it('supports arrow keys and Home on the focused handles', () => {
-    const sizes: [number, number | undefined][] = []
-    const onResizeEnd = vi.fn()
+    const sizes: [number, number][] = []
     instance = mount(Harness, {
       target,
       props: {
         onResize: (nextWidth, nextHeight) => sizes.push([nextWidth, nextHeight]),
-        onResizeEnd,
       },
     })
     flushSync()
     const { width, height } = handles(target)
     key(width, 'ArrowRight')
     expect(sizes.at(-1)).toEqual([216, 150])
-    // A key nudge completes an adjustment, so it reports the end like a drag.
-    expect(onResizeEnd).toHaveBeenCalledTimes(1)
     key(height, 'ArrowDown')
     // Each keyed handle reports the latest rendered size, so the height nudge
     // builds on the widened width.
     expect(sizes.at(-1)).toEqual([216, 166])
-    expect(onResizeEnd).toHaveBeenCalledTimes(2)
-    // An arrow the handle's axis does not own is ignored, end included.
+    // An arrow the handle's axis does not own is ignored.
     key(width, 'ArrowUp')
     expect(sizes.at(-1)).toEqual([216, 166])
-    expect(onResizeEnd).toHaveBeenCalledTimes(2)
     key(width, 'Home')
     expect(sizes.at(-1)).toEqual([0, 166])
-    expect(onResizeEnd).toHaveBeenCalledTimes(3)
   })
 
   it('exposes complete separator ARIA on every handle', () => {

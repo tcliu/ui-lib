@@ -42,29 +42,65 @@ afterEach(async () => {
 })
 
 describe('Pagination numeric size', () => {
-  it('keeps stepped chrome while the inner dropdown interpolates', () => {
+  it('scales chrome continuously while the inner dropdown interpolates', () => {
     instance = mount(Pagination, {
       target,
       props: { total: 100, pageSize: 10, currentPage: 1, size: 14, onPageChange: () => {}, onPageSizeChange: () => {} },
     })
     flushSync()
-    // 14 resolves to the xs step for Pagination's own chrome (tie keeps the
-    // smaller step), while the inner page-size dropdown carries the resolved
-    // var-driven metrics.
-    expect(target.querySelector('nav')?.className ?? target.innerHTML).toContain('text-xs')
+    // Numeric sizes scale every metric by a constant ratio: 14 * 0.875.
+    const nav = target.querySelector('nav')
+    expect(nav?.getAttribute('style')).toContain('--pg-font: 12.25px')
+    expect(nav?.getAttribute('style')).toContain('--pg-btn: 35px')
     const trigger = target.querySelector('[aria-label="Page size"]')
     expect(trigger?.getAttribute('style')).toContain('--sel-font: 11.375px')
   })
 
-  it('renders named sizes exactly as before', () => {
+  it('renders named sizes through the same var path', () => {
     instance = mount(Pagination, {
       target,
       props: { total: 100, pageSize: 10, currentPage: 1, size: 'sm', onPageChange: () => {}, onPageSizeChange: () => {} },
     })
     flushSync()
-    expect(target.innerHTML).toContain('text-sm')
-    // The inner dropdown resolves the sm anchor through the same var path.
+    const nav = target.querySelector('nav')
+    expect(nav?.getAttribute('style')).toContain('--pg-font: 12.25px')
+    // The inner dropdown resolves the sm dimension through the same var path.
     const trigger = target.querySelector('[aria-label="Page size"]')
-    expect(trigger?.getAttribute('style')).toContain('--sel-font: 13px')
+    expect(trigger?.getAttribute('style')).toContain('--sel-font: 11.375px')
+  })
+})
+
+describe('Pagination page-size options', () => {
+  function openPageSizeOptions(): string[] {
+    target.querySelector('[aria-label="Page size"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    flushSync()
+    return [...document.querySelectorAll('[role=listbox] [role=option]')].map(
+      element => element.textContent?.trim() ?? '',
+    )
+  }
+
+  it('offers the default choices without the prop', () => {
+    instance = mount(Pagination, {
+      target,
+      props: { total: 100, pageSize: 10, currentPage: 1, onPageChange: () => {}, onPageSizeChange: () => {} },
+    })
+    flushSync()
+    expect(openPageSizeOptions()).toEqual(['10', '20', '50'])
+  })
+
+  it('offers custom choices through pageSizeOptions', () => {
+    instance = mount(Pagination, {
+      target,
+      props: {
+        total: 100,
+        pageSize: 5,
+        currentPage: 1,
+        pageSizeOptions: [5, 15, 30],
+        onPageChange: () => {},
+        onPageSizeChange: () => {},
+      },
+    })
+    flushSync()
+    expect(openPageSizeOptions()).toEqual(['5', '15', '30'])
   })
 })

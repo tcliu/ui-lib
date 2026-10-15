@@ -75,7 +75,7 @@ describe('SelectDropdown clearable sizing', () => {
     // gap 0.375 * 18, and the clear icon box is the size dimension.
     const wrapper = target.querySelector('div.relative > span.inline-flex')
     expect(wrapper?.getAttribute('style')).toContain('gap: 6.75px')
-    const clear = target.querySelector('button[aria-label="Clear selection"]')
+    const clear = target.querySelector('button[aria-label="Clear"]')
     // The icon box is the dimension var (0.65 has no bearing; icon ratio is 1).
     expect(clear?.getAttribute('style')).toContain('--btn-icon: 18px')
     expect(clear?.innerHTML).toContain('h-[var(--btn-icon)]')

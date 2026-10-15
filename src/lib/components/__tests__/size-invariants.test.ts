@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushSync, mount, unmount } from 'svelte'
+import AutoComplete from '../AutoComplete.svelte'
 import Button from '../Button.svelte'
+import NumberInput from '../NumberInput.svelte'
+import PasswordInput from '../PasswordInput.svelte'
 import SearchInput from '../SearchInput.svelte'
 import SelectDropdown from '../SelectDropdown.svelte'
 import TextInput from '../TextInput.svelte'
@@ -59,15 +62,15 @@ async function renderStyle(component: unknown, props: Record<string, unknown>): 
   }
   instance = mount(component as Parameters<typeof mount>[0], { target, props })
   flushSync()
-  return (
-    target.querySelector('button')?.getAttribute('style') ??
-    target.querySelector('input')?.getAttribute('style') ??
-    target.querySelector('.relative')?.getAttribute('style') ??
-    ''
-  )
+  // A composed field can carry its base metrics on the inner input and its
+  // decoration metrics on a wrapper; collect every inline style so the whole
+  // emitted metric set is visible.
+  return Array.from(target.querySelectorAll('[style]'))
+    .map(el => el.getAttribute('style') ?? '')
+    .join(';')
 }
 
-const AXIS_SIZES = [12, 16, 20, 24]
+const AXIS_SIZES = [12, 14, 16, 18, 20]
 const NUMERIC_SIZES = [13, 14, 15, 17, 18, 19, 22, 40]
 
 interface ComponentCase {
@@ -81,7 +84,7 @@ interface ComponentCase {
 const CASES: ComponentCase[] = [
   {
     name: 'Button',
-    keys: ['btn-font', 'btn-line', 'btn-radius', 'btn-pad-x', 'btn-pad-y', 'btn-icon', 'btn-icon-pad', 'btn-weight'],
+    keys: ['btn-font', 'btn-line', 'btn-radius', 'btn-pad-x', 'btn-pad-y', 'btn-icon', 'btn-icon-pad'],
     render: size => renderStyle(Button, { size }),
   },
   {
@@ -92,11 +95,11 @@ const CASES: ComponentCase[] = [
   {
     name: 'SearchInput',
     keys: [
-      'search-font',
-      'search-line',
-      'search-radius',
-      'search-pad-y',
-      'search-pad-right',
+      'input-font',
+      'input-line',
+      'input-radius',
+      'input-pad-x',
+      'input-pad-y',
       'search-pad-left',
       'search-icon-left',
       'search-icon',
@@ -104,9 +107,34 @@ const CASES: ComponentCase[] = [
     render: size => renderStyle(SearchInput, { value: '', ariaLabel: 'x', size }),
   },
   {
+    name: 'AutoComplete',
+    keys: ['input-font', 'input-line', 'input-radius', 'input-pad-x', 'input-pad-y'],
+    render: size => renderStyle(AutoComplete, { value: '', options: ['a', 'b'], ariaLabel: 'x', size }),
+  },
+  {
     name: 'SelectDropdown',
-    keys: ['sel-font', 'sel-pad-x', 'sel-pad-y', 'sel-min-w', 'sel-gap', 'sel-icon'],
-    render: size => renderStyle(SelectDropdown, { options: ['a', 'b'], activeValue: 'a', ariaLabel: 'x', onSelect: () => {}, size }),
+    keys: ['sel-font', 'sel-line', 'sel-pad-x', 'sel-pad-y', 'sel-min-w', 'sel-gap', 'sel-icon', 'sel-chevron-inset'],
+    render: size =>
+      renderStyle(SelectDropdown, { options: ['a', 'b'], activeValue: 'a', ariaLabel: 'x', onSelect: () => {}, size }),
+  },
+  {
+    name: 'NumberInput',
+    keys: [
+      'input-font',
+      'input-line',
+      'input-radius',
+      'input-pad-x',
+      'input-pad-y',
+      'num-icon',
+      'num-pad-right',
+      'num-radius',
+    ],
+    render: size => renderStyle(NumberInput, { value: '5', ariaLabel: 'x', size }),
+  },
+  {
+    name: 'PasswordInput',
+    keys: ['input-font', 'input-line', 'input-radius', 'input-pad-x', 'input-pad-y', 'pwd-icon', 'pwd-box', 'pwd-inset'],
+    render: size => renderStyle(PasswordInput, { value: '', size }),
   },
 ]
 
@@ -118,15 +146,16 @@ describe('custom size invariants — pure', () => {
       expect(d).toBeGreaterThanOrEqual(1)
     }
     expect(resolveSize('xs')).toBe(12)
-    expect(resolveSize('lg')).toBe(24)
+    expect(resolveSize('lg')).toBe(18)
   })
 
   it('names are aliases for their axis numbers', () => {
     for (const [name, px] of [
       ['xs', 12],
-      ['sm', 16],
-      ['md', 20],
-      ['lg', 24],
+      ['sm', 14],
+      ['md', 16],
+      ['lg', 18],
+      ['xl', 20],
     ] as const) {
       expect(resolveSize(name)).toBe(px)
       expect(dimensionMetrics(name, { font: 0.65 })).toEqual(dimensionMetrics(px, { font: 0.65 }))
@@ -179,13 +208,12 @@ describe.each(CASES)('$name — all metrics', ({ keys, render }) => {
 })
 
 describe('custom size invariants — edge cases', () => {
-  it('non-finite falls back to sm, <=0 clamps to 1', async () => {
-    const fontAt = async (size: number): Promise<number> =>
-      styleVars(await renderStyle(Button, { size }))['btn-font']!
-    expect(await fontAt(Number.NaN)).toBeCloseTo(10.4)
-    expect(await fontAt(Infinity)).toBeCloseTo(10.4)
-    expect(await fontAt(-Infinity)).toBeCloseTo(10.4)
-    expect(await fontAt(0)).toBeCloseTo(0.65)
-    expect(await fontAt(-5)).toBeCloseTo(0.65)
+  it('non-finite falls back to md, <=0 clamps to 1', async () => {
+    const fontAt = async (size: number): Promise<number> => styleVars(await renderStyle(Button, { size }))['btn-font']!
+    expect(await fontAt(Number.NaN)).toBeCloseTo(13)
+    expect(await fontAt(Infinity)).toBeCloseTo(13)
+    expect(await fontAt(-Infinity)).toBeCloseTo(13)
+    expect(await fontAt(0)).toBeCloseTo(0.8125)
+    expect(await fontAt(-5)).toBeCloseTo(0.8125)
   })
 })

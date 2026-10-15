@@ -1,25 +1,28 @@
 <script lang="ts">
   import TagInput from '../TagInput.svelte'
+  import type { SizeInput } from '$lib/size-scale'
 
   interface Props {
     value?: string[]
-    availableTags?: string[]
+    options?: string[]
     disabled?: boolean
+    size?: SizeInput
     palette?: readonly string[]
-    chipClassFor?: (tag: string) => string
+    chipClass?: string | ((tag: string) => string)
     onQueryChange?: (query: string) => void
     onChange?: (next: string[]) => void
   }
 
   let {
     value = [],
-    availableTags = [],
+    options = [],
     disabled = false,
+    size = 'md',
     palette,
-    chipClassFor,
+    chipClass,
     onQueryChange,
     onChange,
   }: Props = $props()
 </script>
 
-<TagInput {value} {availableTags} {disabled} {palette} {chipClassFor} {onQueryChange} {onChange} />
+<TagInput {value} {options} {disabled} {size} {palette} {chipClass} {onQueryChange} {onChange} />

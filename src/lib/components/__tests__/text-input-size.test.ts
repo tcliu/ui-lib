@@ -28,7 +28,7 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 
-const AXIS = { xs: 12, sm: 16, md: 20, lg: 24 } as const
+const AXIS = { xs: 12, sm: 14, md: 16, lg: 18, xl: 20 } as const
 const styleOf = (): string => target.querySelector('input')?.getAttribute('style') ?? ''
 const num = (style: string, key: string): number => Number(new RegExp(`--input-${key}:\\s*([\\d.]+)`).exec(style)?.[1])
 
@@ -44,8 +44,8 @@ describe('TextInput dimension ratios', () => {
       flushSync()
       const style = styleOf()
       expect(num(style, 'font') / px).toBeCloseTo(0.8125)
-      expect(num(style, 'pad-x') / px).toBeCloseTo(0.5)
-      expect(num(style, 'pad-y') / px).toBeCloseTo(0.375)
+      expect(num(style, 'pad-x') / px).toBeCloseTo(0.625)
+      expect(num(style, 'pad-y') / px).toBeCloseTo(0.4375)
       expect(num(style, 'radius') / px).toBeCloseTo(0.375)
       expect(target.querySelector('input')?.className).toContain('text-[length:var(--input-font)]')
     }

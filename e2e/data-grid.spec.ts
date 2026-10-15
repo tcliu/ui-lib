@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { replaceSnippet } from './helpers'
 
 // The DataGrid demo is the canonical spreadsheet control: a header row plus
 // body cells, in-place editing with history, and keyboard navigation. These
@@ -65,52 +66,53 @@ test('showcase: DataGrid keeps grid focus when pasting into an appended row', as
   await expect(root.locator('td[role="gridcell"]:has(textarea[data-row="4"][data-col="1"])')).toBeFocused()
 })
 
-test('showcase: DataGrid settings panel drives editability and headers', async ({ page }) => {
+test('showcase: DataGrid editable and showHeaders Value cells drive the grid', async ({ page }) => {
   await page.goto('/components/data-grid')
   await page.waitForLoadState('networkidle')
-  const demo = (name: string) => page.getByRole('region', { name })
-  const root = demo('Default').locator('[data-testid="data-grid"]')
+  const demo = page.locator('[data-showcase-demo]').first()
+  const root = demo.locator('[data-testid="data-grid"]')
 
   // Pristine: editable, header row present.
   await expect(root.locator('td[role="gridcell"] textarea')).toHaveCount(12)
   await expect(root.locator('textarea').first()).toBeEditable()
 
-  // Editable: No makes every cell read-only.
-  await page.getByRole('combobox', { name: 'Editable' }).click()
-  await page.getByRole('option', { name: 'No' }).click()
-  await expect(demo('Customized').locator('[data-testid="data-grid"] textarea').first()).not.toBeEditable()
+  // The editable Value cell is a boolean toggle (default checked); clearing it
+  // makes every cell read-only. Its input is clipped, so toggle from keyboard.
+  const editableBox = page.getByRole('checkbox', { name: 'editable value' })
+  await editableBox.focus()
+  await page.keyboard.press('Space')
+  await expect(root.locator('textarea').first()).not.toBeEditable()
 
   // A read-only grid refuses keyboard mutations: arrows move the box selection
   // but never append a row/column, and typing/Delete never edit or clear a cell.
-  const roGrid = demo('Customized').locator('[data-testid="data-grid"]')
-  const ada = roGrid.locator('textarea[data-row="1"][data-col="0"]')
+  const ada = root.locator('textarea[data-row="1"][data-col="0"]')
   await ada.click()
   await page.keyboard.type('x')
   await page.keyboard.press('Backspace')
   await expect(ada).toHaveValue('Ada Lovelace')
 
-  const lastBodyCell = roGrid.locator('td[role="gridcell"] textarea[data-row="4"][data-col="0"]')
+  const lastBodyCell = root.locator('td[role="gridcell"] textarea[data-row="4"][data-col="0"]')
   await lastBodyCell.click()
   await page.keyboard.press('ArrowDown')
-  await expect(roGrid.locator('textarea[data-row="5"]')).toHaveCount(0)
+  await expect(root.locator('textarea[data-row="5"]')).toHaveCount(0)
   await expect(lastBodyCell).toHaveValue('Katherine Johnson')
 
   // Right-arrow on the last column must not append a column either.
-  const lastColCell = roGrid.locator('textarea[data-row="4"][data-col="2"]')
+  const lastColCell = root.locator('textarea[data-row="4"][data-col="2"]')
   await lastColCell.click()
   await page.keyboard.press('ArrowRight')
-  await expect(roGrid.locator('textarea[data-col="3"]')).toHaveCount(0)
+  await expect(root.locator('textarea[data-col="3"]')).toHaveCount(0)
 
-  // Show headers: No treats the first row as data (5 data rows, no th row).
-  await page.getByRole('combobox', { name: 'Show headers' }).click()
-  await page.getByRole('option', { name: 'No' }).click()
-  const customized = demo('Customized').locator('[data-testid="data-grid"]')
-  await expect(customized.locator('th textarea')).toHaveCount(0)
-  await expect(customized.locator('td[role="gridcell"] textarea')).toHaveCount(15)
+  // Show headers off treats the first row as data (5 data rows, no th row).
+  const headersBox = page.getByRole('checkbox', { name: 'showHeaders value' })
+  await headersBox.focus()
+  await page.keyboard.press('Space')
+  await expect(root.locator('th textarea')).toHaveCount(0)
+  await expect(root.locator('td[role="gridcell"] textarea')).toHaveCount(15)
 
   // Reset restores the component defaults.
   await page.getByRole('button', { name: 'Reset', exact: true }).click()
-  await expect(demo('Default').locator('[data-testid="data-grid"] td[role="gridcell"] textarea')).toHaveCount(12)
+  await expect(root.locator('td[role="gridcell"] textarea')).toHaveCount(12)
 })
 
 test('showcase: DataGrid cuts a cell with ControlOrMeta+x and pastes it elsewhere', async ({ page }) => {
@@ -127,6 +129,63 @@ test('showcase: DataGrid cuts a cell with ControlOrMeta+x and pastes it elsewher
   await target.click()
   await page.keyboard.press('ControlOrMeta+v')
   await expect(target).toHaveValue('Ada Lovelace')
+})
+
+test('showcase: the DataGrid columnLabels Value cell relabels the header row', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.goto('/components/data-grid')
+  await page.waitForLoadState('networkidle')
+  const root = page.locator('[data-testid="data-grid"]')
+
+  // Pristine: the label row falls back to column letters.
+  await expect(root.getByText('A', { exact: true })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Edit columnLabels' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Edit column labels' })
+  await expect(dialog).toBeVisible()
+  await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
+  const ok = dialog.getByRole('button', { name: 'OK', exact: true })
+
+  // Invalid JSON blocks OK behind an inline error.
+  await replaceSnippet(page, dialog, 'nope')
+  await expect(dialog.getByRole('alert')).toBeVisible()
+  await expect(ok).toBeDisabled()
+
+  // A valid list applies on OK: the label row shows it while the header-row
+  // cells keep their own values.
+  await replaceSnippet(page, dialog, '["Alpha", "Beta", "Gamma"]')
+  await expect(dialog.getByRole('alert')).toHaveCount(0)
+  await ok.click()
+  await expect(dialog).toHaveCount(0)
+  await expect(root.getByText('Alpha', { exact: true })).toBeVisible()
+  await expect(root.locator('textarea[data-row="0"][data-col="0"]')).toHaveValue('Name')
+})
+
+test('showcase: the DataGrid value Value cell edits grid data through a dialog', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.goto('/components/data-grid')
+  await page.waitForLoadState('networkidle')
+  const root = page.locator('[data-testid="data-grid"]')
+  await expect(root.locator('textarea[data-row="1"][data-col="0"]')).toHaveValue('Ada Lovelace')
+
+  await page.getByRole('button', { name: 'Edit value' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Edit grid data' })
+  await expect(dialog).toBeVisible()
+  await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
+  const ok = dialog.getByRole('button', { name: 'OK', exact: true })
+
+  // Invalid JSON blocks OK behind an inline error.
+  await replaceSnippet(page, dialog, 'nope')
+  await expect(dialog.getByRole('alert')).toBeVisible()
+  await expect(ok).toBeDisabled()
+
+  // Valid grid data applies on OK and renders in the grid.
+  await replaceSnippet(page, dialog, '[["Name", "Role"], ["Ada", "Engineer"]]')
+  await expect(dialog.getByRole('alert')).toHaveCount(0)
+  await ok.click()
+  await expect(dialog).toHaveCount(0)
+  await expect(root.locator('textarea[data-row]')).toHaveCount(4)
+  await expect(root.locator('textarea[data-row="1"][data-col="0"]')).toHaveValue('Ada')
 })
 
 test('showcase: DataGrid lets Tab leave the grid at its boundary cells', async ({ page }) => {
@@ -152,4 +211,25 @@ test('showcase: DataGrid lets Tab leave the grid at its boundary cells', async (
   await root.locator('textarea[data-row="0"][data-col="0"]').focus()
   await page.keyboard.press('Shift+Tab')
   await expect(await activeTagInGrid()).toBe('BUTTON')
+})
+
+test('showcase: the DataGrid value eye applies and unapplies the data', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.goto('/components/data-grid')
+  await page.waitForLoadState('networkidle')
+  const root = page.locator('[data-testid="data-grid"]')
+
+  // Commit custom grid data through the dialog.
+  await page.getByRole('button', { name: 'Edit value' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Edit grid data' })
+  await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
+  await replaceSnippet(page, dialog, '[["Name", "Role"], ["Ada", "Engineer"]]')
+  await dialog.getByRole('button', { name: 'OK', exact: true }).click()
+  await expect(root.locator('textarea[data-row="1"][data-col="0"]')).toHaveValue('Ada')
+
+  // Unapplying drops the data (the grid renders empty); re-applying restores it.
+  await page.getByRole('button', { name: 'Unapply value' }).click()
+  await expect(root.locator('textarea[data-row]')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Apply value' }).click()
+  await expect(root.locator('textarea[data-row="1"][data-col="0"]')).toHaveValue('Ada')
 })
