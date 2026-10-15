@@ -16,14 +16,32 @@
   import { getI18nContext } from '$lib/i18n.svelte'
   const i18n = getI18nContext()
 
+  // Optional per-part color overrides so an app can theme the picker without
+  // forking it: each value replaces the default color classes for that part
+  // while the structural classes (layout, size, focus ring) stay fixed. Omitted
+  // keys keep the app's palette, so the default render is unchanged.
+  export interface DateRangePickerTheme {
+    /** Trigger text when no range is set (default `text-slate-500!`). */
+    unsetText?: string
+    /** Prev/next month buttons (default `text-slate-400 hover:bg-slate-800 hover:text-cyan-300`). */
+    navButton?: string
+    /** Weekday column headers (default `text-slate-500`). */
+    columnHeader?: string
+    /** Today's day button (default `text-cyan-300`). */
+    today?: string
+    /** Footer summary and clear-button text (default `text-slate-500`). */
+    metaText?: string
+  }
+
   interface Props {
     from: string
     to: string
     onFrom: (value: string) => void
     onTo: (value: string) => void
+    theme?: DateRangePickerTheme
   }
 
-  let { from, to, onFrom, onTo }: Props = $props()
+  let { from, to, onFrom, onTo, theme = {} }: Props = $props()
 
   const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
   const DAY_STEP: Record<string, number> = {
@@ -269,7 +287,7 @@
     aria-label={`${i18n.t('range.selectDates')}: ${triggerLabel}`}
     onclick={toggle}
     onkeydown={onTriggerKeydown}
-    class={`${NATIVE_SELECT_BUTTON_CLASS} ${start || end ? 'text-slate-100!' : 'text-slate-500!'}`}>
+    class={`${NATIVE_SELECT_BUTTON_CLASS} ${start || end ? 'text-slate-100!' : (theme.unsetText ?? 'text-slate-500!')}`}>
     <span class="min-w-0 flex-1 truncate text-left">{triggerLabel}</span>
     <CalendarIcon size="sm" className="shrink-0 opacity-70" />
   </button>
@@ -291,7 +309,7 @@
           type="button"
           aria-label={i18n.t('range.prevMonth')}
           onclick={prevMonth}
-          class="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 transition outline-none hover:bg-slate-800 hover:text-cyan-300 motion-reduce:transition-none">
+          class={`flex h-7 w-7 items-center justify-center rounded-md transition outline-none motion-reduce:transition-none ${theme.navButton ?? 'text-slate-400 hover:bg-slate-800 hover:text-cyan-300'}`}>
           <ChevronLeftIcon size="sm" />
         </button>
         <span class="text-xs font-semibold text-slate-200">{monthLabel}</span>
@@ -299,7 +317,7 @@
           type="button"
           aria-label={i18n.t('range.nextMonth')}
           onclick={nextMonth}
-          class="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 transition outline-none hover:bg-slate-800 hover:text-cyan-300 motion-reduce:transition-none">
+          class={`flex h-7 w-7 items-center justify-center rounded-md transition outline-none motion-reduce:transition-none ${theme.navButton ?? 'text-slate-400 hover:bg-slate-800 hover:text-cyan-300'}`}>
           <ChevronRightIcon size="sm" />
         </button>
       </div>
@@ -307,7 +325,9 @@
       <div class="grid grid-cols-7 gap-1" role="grid" aria-label={i18n.t('range.calendar')}>
         <div class="contents" role="row">
           {#each weekdayLabels as label}
-            <div role="columnheader" class="py-0.5 text-center text-[10px] font-semibold text-slate-500 uppercase">
+            <div
+              role="columnheader"
+              class={`py-0.5 text-center text-[10px] font-semibold uppercase ${theme.columnHeader ?? 'text-slate-500'}`}>
               {label}
             </div>
           {/each}
@@ -336,7 +356,7 @@
                         : between
                           ? 'bg-cyan-500/15 text-cyan-100'
                           : cell.day === todayIso()
-                            ? 'font-semibold text-cyan-300 hover:bg-slate-800'
+                            ? `font-semibold ${theme.today ?? 'text-cyan-300'} hover:bg-slate-800`
                             : 'text-slate-300 hover:bg-slate-800 hover:text-slate-100'
                     }`}>
                     {numberFormat.format(cell.label)}
@@ -349,12 +369,12 @@
       </div>
 
       <div class="mt-1.5 flex items-center justify-between border-t border-slate-800 pt-1.5">
-        <span class="min-w-0 truncate text-xs text-slate-500">{triggerLabel}</span>
+        <span class={`min-w-0 truncate text-xs ${theme.metaText ?? 'text-slate-500'}`}>{triggerLabel}</span>
         <button
           type="button"
           disabled={!start && !end}
           onclick={clear}
-          class="shrink-0 rounded-md px-1.5 py-0.5 text-xs text-slate-500 transition outline-none hover:text-rose-300 disabled:cursor-not-allowed disabled:opacity-40 motion-reduce:transition-none">
+          class={`shrink-0 rounded-md px-1.5 py-0.5 text-xs transition outline-none hover:text-rose-300 disabled:cursor-not-allowed disabled:opacity-40 motion-reduce:transition-none ${theme.metaText ?? 'text-slate-500'}`}>
           {i18n.t('range.clear')}
         </button>
       </div>

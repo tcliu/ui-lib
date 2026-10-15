@@ -3,17 +3,22 @@
   import Button from './Button.svelte'
   import CopyButton from './CopyButton.svelte'
   import EditIcon from '$lib/icons/EditIcon.svelte'
-  import { TEXT_SIZE, type TextSize } from '$lib/text-size'
-  import { resolveFontPx } from '$lib/size-scale'
+  import type { SizeInput } from '$lib/size-scale'
+  import { INPUT_RATIOS } from './input-chrome'
+  import { resolveSize } from './size-metrics'
   import { getI18nContext } from '$lib/i18n.svelte'
   const i18n = getI18nContext()
+
+  // Text-field metrics follow TextInput's shared base chrome (`input-chrome.ts`
+  // INPUT_RATIOS): every metric is a fixed ratio of the size dimension, so names
+  // (axis aliases) and numbers scale continuously together.
 
   interface Props {
     text: string
     // Return false to reject the committed value (e.g. duplicate name);
     // the component then restores the previous text and keeps editing.
     onChange: (text: string) => void | boolean
-    size?: TextSize | number
+    size?: SizeInput
     className?: string
     onActivate?: () => void
     // maximum width (in px) the editable input may expand to; actual max
@@ -137,15 +142,18 @@
       // Temporarily collapse width to let scrollWidth reflect content width.
       input.style.width = '0px'
       const contentWidth = input.scrollWidth
-      // Account for horizontal padding (px-2 -> 0.5rem each side ~= 8px at 16px root)
-      const paddingExtra = 16
+      // Account for the size-scaled horizontal padding (both sides).
+      const paddingExtra = metrics.padX * 2
       const base = inputWidth ?? 0
       const max = computedMaxWidth ?? maxWidth
       const next = Math.min(max, Math.max(base, contentWidth + paddingExtra))
       input.style.width = `${next}px`
       inputWidth = next
     } catch (e) {
-      // ignore measurement errors
+      // Measurement failure leaves the input at its zero probe width; restore a
+      // sane width and surface the failure rather than swallowing it.
+      if (input) input.style.width = inputWidth ? `${inputWidth}px` : ''
+      console.error('EditableText: width measurement failed', e)
     }
   })
 
@@ -153,18 +161,26 @@
     if (clickTimer) clearTimeout(clickTimer)
   })
 
-  // Text sizing: names render through the literal text class (exactly as
-  // before); numbers interpolate the font on the shared axis.
-  const customFontPx = $derived(
-    typeof size === 'number' && Number.isFinite(size) ? resolveFontPx(size) : undefined,
+  // Text sizing follows TextInput: the size dimension (names alias the
+  // shared axis, numbers pass through, non-finite falls back to md) drives
+  // font, line, radius, and padding through the same fixed ratios, emitted
+  // as `--input-*` vars consumed by the static metric utilities below.
+  const dimension = $derived(resolveSize(size))
+  const metrics = $derived({
+    font: dimension * INPUT_RATIOS.font,
+    line: dimension * INPUT_RATIOS.line,
+    radius: dimension * INPUT_RATIOS.radius,
+    padX: dimension * INPUT_RATIOS.padX,
+    padY: dimension * INPUT_RATIOS.padY,
+  })
+  const sizeStyle = $derived(
+    `--input-font:${metrics.font}px;--input-line:${metrics.line}px;--input-radius:${metrics.radius}px;--input-pad-x:${metrics.padX}px;--input-pad-y:${metrics.padY}px`,
   )
-  // Non-finite numbers fall back to the default step's class (never a
-  // literal "undefined" in the class list).
-  const textClass = $derived(customFontPx === undefined ? TEXT_SIZE[typeof size === 'string' ? size : 'md'] : '')
-  const textStyle = $derived(customFontPx === undefined ? undefined : `font-size:${customFontPx}px`)
+  const metricClass =
+    'rounded-[var(--input-radius)] px-[var(--input-pad-x)] py-[var(--input-pad-y)] text-[length:var(--input-font)] leading-[var(--input-line)]'
   const inputStyle = $derived.by(() => {
     const width = inputWidth ? `width: ${inputWidth}px; min-width: 0` : 'min-width: 0'
-    return textStyle ? `${width}; ${textStyle}` : width
+    return `${width}; ${sizeStyle}`
   })
 </script>
 
@@ -185,15 +201,15 @@
       data-escape-capture
       aria-label={i18n.t('edit.editText')}
       style={inputStyle}
-      class={`${textClass} max-w-full rounded-md bg-slate-950 px-2 py-1 text-slate-100 outline outline-1 outline-slate-700 transition focus:outline-cyan-500 motion-reduce:transition-none`} />
+      class={`${metricClass} max-w-full bg-slate-950 text-slate-100 outline outline-1 outline-slate-700 transition focus:outline-cyan-500 motion-reduce:transition-none`} />
   </div>
 {:else}
   {#snippet displayContent()}
     <button
       bind:this={displayBtn}
       type="button"
-      class={`${textClass} min-w-0 truncate bg-transparent p-0 py-1 pl-2 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 motion-reduce:transition-none ${className}`}
-      style={textStyle}
+      class={`${metricClass} min-w-0 truncate bg-transparent text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 motion-reduce:transition-none ${className}`}
+      style={sizeStyle}
       title={i18n.t('edit.doubleClickToEdit')}
       onclick={e => {
         e.stopPropagation()
@@ -236,7 +252,7 @@
   <div class="group flex min-w-0 items-center gap-2 [&>span]:translate-y-0.5">
     {@render displayContent()}
     {#if copyable && text.trim() !== ''}
-      <CopyButton {text} copyAriaLabel={`Copy ${text}`} />
+      <CopyButton {text} ariaLabel={`Copy ${text}`} />
     {/if}
   </div>
 {/if}

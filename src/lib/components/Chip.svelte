@@ -8,63 +8,45 @@
     label: string
     chipClass: string
     style?: string
-    ariaLabel?: string
+    removeLabel?: string
     removeButtonClass?: string
     removeButtonStyle?: string
     tooltip?: string
     disabled?: boolean
     onRemove?: () => void
-    // Toggle mode: renders an `aria-pressed` button instead of the static
-    // pill. `chipClass` supplies the color; the pressed frame swaps border
-    // weight while the invisible-bold grid keeps the width stable.
-    active?: boolean
-    onclick?: () => void
   }
 
   let {
     label,
     chipClass,
     style = '',
-    ariaLabel,
+    removeLabel,
     removeButtonClass = '',
     removeButtonStyle = '',
     tooltip,
     disabled = false,
     onRemove,
-    active = false,
-    onclick,
   }: Props = $props()
+
+  // Derived (not read inline) so a locale switch re-resolves the label.
+  const resolvedRemoveLabel = $derived(removeLabel ?? i18n.t('chip.remove', { name: label }))
 </script>
 
 <span class={tooltip ? 'group relative inline-flex' : 'inline-flex'}>
-  {#if onclick}
-    <button
-      type="button"
-      aria-pressed={active}
-      {onclick}
-      {disabled}
-      class={`inline-flex w-fit cursor-pointer items-center rounded-full px-2 py-0.5 text-xs transition disabled:cursor-not-allowed ${chipClass} ${active ? 'border-2 font-semibold opacity-100' : 'm-px border opacity-70 hover:opacity-100'}`}>
-      <span class="grid">
-        <span class="col-start-1 row-start-1 {active ? 'font-semibold' : ''}">{label}</span>
-        <span class="invisible col-start-1 row-start-1 font-semibold" aria-hidden="true">{label}</span>
-      </span>
-    </button>
-  {:else}
-    <span {style} class={`${chipClass} inline-flex items-center gap-1`}>
-      {label}
-      {#if onRemove}
-        <button
-          type="button"
-          aria-label={ariaLabel ?? i18n.t('chip.remove', { name: label })}
-          onclick={onRemove}
-          {disabled}
-          style={removeButtonStyle}
-          class={removeButtonClass}>
-          <CloseIcon size="xs" />
-        </button>
-      {/if}
-    </span>
-  {/if}
+  <span {style} class={`${chipClass} inline-flex items-center gap-1`}>
+    {label}
+    {#if onRemove}
+      <button
+        type="button"
+        aria-label={resolvedRemoveLabel}
+        onclick={onRemove}
+        {disabled}
+        style={removeButtonStyle}
+        class={removeButtonClass}>
+        <CloseIcon size="xs" />
+      </button>
+    {/if}
+  </span>
   {#if tooltip}
     <Tooltip>{tooltip}</Tooltip>
   {/if}

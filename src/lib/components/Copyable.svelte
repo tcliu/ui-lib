@@ -1,57 +1,56 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
   import CopyButton from '$lib/components/CopyButton.svelte'
+  import type { SizeInput } from '$lib/size-scale'
 
   interface Props {
     text?: string
-    copyText?: string
-    className?: string
+    textClass?: string
     containerClass?: string
-    copyAriaLabel?: string
-    copyTooltip?: string
-    alwaysVisible?: boolean
+    ariaLabel?: string
+    tooltip?: string
     copyPosition?: 'inline' | 'top-right'
     children?: Snippet
+    size?: SizeInput
   }
 
   let {
     text,
-    copyText = text,
-    className = 'text-slate-400',
+    textClass = 'text-slate-400',
     containerClass = '',
-    copyAriaLabel,
-    copyTooltip,
-    alwaysVisible = false,
+    ariaLabel,
+    tooltip,
     copyPosition = 'inline',
     children,
+    size = 'md',
   }: Props = $props()
 
   // hide copy button when there's nothing to copy (empty or whitespace)
   function hasCopyText() {
-    return (copyText ?? '').toString().trim().length > 0
+    return (text ?? '').toString().trim().length > 0
   }
 </script>
 
 {#if copyPosition === 'top-right'}
   <!-- Top-right mode: the copy button sits to the right of the wrapped content
-       on the same row as its first line, and is always visible. -->
+       on the same row as its first line. -->
   <div class={`group flex items-start gap-1 ${containerClass}`}>
     <div class="min-w-0 flex-1">
       {#if children}
         {@render children()}
       {:else}
-        <span class={`${className} block`}>{text}</span>
+        <span class={`${textClass} block`}>{text}</span>
       {/if}
     </div>
     {#if hasCopyText()}
       <span class="mt-1.5 mr-1.5">
-        <CopyButton text={copyText ?? ''} {copyAriaLabel} {copyTooltip} alwaysVisible />
+        <CopyButton text={text ?? ''} {ariaLabel} {tooltip} size={size} />
       </span>
     {/if}
   </div>
 {:else}
   <div class={`group flex min-w-0 flex-1 items-center gap-1 ${containerClass}`}>
-    <span class={`${className} min-w-0 truncate`}>
+    <span class={`${textClass} min-w-0 truncate`}>
       {#if children}
         {@render children()}
       {:else}
@@ -59,7 +58,7 @@
       {/if}
     </span>
     {#if hasCopyText()}
-      <CopyButton text={copyText ?? ''} {copyAriaLabel} {copyTooltip} {alwaysVisible} />
+      <CopyButton text={text ?? ''} {ariaLabel} {tooltip} size={size} />
     {/if}
   </div>
 {/if}

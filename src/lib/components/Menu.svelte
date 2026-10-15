@@ -1,5 +1,5 @@
 <script module lang="ts">
-  import type { Snippet } from 'svelte'
+  import type { ComponentProps, Snippet } from 'svelte'
 
   export interface MenuItemState {
     index: number
@@ -26,8 +26,7 @@
     ariaLabel: string
     id?: string
     triggerClass?: string
-    triggerTooltip?: string
-    triggerTooltipAlign?: 'center' | 'left' | 'right'
+    triggerTooltip?: { text: string; align?: ComponentProps<typeof Tooltip>['align'] }
     itemClass?: (item: T, state: MenuItemState) => string
     itemRole?: 'menuitem' | 'menuitemradio'
     itemChecked?: (item: T) => boolean
@@ -54,7 +53,6 @@
     autoPlace = true,
     triggerClass = '',
     triggerTooltip,
-    triggerTooltipAlign = 'center',
     panelClass = '',
     itemClass,
     itemRole = 'menuitem',
@@ -82,8 +80,7 @@
   let dialogRef = $state<HTMLDivElement | null>(null)
   let itemRefs = $state<HTMLButtonElement[]>([])
   let isPhoneViewport = $state(false)
-  let sheetDragOffset = $state(0)
-  let sheetDragging = $state(false)
+  let drag = $state<{ offset: number; active: boolean }>({ offset: 0, active: false })
   let reduceMotion = $state(false)
   const usePhoneSheet = $derived(phoneSheetTitle !== undefined && isPhoneViewport)
 
@@ -117,8 +114,7 @@
 
   function close(returnFocus = true) {
     open = false
-    sheetDragOffset = 0
-    sheetDragging = false
+    drag = { offset: 0, active: false }
     if (returnFocus) {
       triggerRef?.focus()
     }
@@ -198,7 +194,8 @@
     onSelect(index)
   }
 
-  const sheetTransition = $derived(sheetDragging || reduceMotion ? 'none' : undefined)
+  const sheetTransition = $derived(drag.active || reduceMotion ? 'none' : undefined)
+  const sheetDrag = $derived({ offset: drag.offset, active: drag.active, transition: sheetTransition })
 
   $effect(() => {
     if (!open) return
@@ -293,7 +290,7 @@
   {#if triggerTooltip}
     <span bind:this={tooltipTriggerEl} class="group relative inline-flex">
       {@render triggerButton()}
-      <Tooltip align={triggerTooltipAlign} trigger={tooltipTriggerEl}>{triggerTooltip}</Tooltip>
+      <Tooltip align={triggerTooltip.align ?? 'center'} trigger={tooltipTriggerEl}>{triggerTooltip.text}</Tooltip>
     </span>
   {:else}
     {@render triggerButton()}
@@ -309,13 +306,10 @@
         {ariaLabel}
         {phoneSheetTitle}
         {sheetCloseLabel}
-        {sheetDragOffset}
-        {sheetDragging}
-        {sheetTransition}
+        drag={sheetDrag}
         onClose={() => close()}
         onDragUpdate={(offset, active) => {
-          sheetDragOffset = offset
-          sheetDragging = active
+          drag = { offset, active }
         }}
         onPanelKeydown={handlePanelKeydown}
         onFocusOut={listbox.handleFocusOut}

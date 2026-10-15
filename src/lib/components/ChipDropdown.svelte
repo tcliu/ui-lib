@@ -4,15 +4,25 @@
   import { createOptionIndex, matchesOption, matchLabelParts } from '$lib/actions/option-index'
   import { isModifiedNavKey } from '$lib/actions/listbox-keynav'
   import { positionPanel } from '$lib/position-panel.svelte'
+  import Button from '$lib/components/Button.svelte'
   import ChevronDownIcon from '$lib/icons/ChevronDownIcon.svelte'
+  import CloseIcon from '$lib/icons/CloseIcon.svelte'
   import type { DropdownPanelProps } from '$lib/dropdown-chrome'
   import { CHIP_PANEL_BASE, DEFAULT_CHIP_PANEL_CLASS } from '$lib/dropdown-chrome'
   import type { SelectOption } from './SelectDropdown.svelte'
+  import type { ClearableProps } from './clearable-props'
+  import { getI18nContext } from '$lib/i18n.svelte'
 
-  interface Props extends DropdownPanelProps {
+  const i18n = getI18nContext()
+
+  interface Props extends DropdownPanelProps, Omit<ClearableProps, 'clearPlacement'> {
     label: string
     options: SelectOption[]
     activeValue?: string
+    // Baseline the clear affordance compares against: the cross hides while
+    // `activeValue` matches it (empty when unset), and the fallback clear
+    // writes it back. A provided `onClear` still owns the clear.
+    defaultValue?: string
     ariaLabel: string
     disabled?: boolean
     variant?: 'sky' | 'violet' | 'amber' | 'fuchsia' | 'emerald'
@@ -21,12 +31,16 @@
     filterPlaceholder?: string
     emptyText?: string
     onSelect: (value: string) => void
+    // No `clearPlacement`: the trigger is a chip, not a text field, so the
+    // clear sits on its own right edge. `onClear` falls back to selecting the
+    // default value.
   }
 
   let {
     label,
     options,
     activeValue = '',
+    defaultValue,
     ariaLabel,
     align = 'left',
     autoPlace = true,
@@ -38,6 +52,9 @@
     filterPlaceholder = 'Search…',
     emptyText = 'No results.',
     onSelect,
+    clearable = false,
+    clearLabel,
+    onClear,
   }: Props = $props()
 
   let id = $props.id()
@@ -52,14 +69,6 @@
         : { value: option.value, label: option.label ?? option.value },
     ),
   )
-
-  const VARIANT_ACTIVE: Record<string, string> = {
-    sky: 'bg-sky-500/15 text-sky-200',
-    violet: 'bg-violet-500/15 text-violet-200',
-    amber: 'bg-amber-500/15 text-amber-200',
-    fuchsia: 'bg-fuchsia-500/15 text-fuchsia-200',
-    emerald: 'bg-emerald-500/15 text-emerald-200',
-  }
 
   const VARIANT_CHIP: Record<string, string> = {
     sky: 'border-sky-500/30 bg-sky-500/10 text-sky-200 hover:border-sky-400 hover:text-sky-100 focus-visible:border-sky-400 focus-visible:text-sky-100',
@@ -77,6 +86,12 @@
     buttonClass ??
       `inline-flex max-w-full items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium outline-none transition disabled:cursor-not-allowed disabled:opacity-50 relative before:absolute before:-inset-1.5 before:content-[''] ${VARIANT_CHIP[variant] ?? VARIANT_CHIP.violet}`,
   )
+
+  const resolvedClearLabel = $derived(clearLabel ?? i18n.t('common.clear'))
+  // A disabled chip offers no clear action, and while `activeValue` matches
+  // `defaultValue` (empty when unset) there is nothing to clear, so the cross
+  // hides.
+  const showClear = $derived(clearable && (activeValue ?? '') !== (defaultValue ?? '') && !disabled)
 
   // Filterable layout is a fixed header + scrolling list contract
   // (`shrink-0` search + `flex-1 overflow-y-auto` options). A custom
@@ -176,6 +191,19 @@
   function select(value: string) {
     onSelect(value)
     close()
+    buttonRef?.focus()
+  }
+
+  // Clearing hides the cross with the value, so return focus to the trigger
+  // instead of dropping it to the body. A provided handler owns the clear;
+  // otherwise the default value is selected.
+  function handleClear() {
+    close()
+    if (onClear) {
+      onClear()
+    } else {
+      onSelect(defaultValue ?? '')
+    }
     buttonRef?.focus()
   }
 
@@ -321,24 +349,42 @@
   bind:this={containerRef}
   data-escape-capture={open ? '' : null}
   onfocusout={listbox.handleFocusOut}>
-  <button
-    type="button"
-    bind:this={buttonRef}
-    role={filterable ? undefined : 'combobox'}
-    aria-label={ariaLabel}
-    aria-haspopup={filterable ? undefined : 'listbox'}
-    aria-expanded={filterable ? undefined : open}
-    aria-controls={!filterable && open ? panelId : undefined}
-    aria-activedescendant={!filterable && open && filteredOptions[listbox.selection.index]
-      ? `${panelId}-option-${listbox.selection.index}`
-      : undefined}
-    {disabled}
-    onclick={toggle}
-    onkeydown={handleButtonKeydown}
-    class={resolvedButtonClass}>
-    <span class="truncate">{label}</span>
-    <ChevronDownIcon size="xs" variant="solid" className="shrink-0 opacity-70" />
-  </button>
+  {#snippet triggerButton()}
+    <button
+      type="button"
+      bind:this={buttonRef}
+      role={filterable ? undefined : 'combobox'}
+      aria-label={ariaLabel}
+      aria-haspopup={filterable ? undefined : 'listbox'}
+      aria-expanded={filterable ? undefined : open}
+      aria-controls={!filterable && open ? panelId : undefined}
+      aria-activedescendant={!filterable && open && filteredOptions[listbox.selection.index]
+        ? `${panelId}-option-${listbox.selection.index}`
+        : undefined}
+      {disabled}
+      onclick={toggle}
+      onkeydown={handleButtonKeydown}
+      class={resolvedButtonClass}>
+      <span class="truncate">{label}</span>
+      <ChevronDownIcon size="xs" className="shrink-0 opacity-70" />
+    </button>
+  {/snippet}
+  {#snippet closeIcon()}
+    <CloseIcon size="xs" />
+  {/snippet}
+  {#if showClear}
+    <span class="inline-flex items-center gap-1">
+      {@render triggerButton()}
+      <Button
+        variant="ghost"
+        size="xs"
+        icon={closeIcon}
+        ariaLabel={resolvedClearLabel}
+        onClick={handleClear} />
+    </span>
+  {:else}
+    {@render triggerButton()}
+  {/if}
 
   {#if open}
     {#if filterable}

@@ -16,8 +16,7 @@
     state: TState
     pathname?: string
     ariaLabel?: string
-    class?: string
-    headerClass?: string
+    className?: string
   }
 
   let {
@@ -25,9 +24,11 @@
     state: tabState,
     pathname,
     ariaLabel,
-    class: className = '',
-    headerClass = 'sticky top-0 z-10 flex w-full flex-wrap items-center justify-between gap-2 bg-transparent pb-3',
+    className = '',
   }: Props<TState> = $props()
+
+  // Built-in header row classes; `className` appends to these.
+  const HEADER_ROW_CLASS = 'sticky top-0 z-10 flex w-full flex-wrap items-center justify-between gap-2 bg-transparent pb-3'
 
   // Derived (not a plain const) so locale switches re-resolve the label.
   const resolvedAriaLabel = $derived(ariaLabel ?? i18n.t('tabs.label'))
@@ -38,7 +39,7 @@
 </script>
 
 <div class="flex min-h-0 flex-1 flex-col">
-  <div class={`${headerClass} ${className}`}>
+  <div class={`${HEADER_ROW_CLASS} ${className}`}>
     <nav aria-label={resolvedAriaLabel} class="inline-flex rounded-xl border border-slate-700 bg-slate-950 p-1">
       {#each tabs as tab}
         {#if pathname !== undefined}

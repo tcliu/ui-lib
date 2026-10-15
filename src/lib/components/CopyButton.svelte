@@ -1,21 +1,22 @@
 <script lang="ts">
   import { toast } from 'svelte-sonner'
   import Button from './Button.svelte'
+  import type { SizeInput } from '$lib/size-scale'
   import CopyIcon from '$lib/icons/CopyIcon.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   const i18n = getI18nContext()
 
   interface Props {
     text: string
-    copyAriaLabel?: string
-    copyTooltip?: string
-    alwaysVisible?: boolean
+    ariaLabel?: string
+    tooltip?: string
+    size?: SizeInput
   }
 
-  let { text, copyAriaLabel, copyTooltip, alwaysVisible = false }: Props = $props()
+  let { text, ariaLabel, tooltip, size = 'md' }: Props = $props()
 
-  const ariaLabel = $derived(copyAriaLabel ?? i18n.t('copy.toClipboard'))
-  const tooltip = $derived(copyTooltip ?? i18n.t('common.copy'))
+  const resolvedAriaLabel = $derived(ariaLabel ?? i18n.t('copy.toClipboard'))
+  const resolvedTooltip = $derived(tooltip ?? i18n.t('common.copy'))
 
   async function handleCopy() {
     try {
@@ -28,13 +29,12 @@
 </script>
 
 <!-- Reveals on hover/focus via a `group` ancestor on hover-capable devices (hidden state gated behind `(hover: hover)`), always visible on touch devices; must not be portalled -->
-<span
-  class={`shrink-0 ${alwaysVisible ? '' : 'transition group-hover:opacity-100 focus-within:opacity-100 [@media(hover:hover)]:opacity-0'}`}>
+<span class="shrink-0 transition group-hover:opacity-100 focus-within:opacity-100 [@media(hover:hover)]:opacity-0">
   <Button
-    size="sm"
+    size={size}
     variant="ghost"
-    {ariaLabel}
-    {tooltip}
+    ariaLabel={resolvedAriaLabel}
+    tooltip={resolvedTooltip}
     onClick={e => {
       e.preventDefault()
       e.stopPropagation()

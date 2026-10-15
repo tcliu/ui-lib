@@ -11,19 +11,12 @@
 
   interface Props {
     width: number
-    // Omitted height means auto height: the frame hugs its content and only
-    // the right-edge width handle renders (no bottom or corner handles).
-    height?: number
+    height: number
     minWidth?: number
     minHeight?: number
     maxWidth?: ResizeBound
     maxHeight?: ResizeBound
-    // `height` is `undefined` while the frame runs width-only.
-    onResize: (width: number, height: number | undefined) => void
-    onResizeEnd?: () => void
-    resizeWidthLabel?: string
-    resizeHeightLabel?: string
-    resizeBothLabel?: string
+    onResize: (width: number, height: number) => void
     className?: string
     children: Snippet
   }
@@ -36,18 +29,14 @@
     maxWidth = Number.POSITIVE_INFINITY,
     maxHeight = Number.POSITIVE_INFINITY,
     onResize,
-    onResizeEnd,
-    resizeWidthLabel,
-    resizeHeightLabel,
-    resizeBothLabel,
     className = '',
     children,
   }: Props = $props()
 
-  const widthLabel = $derived(resizeWidthLabel ?? i18n.t('resizable.resizeWidth'))
-  const heightLabel = $derived(resizeHeightLabel ?? i18n.t('resizable.resizeHeight'))
-  const bothLabel = $derived(resizeBothLabel ?? i18n.t('resizable.resizeBoth'))
-  const valueText = $derived(i18n.t('resizable.resizeValue', { width, height: height ?? 0 }))
+  const widthLabel = $derived(i18n.t('resizable.resizeWidth'))
+  const heightLabel = $derived(i18n.t('resizable.resizeHeight'))
+  const bothLabel = $derived(i18n.t('resizable.resizeBoth'))
+  const valueText = $derived(i18n.t('resizable.resizeValue', { width, height }))
 
   // A `'parent'` bound has no fixed number to announce; the pixel bounds do.
   const maxWidthValue = $derived(typeof maxWidth === 'number' && Number.isFinite(maxWidth) ? maxWidth : undefined)
@@ -73,7 +62,7 @@
 
   function captureBounds() {
     startWidth = width
-    startHeight = height ?? 0
+    startHeight = height
     const parent = rootEl?.parentElement
     availableWidth =
       maxWidth === 'parent' ? (parent?.clientWidth ?? Number.POSITIVE_INFINITY) : Number.POSITIVE_INFINITY
@@ -81,14 +70,16 @@
       maxHeight === 'parent' ? (parent?.clientHeight ?? Number.POSITIVE_INFINITY) : Number.POSITIVE_INFINITY
   }
 
+  // Drag deltas are fractional, so the clamped sizes round to the nearest
+  // integer: the frame reports whole pixels on every move.
   function clampWidth(next: number) {
     const bound = typeof maxWidth === 'number' ? maxWidth : availableWidth
-    return Math.min(bound, Math.max(minWidth, next))
+    return Math.round(Math.min(bound, Math.max(minWidth, next)))
   }
 
   function clampHeight(next: number) {
     const bound = typeof maxHeight === 'number' ? maxHeight : availableHeight
-    return Math.min(bound, Math.max(minHeight, next))
+    return Math.round(Math.min(bound, Math.max(minHeight, next)))
   }
 
   // An unbounded edge has no maximum to jump to, so End keeps the size.
@@ -103,7 +94,7 @@
     if (edge === 'min') {
       return minHeight
     }
-    return typeof maxHeight === 'number' && Number.isFinite(maxHeight) ? maxHeight : (height ?? 0)
+    return typeof maxHeight === 'number' && Number.isFinite(maxHeight) ? maxHeight : height
   }
 
   // One drag handle per axis set: the right edge moves width, the bottom edge
@@ -117,7 +108,7 @@
       measure: captureBounds,
       onMove(deltaX, deltaY, phase) {
         const baseWidth = phase === 'drag' ? startWidth : width
-        const baseHeight = phase === 'drag' ? startHeight : (height ?? 0)
+        const baseHeight = phase === 'drag' ? startHeight : height
         onResize(
           horizontal ? clampWidth(baseWidth + deltaX) : width,
           vertical ? clampHeight(baseHeight + deltaY) : height,
@@ -126,7 +117,6 @@
       onJump(edge) {
         onResize(horizontal ? jumpWidth(edge) : width, vertical ? jumpHeight(edge) : height)
       },
-      onEnd: () => onResizeEnd?.(),
     })
   }
 
@@ -150,7 +140,7 @@
 <div
   bind:this={rootEl}
   class={`relative ${className}${boundClass}`}
-  style={height === undefined ? `width:${width}px` : `width:${width}px;height:${height}px`}>
+  style={`width:${width}px;height:${height}px`}>
   {@render children()}
   <div
     role="separator"
@@ -171,45 +161,43 @@
       widthDrag.handleKeydown(event)
     }}>
   </div>
-  {#if height !== undefined}
-    <div
-      role="separator"
-      aria-orientation="horizontal"
-      aria-label={heightLabel}
-      aria-valuenow={height}
-      aria-valuemin={minHeight}
-      aria-valuemax={maxHeightValue}
-      tabindex="0"
-      class="absolute inset-x-0 bottom-0 z-40 h-3 cursor-s-resize touch-none outline-none select-none focus-visible:ring-2 focus-visible:ring-cyan-500"
-      onpointerdown={heightDrag.handlePointerDown}
-      onpointermove={heightDrag.handlePointerMove}
-      onpointerup={heightDrag.handlePointerUp}
-      onpointercancel={heightDrag.handlePointerCancel}
-      onlostpointercapture={heightDrag.handleLostPointerCapture}
-      onkeydown={event => {
-        captureBounds()
-        heightDrag.handleKeydown(event)
-      }}>
-    </div>
-    <div
-      role="separator"
-      aria-orientation="vertical"
-      aria-label={bothLabel}
-      aria-valuenow={width}
-      aria-valuemin={minWidth}
-      aria-valuemax={maxWidthValue}
-      aria-valuetext={valueText}
-      tabindex="0"
-      class="absolute right-0 bottom-0 z-40 h-4 w-4 cursor-nwse-resize touch-none outline-none select-none focus-visible:ring-2 focus-visible:ring-cyan-500"
-      onpointerdown={bothDrag.handlePointerDown}
-      onpointermove={bothDrag.handlePointerMove}
-      onpointerup={bothDrag.handlePointerUp}
-      onpointercancel={bothDrag.handlePointerCancel}
-      onlostpointercapture={bothDrag.handleLostPointerCapture}
-      onkeydown={event => {
-        captureBounds()
-        bothDrag.handleKeydown(event)
-      }}>
-    </div>
-  {/if}
+  <div
+    role="separator"
+    aria-orientation="horizontal"
+    aria-label={heightLabel}
+    aria-valuenow={height}
+    aria-valuemin={minHeight}
+    aria-valuemax={maxHeightValue}
+    tabindex="0"
+    class="absolute inset-x-0 bottom-0 z-40 h-3 cursor-s-resize touch-none outline-none select-none focus-visible:ring-2 focus-visible:ring-cyan-500"
+    onpointerdown={heightDrag.handlePointerDown}
+    onpointermove={heightDrag.handlePointerMove}
+    onpointerup={heightDrag.handlePointerUp}
+    onpointercancel={heightDrag.handlePointerCancel}
+    onlostpointercapture={heightDrag.handleLostPointerCapture}
+    onkeydown={event => {
+      captureBounds()
+      heightDrag.handleKeydown(event)
+    }}>
+  </div>
+  <div
+    role="separator"
+    aria-orientation="vertical"
+    aria-label={bothLabel}
+    aria-valuenow={width}
+    aria-valuemin={minWidth}
+    aria-valuemax={maxWidthValue}
+    aria-valuetext={valueText}
+    tabindex="0"
+    class="absolute right-0 bottom-0 z-40 h-4 w-4 cursor-nwse-resize touch-none outline-none select-none focus-visible:ring-2 focus-visible:ring-cyan-500"
+    onpointerdown={bothDrag.handlePointerDown}
+    onpointermove={bothDrag.handlePointerMove}
+    onpointerup={bothDrag.handlePointerUp}
+    onpointercancel={bothDrag.handlePointerCancel}
+    onlostpointercapture={bothDrag.handleLostPointerCapture}
+    onkeydown={event => {
+      captureBounds()
+      bothDrag.handleKeydown(event)
+    }}>
+  </div>
 </div>

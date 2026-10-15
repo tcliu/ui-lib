@@ -1,9 +1,8 @@
 <script lang="ts">
-  import type { Snippet } from 'svelte'
+  import type { ComponentProps, Snippet } from 'svelte'
   import Tooltip from './Tooltip.svelte'
-  import { tooltip as tooltipAction } from '$lib/actions/tooltip.svelte'
   import type { SizeInput } from '$lib/size-scale'
-  import { dimensionMetrics, dimensionWeight, sizeVarStyle } from './size-metrics'
+  import { dimensionMetrics, sizeVarStyle } from './size-metrics'
 
   interface Props {
     variant?: 'primary' | 'secondary' | 'danger' | 'outline' | 'ghost'
@@ -24,13 +23,9 @@
     focusRing?: boolean
     ariaLabel?: string
     ariaExpanded?: boolean
-    dataTip?: string
     tooltip?: string
-    tooltipAlign?: 'center' | 'left' | 'right'
-    badge?: string | number
+    tooltipAlign?: ComponentProps<typeof Tooltip>['align']
     icon?: Snippet
-    /** Override the icon box class (defaults to the size's icon box). */
-    iconClass?: string
     children?: Snippet
     buttonEl?: HTMLButtonElement | null
   }
@@ -50,12 +45,9 @@
     ariaLabel,
     ariaPressed,
     ariaExpanded,
-    dataTip,
     tooltip,
     tooltipAlign = 'center',
-    badge,
     icon,
-    iconClass,
     children,
     buttonEl = $bindable<HTMLButtonElement | null>(null),
   }: Props = $props()
@@ -87,31 +79,16 @@
     rose: 'border border-rose-500/40 bg-rose-500/10 text-rose-200 hover:border-rose-400 hover:text-rose-100 focus:border-rose-400 focus:text-rose-100 focus-visible:border-transparent',
   }
 
-  const badgeClasses: Record<string, string> = {
-    cyan: 'bg-cyan-500',
-    emerald: 'bg-emerald-500',
-    amber: 'bg-amber-500',
-    violet: 'bg-violet-500',
-    rose: 'bg-rose-500',
-  }
-
   // Every metric is a fixed ratio of the size dimension, so each keeps a
   // constant metric:dimension ratio across the range; the icon is the dimension
-  // itself (ratio 1). Font weight is an emphasis tier, not a length.
-  const BUTTON_RATIOS = { font: 0.65, line: 0.93, radius: 0.4, padX: 0.8, padY: 0.5, icon: 1, iconPad: 0.5 }
+  // itself (ratio 1). Font weight is an emphasis tier, not a length. The ratios
+  // reproduce a compact 13px toolbar button at the default `md` dimension.
+  const BUTTON_RATIOS = { font: 0.8125, line: 1.1607, radius: 0.375, padX: 0.75, padY: 0.5, icon: 1, iconPad: 0.375 }
 
-  const metrics = $derived({ ...dimensionMetrics(size, BUTTON_RATIOS), weight: dimensionWeight(size) })
-  const boxStyle = $derived(sizeVarStyle('btn', metrics, ['weight']))
+  const metrics = $derived({ ...dimensionMetrics(size, BUTTON_RATIOS) })
+  const boxStyle = $derived(sizeVarStyle('btn', metrics))
 
   const disabledState = $derived(disabled || pending)
-
-  // The `data-tip` engine rides the element that receives pointer events: the
-  // button normally, or the wrapper span when the button is disabled (a
-  // disabled button fires no mouse events). Exactly one element carries the tip.
-  const tipOwnedByButton = $derived(!(disabledState && dataTip))
-
-  // Count pill overhanging the button's top-right corner; omit the prop to hide it.
-  const hasBadge = $derived(badge !== undefined && badge !== null && badge !== '')
 
   const isIconOnly = $derived(!!icon && !children)
 
@@ -132,27 +109,32 @@
     // Shape carries the layout, the interpolated metrics, and the hit-area
     // inset (a constant per shape, not per size). Ghost drops padding only.
     const shape = isIconOnly
-      ? `${BOX_BASE} rounded-[var(--btn-radius)] before:absolute before:-inset-2 before:content-['']`
-      : `${BOX_BASE} text-[length:var(--btn-font)] leading-[var(--btn-line)] [font-weight:var(--btn-weight)] rounded-[var(--btn-radius)] before:absolute before:-inset-1.5 before:content-['']`
+      ? `${BOX_BASE} rounded-[var(--btn-radius)] max-[27.999rem]:min-h-11 max-[27.999rem]:min-w-11 before:absolute before:-inset-2 before:content-['']`
+      : `${BOX_BASE} text-[length:var(--btn-font)] leading-[var(--btn-line)] rounded-[var(--btn-radius)] before:absolute before:-inset-1.5 before:content-['']`
     const pad =
       variant === 'ghost' ? '' : isIconOnly ? 'p-[var(--btn-icon-pad)]' : 'py-[var(--btn-pad-y)] px-[var(--btn-pad-x)]'
     const common = `${shape} ${pad}`.trim()
+    // Primary carries semibold emphasis, so dialog confirms read bold.
     if (variant === 'primary') {
-      return `${common} ${primaryClasses[accent]} ${ringClass}`
+      return `${common} font-semibold ${primaryClasses[accent]} ${ringClass}`
     }
     if (variant === 'danger') {
       return `${common} bg-rose-500 text-onaccent hover:bg-rose-400 focus:bg-rose-400 ${ringClass}`
     }
+    // Outline carries the same semibold emphasis as primary, so dialog
+    // Cancel/Reset buttons read bold like their confirms.
     if (variant === 'outline') {
-      return `${common} ${outlineClasses[accent]} ${ringClass}`
+      return `${common} font-semibold ${outlineClasses[accent]} ${ringClass}`
     }
     if (variant === 'ghost') {
       return `${common} text-slate-400 hover:text-cyan-300 focus:text-cyan-300 ${ringClass}`
     }
-    return `${common} border border-slate-700 bg-slate-950 hover:border-slate-500 hover:text-slate-100 focus:border-slate-500 focus:text-slate-100 focus-visible:border-transparent ${ringClass}`
+    // Secondary keeps its original light-blue highlight: the border and label
+    // shift to cyan on hover/focus, matching the bordered dropdown surfaces.
+    return `${common} border border-slate-700 bg-slate-950 text-slate-200 hover:border-cyan-500 hover:text-cyan-300 focus:border-cyan-500 focus:text-cyan-300 focus-visible:border-transparent ${ringClass}`
   })
 
-  const iconBoxClass = $derived(iconClass ?? 'h-[var(--btn-icon)] w-[var(--btn-icon)]')
+  const iconBoxClass = 'h-[var(--btn-icon)] w-[var(--btn-icon)]'
 
   function handlePreventFocusSteal(event: PointerEvent) {
     event.preventDefault()
@@ -173,28 +155,22 @@
 {/snippet}
 
 {#snippet buttonElement()}
-  <!-- Two tooltip systems, applied independently: `dataTip` renders the
-      `data-tip` custom-tooltip attribute, `tooltip` wraps the button with the
-      positioned Tooltip component. Existing callers use one or the other. -->
+  <!-- `tooltip` wraps the button with the positioned Tooltip component. The
+    wrapper span owns the trigger, so the tip also works when the button is
+    disabled (a disabled button fires no mouse events). -->
   <button
     bind:this={buttonEl}
     {type}
     aria-label={ariaLabel}
     aria-pressed={ariaPressed}
     aria-expanded={ariaExpanded}
-    use:tooltipAction data-tip={tipOwnedByButton ? dataTip : undefined}
     onclick={onClick}
     onkeydown={onKeyDown}
     onpointerdown={preventFocusSteal ? handlePreventFocusSteal : undefined}
     disabled={disabledState}
     style={boxStyle}
-    class={`${baseClass} ${hasBadge ? 'relative' : ''} ${className}`}>
+    class={`${baseClass} ${className}`}>
     {@render buttonInner()}
-    {#if hasBadge}
-      <span
-        class={`absolute -top-2 -right-2 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs font-semibold text-onaccent ${badgeClasses[accent]}`}
-        >{badge}</span>
-    {/if}
   </button>
 {/snippet}
 
@@ -202,12 +178,6 @@
   <span bind:this={triggerEl} class="group relative inline-flex">
     {@render buttonElement()}
     <Tooltip align={tooltipAlign} trigger={triggerEl}>{tooltip}</Tooltip>
-  </span>
-{:else if disabledState && dataTip}
-  <!-- Disabled buttons fire no mouse events, so the tip rides on a
-    non-disabled wrapper instead; the button's own `data-tip` is gated off. -->
-  <span class="inline-flex" use:tooltipAction data-tip={dataTip}>
-    {@render buttonElement()}
   </span>
 {:else}
   {@render buttonElement()}

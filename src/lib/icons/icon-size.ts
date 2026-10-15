@@ -5,7 +5,7 @@
 // `$lib/size-scale` alongside every other sized component.
 import { SIZE_PX, type SizeInput } from '$lib/size-scale'
 
-export type IconSize = 'xs' | 'sm' | 'md' | 'lg'
+export type IconSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 
 export type IconSizeInput = SizeInput
 

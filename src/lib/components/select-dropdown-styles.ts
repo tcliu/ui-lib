@@ -1,14 +1,6 @@
-import { resolveSizeStep, type SizeInput } from '$lib/size-scale'
-
 // Numeric sizes are positions on the shared scale (`$lib/size-scale`): names
-// are aliases for its steps and any size interpolates between them, so nothing
-// below is keyed on a size name.
-export type SelectSize = SizeInput
-
-// Nearest named step for wrappers that keep stepped chrome while forwarding the
-// raw size to an inner interpolating component (e.g. Pagination's page-size
-// dropdown). Canonical implementation lives in `$lib/size-scale`.
-export const resolveSelectStep = resolveSizeStep
+// are aliases for its steps and every metric below interpolates from the
+// dimension, so nothing below is keyed on a size name.
 
 // Every metric is a fixed ratio of the size dimension (the icon is the
 // dimension itself), so each keeps a constant metric:dimension ratio across the
@@ -16,17 +8,29 @@ export const resolveSelectStep = resolveSizeStep
 // the trigger.
 export const SELECT_RATIOS = {
   font: 0.8125,
+  line: 1.1875,
   padX: 0.75,
-  padY: 0.5,
+  padY: 0.4375,
   minW: 7,
   gap: 0.375,
   icon: 1,
+  // Negative right-margin pulling the chevron into the trigger's right padding,
+  // as a ratio of the size dimension so the inset scales with the control
+  // instead of a fixed 6px that is off-scale at the small and large steps.
+  chevronInset: 0.375,
 }
 
 // The var-driven box metrics shared by the trigger boxes, the option rows, and
 // the empty row; the element's inline style carries the values.
 export const SELECT_BOX_UTILITIES =
-  'min-w-[var(--sel-min-w)] text-[length:var(--sel-font)] py-[var(--sel-pad-y)] px-[var(--sel-pad-x)]'
+  'min-w-[var(--sel-min-w)] text-[length:var(--sel-font)] leading-[var(--sel-line)] py-[var(--sel-pad-y)] px-[var(--sel-pad-x)]'
+
+// The trigger box shares the box metrics but carries an asymmetric right
+// padding: the chevron sits inside the right gutter, so that gutter is reduced
+// by the chevron inset (an intentional control inset, per the tailwind
+// reference) instead of pulling the chevron out with a negative margin.
+export const SELECT_TRIGGER_UTILITIES =
+  'min-w-[var(--sel-min-w)] text-[length:var(--sel-font)] leading-[var(--sel-line)] py-[var(--sel-pad-y)] pl-[var(--sel-pad-x)] pr-[calc(var(--sel-pad-x)-var(--sel-chevron-inset))]'
 
 // Default floating panel chrome; a `panelClass` override replaces it. The
 // per-size min-width lives on the trigger and option rows (see
