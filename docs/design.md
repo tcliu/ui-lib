@@ -6,44 +6,51 @@ organized, see `ARCHITECTURE.md`; for behavioral contracts and API specs, see
 
 ## Overview
 
-UI Library is a responsive web app built with Svelte 5, SvelteKit, and
-Tailwind CSS v4. It supports multiple themes.
+UI Library is a component showcase: a responsive Svelte 5 / SvelteKit /
+Tailwind CSS v4 app cataloguing the shared primitives in
+`src/lib/components/` — one route per component
+(`src/routes/components/<slug>/+page.svelte`, indexed by
+`SHOWCASE_COMPONENTS` in `src/lib/showcase-components.ts`) with a live
+Show-code playground on every page. It supports multiple themes.
 
 ## Layout
 
 ### Top bar
 
 The app shell's top bar has:
-- **Title** on the left (project name, semibold, tracking-tight)
+- **Component-picker toggle** (menu icon button) plus the localized
+  showcase **title** on the left
 - **Theme** and **language** icon-button menus on the right
-- Responsive layout (`flex`, `justify-between`, `gap-4`)
-- Border bottom separator
+- Wrapping header row (`flex-wrap`); the shell itself is a non-shrinking
+  `h-full flex-col overflow-hidden` column inside an app-supplied `h-dvh` box
 
 ### Main content
 
-The top bar is non-shrinking chrome; the content area fills the remaining
-viewport height (`flex-1`, `min-h-0`). The showcase is a two-pane splitter
-view:
+The content area fills the remaining viewport height (`flex-1`, `min-h-0`).
+The showcase is an `AppShell` two-pane view:
 
 - **Left pane**: a search box (case-insensitive name filter) above the list of
-  components; selecting one routes to its page and marks it active.
+  components; selecting one routes to its page and marks it active
+  (`aria-current="page"`).
 - **Right pane**: the selected component's showcase page, which scrolls.
 - **Component page**: the page title is followed by a **Related** row of tag
-  chips linking to components that share a browsing group (for example, the
-  dropdown selectors link to one another).
-- **Converted pages** (`select-dropdown`, `chip-dropdown`, `menu`, `column-chooser`, `date-range-picker`,
-  `tag-input`): unlike the
-  standard demo-plus-settings page, their demo renders inside a resizable frame,
-  the Show-code toggle sits beside the page title, and their props table adds an
-  editable **Value** column that shows and sets each prop's current value
-  (`options` edits as JSON through an edit dialog). Single-prop editing lives in
-  that column, so their config panel keeps only Reset plus editors for demo data
-  no single prop covers.
+  chips linking to components that share a browsing group (declared once in
+  `SHOWCASE_COMPONENT_GROUPS`; relatedness is symmetric by construction).
+- **Every page is converted**: the shell hosts the Show-code toggle and Reset
+  beside the page title, and the props table appends an editable
+  **Value** column that shows and sets each prop's current value (`options`
+  edits as JSON through an edit dialog; a snippet edits as text or, when its
+  own markup is the demo content, through a markup dialog, and a snippet row
+  also carries an eye toggle that applies or unapplies it). Single-prop
+  editing lives in that column, so the config panel keeps only Reset plus
+  editors for demo data no single prop covers. An overlay or placement demo
+  renders inside a resizable stage so its placement can be inspected as the
+  container narrows.
 
-On narrow viewports the list becomes an overlay drawer above the dimmed
-content (below the 768px shell-container breakpoint in `auto` mode) instead
-of stacking; a pinned `docked` pane stays an in-flow row at every width and
-the content scrolls beside it.
+In `auto` mode the picker floats as an overlay above the dimmed content when
+the shell container narrows below the 768px container breakpoint, and docks
+beside the content at/above it; `docked`/`floating` pin one behavior at every
+width.
 
 ## Component interaction
 
@@ -59,25 +66,38 @@ is left plain. Confirming an option writes the confirmed label back into the
 input, and reopening the panel filters by that label, so the typed query does not
 reappear after a selection.
 
+An autocomplete field narrows its suggestion list the same way but keeps the
+typed text as its value: free text is accepted, picking a suggestion writes that
+suggestion's label into the field, and a query that matches nothing hides the
+panel instead of falling back to the full list. `Escape` dismisses the
+suggestions while keeping focus and the typed text.
+
 ## Theming
 
-The app supports multiple themes:
-- **Dark** (default): `dark`, `ember`, `nebula`, `forest`, `midnight`
+The app supports ten themes; `dark` is the default palette (no `data-theme`
+attribute, applied pre-paint by the inline script in `src/app.html`), and the
+other nine opt in through `data-theme`:
+- **Dark**: `dark` (default), `ember`, `nebula`, `forest`, `midnight`
 - **Light**: `light`, `sepia`, `sky`, `mint`, `lavender`
 
-Theme selection is persisted in localStorage under `ui-lib:web-settings`.
+Theme selection (plus picker visibility) is persisted as fields of one JSON
+object in localStorage under `ui-lib:web-settings`.
 
 ## Accessibility
 
-- All focusable controls are keyboard reachable
-- Explicit focus styles
+- All focusable controls are keyboard reachable, with visible focus rings
 - Accessible names for icon-only buttons
 - Non-interactive scroll wrappers are out of the tab order (`tabindex="-1"`)
-- Reduced motion support
+- Plain-text hints ride the shared `Tooltip` component (`tooltip` prop);
+  overlay dialogs portal to `document.body`
+- Reduced motion support (`motion-reduce:transition-none`)
 
 ## Responsive design
 
-- Mobile-first approach
-- Container-query-based breakpoints for components
-- Viewport-aware overlays and drawers
-- Touch-friendly target sizes
+- The shell fills its container (`h-full`) inside an app-supplied `h-dvh` box,
+  with one flexible content region; layout decisions stay in CSS so the first
+  paint is correct on mobile and desktop
+- `AppShell` pane presentation derives from one container-measured `floating`
+  boolean (768px container breakpoint), never viewport breakpoint classes
+- Overlays clamp to the viewport and flip when crowded; touch targets stay
+  tappable on coarse pointers

@@ -47,7 +47,7 @@ A target is offered only when its required config is present: Vercel needs a
 link, --project, or VERCEL_PROJECT (or an interactive run that can link);
 Cloudflare needs CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, and
 CLOUDFLARE_PROJECT, plus any requiredEnv keys declared in
-scripts/deploy.config.mjs. --target all covers only the available targets.
+deploy.config.json. --target all covers only the available targets.
 
 Options:
   --profile dev|prod   Backend profile to deploy (also read from $PROFILE).
@@ -238,8 +238,9 @@ async function deployWithTarget(options, { availableEntries, availableValues, co
   })
 }
 
-// Load the per-project deploy config (`deploy.config.mjs`); `{}` when absent so
-// every reader falls back to its default.
+// Load the shared deploy-config loader (`deploy.config.mjs`), which reads the
+// project-owned `deploy.config.json`; `{}` when the loader is absent so every
+// reader falls back to its default.
 async function loadDeployConfig() {
   if (!existsSync(join(ROOT_DIR, 'scripts', 'deploy.config.mjs'))) {
     return {}

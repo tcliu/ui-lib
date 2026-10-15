@@ -28,7 +28,7 @@
   "scripts": {
     "dev": "vite dev --host",
     "build": "svelte-kit sync && vite build",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --tsgo && node scripts/check-shared-parity.mjs",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --tsgo && node scripts/check-shared-parity.mjs --strict",
     "test": "vitest run --passWithNoTests",
     "test:coverage": "vitest run --coverage --passWithNoTests",
     "audit": "npm audit",

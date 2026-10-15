@@ -1,10 +1,14 @@
 # UI Library
 
-A responsive UI Library web app.
+A responsive component-showcase web app cataloguing the shared Svelte 5
+primitives in `src/lib/components/` — one showcase route per component with a
+live Show-code playground. For what the user sees see `docs/design.md`, for
+contracts see `docs/spec.md`, for code organization see `ARCHITECTURE.md`.
 
 ## Setup
 
 - Build the browser app at the project root; the web UI stack and component patterns stay in this repo.
+- `npm run check`, `npm run build`, `npm test` are the verification gates (see `AGENTS.md`).
 
 ## Environment variables
 
@@ -17,7 +21,9 @@ the app ships sensible defaults in code.
 ## Deployment (Vercel)
 
 The app ships with `@sveltejs/adapter-vercel` (Node.js runtime) and is ready to
-deploy to Vercel.
+deploy to Vercel. Deploy plugins and targets are selected by the committed
+`deploy.config.json` at the repo root, so the shared deploy modules stay
+app-agnostic; edit that file to change which plugins/targets run.
 
 1. Install the Vercel CLI and log in:
 
@@ -71,3 +77,18 @@ deploy to Vercel.
     removed so only the configured domain remains.
 
 `vercel.json` sets the SvelteKit framework with `npm run build`.
+
+## Deployment (Cloudflare Pages)
+
+Second target on the existing Neon backend: `CF_PAGES=1` selects
+`@sveltejs/adapter-cloudflare` (see `svelte.config.js`).
+
+```bash
+npm run deploy -- --target cloudflare
+```
+
+Cloudflare-only values live in the git-ignored `.env.cloudflare`
+(`CLOUDFLARE_PROJECT`, `CLOUDFLARE_ACCOUNT_ID`), overlaid on `.env.prod`;
+sync with `npm run env:sync:cloudflare`. The live URL is the Pages
+production hostname derived from `CLOUDFLARE_PROJECT` — no `APP_BASE_URL`
+exists on this target. See `.env.example` for all knobs.

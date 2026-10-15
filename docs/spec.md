@@ -9,19 +9,25 @@ organized, see `ARCHITECTURE.md`; for how to write code in this project, see
 
 - **Svelte 5** (runes) + **SvelteKit** (routing, server endpoints)
 - **Tailwind CSS v4** (utility-first styling, theme via CSS variable overrides)
-- **Vercel** deployment (`@sveltejs/adapter-vercel`, Node.js runtime)
+- **Vercel** deployment by default (`@sveltejs/adapter-vercel`, Node.js runtime),
+  or **Cloudflare Pages** (`@sveltejs/adapter-cloudflare`, selected by `CF_PAGES=1`
+  / `npm run deploy -- --target cloudflare` on the existing Neon backend)
 
 ## Environment variables
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `APP_BASE_URL` | No | — | Public URL the app is reachable at |
+| `APP_BASE_URL` | No (Vercel only) | — | Public URL the app is reachable at; the deploy points the Vercel production domain at its hostname |
+| `VERCEL_PROJECT` | No | — | Vercel project slug used to auto-link an unlinked checkout |
+| `CLOUDFLARE_PROJECT` | Cloudflare only | — | Pages project name; the live URL is the Pages production hostname derived from it |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare only | — | Cloudflare account ID for the Pages/API steps |
 | `DEV_TAG` | No | — | Worktree badge label (set in `.env.local` by `scripts/create-worktree.mjs`) |
 | `PROFILE` | No | `dev` | Explicit `dev`/`prod` runtime profile; `NODE_ENV=production` also selects `prod` |
-| `SQLITE_PATH` | No | `.data/ui-lib-dev.sqlite` | Dev database file (SQLite) |
+| `SQLITE_PATH` | No | `.data/dev.sqlite` | Dev database file (SQLite) |
 | `DATABASE_URL` | Prod only | — | Neon connection string; required when `PROFILE=prod` |
 | `SCHEMA_NAME` | No | `public` | Postgres schema to create tables in |
 | `SCHEMA_VERIFY_TABLES` | No | `app_meta` | Comma-separated tables `npm run schema:apply` must find after applying |
+| `APP_ACTIVE` | No | `true` | `false` opts this instance out of catalog scans (`active` field of `GET /api/info`) |
 
 ## Schema
 
@@ -42,7 +48,7 @@ Public, no auth. Returns this project's catalog self-card: a flat card
 (`{ id, name, icon?, description?, branch?, repo?, status, url?, profile?, tags, active? }`)
 that a catalog scanner reads to discover and identify the project. `id` and
 `name` are required; `branch` is the runtime ref (worktree `DEV_TAG` in dev,
-commit ref on Vercel); `profile` is the app's runtime profile (the `PROFILE`
+commit ref in production); `profile` is the app's runtime profile (the `PROFILE`
 env var, `dev`/`prod`) and is absent in an app with no runtime profile; absent
 fields normalize to `null`, a missing/unknown `status` defaults to `Active`,
 and `active` defaults to `true` (`APP_ACTIVE=false` opts the instance out of
@@ -53,14 +59,14 @@ answer with an envelope carrying the card under `self` (`{ ..., self: {...} }`);
 consumers resolve `self` when present and the whole body otherwise. Keep that
 module's shape identical across projects so any scanner can parse any of them.
 
-### `POST /api/...`
+### Other API routes
 
-Request/response contracts go here.
+No POST routes exist. The only API route is `GET /api/info` above.
 
 ## Constraints
 
-- Theme palettes live only in `src/styles.css`
-- Component attributes stay camelCase
+- Theme palettes live only in `src/styles.css` (`[data-theme]` overrides of the
+  Tailwind palette variables; `dark` is the default with no attribute)
 - Z-index ladder: sticky `z-10`, drawer `z-20`, overlays `z-40`, dev tag `z-50`
 - AppShell presentation follows one ruler: the shell container width against
   the 768px breakpoint (`auto` docks at/above, overlays below;
@@ -70,5 +76,7 @@ Request/response contracts go here.
 
 ## Error handling
 
-- Surface server failures as stable wire codes mapped to localized strings
-- Never surface raw English literals or technical detail as user-facing errors
+- Surface client-side failures through the shared toast (`svelte-sonner`); the
+  app has no server routes, so there is no server-error wire contract.
+- Log unexpected errors with enough context to reproduce; never surface raw
+  technical detail as user-facing text.

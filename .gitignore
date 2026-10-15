@@ -12,6 +12,7 @@ coverage/
 data/
 .opencode/
 .commandcode/
+.playwright-cli/
 .vercel/
 .env
 .env.*

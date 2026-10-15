@@ -13,7 +13,6 @@
   import { createAppI18n, setI18nContext } from '$lib/i18n.svelte'
   import { SHOWCASE_COMPONENTS } from '$lib/showcase-components'
   import { getPickerOpen, setPickerOpen } from '$lib/showcase-picker.svelte'
-  import { setTipBox, tipState } from '$lib/actions/tooltip.svelte'
   import type { LayoutData } from './$types'
 
   // One i18n store per app instance; children read it through the context.
@@ -27,11 +26,15 @@
   let query = $state('')
   let paneSize = $state(APP_SHELL_DEFAULT_WIDTH)
 
-  // Register the shared tooltip box (the host half of `use:tooltip`).
-  let tipBoxEl = $state<HTMLElement | null>(null)
-  $effect(() => {
-    setTipBox(tipBoxEl)
-    return () => setTipBox(null)
+  // The left pane is caller-controlled: it owns `open`/`size` and observes every
+  // change through the callbacks, so the shell tracks them and the picker stays
+  // in sync with the route chrome.
+  const layoutLeft = $derived({
+    open: pickerOpen,
+    size: paneSize,
+    resizeLabel: i18n.t('splitter.resize'),
+    onOpenChange: setPickerOpen,
+    onSizeChange: (value: number) => (paneSize = value),
   })
 
   const currentPath = $derived(page.url.pathname)
@@ -42,74 +45,59 @@
   })
 </script>
 
-<AppShell
-  open={pickerOpen}
-  {paneSize}
-  className="flex h-dvh flex-col overflow-hidden bg-slate-950 text-slate-100"
-  headerClassName="flex-wrap"
-  resizeLabel={i18n.t('splitter.resize')}
-  onOpenChange={setPickerOpen}
-  onPaneChange={value => (paneSize = value)}>
-  {#snippet header(api: AppShellHeaderApi)}
-    <div class="flex flex-none items-center gap-2">
-      <Button
-        variant="secondary"
-        size="sm"
-        className="-ml-1"
-        ariaLabel={i18n.t('showcase.toggleComponents')}
-        ariaExpanded={api.open}
-        tooltip={i18n.t('showcase.toggleComponents')}
-        tooltipAlign="left"
-        preventFocusSteal
-        onClick={api.toggleLeft}>
-        {#snippet icon()}
-          <MenuIcon size="sm" />
-        {/snippet}
-      </Button>
-      <h1 class="flex-none text-base font-semibold tracking-tight whitespace-nowrap text-slate-200 sm:text-lg">
-        {i18n.t('showcase.title')}
-      </h1>
-    </div>
-    <div class="flex flex-none items-center gap-2">
-      <ThemeMenu align="right" />
-      <LanguageMenu align="right" />
-    </div>
-  {/snippet}
-  {#snippet leftPane()}
-    <SearchInput bind:value={query} ariaLabel={i18n.t('showcase.searchComponents')} wrapperClass="px-2 pt-3 sm:px-3" />
-    <nav
-      class="min-h-0 flex-1 overflow-y-auto px-2 pb-3 sm:px-3"
-      tabindex="-1"
-      aria-label={i18n.t('showcase.components')}>
-      <ul class="flex flex-col gap-1">
-        {#each filteredComponents as component (component.slug)}
-          {@const active = currentPath === `/components/${component.slug}`}
-          <li>
-            <a
-              href={`/components/${component.slug}`}
-              aria-current={active ? 'page' : undefined}
-              class={`block rounded-md px-3 py-2 text-sm transition outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40 motion-reduce:transition-none ${
-                active ? 'bg-cyan-500/15 text-cyan-200' : 'text-slate-300 hover:bg-slate-800 hover:text-cyan-200'
-              }`}>
-              {component.name}
-            </a>
-          </li>
-        {/each}
-      </ul>
-    </nav>
-  {/snippet}
-  {@render children()}
-</AppShell>
-
-<div
-  id="tip"
-  role="tooltip"
-  bind:this={tipBoxEl}
-  class="fixed z-tooltip pointer-events-none rounded-lg border border-slate-700 bg-slate-800 px-2 py-1.5 text-xs leading-normal text-slate-200 whitespace-pre-line shadow-lg"
-  style:left="{tipState.left}px"
-  style:top="{tipState.top}px"
-  style:max-width="{tipState.maxWidth}px"
-  hidden={!tipState.visible}>{tipState.text}</div>
+<div class="h-dvh">
+  <AppShell left={layoutLeft}>
+    {#snippet header(api: AppShellHeaderApi)}
+      <div class="flex flex-none items-center gap-2">
+        <Button
+          variant="secondary"
+          ariaLabel={i18n.t('showcase.toggleComponents')}
+          ariaExpanded={api.open}
+          tooltip={i18n.t('showcase.toggleComponents')}
+          tooltipAlign="left"
+          preventFocusSteal
+          onClick={api.toggleLeft}>
+          {#snippet icon()}
+            <MenuIcon />
+          {/snippet}
+        </Button>
+        <h1 class="flex-none text-base font-semibold tracking-tight whitespace-nowrap text-slate-200 sm:text-lg">
+          {i18n.t('showcase.title')}
+        </h1>
+      </div>
+      <div class="flex flex-none items-center gap-2">
+        <ThemeMenu align="right" />
+        <LanguageMenu align="right" />
+      </div>
+    {/snippet}
+    {#snippet leftPane()}
+      <div class="px-2 pt-3 sm:px-3">
+        <SearchInput bind:value={query} ariaLabel={i18n.t('showcase.searchComponents')} clearable />
+      </div>
+      <nav
+        class="min-h-0 flex-1 overflow-y-auto px-2 pb-3 sm:px-3"
+        tabindex="-1"
+        aria-label={i18n.t('showcase.components')}>
+        <ul class="flex flex-col gap-1">
+          {#each filteredComponents as component (component.slug)}
+            {@const active = currentPath === `/components/${component.slug}`}
+            <li>
+              <a
+                href={`/components/${component.slug}`}
+                aria-current={active ? 'page' : undefined}
+                class={`block rounded-md px-3 py-2 text-sm transition outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40 motion-reduce:transition-none ${
+                  active ? 'bg-cyan-500/15 text-cyan-200' : 'text-slate-300 hover:bg-slate-800 hover:text-cyan-200'
+                }`}>
+                {component.name}
+              </a>
+            </li>
+          {/each}
+        </ul>
+      </nav>
+    {/snippet}
+    {@render children()}
+  </AppShell>
+</div>
 
 {#if data?.devTag}
   <div

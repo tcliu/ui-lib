@@ -121,6 +121,7 @@ const verifyTables = getVerifyTables()
 
 if (profile === 'dev') {
   const path = getSqlitePath()
+  const schemaName = getSchemaName()
   logEvent({ action: 'schema_apply_start', details: { profile, source: 'sql/schema.sql', sqlite_path: path } })
   try {
     const { default: Database } = await import('better-sqlite3')
@@ -131,10 +132,16 @@ if (profile === 'dev') {
 
     const database = new Database(path)
     try {
+      // A schema-qualified sql/schema.sql needs its schema present in SQLite:
+      // attach the target file under SCHEMA_NAME so `"schema".table` resolves.
+      if (schemaName) {
+        const escaped = path.replace(/'/g, "''")
+        database.exec(`attach database '${escaped}' as ${quoteIdentifier(schemaName)}`)
+      }
       database.exec(toSqliteSql(sql))
       const tables = database
         .prepare(
-          `select name from sqlite_master where type = 'table' and name in (${verifyTables.map(() => '?').join(', ')}) order by name`,
+          `select name from ${schemaName ? `${quoteIdentifier(schemaName)}.` : ''}sqlite_master where type = 'table' and name in (${verifyTables.map(() => '?').join(', ')}) order by name`,
         )
         .all(...verifyTables)
         .map(row => row.name)
@@ -142,6 +149,14 @@ if (profile === 'dev') {
         action: 'schema_apply_end',
         details: { profile, sqlite_path: path, elapsed_ms: Date.now() - startedAt, tables },
       })
+      const missing = verifyTables.filter(table => !tables.includes(table))
+      if (missing.length > 0) {
+        logEvent({
+          action: 'schema_apply_incomplete',
+          details: { profile, sqlite_path: path, missing, level: 'ERROR' },
+        })
+        process.exitCode = 1
+      }
     } finally {
       database.close()
     }
@@ -206,6 +221,14 @@ if (profile === 'dev') {
           current_schema: location.current_schema,
         },
       })
+      const missing = verifyTables.filter(table => !tables.includes(table))
+      if (missing.length > 0) {
+        logEvent({
+          action: 'schema_apply_incomplete',
+          details: { profile, db_host, db_name, schema, missing, level: 'ERROR' },
+        })
+        process.exitCode = 1
+      }
     } finally {
       client.release()
     }

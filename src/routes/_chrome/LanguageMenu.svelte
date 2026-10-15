@@ -41,7 +41,7 @@
   closeLabel={i18n.t('common.close')}
   {itemClass}>
   {#snippet icon()}
-    <GlobeIcon size="sm" />
+    <GlobeIcon />
   {/snippet}
   {#snippet item(option: LocaleOption, _state: MenuItemState)}
     <span>{option.label}</span>

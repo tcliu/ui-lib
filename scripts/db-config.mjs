@@ -35,7 +35,7 @@ export function resolveScriptProfile(env = process.env) {
 
 export function getSqlitePath(env = process.env) {
   const loadedEnv = loadScriptEnv(env)
-  return (loadedEnv.SQLITE_PATH || '.data/ui-lib-dev.sqlite').trim()
+  return (loadedEnv.SQLITE_PATH || '.data/dev.sqlite').trim()
 }
 export function getSchemaName(env = process.env) {
   const loadedEnv = loadScriptEnv(env)

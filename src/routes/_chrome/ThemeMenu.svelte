@@ -49,7 +49,7 @@
   closeLabel={i18n.t('common.close')}
   {itemClass}>
   {#snippet icon()}
-    <PaletteIcon size="sm" />
+    <PaletteIcon />
   {/snippet}
   {#snippet item(option: ThemeOption, _state: MenuItemState)}
     <span>{option.label}</span>

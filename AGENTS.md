@@ -12,348 +12,130 @@ Project-specific development conventions for the UI Library web app.
 
 ## File editing
 
-- Edit with the smallest possible range: select only the lines that change and put their complete final content in the edit body; if an edit is rejected or the file changed since the last read, re-read the section and issue a new minimal edit rather than retrying.
-- An `edit` rejection saying the body "restates" adjacent lines means unchanged
-  context lines leaked into the body: shrink the range to exactly the lines
-  that change and resend; do not retry the same payload.
+- Edit the smallest possible range: only the changed lines, complete final content; after a rejection or external change, re-read and issue a new minimal edit.
+- An `edit` rejection about the body restating adjacent lines means unchanged context leaked in: shrink to the changed lines and resend, not retry.
 
 ## Read first
 
 - Read the shared references applicable to the files being edited before
   editing, keeping pre-edit investigation within the read cap in `~/.agents/references/agent-progress.md`.
-- Before `read` on a path not seen in prior tool output or a directory
-  listing, run `glob` to confirm the path instead of guessing file names or
-  worktree paths.
-- If a `~/.agents/references/...` path does not exist, the config root is
-  unconfigured on this machine (fresh clone): ask the user for the config-root
-  path once and use it for the session instead of guessing.
+- Before changing a documented surface, read its managed doc (`ARCHITECTURE.md`, `docs/design.md`); the source wins, and the doc is fixed in the same change.
+- Before `read` on a path not seen in prior output or a listing, run `glob` to confirm it instead of guessing names or worktree paths.
+- If a `~/.agents/references/...` path is missing, the config root is unconfigured: ask the user for its path once and use it for the session.
 - When reviewing completed work, follow the `review` skill and report
   findings with severity, location, rule, and fix.
-- When a task is ambiguous about what to change or how to approach it, ask the
-  user to clarify or present up to three concrete options before editing, to
-  avoid unwanted changes.
+- When a task is ambiguous, ask the user to clarify or present up to three concrete options before editing, to avoid unwanted changes.
 
 ## Architecture
 
 - The project root hosts the browser app.
-- This project is the canonical source for the shared UI surface: the primitives
-  in `src/lib/components/`, the shared icons and actions, and the generic
-  `scripts/`. Sibling apps vendor them through the `unify` skill and adapt only
-  import paths and per-app storage keys. Fix a shared component here first, then
-  port it; never fork one in a consuming app without syncing the change back, or
-  `npm run check`'s parity gate will fail.
-- Shared components never traverse or manipulate the DOM: render `$state`,
-  reach an owned node through `bind:this` or a Svelte action, and read an event
-  target's own attributes in place. Follow the imperative-DOM-access ban in
-  `~/.agents/references/svelte.md`; only these isolated accessibility and
-  infrastructure helpers are exempt: `position-panel.svelte.ts` (portal
-  attach/detach and placement), `BaseDialog` + `use-app-shell-drawer.svelte.ts`
-  (focus trap and `document.activeElement` restore), `use-dropdown.svelte.ts`,
-  `click-outside.ts`, `use-focusout-close.ts`, `drag-close-down.ts`,
-  `Tooltip.svelte`, and `AppShell.svelte` (outside-click and popup focus
-  containment, Escape routing through their own element refs),
-  `use-grid-autoscroll.svelte.ts` (grid hit-testing through
-  `elementFromPoint`/`closest`/`dataset`), `grid-cell-refs.ts` (owned-node
-  registry: cells, editors, and selectors register their own nodes through
-  actions so grid focus and edit transitions never query the DOM),
-  `use-table-scroll-sync.svelte.ts`
-  (header padding measured from the body scrollbar), `tooltip.svelte.ts`
-  (action reads its own element's `dataset` + geometry), and `theme.svelte.ts` +
-  `i18n.svelte.ts` (root `data-theme`/`lang` attributes). Keep each in its own
-  focused module and never copy the pattern into feature code.
-- Plain-text hints use `data-tip` with the shared `use:tooltip` engine (route
-  layout hosts the `#tip` box via `setTipBox`); rich positioned content keeps
-  the `Tooltip` component. A `dataTip` on a disabled `Button` rides on a
-  non-disabled wrapper, since disabled triggers fire no mouse events.
-- `scripts/check-shared-parity.mjs` (run by `npm run check`) byte-compares the
-  shared directories (`src/lib/components/`, `src/lib/icons/`, `src/lib/actions/`,
-  `src/lib/data-table/`, `scripts/`) plus the listed top-level `src/lib/*.ts` and
-  `*.mjs` files against each registered sibling app. Keep app-private UI out of the
-  shared directories (this app's own chrome lives under `src/routes/_chrome/`);
-  a change to a shared file is not complete until the sibling copies are
-  re-ported or the divergence is added to that script's documented exception
-  list with a reason.
-- Tag editing stays one shared control: `TagInput` models `string[]` and colours
-  tags from a built-in per-tag palette by default (a deterministic hash over a
-  six-colour set), so tags read distinctly with zero config. Override the colours
-  with the `palette` prop (replaces the set), or per chip with the `chipClassFor`
-  hook (per tag) / `chipClass` (uniform), plus `chip`/`option` snippets, so an app
-  whose tags carry extra data (e.g. `{ name, color }`) maps that object model to
-  `string[]` at the call site instead of forking a second tag-input component. It
-  reports the typed draft through `onQueryChange` so a caller can supply
-  externally filtered (e.g. async) `availableTags`, renders its chips through the
-  shared `Chip`, and exports `focus()` for dialog autofocus.
-- The dropdown and menu surfaces (`SelectDropdown`, `ChipDropdown`, `TagInput`,
-  `Menu`) share one navigation core, `use-listbox.svelte.ts`: it owns the active
-  index, held-key moves (skipping disabled rows when a surface declares them),
-  type-ahead, focusout close, and the `useDropdown` dismissal lifecycle, while
-  each surface keeps its own open state, filtering, and value commit. The
-  aria-activedescendant surfaces render the shared `highlight.flags` over
-  never-focused rows; `Menu` instead focuses the active item. `SelectDropdown`
-  and `TagInput` render their option panel through the shared `ListboxPanel.svelte`
-  (positioning, option rows, the empty row, and the `option` snippet for row
-  content). Compose `useListbox` — and `ListboxPanel` where the panel shape fits —
-  for a new listbox surface instead of re-wiring those helpers by hand.
-- `SelectDropdown` derives its trigger label from the committed value, so callers
-  pass no `buttonLabel` unless they need an override; options take bare strings
-  or `{ value, label? }`, and a missing label displays as the value.
-- Spreadsheet editing stays one shared control: `DataGrid` models `string[][]`
-  and covers header/column-label, fixed-column, resize-persistence, and
-  read-only variants through props (`showHeaders`, `columnLabels`, `maxColumns`,
-  `editable`, `storageKey`), together with its `use-grid-*` hooks and grid
-  icons, so an app needing a CSV or key/value editor reuses it instead of
+- This project is the canonical source for the shared UI surface; fix a shared component here first, then port it, never fork without syncing back.
+- Reuse the existing shared control for a concern instead of building a parallel one; keep app-private UI out of the shared directories (inventory in `ARCHITECTURE.md`).
+- Shared components never traverse or manipulate the DOM; sanctioned exceptions and the permitted `svelte-ignore` suppressions are in `ARCHITECTURE.md`. Never suppress another `a11y_*` warning or `state_referenced_locally`.
+- Plain-text hints use the `tooltip` prop with the shared `Tooltip` component; a disabled `Button`'s tooltip rides its non-disabled wrapper (disabled triggers fire no events).
+- `npm run check` enforces shared parity; a change is complete only once siblings are re-ported or the divergence is a documented exception. Mechanism in `ARCHITECTURE.md`.
+- Keep shared scripts byte-identical: read per-app values from ungated app files, never hardcode an app name or path; project-owned data stays out of gated directories.
+- Tag editing stays one shared control (`TagInput`); map an app's richer tag
+  object to `string[]` at the call site instead of forking a second control.
+- The dropdown/menu surfaces share `use-listbox.svelte.ts` (and `ListboxPanel` where the panel shape fits); compose them for a new listbox surface, never re-wiring the helpers by hand.
+- Free-text suggestions stay one shared control (`AutoComplete`), filtering to
+  matches only and hiding the panel when nothing matches.
+- Give `DateRangePicker` its `theme` prop instead of forking it for a different
+  palette.
+- `SelectDropdown` derives its trigger label from the committed value; pass
+  `buttonLabel` only to override it.
+- Spreadsheet editing stays one shared control (`DataGrid`); reuse it instead of
   forking a grid.
-- Two-axis container resizing stays one shared control: `Resizable` takes a
-  `width` number plus `onResize(width, height)`, with an optional `height`
-  (omitted, the frame hugs its content and only the right-edge width handle
-  renders), bounds them through
-  `minWidth`/`minHeight`/`maxWidth`/`maxHeight`, and renders three invisible
-  handles (right, bottom, corner) that show only a resize cursor, so an app
-  needing a drag-resizable box reuses it instead of reimplementing pointer
-  capture and keyboard nudges. A maximum may be the string `'parent'`, which
-  bounds the frame to the parent's content box: the box is capped in CSS
-  (`max-w-full`/`max-h-full`, so a requested size can never overflow the
-  container) and the drag, key nudge, and Home/End clamps measure the parent at
-  interaction time. Use it to keep a frame inside a non-scrolling container so
-  no scrollbar can ever cover a handle.
-- `FormField` carries a `layout` prop: `stacked` (default) renders the label
-  above the control; `inline` renders the label in a 6rem column beside the
-  control at >=sm and stacks below sm, so a form row aligns its labels without
-  forking the wrapper. The inline track stays a literal arbitrary value
-  (`sm:grid-cols-[6rem_minmax(0,1fr)]`) rather than a theme token, because a
-  token would force every consuming app to define an app-private
-  `--grid-template-columns-*` entry for a shared component.
-- Resize handles are focusable `role="separator"` widgets carrying
-  `aria-valuenow`/`aria-valuemin`/`aria-valuemax`; the two
-  `svelte-ignore a11y_no_noninteractive_*` comments above a handle are the
-  documented false positive for Svelte misclassifying a focusable separator as
-  non-interactive, scoped to the handle subtree.
-- `DataGrid` implements the ARIA grid pattern — a `role="grid"` table whose
-  `role="columnheader"`/`role="rowheader"`/`role="gridcell"` cells carry
-  `tabindex="-1"` plus pointer and keyboard handlers, with the container
-  capturing the Ctrl+Z/Ctrl+Y history shortcuts; the `svelte-ignore
-  a11y_no_static_element_interactions` comments on those elements are the
-  documented false positive for Svelte misclassifying ARIA-defined grid roles as
-  static elements, scoped to the grid subtree. These two scoped exceptions are
-  the only sanctioned a11y suppressions: never suppress another `a11y_*` warning,
-  and never suppress `state_referenced_locally` (read the value through an
-  accessor or `untrack` instead).
-- Never combine `align` with `className` on `Buttons`: a custom `className`
-  replaces the default row and silently drops `align`; spell the row out
-  (`flex w-full … justify-end`) instead.
-- The `AppShell` aside carries no padding: left-pane content owns its own
-  spacing, so shell and pane padding never need compensating values.
-- `AppShell` pane presentation derives from one `floating` boolean measured on
-  the shell's own container (`ResizeObserver` at `APP_SHELL_DESKTOP_BREAKPOINT`),
-  never from viewport breakpoint classes; docked and floating are the only two
-  presentations, and direction, borders, splitters, backdrop, `inert`, Escape,
-  and the slide axis all follow it. The slide is armed only after the first
-  pointer/key interaction, so a pane that mounts as the page settles (the docked
-  pane once the container measures desktop) appears in place instead of sweeping
-  in on load; an explicit reduced-motion preference still zeroes the duration. A pane anchored on the far side of its
-  splitter (the right pane) passes `invert` so the handle follows the pointer
-  while widening the pane instead of running away from it. Docked wrappers keep
-  an explicit pane width
-  and the content row a `min-width` floor so a narrow container squeezes the pane
-  instead of clipping or overlapping it. Rail collapse docks while wide and
-  floats as a plain overlay when narrow; a nested shell visibility-hides its own
-  floating panes while an ancestor overlay is open. Mechanics in
-  `ARCHITECTURE.md`.
-- The shared primitives resolve labels as `$derived(prop ?? i18n.t('key'))` and
-  fall back to the locales in `src/lib/locales/` (nested `as const` trees with a
-  dotted-path `MessageKey`; every other locale is typed `LocaleMessages<typeof en>`
-  so a missing key fails the build). A consuming app's locale
-  dictionaries must define the shared keys (`common.*`, `number.*`, `dropdown.*`,
-  `pagination.*`, `tabs.label`, `search.placeholder`, `splitter.*`, `password.*`,
-  `chip.remove`, `tagInput.*`, `kebab.*`, `range.*`, `grid.*`, `resizable.*`, and
-  `appShell.*`).
+- Tabular display stays one shared control (`DataTable`), with `FieldTable` for
+  `FieldConfig[]` props tables; pagination is optional (omit it for no footer).
+- Tree/JSON-shaped display stays one shared control (`StructureTree`); reuse it
+  instead of forking a tree viewer.
+- Two-axis container resizing stays one shared control (`Resizable`); reuse it
+  instead of reimplementing pointer capture and keyboard nudges.
+- `FormField` carries a `layout` prop (`stacked` default, `inline` label column
+  at >=sm) so a form row aligns its labels without forking the wrapper.
+- Text-like inputs share one base chrome from `input-chrome.ts`; a new text-like
+  field uses that base instead of re-declaring it.
+- A clearable field extends the shared `ClearableProps` group, never re-declaring it or hand-rolling a cross; mechanism in `ARCHITECTURE.md` (Input family).
+- A `number` Value cell driving live interaction state (its setter ignores blank input) stays non-clearable.
+- A composite field uses `TextInput`'s `trailer` slot for content outside the
+  field area rather than re-declaring an input.
+- Resize handles are focusable `role="separator"` widgets carrying `aria-valuenow`/`-min` and `-max` when finite (max omitted for an unbounded edge); keep the two documented scoped `svelte-ignore` comments.
+- Keep the `DataGrid` ARIA grid pattern and its documented scoped
+  `svelte-ignore` comment; never add another `a11y_*` suppression.
+- Never combine `align` with `className` on `Buttons`: the custom class replaces the default row and drops `align`; spell the row out (`flex w-full … justify-end`).
+- The `AppShell` aside carries no padding; left-pane content owns its spacing.
+- `AppShell` pane presentation derives from one container-measured `floating`
+  boolean, never viewport breakpoint classes; docked and floating are the only
+  presentations. Mechanics are in `ARCHITECTURE.md`.
+- Labels resolve as `$derived(prop ?? i18n.t('key'))`; a consuming app's locale
+  dictionaries must define the shared keys. Keys, dictionaries, and the exact
+  list are in `ARCHITECTURE.md`.
 - Component attributes stay camelCase.
-- A sized component exposes one numeric size dimension, and names (`xs`–`lg`)
-  are aliases to the shared `SIZE_PX` axis. Scale every dimension metric —
-  font, line-height, padding, gap, icon — as a fixed ratio of that dimension
-  (`metric = ratio × resolveSize(size)`), so each metric's ratio to the size is
-  constant across the whole range: no metric plateaus while another grows, and
-  none steps or jumps relative to the size. Non-length chrome (corner radius,
-  font weight) is not a dimension metric. Because the ratio is constant there
-  is nothing to interpolate, so a sized component keeps no per-step
-  anchor/class table and no geometry module; the shared helpers live in
-  `src/lib/components/size-metrics.ts` (`resolveSize`, `dimensionMetrics`,
-  `dimensionWeight`, `sizeVarStyle`) and the inline style carries the metric
-  custom properties while a static utility set consumes them.
-- Size svg primitives (icons, spinner) through the `size` prop (`xs`–`lg` as
-  width/height attributes), never size classes: attributes compose with
-  `className`, while explicit size classes in `className` still win because
-  CSS beats attributes.
-- Express an icon glyph's alternate drawing styles as a `variant` prop on the
-  one component (`outline` stroke by default, `solid` fill) instead of adding a
-  second icon file, so one glyph stays one component.
-- Reuse this project's existing UI primitives and patterns when they fit,
-  especially dialog, dropdown, editor, and icon components; do not build a
-  parallel design system for equivalent controls. Every button is the shared
-  `Button` component (icon-only through its `icon` snippet) per
-  `~/.agents/references/ui-patterns.md` (Shared components), never a raw
-  `<button>`; skin-carrying buttons keep raw markup per that reference's
-  documented exceptions.
-- Apply code changes in a separate git branch and worktree under `.worktrees/`
-  per the shared `git.md` worktree practice (branch `<type>/<change-name>`,
-  path mirrors branch); create worktrees with
-  `node scripts/create-worktree.mjs <branch>` from the default worktree; it
-  copies the gitignored local dev files (`.env.local` and all files under
-  `.data/`) and sets `DEV_TAG=<branch>` so the dev tag identifies the branch,
-  unless the user opts for the current worktree.
-- Worktree deletion refuses targets with running processes: `findProcessesInPath`
-  (`scripts/_worktrees.mjs`) scans `/proc` cwds and both delete flows refuse
-  guarded checkouts (an unreadable process status also refuses), because deleting
-  under a live server half-removes the worktree (unregistered,
-  files/branch/server left). An explicit terminate-and-delete step (default No;
-  `--kill` in `delete-worktrees.mjs`) stops guarding processes via the shared
-  `terminateProcessesInPath` helper — SIGTERM then SIGKILL on re-verified
-  individual PIDs only, never the invoker's own process chain.
+- A sized component exposes one numeric size dimension (`xs`–`xl` aliases of the `SIZE_PX` axis) and scales every metric by a fixed ratio (details in `ARCHITECTURE.md`).
+- A composite embedding sized controls exposes `size?: SizeInput` and forwards it to every inner sized control, defaulting to the shared `md` step so both agree.
+- A dialog panel's footprint is `BaseDialog`'s `widthVariant`/`heightVariant` (or the `size` shorthand setting both; explicit variant wins), not a `SizeInput` metric scale. Mechanism in `ARCHITECTURE.md`.
+- Size svg primitives (icons, spinner) take `size` attributes, never classes.
+- Reuse this project's existing UI primitives; every button is the shared
+  `Button` (icon-only through its `icon` snippet) per
+  `~/.agents/references/ui-patterns.md`, never a raw `<button>`.
+- Apply code changes in a separate branch and worktree under `.worktrees/` per `~/.agents/references/git.md`, unless the user opts for the current worktree.
+- Worktree deletion refuses targets with running processes; the explicit
+  terminate-and-delete step (`--kill`) is in `ARCHITECTURE.md`.
 - Z ladder: sticky content `z-10`, drawer `z-20`, overlays `z-40`, dev tag
   `z-50` — keep overlays at or below `z-40` so the tag is never covered.
-  Exception: the transient `use:tooltip` hint host uses the `--z-index-tooltip`
-  token (45, Tailwind's `--z-index-*` namespace → the `z-tooltip` utility),
-  above portalled `z-40` dialogs that paint after it in body order, still below
-  the dev tag.
 - Portal dialogs to `document.body` through `positionPanel` sheet mode so no
-  ancestor stacking context (including the showcase's paint-contained demo row)
-  can clip or trap them.
-- Temporary scratch files (plans, proposals, notes) go in `.tmp/` (plans in
-  `.tmp/plans/`), never in source directories. Direct every other temporary
-  file there too (dev-server logs, probe scripts, ad-hoc output) instead of
-  `/tmp`, so scratch stays inside the worktree and cleans up with it. In-progress feature requirements
-  go in `.tmp/features/{feature-name}.md` as supplementary context only.
+  ancestor stacking context can clip or trap them.
+- Temporary scratch (plans in `.tmp/plans/`, requirements in `.tmp/features/`)
+  lives in `.tmp/`, never in source directories.
 - The shared `CodeEditor`/`LazyCodeEditor` load language packs on demand through
-  a `docType` lookup, and its CodeMirror theme package requires `@babel/runtime`
-  to be installed in any app that vendors it.
-- The showcase's per-section code panel is a live playground: `ShowcaseSection`
-  owns a `SnippetPreview` (`src/lib/showcase/use-snippet-preview.svelte.ts`)
-  that compiles the edited Svelte source in the browser (`svelte/compiler`
-  loaded via dynamic `import()` so it stays a separate lazy chunk) and swaps
-  the section's own demo row with the live instance in place. `CodeSnippet`
-  is only the editor plus the copy button. A section passes the page bindings
-  its snippet references through `ShowcaseSection`'s `scope`; compile and
-  render failures show inline and keep the previous render, and the live demo
-  row is `contain: paint` so a snippet that renders a fixed overlay cannot
-  cover the page (portaled dialogs escape it by design). Every section's snippet must reproduce its own static demo
-  exactly (same structure, full class strings, localized text via `scope`, same
-  props), so opening Show-code with default state is pixel-identical until the
-  user edits. Snippets must never assign a constructed collection (`new
-  Set()`/`new Map()`) to state: the compiler then emits a legacy `init()` call
-  that throws when the playground mounts the snippet at the root — build the
-  value in a `scope` helper instead. A snippet may also declare local values
-  (data arrays, column defs) in a single leading `<script>` block: the
-  playground splits it out and merges it into the compiled preamble's instance
-  script, and local names override same-named `scope` keys, so a snippet can be
-  self-contained. The block must come first and must not use module context;
-  the split/merge logic lives in `src/lib/showcase/snippet-source.ts`.
-- The playground executes arbitrary JavaScript in the page: it evaluates the
-  compiler output with `new Function` after rewriting its imports to a whitelist
-  of shared primitives. This is not a sandbox — the code still reaches page
-  globals, storage, and `fetch` — so it is acceptable only for this local
-  showcase and must never be handed app secrets, stores, or fetch wrappers.
-- Every component showcase page is one `ShowcaseSection` with a single live
-  demo plus a settings-panel `footer` (`Reset` plus `FormField` controls over
-  `pg*` playground state, unset by default); a colocated `demo-snippet.ts`
-  builder (+ test) regenerates the Show-code source from that state, and the
-  section title derives from `isCustomized` (`showcase.default` /
-  `showcase.customized`).
-- Converted showcase pages (`select-dropdown`, `chip-dropdown`, `menu`,
-  `column-chooser`, `date-range-picker`, `tag-input`, `button`, `search-input`,
-  `text-input`, `number-input`, `password-input`, and later siblings) depart from that shell: they pass `bordered={false}`/`showHeader={false}`
-  to `ShowcaseSection`, own the `SnippetPreview`, and render the code toggle in
-  `ShowcasePage`'s `actions` slot beside the component name (so they drop the
-  Default/Customized title). Overlay demos sit in a width-only `Resizable` stage
-  (non-overlay demos render unframed, since there is no placement to inspect),
-  and their props table appends an editable Value column whose typed controls
-  drive the same `pg*` state as the config panel. Single-prop editing lives in
-  that column, so the config footer keeps only `Reset` plus editors for demo
-  data no single prop covers (item labels) and any future composite preset
-  driving several props at once; `options` (plain data, no functions) edits
-  through an `EditDialog` hosting a JSON `CodeEditor`, with `OK` applying the
-  parsed array and `Reset` reverting the draft.
-- Reusable showcase hooks backing that page: `ShowcasePage` takes an `actions`
-  snippet; `ShowcaseSection` takes a caller-owned `preview` (so a page can host
-  the toggle elsewhere), `showHeader`, and `bordered`, and tags its demo row
-  `data-showcase-demo`; `PropsTable` takes a `value` snippet rendered as a column
-  between Default and Note. A page whose snippet reads scope keys the seed does
-  not cover (the SelectDropdown options) calls `preview.refresh()` from an
-  effect over those keys while live, so scope edits recompile the instance
-  without touching the editor text. Conversely, a page can pass `onCompiled` to
-  write a compiled snippet's recognized demo-tag attributes back into playground
-  state (then `syncSeed`, so the reseed effect keeps the user's text), so snippet
-  edits surface in the Value column; unrecognized shapes and tag-less experiments
-  sync nothing. Pure snippet helpers shared across demos live in
-  `$lib/showcase/` (`snippet-attributes.ts` for tag/script extraction,
-  `option-json.ts` for the options-editor parser); each page keeps only its
-  field mapping and stage literals. Converted pages list props-table rows with
-  the editable props first (primitives, plain data, and snippets, A–Z by code
-  unit), then the non-editable function props (A–Z): a prop is editable unless
-  it is a function or an object carrying functions. A value control uses `TextInput` for text,
-  `SelectDropdown` for enum and scale props (e.g. the `size` and `align` rows),
-  `NumberInput` for a bare number prop, and `Checkbox` for booleans, wireable to
-  the same `pg*` state the config panel drives (an unset text override falls
-  back to the derived value, as `buttonLabel` does to the committed label;
-  `activeValue` and function props stay read-only).
-- A playground preset that derives other props fills visible panel fields for
-  them (shared builder constants as the single source), so static demo,
-  Show-code, and live render stay identical; every `size` prop gets a panel
-  control using the standard `xs`–`lg` options.
-- Showcase demos for the wide components (`DataGrid`, `DataTable`, `Splitter`)
-  use `ShowcasePage wide`, fill the container (no max-width), and render inside
-  `ShowcaseStage` (`src/lib/showcase/ShowcaseStage.svelte`): a pane sized by an
-  inline `flex-basis` percentage plus a `Splitter unit="%"` handle that drags it
-  between 25% and its 100% default, labelled with `showcase.resizeDemo`. The
-  width is interaction state, excluded from `isCustomized` and restored by
-  `Reset`; the page passes the handle label through the section `scope` as
-  `resizeLabel`, and the `demo-snippet` builder emits the same stage from the
-  shared literals in `resizable-stage.ts` (including the snippet's local
-  `stageWidth` state) so static demo and Show-code stay identical. A demo passes
-  `showHandle={false}` when its pane owns a bounded height or its own separator
-  is the only handle — `ShowcaseStage` then renders the pane with no inline width
-  and no handle (the width comes from `paneClass`), and its builder uses the
-  handle-less `stageStaticOpenLines`/`stageStaticCloseLines` literals instead of
-  the `stageWidth` state; the DataTable demo is always handle-less (its
-  `fillHeight` pane owns a bounded height), and the Splitter demo is always
-  handle-less (its own separator is the only handle).
-- The AppShell demo is the one container-responsive demo that needs a
-  `Resizable` frame instead of `ShowcaseStage`: the shell measures its own
-  container to choose between docked and floating, so the container itself must
-  be resizable. Its stage is a non-scrolling `w-full overflow-hidden` host
-  wrapping a `Resizable` at a fixed px default (840×420, min 320×240) with
-  `maxWidth="parent"` — the frame is bounded by the host and capped in CSS, so it
-  can never overflow it and no scrollbar can appear over a frame handle — and
-  `maxHeight={SHELL_STAGE_MAX_HEIGHT}` (the host hugs the frame, so the parent's
-  height is not a usable bound). Its pane carries no padding, so the shell lines
-  up with the settings panel below it. Those literals live in the app-shell
-  `demo-snippet` (the `SHELL_STAGE_*` constants and its stage line helpers) and
-  the snippet emits the same stage, so static demo and Show-code stay identical.
-- Showcase demo frames line up with the section chrome: a demo wrapper carries
-  no inline-start or top padding, only the padding its own scrollbars need on the
-  axes where they render, so the frame's left edge matches the settings panel
-  below it.
+  a `docType` lookup; its CodeMirror theme package needs `@babel/runtime` in any
+  app that vendors it.
+- The showcase's code panel is a live playground: a Show-code snippet must reproduce its static demo exactly, never including a shell-owned resize frame.
+- `ShowcasePage` pins everything above the props `tbody` so only the `FieldTable` body scrolls and the header band never scrolls away; mechanism in `ARCHITECTURE.md`.
+- When a component's props change, update its showcase page in the same change (playground state, props-table rows, snippet builder, tests), or the change is incomplete.
+- A snippet passes page bindings through `scope`; its own data lives in a single leading `<script>` block, local names overriding `scope` keys. Mechanism in `ARCHITECTURE.md`.
+- Never assign a constructed collection (`new Set()`/`new Map()`) to snippet state; the compiler emits a legacy `init()` that throws at root mount.
+- The playground executes arbitrary JavaScript in the page and is not a sandbox:
+  never hand it app secrets, stores, or fetch wrappers.
+- Register every page in `src/lib/showcase-components.ts` and start a new page
+  from a close existing one; the add-a-page checklist is in `ARCHITECTURE.md`
+  (Showcase component pages).
+- Every page uses the converted shell so the props table drives the live demo, and is listed in `CONVERTED_PAGE_SLUGS`; shape in `ARCHITECTURE.md`.
+- Converted-page props table: list editable props first (primitives, data, snippets, A–Z), then function props (A–Z); a function prop or object carrying functions stays read-only.
+- Every Snippet-typed prop is editable through the markup dialog; demo data with no prop row lives in the settings panel. Mechanism in `ARCHITECTURE.md`.
+- Every dialog-backed prop row renders an eye toggle beside the edit icon; a toggle-configured primitive row renders it trailing the input.
+- Apply an applied prop as `prop={on ? value : undefined}` per `~/.agents/references/svelte.md` (Components), never `{#if}`-gated element children.
+- A row's eye off omits an optional prop from the demo and Show-code, keeping committed data for re-applying; a required prop resets to its default.
+- Committing re-applies the eye, and Reset restores data plus eyes.
+- Start a new eye on when its curated value is non-default; only default-valued rows start off, so the cleared form reproduces the curated demo and seed exactly.
+- The only eye-free dialog row is data applied elsewhere with nothing of its own to preserve (data-table `chooserColumns`); record the reason in a code comment.
+- Build a required dialog row's eye with `resetToggle` (off resets committed data to the row default); an optional row's uses `snippetToggle`. A row whose demo binds the state also uses `resetToggle` (off resets the bound state to its default; the binding stays). Mechanism in `ARCHITECTURE.md`.
+- Declare a `text`/`number`/`tri` row and let `syncFieldsOf` derive its absent-attribute fallback; never hand-write a `sync.set` repeating it (`set` stays for a bespoke setter) — except an eye row prefilling a literal default, which takes a custom `read` (absent resolves to current state) and `set` (default maps back to unset) so compiling never stages the default into the form.
+- A `text`/`number` Value cell with a Value editor sets `clearable`; `TextArea` has no clearable.
+- A Value cell's Type takes a `?` suffix only when the prop is optional, so a required value keeps the bare type.
+- A Value input's placeholder is the literal default when the prop has one, otherwise absent, never a meta-hint like `(none)` or `(built-in)`.
+- Build a dialog-backed prop row with the shared `snippetField`/`jsonField`/`snippetToggle`/`resetToggle`/`snippetDialog` helpers rather than inline row literals; the row's seed and commit stay page-specific. Mechanism in `ARCHITECTURE.md`.
+- Seed a dialog-backed Value cell from the fallback-resolved demo value, not the raw override; map the untouched default back to unset on commit.
+- A dialog-backed row must round-trip every editable facet its dialog presents, with `dialog.valid` rejecting any shape it cannot reproduce; cover each with a round-trip spec.
+- Before closing a props-table task, re-audit all rows, not just the requested type: every editor-less primitive-typed row is made editable or its read-only reason recorded.
+- A playground preset that derives other props fills their panel fields from the shared builder constants, so demo, Show-code, and live render stay identical.
+- Every `size` prop gets a settings-panel control.
+- Wide and container-sensitive demos follow the stage rules in `ARCHITECTURE.md`; a demo frame carries no inline-start or top padding, matching the settings panel's left edge.
 
 ## UI behavior
 
+- Size and space elements from their own box; never compensate a container's padding or margin with a negative margin on an inner element.
+- Overhang with a `before:-inset-*` hit area or a zero-footprint wrapper, and tighten stacks with the stack's own spacing (`~/.agents/references/ui-patterns.md`).
+- Use the fewest elements: put borders and spacing on existing elements instead of adding `hr`/`div` wrappers, and merge a single-child wrapper into its parent.
 - Keep responsive layout decisions in CSS (no JS `matchMedia` for initial
   layout) so the first paint is correct on mobile and desktop.
-- Keep all focusable controls keyboard reachable, with explicit focus styles and
-  accessible names for icon-only buttons. Keep non-interactive scroll wrappers
-  out of the tab order (`tabindex="-1"` on overflow containers) so Tab lands
-  only on interactive controls.
-- The app shell fills the dynamic viewport with `h-dvh` (non-shrinking chrome,
-  one flexible editor region); do not add `min-h-screen`, clip the shell with
-  `overflow-hidden`, or chase mobile keyboard gaps — those differences are
-  owned by the browser (see `cross-browser.md`).
-- Icon-only `Button` uses uniform padding (`p-1` for `xs`, `p-1.5` for `sm`, `p-2.5` for `md`, `p-3` for `lg`);
-  text buttons keep `px`/`py` distinction. The `ghost` variant deliberately
-  carries no padding for icons or text, so it stays compact; a ghost text button
-  restores breathing room through `className`, and a ghost on a touch surface
-  still owes the mobile target per `~/.agents/references/responsive-design.md`.
-- `ConfirmDialog` routes its dismiss affordances to a separate `onCancel` when
-  one is passed; a discard confirm passes `confirmOnDismiss` so Escape, overlay
-  click, and the close icon perform the confirm (the discard) instead of
-  returning to the form, while destructive confirms keep the safe cancel.
+- Keep focusable controls keyboard reachable with explicit focus styles and accessible names; keep non-interactive scroll wrappers out of the tab order (`tabindex="-1"`).
+- `AppShell` fills its container (`h-full`), the app supplying the viewport box (`h-dvh` wrapper); never `min-h-screen`, `overflow-hidden` clipping, or chasing mobile keyboard gaps (see `cross-browser.md`).
+- Icon-only `Button` padding is the same fixed ratio of its size dimension as every other metric; text buttons keep `px`/`py` distinction. Mechanism in `ARCHITECTURE.md`.
+- The `ghost` variant deliberately carries no padding for icons or text, so it stays compact.
+- A ghost text button restores breathing room through `className`; a ghost on a touch surface still owes the mobile target (`~/.agents/references/responsive-design.md`).
+- `ConfirmDialog` routes dismiss affordances to `onCancel` when passed; a discard confirm passes `confirmOnDismiss` so Escape/overlay/close perform the confirm, while destructive confirms keep the safe cancel.
 
 ## Theming
 
@@ -386,20 +168,12 @@ Project-specific development conventions for the UI Library web app.
 
 - When a code change establishes or revises a project-specific convention, update
   this `AGENTS.md` in the same change.
-- When a code change establishes or revises a generic reusable convention, update
-  the appropriate file under `$AI_CONFIG_DIR/references/` in the same change rather
-  than duplicating it here.
+- When a code change establishes or revises a generic reusable convention, update the appropriate `$AI_CONFIG_DIR/references/` file in the same change rather than duplicating it here.
 - After a behavior-affecting change, run the `doc` skill in the same change so the managed docs stay reconciled.
-- Shared reference files under `$AI_CONFIG_DIR/references/` must stay generic and
-  implementation-agnostic: no project-specific paths, component names, routes, or
-  internal identifiers. Put project-level details in this `AGENTS.md` instead.
+- Shared reference files under `$AI_CONFIG_DIR/references/` must stay generic: no project-specific paths, component names, routes, or internal identifiers; put project-level details here instead.
 - When recording a convention borrowed from a sibling project, describe only the rule and its content; never name the source project.
-- This `AGENTS.md` holds project-specific *development conventions* — rules to
-  follow when writing code — not feature descriptions or implementation
-  narratives. Keep each bullet to the rule plus the briefest rationale;
-  architecture detail belongs in `ARCHITECTURE.md` and user-facing behavior in
-  `docs/design.md`.
-- When the user corrects a mistake, approves a fix, or states a new convention, invoke the `learn` skill so the lesson is not repeated.
+- This `AGENTS.md` holds development conventions, not feature descriptions; keep each bullet to the rule plus briefest rationale, architecture detail in `ARCHITECTURE.md`, behavior in `docs/design.md`.
+- Offer `learn` on a correction, approval, or new convention per `~/.agents/references/learning-flow.md`, the single owner of the correction signals; do not restate them here.
 
 ## Quality checks
 
@@ -415,13 +189,6 @@ npm test
 ```
 
 - Measure unit coverage with `npm run test:coverage` (vitest v8 provider); use the summary as evidence for test-coverage findings, never as a percentage target.
-- e2e specs live one-per-component/concern under `e2e/` (showcase,
-  components, snippets, data-table, resizable-stage, app-shell, base-dialog),
-  with shared snippet helpers in `e2e/helpers.ts` rather than one growing spec.
-  Anchor locators on roles, accessible names, or `data-*` hooks (e.g.
-  `data-showcase-demo`), never on DOM nesting, so layout restructures do not
-  silently retarget them.
-- TypeScript rides dual installs: `typescript@~6` stays the main package because
-  `svelte-check` peers only on 5/6, while `@typescript/native` (TS 7) performs
-  the check via the `--tsgo` flag in `npm run check`. Keep both and the flag;
-  promoting `typescript` to 7 breaks the check gate.
+- e2e specs live one-per-component/concern under `e2e/`, with shared helpers not one growing spec; anchor locators on roles, accessible names, or `data-*` hooks, never DOM nesting.
+- Portaled overlays render under `document.body`, not the demo hook, so anchor those assertions page-wide; match exactly when one accessible name prefixes another (`~/.agents/references/testing.md`).
+- TypeScript rides dual installs: keep `typescript@~6` main (`svelte-check` peers only on 5/6) and `@typescript/native` checking via `--tsgo`; promoting to 7 breaks the gate.
