@@ -78,7 +78,7 @@
   // inset matches the field's horizontal padding, and the gutter reserves room
   // for both. The box reserves the outside row's clear slot so the input keeps
   // the same width empty and filled.
-  const CLEAR_RATIOS = { button: 0.625, inset: 0.5625, gutter: 1.6875, box: 1 }
+  const CLEAR_RATIOS = { button: 0.625, inset: INPUT_RATIOS.padX, gutter: 1.6875, box: 1 }
   const clearMetrics = $derived(dimensionMetrics(size, CLEAR_RATIOS))
   const clearStyle = $derived(sizeVarStyle('clear', clearMetrics))
 
