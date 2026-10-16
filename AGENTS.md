@@ -108,6 +108,7 @@ Project-specific development conventions for the UI Library web app.
 - Register every page in `src/lib/showcase-components.ts` and start a new page
   from a close existing one; the add-a-page checklist is in `ARCHITECTURE.md`
   (Showcase component pages).
+- The Icons page indexes the whole set: every glyph under `src/lib/icons` gets an entry, in name order, so a directory-parity spec fails when one is missing.
 - Every page uses the converted shell so the props table drives the live demo, and is listed in `CONVERTED_PAGE_SLUGS`; shape in `ARCHITECTURE.md`.
 - Converted-page props table: list editable props first (primitives, data, snippets, A–Z), then function props (A–Z); a function prop or object carrying functions stays read-only.
 - Every Snippet-typed prop is editable through the markup dialog; demo data with no prop row lives in the settings panel. Mechanism in `ARCHITECTURE.md`.

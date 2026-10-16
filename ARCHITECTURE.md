@@ -230,9 +230,9 @@ of building a parallel control.
   static utility set consumes them; the constant ratio means no per-step
   anchor/class table and no geometry module. Size svg primitives (icons,
   spinner) take width/height `size` attributes, never classes, so they compose
-  with `className`. An icon passed to a `Button` `icon` snippet is sized by the
-  button's icon box (`[&_svg]:h-full [&_svg]:w-full`) and carries no `size`
-  itself; Menu-trigger icons keep their `size` (Menu has no such override). A
+  with `className`. An icon passed to a `Button` `icon` snippet carries no
+  `size` itself — the button's box sizes it; Menu-trigger icons keep their
+  `size` (Menu has no such override). A
   sized control's own icon slot is the size dimension itself (`icon` ratio `1`),
   and the glyph rendered into it takes the shared icon ratio (`ICON_RATIO`,
   0.8125) — the text-like font ratio, so an `md` icon lands at 13px, the size of
@@ -248,7 +248,10 @@ of building a parallel control.
   applies the shared `ICON_RATIO` (0.8125), so a viewBox-filling glyph still
   lands at the optical size the components around it were tuned for. The
   non-square `SortAscIcon`/`SortDescIcon` pair keeps a tight 12×8 crop with a
-  two-thirds-height render.
+  two-thirds-height render. Every glyph carries the same `size`/`className`
+  props and appears on the Icons showcase page, which is the set's index:
+  `demo-snippet.ts` keeps one entry per glyph in name order and a
+  directory-parity spec fails when a file under `src/lib/icons` has no entry.
 - **Listbox surfaces** — `SelectDropdown`, `ChipDropdown`, `TagInput`,
   `AutoComplete`, and `Menu` sit on the shared listbox interaction core (Key
   patterns, Shared listbox interactions); `SelectDropdown` derives its trigger
