@@ -25,8 +25,8 @@
   import { createGridSort } from './use-grid-sort.svelte'
   import { createGridUndoRedo } from './use-grid-undo-redo.svelte'
   import GridToolbar from './GridToolbar.svelte'
-  import SortAscIcon from '$lib/icons/SortAscIcon.svelte'
-  import SortDescIcon from '$lib/icons/SortDescIcon.svelte'
+  import CaretDownIcon from '$lib/icons/CaretDownIcon.svelte'
+  import CaretUpIcon from '$lib/icons/CaretUpIcon.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   const i18n = getI18nContext()
 
@@ -292,7 +292,7 @@
                   <span class="flex w-full items-center justify-center gap-1.5 text-center">
                     <span>{columnLabels?.[ci] ?? columnLetter(ci)}</span>
                     <span
-                      class="flex flex-col gap-px text-slate-400 transition-opacity {isSortActive
+                      class="flex flex-col gap-0.5 text-slate-400 transition-opacity {isSortActive
                         ? 'opacity-100'
                         : '[@media(hover:hover)]:opacity-0'} group-hover:opacity-100 focus-within:opacity-100">
                       <button
@@ -304,7 +304,9 @@
                         onmousedown={event => event.stopPropagation()}
                         onclick={() => editable && sort.handleSortClick(ci, 'asc')}
                         disabled={!editable}>
-                        <SortAscIcon size="xs" />
+                        <!-- The caret is cropped tight to the triangle, so `size`
+                             is the width it renders at (0.8125 × 10). -->
+                        <CaretUpIcon size={10} />
                       </button>
                       <button
                         type="button"
@@ -315,7 +317,7 @@
                         onmousedown={event => event.stopPropagation()}
                         onclick={() => editable && sort.handleSortClick(ci, 'desc')}
                         disabled={!editable}>
-                        <SortDescIcon size="xs" />
+                        <CaretDownIcon size={10} />
                       </button>
                     </span>
                   </span>

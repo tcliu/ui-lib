@@ -7,8 +7,8 @@
   import SearchInput from './SearchInput.svelte'
   import Spinner from './Spinner.svelte'
   import type { SizeInput } from '$lib/size-scale'
-  import SortAscIcon from '$lib/icons/SortAscIcon.svelte'
-  import SortDescIcon from '$lib/icons/SortDescIcon.svelte'
+  import CaretDownIcon from '$lib/icons/CaretDownIcon.svelte'
+  import CaretUpIcon from '$lib/icons/CaretUpIcon.svelte'
   import { createTableColumns, TABLE_MIN_COLUMN_WIDTH, TABLE_SELECT_COLUMN_WIDTH } from './use-table-columns.svelte'
   import { createTableScrollSync } from './use-table-scroll-sync.svelte'
   import { resolveColumnWidths } from '$lib/data-table/column-helpers'
@@ -491,7 +491,7 @@
               <span class={centerHeader ? 'min-w-0 overflow-hidden break-words text-ellipsis' : ''}
                 >{column.header}</span>
               <span
-                class="flex flex-col gap-px {centerHeader
+                class="flex flex-col gap-0.5 {centerHeader
                   ? 'absolute top-1/2 right-0 -translate-y-1/2'
                   : ''} text-slate-400 transition-opacity {isActive
                   ? 'opacity-100'
@@ -503,7 +503,9 @@
                     : 'hover:text-cyan-300 focus:text-cyan-300'}"
                   aria-label={sortAriaLabel?.(column, 'asc') ?? `Sort ${column.header} ascending`}
                   onclick={() => handleSortClick(column, 'asc')}>
-                  <SortAscIcon size="xs" />
+                  <!-- The caret is cropped tight to the triangle, so `size` is the
+                       width it renders at (0.8125 × 10) rather than a square box. -->
+                  <CaretUpIcon size={10} />
                 </button>
                 <button
                   type="button"
@@ -512,7 +514,7 @@
                     : 'hover:text-cyan-300 focus:text-cyan-300'}"
                   aria-label={sortAriaLabel?.(column, 'desc') ?? `Sort ${column.header} descending`}
                   onclick={() => handleSortClick(column, 'desc')}>
-                  <SortDescIcon size="xs" />
+                  <CaretDownIcon size={10} />
                 </button>
               </span>
             </span>

@@ -11,8 +11,8 @@
   import { positionPanel } from '$lib/position-panel.svelte'
   import { NATIVE_SELECT_BUTTON_CLASS } from '$lib/dropdown-chrome'
   import CalendarIcon from '$lib/icons/CalendarIcon.svelte'
-  import ChevronLeftIcon from '$lib/icons/ChevronLeftIcon.svelte'
-  import ChevronRightIcon from '$lib/icons/ChevronRightIcon.svelte'
+  import CaretLeftIcon from '$lib/icons/CaretLeftIcon.svelte'
+  import CaretRightIcon from '$lib/icons/CaretRightIcon.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   const i18n = getI18nContext()
 
@@ -310,7 +310,7 @@
           aria-label={i18n.t('range.prevMonth')}
           onclick={prevMonth}
           class={`flex h-7 w-7 items-center justify-center rounded-md transition outline-none motion-reduce:transition-none ${theme.navButton ?? 'text-slate-400 hover:bg-slate-800 hover:text-cyan-300'}`}>
-          <ChevronLeftIcon size="sm" />
+          <CaretLeftIcon size="sm" />
         </button>
         <span class="text-xs font-semibold text-slate-200">{monthLabel}</span>
         <button
@@ -318,7 +318,7 @@
           aria-label={i18n.t('range.nextMonth')}
           onclick={nextMonth}
           class={`flex h-7 w-7 items-center justify-center rounded-md transition outline-none motion-reduce:transition-none ${theme.navButton ?? 'text-slate-400 hover:bg-slate-800 hover:text-cyan-300'}`}>
-          <ChevronRightIcon size="sm" />
+          <CaretRightIcon size="sm" />
         </button>
       </div>
 

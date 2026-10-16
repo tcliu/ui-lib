@@ -44,6 +44,10 @@ import TextArea from '$lib/components/TextArea.svelte'
 import TextInput from '$lib/components/TextInput.svelte'
 import Toast from '$lib/components/Toast.svelte'
 import Tooltip from '$lib/components/Tooltip.svelte'
+import CaretDownIcon from '$lib/icons/CaretDownIcon.svelte'
+import CaretLeftIcon from '$lib/icons/CaretLeftIcon.svelte'
+import CaretRightIcon from '$lib/icons/CaretRightIcon.svelte'
+import CaretUpIcon from '$lib/icons/CaretUpIcon.svelte'
 import CheckIcon from '$lib/icons/CheckIcon.svelte'
 import ChevronDownIcon from '$lib/icons/ChevronDownIcon.svelte'
 import ChevronLeftIcon from '$lib/icons/ChevronLeftIcon.svelte'
@@ -79,8 +83,6 @@ import SaveIcon from '$lib/icons/SaveIcon.svelte'
 import SearchIcon from '$lib/icons/SearchIcon.svelte'
 import SettingsIcon from '$lib/icons/SettingsIcon.svelte'
 import SignOutIcon from '$lib/icons/SignOutIcon.svelte'
-import SortAscIcon from '$lib/icons/SortAscIcon.svelte'
-import SortDescIcon from '$lib/icons/SortDescIcon.svelte'
 import SparklesIcon from '$lib/icons/SparklesIcon.svelte'
 import SunIcon from '$lib/icons/SunIcon.svelte'
 import UploadIcon from '$lib/icons/UploadIcon.svelte'
@@ -147,6 +149,10 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/TextInput.svelte': { default: TextInput },
   'ui/Toast.svelte': { default: Toast },
   'ui/Tooltip.svelte': { default: Tooltip },
+  'ui/CaretDownIcon.svelte': { default: CaretDownIcon },
+  'ui/CaretLeftIcon.svelte': { default: CaretLeftIcon },
+  'ui/CaretRightIcon.svelte': { default: CaretRightIcon },
+  'ui/CaretUpIcon.svelte': { default: CaretUpIcon },
   'ui/CheckIcon.svelte': { default: CheckIcon },
   'ui/ChevronDownIcon.svelte': { default: ChevronDownIcon },
   'ui/ChevronLeftIcon.svelte': { default: ChevronLeftIcon },
@@ -182,8 +188,6 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/SearchIcon.svelte': { default: SearchIcon },
   'ui/SettingsIcon.svelte': { default: SettingsIcon },
   'ui/SignOutIcon.svelte': { default: SignOutIcon },
-  'ui/SortAscIcon.svelte': { default: SortAscIcon },
-  'ui/SortDescIcon.svelte': { default: SortDescIcon },
   'ui/SparklesIcon.svelte': { default: SparklesIcon },
   'ui/SunIcon.svelte': { default: SunIcon },
   'ui/UploadIcon.svelte': { default: UploadIcon },

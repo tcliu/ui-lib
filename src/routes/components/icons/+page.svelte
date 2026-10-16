@@ -4,8 +4,8 @@
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { sizeField, snippetToggle } from '$lib/showcase/snippet-field'
-  import { buildIconsSnippet, ICON_COMPONENTS, ICON_ENTRIES, iconClassFor, iconLabel } from './demo-snippet'
+  import { enumField, sizeField, snippetToggle } from '$lib/showcase/snippet-field'
+  import { buildIconsSnippet, ICON_COMPONENTS, ICON_ENTRIES, iconClassFor, iconLabel, iconTakesVariant } from './demo-snippet'
   import { parseSizeValue } from '$lib/showcase/size-input'
 
   const i18n = getI18nContext()
@@ -21,6 +21,8 @@
     tint: '',
     className: '',
     classNameOn: false,
+    variant: 'regular',
+    variantOn: false,
   }
   let pg = $state(structuredClone(INITIAL))
 
@@ -31,6 +33,10 @@
     { value: 'lg', label: 'lg' },
     { value: 'xl', label: 'xl' },
   ]
+  const variantOptions = [
+    { value: 'regular', label: 'regular' },
+    { value: 'bold', label: 'bold' },
+  ]
   const tintOptions = [
     { value: 'text-cyan-400', label: 'cyan' },
     { value: 'text-emerald-400', label: 'emerald' },
@@ -38,13 +44,16 @@
     { value: 'text-rose-400', label: 'rose' },
   ]
   const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
+  // Only the chevron glyphs take `variant`; the gallery spreads it onto those
+  // tags alone (see below).
+  const demoVariant = $derived(pg.variantOn ? pg.variant : undefined)
   const galleryClass = $derived(iconClassFor(pg.tint, pg.classNameOn ? pg.className : ''))
 
   function clearPlayground() {
     pg = structuredClone(INITIAL)
   }
 
-  const code = $derived.by(() => buildIconsSnippet({ size: pg.size, sizeOn: pg.sizeOn, tint: pg.tint, className: pg.className, classNameOn: pg.classNameOn }))
+  const code = $derived.by(() => buildIconsSnippet({ size: pg.size, sizeOn: pg.sizeOn, tint: pg.tint, className: pg.className, classNameOn: pg.classNameOn, variant: pg.variant, variantOn: pg.variantOn }))
 
   // The page owns the preview so the shell can host the code toggle (and the
   // playground Reset) in the sticky title row while it renders the demo and
@@ -57,9 +66,10 @@
   // shape once; the sync table below derives from the same declarations.
   // Snippet edits surface in the Value column, and `syncSeed` holds the
   // regenerated seed back so the editor keeps the user's text. Every gallery
-  // tag carries the same attributes, so the sync reads the first one
-  // (CheckIcon). `className` rides the seed combined with the tint and has no
-  // write-back: a seed edit cannot split the tint back out, so it stays in
+  // tag carries the same `size`/`className` and the chevrons add `variant`, so
+  // the sync reads a chevron tag (ChevronDownIcon), the first tag carrying
+  // every attribute. `className` rides the seed combined with the tint and has
+  // no write-back: a seed edit cannot split the tint back out, so it stays in
   // the editor while the Value column keeps the uncombined class.
   const fields: SyncableFieldConfig[] = $derived([
     {
@@ -78,6 +88,7 @@
       toggle: snippetToggle(pg.classNameOn, enabled => (pg.classNameOn = enabled)),
     },
     sizeField({ note: 'Width/height attributes (12/16/20/24px for names, passthrough for numbers); composes with className.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v), options: sizeOptions }),
+    enumField({ name: 'variant', type: "'regular' | 'bold'", defaultValue: "'regular'", note: 'Stroke weight for the chevron glyphs (single and double); the other icons ignore it.', options: variantOptions, value: pg.variant, onChange: v => (pg.variant = v), placeholder: 'regular', clearLabel: 'Clear variant', enabled: pg.variantOn, setEnabled: v => (pg.variantOn = v) }),
   ])
 
 </script>
@@ -99,17 +110,19 @@
 {/snippet}
 
 <ShowcasePage {fields} title="Icons" {code} onReset={clearPlayground} configPanel={settingsPanel}
-    sync={{ tag: 'CheckIcon' }}
+    sync={{ tag: 'ChevronDownIcon' }}
     scope={{}}
   >
   <div
     class="grid grid-cols-4 gap-3 text-xs text-slate-400 sm:grid-cols-8 [&>span]:flex [&>span]:flex-col [&>span]:items-center [&>span]:gap-1">
     {#each ICON_ENTRIES as entry (iconLabel(entry))}
       {@const Icon = ICON_COMPONENTS[entry.name]}
+      {@const variantProps = iconTakesVariant(entry.name) ? { variant: demoVariant } : {}}
       <span
         ><Icon
           size={demoSize}
-          className={galleryClass} />{iconLabel(entry)}</span
+          className={galleryClass}
+          {...variantProps} />{iconLabel(entry)}</span
       >{' '}
     {/each}
   </div>

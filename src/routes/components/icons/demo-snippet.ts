@@ -6,6 +6,10 @@ import type { Component } from 'svelte'
 import { sizeAttributeFragment } from '$lib/showcase/size-input'
 import BrowseIcon from '$lib/icons/BrowseIcon.svelte'
 import CalendarIcon from '$lib/icons/CalendarIcon.svelte'
+import CaretDownIcon from '$lib/icons/CaretDownIcon.svelte'
+import CaretLeftIcon from '$lib/icons/CaretLeftIcon.svelte'
+import CaretRightIcon from '$lib/icons/CaretRightIcon.svelte'
+import CaretUpIcon from '$lib/icons/CaretUpIcon.svelte'
 import CheckIcon from '$lib/icons/CheckIcon.svelte'
 import ChevronDownIcon from '$lib/icons/ChevronDownIcon.svelte'
 import ChevronLeftIcon from '$lib/icons/ChevronLeftIcon.svelte'
@@ -23,6 +27,10 @@ import DeleteIcon from '$lib/icons/DeleteIcon.svelte'
 import DeleteColumnsIcon from '$lib/icons/DeleteColumnsIcon.svelte'
 import DeleteRowsIcon from '$lib/icons/DeleteRowsIcon.svelte'
 import DocumentIcon from '$lib/icons/DocumentIcon.svelte'
+import DoubleChevronDownIcon from '$lib/icons/DoubleChevronDownIcon.svelte'
+import DoubleChevronLeftIcon from '$lib/icons/DoubleChevronLeftIcon.svelte'
+import DoubleChevronRightIcon from '$lib/icons/DoubleChevronRightIcon.svelte'
+import DoubleChevronUpIcon from '$lib/icons/DoubleChevronUpIcon.svelte'
 import DownloadIcon from '$lib/icons/DownloadIcon.svelte'
 import EditIcon from '$lib/icons/EditIcon.svelte'
 import ExportIcon from '$lib/icons/ExportIcon.svelte'
@@ -52,8 +60,6 @@ import SaveIcon from '$lib/icons/SaveIcon.svelte'
 import SearchIcon from '$lib/icons/SearchIcon.svelte'
 import SettingsIcon from '$lib/icons/SettingsIcon.svelte'
 import SignOutIcon from '$lib/icons/SignOutIcon.svelte'
-import SortAscIcon from '$lib/icons/SortAscIcon.svelte'
-import SortDescIcon from '$lib/icons/SortDescIcon.svelte'
 import SparklesIcon from '$lib/icons/SparklesIcon.svelte'
 import SunIcon from '$lib/icons/SunIcon.svelte'
 import TableIcon from '$lib/icons/TableIcon.svelte'
@@ -67,6 +73,8 @@ export interface IconsSnippetState {
   tint: string
   className: string
   classNameOn: boolean
+  variant: string
+  variantOn: boolean
 }
 
 export interface IconEntry {
@@ -78,6 +86,10 @@ export interface IconEntry {
 export const ICON_ENTRIES: IconEntry[] = [
   { name: 'Browse' },
   { name: 'Calendar' },
+  { name: 'CaretDown' },
+  { name: 'CaretLeft' },
+  { name: 'CaretRight' },
+  { name: 'CaretUp' },
   { name: 'Check' },
   { name: 'ChevronDown' },
   { name: 'ChevronLeft' },
@@ -95,6 +107,10 @@ export const ICON_ENTRIES: IconEntry[] = [
   { name: 'DeleteColumns' },
   { name: 'DeleteRows' },
   { name: 'Document' },
+  { name: 'DoubleChevronDown' },
+  { name: 'DoubleChevronLeft' },
+  { name: 'DoubleChevronRight' },
+  { name: 'DoubleChevronUp' },
   { name: 'Download' },
   { name: 'Edit' },
   { name: 'Export' },
@@ -124,8 +140,6 @@ export const ICON_ENTRIES: IconEntry[] = [
   { name: 'Search' },
   { name: 'Settings' },
   { name: 'SignOut' },
-  { name: 'SortAsc' },
-  { name: 'SortDesc' },
   { name: 'Sparkles' },
   { name: 'Sun' },
   { name: 'Table' },
@@ -138,6 +152,13 @@ export function iconClassFor(tint: string, className: string): string {
   return [tint, className].filter(Boolean).join(' ')
 }
 
+// The glyphs that take the `variant` prop: the chevron family (single and
+// double). The variant rides these tags alone, so no other glyph sees an
+// unknown prop.
+export function iconTakesVariant(name: string): boolean {
+  return name.includes('Chevron')
+}
+
 export function iconLabel(entry: IconEntry): string {
   return entry.name
 }
@@ -147,6 +168,10 @@ export function iconLabel(entry: IconEntry): string {
 export const ICON_COMPONENTS: Record<string, Component> = {
   Browse: BrowseIcon,
   Calendar: CalendarIcon,
+  CaretDown: CaretDownIcon,
+  CaretLeft: CaretLeftIcon,
+  CaretRight: CaretRightIcon,
+  CaretUp: CaretUpIcon,
   Check: CheckIcon,
   ChevronDown: ChevronDownIcon,
   ChevronLeft: ChevronLeftIcon,
@@ -164,6 +189,10 @@ export const ICON_COMPONENTS: Record<string, Component> = {
   DeleteColumns: DeleteColumnsIcon,
   DeleteRows: DeleteRowsIcon,
   Document: DocumentIcon,
+  DoubleChevronDown: DoubleChevronDownIcon,
+  DoubleChevronLeft: DoubleChevronLeftIcon,
+  DoubleChevronRight: DoubleChevronRightIcon,
+  DoubleChevronUp: DoubleChevronUpIcon,
   Download: DownloadIcon,
   Edit: EditIcon,
   Export: ExportIcon,
@@ -193,8 +222,6 @@ export const ICON_COMPONENTS: Record<string, Component> = {
   Search: SearchIcon,
   Settings: SettingsIcon,
   SignOut: SignOutIcon,
-  SortAsc: SortAscIcon,
-  SortDesc: SortDescIcon,
   Sparkles: SparklesIcon,
   Sun: SunIcon,
   Table: TableIcon,
@@ -203,16 +230,20 @@ export const ICON_COMPONENTS: Record<string, Component> = {
   Upload: UploadIcon,
 }
 
-export function buildIconsSnippet({ size, sizeOn, tint, className, classNameOn }: IconsSnippetState): string {
+export function buildIconsSnippet({ size, sizeOn, tint, className, classNameOn, variant, variantOn }: IconsSnippetState): string {
   const classes = iconClassFor(tint, classNameOn ? className : '')
   // The size Value prefills the component default; the builder omits it so
   // Show-code stays minimal.
   const sizeFragment = sizeOn && size !== '' && size !== 'md' ? sizeAttributeFragment(size) : ''
-  const attrs = [sizeFragment, ...(classes ? [` className="${classes}"`] : [])].join('')
+  const classFragment = classes ? ` className="${classes}"` : ''
+  // `variant` belongs to the chevron family, so it rides those tags alone;
+  // `regular` is the component default and is omitted like `md`.
+  const variantFragment = variantOn && variant !== '' && variant !== 'regular' ? ` variant="${variant}"` : ''
   const lines = [
     '<div class="grid grid-cols-4 gap-3 text-xs text-slate-400 sm:grid-cols-8 [&>span]:flex [&>span]:flex-col [&>span]:items-center [&>span]:gap-1">',
     ...ICON_ENTRIES.map(entry => {
-      return `  <span><${entry.name}Icon${attrs} />${iconLabel(entry)}</span>`
+      const entryVariant = iconTakesVariant(entry.name) ? variantFragment : ''
+      return `  <span><${entry.name}Icon${sizeFragment}${classFragment}${entryVariant} />${iconLabel(entry)}</span>`
     }),
     '</div>',
   ]

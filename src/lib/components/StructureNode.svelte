@@ -17,7 +17,7 @@
   import Copyable from './Copyable.svelte'
   import EditDialog from './EditDialog.svelte'
   import LazyCodeEditor from './LazyCodeEditor.svelte'
-  import ChevronRightIcon from '$lib/icons/ChevronRightIcon.svelte'
+  import CaretRightIcon from '$lib/icons/CaretRightIcon.svelte'
   import EditIcon from '$lib/icons/EditIcon.svelte'
   import CopyIcon from '$lib/icons/CopyIcon.svelte'
   import {
@@ -228,7 +228,7 @@
       onClick={() => (openOverride = !open)}
       className="shrink-0">
       {#snippet icon()}
-        <ChevronRightIcon className="text-slate-400 transition-transform {open ? 'rotate-90' : ''}" />
+        <CaretRightIcon className="text-slate-400 transition-transform {open ? 'rotate-90' : ''}" />
       {/snippet}
     </Button>
     <span class={editOwnName.key ? 'min-w-0' : 'min-w-0 truncate'}>
