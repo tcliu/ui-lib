@@ -83,6 +83,16 @@ describe('maskCommandLine', () => {
     )
   })
 
+  it('masks the whole quoted value of a secret flag, not just its first fragment', () => {
+    expect(maskCommandLine('vercel env add SESSION_SECRET production --value "my s3cr3t value"')).toBe(
+      'vercel env add SESSION_SECRET production --value *** *** ***',
+    )
+  })
+
+  it('masks the fragments after an inline quoted secret value', () => {
+    expect(maskCommandLine('curl --token="multi word secret" https://x')).toBe('curl --token=*** *** *** https://x')
+  })
+
   it('preserves whitespace outside masked values', () => {
     expect(maskCommandLine('  git   rev-parse   HEAD  ')).toBe('  git   rev-parse   HEAD  ')
   })
