@@ -5,6 +5,7 @@
 
   interface Props {
     text?: string
+    copyText?: string
     textClass?: string
     containerClass?: string
     ariaLabel?: string
@@ -16,6 +17,7 @@
 
   let {
     text,
+    copyText = text,
     textClass = 'text-slate-400',
     containerClass = '',
     ariaLabel,
@@ -27,7 +29,7 @@
 
   // hide copy button when there's nothing to copy (empty or whitespace)
   function hasCopyText() {
-    return (text ?? '').toString().trim().length > 0
+    return (copyText ?? '').toString().trim().length > 0
   }
 </script>
 
@@ -44,7 +46,7 @@
     </div>
     {#if hasCopyText()}
       <span class="mt-1.5 mr-1.5">
-        <CopyButton text={text ?? ''} {ariaLabel} {tooltip} size={size} />
+        <CopyButton text={copyText ?? ''} {ariaLabel} {tooltip} size={size} />
       </span>
     {/if}
   </div>
@@ -58,7 +60,7 @@
       {/if}
     </span>
     {#if hasCopyText()}
-      <CopyButton text={text ?? ''} {ariaLabel} {tooltip} size={size} />
+      <CopyButton text={copyText ?? ''} {ariaLabel} {tooltip} size={size} />
     {/if}
   </div>
 {/if}
