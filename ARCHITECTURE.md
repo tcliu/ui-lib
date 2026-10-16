@@ -225,7 +225,13 @@ of building a parallel control.
   a bordered icon-only box (`icon + 2·iconPad`) is the same height as a text
   button's (`line + 2·padY`) and never goes stale when `padY`/`line` are tuned;
   the icon-only shape also floors its box at the text line height, so the
-  paddingless `ghost` glyph matches the ghost text row too. The helpers in
+  paddingless `ghost` glyph matches the ghost text row too. An interrelated
+  metric is derived from its base rather than tuned beside it: `SelectDropdown`'s
+  trigger gutter (chevron → border) is a fixed share of `padX`
+  (`SELECT_GUTTER_SHARE`), emitted as
+  `--sel-pad-right: calc(var(--sel-pad-x) * share)` so retuning the padding — or
+  a caller overriding `--sel-pad-x` — rescales the chevron's inset with it
+  instead of shifting it by a constant offset. The helpers in
   `size-metrics.ts` (`resolveSize`, `dimensionMetrics`, `iconPadRatio`,
   `sizeVarStyle`) emit the metric custom properties on the inline style while a
   static utility set consumes them; the constant ratio means no per-step
@@ -240,8 +246,11 @@ of building a parallel control.
   its label and the optical size the filled-viewBox glyphs were normalized from.
   An in-field affordance trims that slot rather than matching the label:
   `SelectDropdown`'s trigger chevron and clear cross and `TextInput`'s clear
-  cross ride `0.625×` it, `NumberInput`'s steppers `0.75×`, and all still scale
-  with the control.
+  cross ride `0.625×` it, `NumberInput`'s steppers `0.75×`, `SearchInput`'s
+  leading search icon `0.9×`, and all still scale with the control.
+  `Pagination`'s page blocks reuse the select trigger's line and vertical
+  padding (plus its 1px border), so the numbered blocks, the jump input, and the
+  page-size dropdown land on one height.
 - **Icon glyphs** — one glyph is one component: a single `aria-hidden` `<svg>`
   sized by its `size`/`className` props, with no per-glyph style variant. Every
   square glyph uses the one square viewBox (`0 0 20 20`) and authors its artwork
@@ -255,8 +264,15 @@ of building a parallel control.
   family is the set's filled direction marker: the one triangle cropped tight to
   the arrow, 12×8 rendering two-thirds tall for up/down and 8×12 rendering
   two-thirds wide for left/right, used by the table sort pair (up/down) and by
-  navigation and disclosure (left/right). Every glyph carries the same
-  `size`/`className` props and appears on the Icons showcase page, which is the
+  navigation and disclosure (left/right). The chevron family (`Chevron*` and
+  `DoubleChevron*`) takes a `variant` prop (`regular` default, `bold`); each
+  variant draws its own normalized path — the bold artwork is inset so its
+  heavier stroke still fills the box without clipping — with the stroke weight,
+  caps, and joins (`bold` is flat-ended and mitred, for a chunky sharp mark)
+  coming from the one shared `chevron-stroke.ts` map, so the treatment stays
+  uniform across the eight glyphs. Every glyph carries the same
+  `size`/`className` props, plus the chevron `variant`, and appears on the Icons
+  showcase page, which is the
   set's index: `demo-snippet.ts` keeps one entry per glyph in name order and a
   directory-parity spec fails when a file under `src/lib/icons` has no entry.
 - **Listbox surfaces** — `SelectDropdown`, `ChipDropdown`, `TagInput`,
@@ -317,6 +333,9 @@ of building a parallel control.
   Home/End clamps measure the parent at interaction time. The handles are
   focusable `role="separator"` widgets carrying `aria-valuenow`/`-min` and
   `-max` when the bound is finite (the max is omitted for an unbounded edge).
+  `pointerOnlyHandles` keeps their tab stops closed for good, so a frame that is
+  page chrome adds no invisible focus stops (the showcase stage sets it; a frame
+  whose keyboard resize is the demo's own subject leaves it off).
 - **StructureTree / StructureNode** — display and inline-edit a JSON-shaped
   `value`: `StructureTree` renders the top-level container (or a leaf), and each
   `StructureNode` row expands/collapses, renames its key, edits its value
@@ -463,9 +482,17 @@ handle (dragging 25%–100%), labelled from `scope` as `resizeLabel` — or insi
 `stage={{ minWidth }}` prop renders the hook/host/`Resizable`/pane around both
 the static demo and the live mount (the pane is the live mount, so the frame
 survives a compile), and the page binds `stageWidth` so its Reset restores the
-seeded width. Because that frame is chrome, the page's Show-code builder emits
-only the demo content, never the frame. A frame that is the demo's own subject
-stays in the snippet: AppShell's self-measuring `Resizable` (width and height),
+seeded width. The pane carries no padding (so the demo aligns with the settings
+panel), which puts the demo's first control flush at the host's clip edge: the
+host therefore clips with the shared clip margin (`--stage-clip-margin`) instead
+of at the edge, and neither hook carries paint containment, so a demo's focus
+ring or border renders alike whether the demo is static or live. The stage passes
+`pointerOnlyHandles` to its `Resizable`, keeping the invisible handles out of the
+tab order entirely (the `Resizable` demo, whose subject is keyboard resizing,
+leaves it off). Because that frame is chrome, the page's
+Show-code builder emits only the demo content, never the frame. A frame that is
+the demo's own subject stays in the snippet: AppShell's self-measuring
+`Resizable` (width and height),
 and the `showHandle={false}` static pane (DataTable, Splitter) whose bounded pane
 is the demo. The `ShowcaseStage` builder emits its stage from the shared literals
 (`resizable-stage.ts`, or the AppShell `SHELL_STAGE_*` constants) so static demo

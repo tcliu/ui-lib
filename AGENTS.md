@@ -72,12 +72,13 @@ Project-specific development conventions for the UI Library web app.
   dictionaries must define the shared keys. Keys, dictionaries, and the exact
   list are in `ARCHITECTURE.md`.
 - Component attributes stay camelCase.
-- A sized component exposes one numeric size dimension (`xs`–`xl` aliases of the `SIZE_PX` axis) and scales every metric by a fixed ratio (details in `ARCHITECTURE.md`).
+- A sized component exposes one numeric size dimension (`xs`–`xl` aliases of the `SIZE_PX` axis) and scales every metric by a fixed ratio; an interrelated metric derives from its base rather than being tuned beside it (the trigger gutter is a fixed share of the horizontal padding), so retuning or overriding the base carries it (details in `ARCHITECTURE.md`).
 - A composite embedding sized controls exposes `size?: SizeInput` and forwards it to every inner sized control, defaulting to the shared `md` step so both agree.
+- `Pagination`'s page blocks match the page-size dropdown trigger's height (same select line, vertical padding, and 1px border), so the row's controls sit level rather than from a hand-tuned block ratio.
 - A dialog panel's footprint is `BaseDialog`'s `widthVariant`/`heightVariant` (or the `size` shorthand setting both; explicit variant wins), not a `SizeInput` metric scale. Mechanism in `ARCHITECTURE.md`.
 - Size svg primitives (icons, spinner) take `size` attributes, never classes.
 - A sized control's icon slot is the size dimension itself (`icon` ratio `1`), while the glyph renders at the shared `ICON_RATIO` (`0.8125`), so an icon matches its label and keeps the optical size the filled-viewBox glyphs were normalized from.
-- An in-field affordance glyph rides a trimmed share of the icon slot rather than the whole slot — the dropdown trigger's chevron and its clear cross and a clearable field's cross at `0.625×`, the number steppers at `0.75×` — so it reads lighter than the label while still scaling with the control.
+- An in-field affordance glyph rides a trimmed share of the icon slot rather than the whole slot — the dropdown trigger's chevron and its clear cross and a clearable field's cross at `0.625×`, the number steppers at `0.75×`, the search icon at `0.9×` — so it reads lighter than the label while still scaling with the control.
 - Icon glyphs share one square viewBox (`0 0 20 20`) and author their artwork
   directly in it, already normalized to fill the box (dominant axis, centered)
   on the 0.01 unit step, so every square icon renders at a consistent size per
@@ -133,6 +134,8 @@ Project-specific development conventions for the UI Library web app.
 - A playground preset that derives other props fills their panel fields from the shared builder constants, so demo, Show-code, and live render stay identical.
 - Every `size` prop gets a settings-panel control.
 - Wide and container-sensitive demos follow the stage rules in `ARCHITECTURE.md`; a demo frame carries no inline-start or top padding, matching the settings panel's left edge.
+- A stage frame clips with the shared clip margin, never at its edge, so a flush control keeps its focus ring or border.
+- The stage's resize handles stay out of the tab order.
 
 ## UI behavior
 

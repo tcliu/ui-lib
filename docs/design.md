@@ -45,7 +45,9 @@ The showcase is an `AppShell` two-pane view:
   editing lives in that column, so the config panel keeps only Reset plus
   editors for demo data no single prop covers. An overlay or placement demo
   renders inside a resizable stage so its placement can be inspected as the
-  container narrows.
+  container narrows; the frame clips with a margin so a control flush at its edge
+  keeps its focus ring, and the frame's invisible resize handles stay out of the
+  tab order (keyboard resizing belongs to the Resizable demo).
 
 In `auto` mode the picker floats as an overlay above the dimmed content when
 the shell container narrows below the 768px container breakpoint, and docks
@@ -64,7 +66,8 @@ A filterable dropdown narrows its list as you type. While a query matches more
 than one option the matched part of each label is emphasized, while a lone match
 is left plain. Confirming an option writes the confirmed label back into the
 input, and reopening the panel filters by that label, so the typed query does not
-reappear after a selection.
+reappear after a selection. Double-clicking the input selects the whole value,
+so typing replaces it instead of editing one word inside it.
 
 An autocomplete field narrows its suggestion list the same way but keeps the
 typed text as its value: free text is accepted, picking a suggestion writes that
