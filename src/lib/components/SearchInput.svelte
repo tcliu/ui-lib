@@ -49,7 +49,7 @@
   // The input box rides TextInput's shared base metrics; the search icon and
   // its gutter are the only metrics this wrapper adds. Every metric is a fixed
   // ratio of the size dimension, so each stays constant across the range.
-  const SEARCH_RATIOS = { padLeft: 1.75, iconLeft: 0.5, icon: 1 }
+  const SEARCH_RATIOS = { padLeft: 1.8, iconLeft: 0.6, icon: 0.9 }
 
   const metrics = $derived(dimensionMetrics(size, SEARCH_RATIOS))
   const style = $derived(sizeVarStyle('search', metrics))

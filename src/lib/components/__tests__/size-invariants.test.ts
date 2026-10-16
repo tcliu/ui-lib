@@ -113,7 +113,7 @@ const CASES: ComponentCase[] = [
   },
   {
     name: 'SelectDropdown',
-    keys: ['sel-font', 'sel-line', 'sel-pad-x', 'sel-pad-y', 'sel-min-w', 'sel-gap', 'sel-icon', 'sel-chevron-inset'],
+    keys: ['sel-font', 'sel-line', 'sel-pad-x', 'sel-pad-y', 'sel-min-w', 'sel-gap', 'sel-icon'],
     render: size =>
       renderStyle(SelectDropdown, { options: ['a', 'b'], activeValue: 'a', ariaLabel: 'x', onSelect: () => {}, size }),
   },

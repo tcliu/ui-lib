@@ -47,13 +47,14 @@ describe('SearchInput dimension ratios', () => {
       flushSync()
       const style = styleOf()
       expect(num(style, 'input-font') / px).toBeCloseTo(0.8125)
-      expect(num(style, 'input-pad-y') / px).toBeCloseTo(0.4375)
-      expect(num(style, 'input-pad-x') / px).toBeCloseTo(0.625)
+      expect(num(style, 'input-pad-y') / px).toBeCloseTo(0.39375)
+      expect(num(style, 'input-pad-x') / px).toBeCloseTo(0.5625)
       expect(num(style, 'input-radius') / px).toBeCloseTo(0.375)
-      expect(num(style, 'search-pad-left') / px).toBeCloseTo(1.75)
-      expect(num(style, 'search-icon-left') / px).toBeCloseTo(0.5)
-      // The icon glyph renders at the shared icon ratio of the dimension.
-      expect(Number(target.querySelector('svg')?.getAttribute('width')) / px).toBeCloseTo(0.8125)
+      expect(num(style, 'search-pad-left') / px).toBeCloseTo(1.8)
+      expect(num(style, 'search-icon-left') / px).toBeCloseTo(0.6)
+      // The search icon trims the icon slot, so its glyph rides 0.9× the
+      // shared icon ratio of the dimension.
+      expect(Number(target.querySelector('svg')?.getAttribute('width')) / px).toBeCloseTo(0.73125)
     }
   })
 })

@@ -64,8 +64,8 @@ describe('TextInput clearable', () => {
     expect(inputEl().getAttribute('style')).toContain('padding-right: calc(var(--clear-gutter) + var(--input-clear-offset, 0px))')
     const frame = inputEl().parentElement!
     expect(frame.className).toContain('relative')
-    expect(frame.getAttribute('style')).toContain('--clear-inset: 10px')
-    expect(frame.getAttribute('style')).toContain('--clear-gutter: 30px')
+    expect(frame.getAttribute('style')).toContain('--clear-inset: 9px')
+    expect(frame.getAttribute('style')).toContain('--clear-gutter: 27px')
     expect(frame.contains(clearEl()!)).toBe(true)
   })
 
@@ -85,8 +85,8 @@ describe('TextInput clearable', () => {
   it('scales the clear metrics with the size', async () => {
     await remount(TextInput, { value: 'hi', clearable: true, size: 20, ariaLabel: 'x' })
     const frame = inputEl().parentElement!
-    expect(frame.getAttribute('style')).toContain('--clear-inset: 12.5px')
-    expect(frame.getAttribute('style')).toContain('--clear-gutter: 37.5px')
+    expect(frame.getAttribute('style')).toContain('--clear-inset: 11.25px')
+    expect(frame.getAttribute('style')).toContain('--clear-gutter: 33.75px')
   })
 
   it('rides a trimmed share of the field so the cross scales with it', async () => {

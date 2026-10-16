@@ -27,6 +27,7 @@ async function applySnippet(page: Page, path: string, snippet: string, count: nu
 interface Metrics {
   font: number
   padLeft: number
+  padRight: number
   padTop: number
   radius: number
   line: number
@@ -40,6 +41,7 @@ function measure(page: Page, selector: string): Promise<Metrics[]> {
       return {
         font: parseFloat(cs.fontSize),
         padLeft: parseFloat(cs.paddingLeft),
+        padRight: parseFloat(cs.paddingRight),
         padTop: parseFloat(cs.paddingTop),
         radius: parseFloat(cs.borderTopLeftRadius),
         line: parseFloat(cs.lineHeight),
@@ -62,8 +64,8 @@ test('numeric size scales every Button metric by a constant ratio', async ({ pag
     const size = SIZES[i]!
     expect(row.font / size).toBeCloseTo(0.8125, 2)
     expect(row.line / size).toBeCloseTo(1.1607, 2)
-    expect(row.padLeft / size).toBeCloseTo(0.75, 2)
-    expect(row.padTop / size).toBeCloseTo(0.5, 2)
+    expect(row.padLeft / size).toBeCloseTo(0.65, 2)
+    expect(row.padTop / size).toBeCloseTo(0.45, 2)
     expect(row.radius / size).toBeCloseTo(0.375, 2)
   })
 })
@@ -82,8 +84,8 @@ test('numeric size scales every TextInput metric by a constant ratio', async ({ 
     const size = SIZES[i]!
     expect(row.font / size).toBeCloseTo(0.8125, 2)
     expect(row.line / size).toBeCloseTo(1.1875, 2)
-    expect(row.padLeft / size).toBeCloseTo(0.625, 2)
-    expect(row.padTop / size).toBeCloseTo(0.4375, 2)
+    expect(row.padLeft / size).toBeCloseTo(0.5625, 2)
+    expect(row.padTop / size).toBeCloseTo(0.39375, 2)
   })
 })
 
@@ -103,9 +105,10 @@ test('numeric size scales the SearchInput box and icon by a constant ratio', asy
   rows.forEach((row, i) => {
     const size = SIZES[i]!
     expect(row.font / size).toBeCloseTo(0.8125, 2)
-    expect(row.padLeft / size).toBeCloseTo(1.75, 2)
-    // The icon glyph renders at the shared icon ratio of the dimension.
-    expect(icons[i]! / size).toBeCloseTo(0.8125, 2)
+    expect(row.padLeft / size).toBeCloseTo(1.8, 2)
+    // The search icon trims the icon slot, so its glyph rides 0.9× the shared
+    // icon ratio of the dimension.
+    expect(icons[i]! / size).toBeCloseTo(0.73125, 2)
   })
 })
 
@@ -125,7 +128,10 @@ test('numeric size scales the SelectDropdown trigger by a constant ratio', async
   rows.forEach((row, i) => {
     const size = SIZES[i]!
     expect(row.font / size).toBeCloseTo(0.8125, 2)
-    expect(row.padLeft / size).toBeCloseTo(0.75, 2)
+    expect(row.padLeft / size).toBeCloseTo(0.675, 2)
+    // The right gutter is derived from the padding, not tuned beside it: the
+    // computed right padding must track `padLeft × SELECT_GUTTER_SHARE`.
+    expect(row.padRight / size).toBeCloseTo(0.3375, 2)
     expect(row.minWidth / size).toBeCloseTo(7, 2)
   })
 })

@@ -44,8 +44,8 @@ describe('TextInput dimension ratios', () => {
       flushSync()
       const style = styleOf()
       expect(num(style, 'font') / px).toBeCloseTo(0.8125)
-      expect(num(style, 'pad-x') / px).toBeCloseTo(0.625)
-      expect(num(style, 'pad-y') / px).toBeCloseTo(0.4375)
+      expect(num(style, 'pad-x') / px).toBeCloseTo(0.5625)
+      expect(num(style, 'pad-y') / px).toBeCloseTo(0.39375)
       expect(num(style, 'radius') / px).toBeCloseTo(0.375)
       expect(target.querySelector('input')?.className).toContain('text-[length:var(--input-font)]')
     }

@@ -163,15 +163,8 @@
 
   // Text sizing follows TextInput: the shared input chrome (`input-chrome.ts`)
   // drives font, line, radius, and padding from the size dimension, emitted as
-  // `--input-*` vars consumed by `INPUT_METRIC_CLASS` below. Only the padding is
-  // trimmed 20% so the inline field sits tighter in a dense row; every other
-  // ratio stays shared so the label matches a sibling TextInput's type metrics.
-  const EDITABLE_INPUT_RATIOS = {
-    ...INPUT_RATIOS,
-    padX: INPUT_RATIOS.padX * 0.8,
-    padY: INPUT_RATIOS.padY * 0.8,
-  }
-  const metrics = $derived(dimensionMetrics(size, EDITABLE_INPUT_RATIOS))
+  // `--input-*` vars consumed by `INPUT_METRIC_CLASS` below.
+  const metrics = $derived(dimensionMetrics(size, INPUT_RATIOS))
   const sizeStyle = $derived(sizeVarStyle('input', metrics))
   const metricClass = INPUT_METRIC_CLASS
   const inputStyle = $derived.by(() => {

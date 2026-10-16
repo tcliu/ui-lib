@@ -15,6 +15,7 @@
     SELECT_BOX_UTILITIES,
     SELECT_TRIGGER_UTILITIES,
     SELECT_RATIOS,
+    SELECT_GUTTER_SHARE,
     TRIGGER_BASE,
     OPTION_BASE,
     EMPTY_BASE,
@@ -107,7 +108,14 @@
   // constant metric:dimension ratio across the range; the icon slot is the
   // dimension itself (ratio 1).
   const metrics = $derived(dimensionMetrics(size, SELECT_RATIOS))
-  const style = $derived(sizeVarStyle('sel', metrics))
+  // The trigger's right gutter is derived from the horizontal padding rather
+  // than tuned beside it: `--sel-pad-right` is published as a calc over
+  // `--sel-pad-x`, so retuning `padX` (or a caller overriding the var) rescales
+  // the chevron's inset with the padding instead of moving it by a constant
+  // offset. `Pagination` emits its derived `--pg-btn` the same way.
+  const style = $derived(
+    `${sizeVarStyle('sel', metrics)};--sel-pad-right:calc(var(--sel-pad-x) * ${SELECT_GUTTER_SHARE})`,
+  )
   // The trigger's direction marker and its clear cross ride a trimmed share of
   // that slot: at the full dimension each reads as loud as the label beside it,
   // so they take 0.625 of it — the same share `TextInput`'s clear cross rides —

@@ -22,4 +22,4 @@ export const INPUT_METRIC_CLASS =
 
 // Every metric is a fixed ratio of the size dimension, so each keeps a constant
 // metric:dimension ratio across the whole range.
-export const INPUT_RATIOS = { font: 0.8125, line: 1.1875, radius: 0.375, padX: 0.625, padY: 0.4375 }
+export const INPUT_RATIOS = { font: 0.8125, line: 1.1875, radius: 0.375, padX: 0.5625, padY: 0.39375 }

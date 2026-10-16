@@ -109,14 +109,14 @@ describe('EditableText numeric size', () => {
     const display = target.querySelector('button')
     expect(display?.className).toContain('var(--input-font)')
     expect(display?.getAttribute('style')).toContain('--input-font: 13px')
-    expect(display?.getAttribute('style')).toContain('--input-pad-x: 8px')
+    expect(display?.getAttribute('style')).toContain('--input-pad-x: 9px')
     await unmount(instance!)
     instance = mount(EditableText, { target, props: { text: 'hi', size: 14, onChange: () => {} } })
     flushSync()
     const custom = target.querySelector('button')
     expect(custom?.className).toContain('var(--input-font)')
     expect(custom?.getAttribute('style')).toContain('--input-font: 11.375px')
-    expect(custom?.getAttribute('style')).toContain('--input-pad-x: 7px')
+    expect(custom?.getAttribute('style')).toContain('--input-pad-x: 7.875px')
     await unmount(instance!)
     instance = null
     // Non-finite numbers fall back to md, never "undefined".

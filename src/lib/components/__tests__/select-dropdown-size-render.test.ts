@@ -64,6 +64,16 @@ describe('SelectDropdown numeric size', () => {
     // The chevron rides 0.625 × the slot (14) → 8.75 × ICON_RATIO.
     expect(document.querySelector('.relative svg')?.getAttribute('width')).toBe('7.109375')
   })
+
+  it('publishes the chevron gutter as a calc over the padding var', () => {
+    instance = mount(Harness, { target })
+    flushSync()
+    const trigger = document.querySelector('button[role=combobox]')
+    // Derived, not baked to px: the gutter reads `--sel-pad-x`, so retuning the
+    // padding or overriding the var carries the chevron's inset with it.
+    expect(trigger?.getAttribute('style')).toContain('--sel-pad-right: calc(var(--sel-pad-x) * 0.5)')
+    expect(trigger?.getAttribute('class')).toContain('pr-[var(--sel-pad-right)]')
+  })
 })
 
 describe('SelectDropdown clearable sizing', () => {

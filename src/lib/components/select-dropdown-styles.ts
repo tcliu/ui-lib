@@ -9,16 +9,19 @@
 export const SELECT_RATIOS = {
   font: 0.8125,
   line: 1.1875,
-  padX: 0.75,
-  padY: 0.4375,
+  padX: 0.675,
+  padY: 0.39375,
   minW: 7,
   gap: 0.375,
   icon: 1,
-  // Negative right-margin pulling the chevron into the trigger's right padding,
-  // as a ratio of the size dimension so the inset scales with the control
-  // instead of a fixed 6px that is off-scale at the small and large steps.
-  chevronInset: 0.375,
 }
+
+// The trigger's right gutter (chevron → border) is derived, not a ratio of the
+// dimension: it is a fixed, size-independent share of the horizontal padding,
+// so retuning `padX` — or a caller overriding `--sel-pad-x` — rescales the
+// gutter with the padding instead of shifting it by a constant offset. The
+// share is the fixed constant; the emitted gutter is `--sel-pad-right`.
+export const SELECT_GUTTER_SHARE = 0.5
 
 // The var-driven box metrics shared by the trigger boxes, the option rows, and
 // the empty row; the element's inline style carries the values.
@@ -26,11 +29,12 @@ export const SELECT_BOX_UTILITIES =
   'min-w-[var(--sel-min-w)] text-[length:var(--sel-font)] leading-[var(--sel-line)] py-[var(--sel-pad-y)] px-[var(--sel-pad-x)]'
 
 // The trigger box shares the box metrics but carries an asymmetric right
-// padding: the chevron sits inside the right gutter, so that gutter is reduced
-// by the chevron inset (an intentional control inset, per the tailwind
-// reference) instead of pulling the chevron out with a negative margin.
+// padding: the chevron sits inside the right gutter, published as
+// `--sel-pad-right` — a fixed share of the horizontal padding, defined in terms
+// of `--sel-pad-x` so a padding override carries the gutter along — rather than
+// tuned as its own absolute ratio.
 export const SELECT_TRIGGER_UTILITIES =
-  'min-w-[var(--sel-min-w)] text-[length:var(--sel-font)] leading-[var(--sel-line)] py-[var(--sel-pad-y)] pl-[var(--sel-pad-x)] pr-[calc(var(--sel-pad-x)-var(--sel-chevron-inset))]'
+  'min-w-[var(--sel-min-w)] text-[length:var(--sel-font)] leading-[var(--sel-line)] py-[var(--sel-pad-y)] pl-[var(--sel-pad-x)] pr-[var(--sel-pad-right)]'
 
 // Default floating panel chrome; a `panelClass` override replaces it. The
 // per-size min-width lives on the trigger and option rows (see
