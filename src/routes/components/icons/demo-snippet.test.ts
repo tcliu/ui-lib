@@ -1,3 +1,5 @@
+import { readdirSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { buildIconsSnippet, ICON_COMPONENTS, ICON_ENTRIES, iconLabel } from './demo-snippet'
 
@@ -62,5 +64,23 @@ describe('ICON_COMPONENTS parity', () => {
     const known = new Set(ICON_ENTRIES.map(entry => entry.name))
     const extra = Object.keys(ICON_COMPONENTS).filter(name => !known.has(name))
     expect(extra).toEqual([])
+  })
+})
+
+describe('icon gallery coverage', () => {
+  // The page is the icon set's index, so a glyph file cannot ship without an
+  // entry: read the directory instead of trusting the hand-kept list.
+  const glyphs = readdirSync(join(process.cwd(), 'src/lib/icons'))
+    .filter(name => name.endsWith('Icon.svelte'))
+    .map(name => name.replace(/\.svelte$/, ''))
+
+  it('lists an entry for every glyph in src/lib/icons', () => {
+    const listed = new Set(ICON_ENTRIES.map(entry => `${entry.name}Icon`))
+    expect(glyphs.filter(glyph => !listed.has(glyph))).toEqual([])
+  })
+
+  it('lists entries in name order', () => {
+    const names = ICON_ENTRIES.map(entry => entry.name)
+    expect(names).toEqual([...names].sort())
   })
 })
