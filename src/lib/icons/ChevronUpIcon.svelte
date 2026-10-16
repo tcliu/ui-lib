@@ -13,15 +13,15 @@
 </script>
 
 <svg
-  viewBox="0 0 12 12"
+  viewBox="0 0 20 20"
   fill="none"
   stroke="currentColor"
-  stroke-width="1.75"
+  stroke-width="4.52"
   stroke-linecap="round"
   stroke-linejoin="round"
   aria-hidden="true"
   width={resolveIconPx(size)}
   height={resolveIconPx(size)}
   class={className}>
-  <path d="M3 7.5 6 4.5 9 7.5" />
+  <path d="M 2.26 13.87L 10 6.13L 17.74 13.87" />
 </svg>

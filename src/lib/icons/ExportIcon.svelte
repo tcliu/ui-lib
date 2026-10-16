@@ -16,12 +16,12 @@
   viewBox="0 0 20 20"
   fill="none"
   stroke="currentColor"
-  stroke-width="1.8"
+  stroke-width="2.43"
   stroke-linecap="round"
   stroke-linejoin="round"
   aria-hidden="true"
   width={resolveIconPx(size)}
   height={resolveIconPx(size)}
   class={className}>
-  <path d="M10 3v9m0 0 3.5-3.5M10 12 6.5 8.5M4 16h12" />
+  <path d="M 10 1.22v 12.16m 0 0l 4.73 -4.73M 10 13.38L 5.27 8.65M 1.89 18.78h 16.22" />
 </svg>

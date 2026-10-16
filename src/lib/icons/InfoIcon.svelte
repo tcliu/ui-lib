@@ -13,7 +13,7 @@
 </script>
 
 <svg
-  viewBox="0 0 24 24"
+  viewBox="0 0 20 20"
   fill="none"
   stroke="currentColor"
   stroke-width="2"
@@ -23,7 +23,7 @@
   width={resolveIconPx(size)}
   height={resolveIconPx(size)}
   class={className}>
-  <circle cx="12" cy="12" r="9" />
-  <line x1="12" y1="11" x2="12" y2="16" />
-  <circle cx="12" cy="7.5" r="0.6" fill="currentColor" stroke="none" />
+  <circle cx="10" cy="10" r="9" />
+  <line x1="10" y1="9" x2="10" y2="14" />
+  <circle cx="10" cy="5.5" r="0.6" fill="currentColor" stroke="none" />
 </svg>
