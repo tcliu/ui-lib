@@ -76,6 +76,13 @@ Project-specific development conventions for the UI Library web app.
 - A composite embedding sized controls exposes `size?: SizeInput` and forwards it to every inner sized control, defaulting to the shared `md` step so both agree.
 - A dialog panel's footprint is `BaseDialog`'s `widthVariant`/`heightVariant` (or the `size` shorthand setting both; explicit variant wins), not a `SizeInput` metric scale. Mechanism in `ARCHITECTURE.md`.
 - Size svg primitives (icons, spinner) take `size` attributes, never classes.
+- A sized control's icon slot is the size dimension itself (`icon` ratio `1`), while the glyph renders at the shared `ICON_RATIO` (`0.8125`), so an icon matches its label and keeps the optical size the filled-viewBox glyphs were normalized from.
+- Icon glyphs share one square viewBox (`0 0 20 20`) and author their artwork
+  directly in it, already normalized to fill the box (dominant axis, centered)
+  on the 0.01 unit step, so every square icon renders at a consistent size per
+  `size` value and no per-icon `<g transform>` fit sits between artwork and
+  grid; the sort pair keeps its non-square crop. Mechanism in
+  `ARCHITECTURE.md`.
 - Reuse this project's existing UI primitives; every button is the shared
   `Button` (icon-only through its `icon` snippet) per
   `~/.agents/references/ui-patterns.md`, never a raw `<button>`.

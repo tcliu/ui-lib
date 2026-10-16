@@ -232,9 +232,23 @@ of building a parallel control.
   spinner) take width/height `size` attributes, never classes, so they compose
   with `className`. An icon passed to a `Button` `icon` snippet is sized by the
   button's icon box (`[&_svg]:h-full [&_svg]:w-full`) and carries no `size`
-  itself; Menu-trigger icons keep their `size` (Menu has no such override).
+  itself; Menu-trigger icons keep their `size` (Menu has no such override). A
+  sized control's own icon slot is the size dimension itself (`icon` ratio `1`),
+  and the glyph rendered into it takes the shared icon ratio (`ICON_RATIO`,
+  0.8125) — the text-like font ratio, so an `md` icon lands at 13px, the size of
+  its label and the optical size the filled-viewBox glyphs were normalized from.
 - **Icon glyphs** — one glyph is one component: a single `aria-hidden` `<svg>`
-  sized by its `size`/`className` props, with no per-glyph style variant.
+  sized by its `size`/`className` props, with no per-glyph style variant. Every
+  square glyph uses the one square viewBox (`0 0 20 20`) and authors its artwork
+  directly in that grid: the glyph is normalized at authoring time to fill the
+  box on the dominant axis (centered, no distortion, no empty edge, geometry on
+  the 0.01 unit step, stroke widths scaled with it), so no per-icon `<g
+  transform>` fit stands between the artwork and the grid and
+  `resolveIconPx(size)` maps to identical geometry for every icon; that resolver
+  applies the shared `ICON_RATIO` (0.8125), so a viewBox-filling glyph still
+  lands at the optical size the components around it were tuned for. The
+  non-square `SortAscIcon`/`SortDescIcon` pair keeps a tight 12×8 crop with a
+  two-thirds-height render.
 - **Listbox surfaces** — `SelectDropdown`, `ChipDropdown`, `TagInput`,
   `AutoComplete`, and `Menu` sit on the shared listbox interaction core (Key
   patterns, Shared listbox interactions); `SelectDropdown` derives its trigger
