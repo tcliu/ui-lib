@@ -79,7 +79,11 @@
   // The stage chrome: the same hook/host/pane classes the container-sensitive
   // pages used to spell inline, kept here so the harness is written once.
   const FRAME_ROW = 'flex flex-wrap items-start gap-4'
-  const FRAME_HOST = 'w-full overflow-hidden'
+  // The host clips a demo that outgrows its frame, but keeps the shared clip
+  // margin: the pane carries no padding, so a control sitting flush at the frame
+  // edge — and its focus ring, drawn outside the border box — would otherwise be
+  // cut off at the edge.
+  const FRAME_HOST = 'w-full overflow-clip [overflow-clip-margin:var(--stage-clip-margin)]'
   const FRAME_PANE = 'flex w-full min-w-0 flex-wrap items-start gap-4'
 
   // Only build an owned preview when the caller passes none. The preview prop
@@ -184,10 +188,13 @@
   {#if stage}
     <!-- The shell owns the resize harness so every container-sensitive demo
       shares one frame and its Show-code snippet stays content-only. The pane is
-      the live mount (below), so the frame survives the live compile. -->
+      the live mount (below), so the frame survives the live compile. The hook
+      carries no paint containment: containment clips at the box edge, and the
+      demo sits flush at that edge, so a focus ring or border there would be cut
+      (the host below still clips what outgrows the frame, with a margin). -->
     <div
       data-showcase-demo
-      class={preview.live ? `${FRAME_ROW} [contain:paint]` : FRAME_ROW}
+      class={FRAME_ROW}
       style={showDemo ? undefined : 'display:none'}>
       <div class={FRAME_HOST}>
         <Resizable
@@ -195,6 +202,7 @@
           height={stageHeight}
           minWidth={stage.minWidth}
           maxWidth={stage.maxWidth ?? 'parent'}
+          pointerOnlyHandles
           onResize={(nextWidth, nextHeight) => {
             stageWidth = nextWidth
             stageHeight = nextHeight
@@ -215,7 +223,7 @@
     <div
       bind:this={preview.liveEl}
       data-showcase-demo
-      class="flex flex-wrap items-start gap-4 [contain:paint]"
+      class="flex flex-wrap items-start gap-4"
       style={showDemo ? undefined : 'display:none'}></div>
   {:else}
     <div
