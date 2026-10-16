@@ -168,3 +168,28 @@ test('showcase: the SelectDropdown options eye resets to the defaults', async ({
   await dialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(demo).toContainText('two value: two')
 })
+
+test('showcase: double-clicking the filterable SelectDropdown selects the whole value', async ({ page }) => {
+  await page.goto('/components/select-dropdown')
+  await page.waitForLoadState('networkidle')
+
+  const demo = page.locator('[data-showcase-demo]').first()
+  // Ticking filterable swaps the trigger button for the combobox input.
+  await page.getByRole('checkbox', { name: 'filterable value' }).check({ force: true })
+  const input = demo.locator('input[role="combobox"]')
+  await expect(input).toHaveValue('Two')
+
+  // The double-click selects the whole value rather than the browser's single
+  // word, so the next keystroke replaces the filter.
+  await input.dblclick()
+  expect(
+    await input.evaluate(el => [(el as HTMLInputElement).selectionStart, (el as HTMLInputElement).selectionEnd]),
+  ).toEqual([0, 3])
+
+  await page.keyboard.type('One')
+  await expect(input).toHaveValue('One')
+  await page.keyboard.press('Enter')
+  // The typed replacement committed as the new value (the input's own text is
+  // not part of the demo's innerText).
+  await expect(demo).toContainText('value: one')
+})

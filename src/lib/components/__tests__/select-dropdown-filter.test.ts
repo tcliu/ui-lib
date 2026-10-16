@@ -215,3 +215,29 @@ describe('SelectDropdown filterable keyboard text behavior', () => {
     expect(activeOption()).toBe('Three')
   })
 })
+
+describe('SelectDropdown filterable text selection', () => {
+  function doubleClick(): void {
+    filterInput().dispatchEvent(new MouseEvent('dblclick', { bubbles: true, detail: 2 }))
+    flushSync()
+  }
+
+  it('selects the whole value on double-click so the next keystroke replaces it', () => {
+    openPanel()
+    doubleClick()
+    const input = filterInput()
+    expect([input.selectionStart, input.selectionEnd]).toEqual([0, input.value.length])
+  })
+
+  it('drops a pending caret fix that would collapse the selection', async () => {
+    openPanel()
+    const input = filterInput()
+    // With the whole value already selected, the caret fix a single click
+    // schedules would collapse it to the end; the double-click cancels it.
+    input.setSelectionRange(0, input.value.length)
+    input.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }))
+    doubleClick()
+    await new Promise(resolve => setTimeout(resolve, 50))
+    expect([input.selectionStart, input.selectionEnd]).toEqual([0, input.value.length])
+  })
+})
