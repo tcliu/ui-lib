@@ -42,22 +42,22 @@ describe('NumberInput size', () => {
   it('defaults to md with no custom override', async () => {
     await remount(NumberInput, { value: '5', ariaLabel: 'x' })
     const frame = target.firstElementChild
-    // The stepper glyph sits just under the dimension; its gutter clears the overlay.
-    expect(frame?.getAttribute('style')).toContain('--num-icon: 14px')
+    // The stepper icon slot is the size dimension itself; its gutter clears the overlay.
+    expect(frame?.getAttribute('style')).toContain('--num-icon: 16px')
     expect(frame?.getAttribute('style')).toContain('--num-pad-right: 20px')
     expect(frame?.getAttribute('style')).toContain('--num-radius: 6px')
     // The box rides TextInput's shared base metrics.
     expect(target.querySelector('input')?.className).toContain('text-[length:var(--input-font)]')
-    // Stepper chevrons scale with the dimension instead of a pinned size.
-    expect(target.querySelector('svg')?.getAttribute('width')).toBe('14')
+    // Stepper chevrons scale with the dimension, at the shared icon ratio.
+    expect(target.querySelector('svg')?.getAttribute('width')).toBe('13')
   })
 
   it('scales continuously for names and numbers, falling back to md', async () => {
     await remount(NumberInput, { value: '5', ariaLabel: 'x', size: 14 })
-    expect(target.firstElementChild?.getAttribute('style')).toContain('--num-icon: 12.25px')
+    expect(target.firstElementChild?.getAttribute('style')).toContain('--num-icon: 14px')
     expect(target.firstElementChild?.getAttribute('style')).toContain('--num-pad-right: 17.5px')
     await remount(NumberInput, { value: '5', ariaLabel: 'x', size: Number.NaN })
-    expect(target.firstElementChild?.getAttribute('style')).toContain('--num-icon: 14px')
+    expect(target.firstElementChild?.getAttribute('style')).toContain('--num-icon: 16px')
   })
 })
 
@@ -70,7 +70,7 @@ describe('PasswordInput size', () => {
     // The box rides TextInput's shared base metrics.
     expect(target.querySelector('input')?.className).toContain('text-[length:var(--input-font)]')
     // The eye toggle scales with the dimension instead of a pinned size.
-    expect(target.querySelector('svg')?.getAttribute('width')).toBe('16')
+    expect(target.querySelector('svg')?.getAttribute('width')).toBe('13')
   })
 
   it('scales continuously for names and numbers, falling back to md', async () => {

@@ -64,8 +64,8 @@
 
   // The input box rides TextInput's shared base metrics; the stepper glyph and
   // the gutter that clears it are the only metrics NumberInput adds. The glyph
-  // sits a touch under the dimension so it clears the half-height stepper row.
-  const NUM_RATIOS = { icon: 0.875, padRight: 1.25, radius: 0.375 }
+  // is the size dimension itself, the same slot rule every sized control uses.
+  const NUM_RATIOS = { icon: 1, padRight: 1.25, radius: 0.375 }
 
   const numMetrics = $derived(dimensionMetrics(size, NUM_RATIOS))
   const numStyle = $derived(sizeVarStyle('num', numMetrics))

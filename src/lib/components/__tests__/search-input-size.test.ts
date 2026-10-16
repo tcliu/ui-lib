@@ -52,8 +52,8 @@ describe('SearchInput dimension ratios', () => {
       expect(num(style, 'input-radius') / px).toBeCloseTo(0.375)
       expect(num(style, 'search-pad-left') / px).toBeCloseTo(1.75)
       expect(num(style, 'search-icon-left') / px).toBeCloseTo(0.5)
-      // The icon glyph is the dimension itself.
-      expect(Number(target.querySelector('svg')?.getAttribute('width')) / px).toBe(1)
+      // The icon glyph renders at the shared icon ratio of the dimension.
+      expect(Number(target.querySelector('svg')?.getAttribute('width')) / px).toBeCloseTo(0.8125)
     }
   })
 })

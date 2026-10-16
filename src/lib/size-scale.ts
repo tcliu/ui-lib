@@ -1,7 +1,7 @@
 // Canonical named-step scale shared by every sized component, so a numeric
-// size means the same thing everywhere. Names are aliases for icon-scale
-// pixels (the same steps the icons render); numbers are positions on that
-// axis — scaled by a constant ratio from the dimension, never a second scale.
+// size means the same thing everywhere. Names are aliases for the shared
+// dimension pixels; numbers are positions on that axis — scaled by a constant
+// ratio from the dimension, never a second scale.
 
 export type SizeName = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 
@@ -17,6 +17,14 @@ export const SIZE_ORDER: SizeName[] = (Object.entries(SIZE_PX) as [SizeName, num
 
 // Fixed font ratio: font size is always the size dimension times this.
 export const FONT_RATIO = 0.875
+
+// Fixed icon ratio: an icon renders at this fraction of its size — the same
+// ratio the text-like controls give their font, so a glyph sits at its label's
+// size. Glyphs fill their viewBox, so this is what holds a filled glyph at the
+// optical size the component around it was tuned for (the artwork it replaced
+// filled ~0.79 of its box); the control's own icon slot stays the size
+// dimension.
+export const ICON_RATIO = 0.8125
 
 // Ratio-scaled font size for any input on the shared axis: names resolve to
 // their step dimension, numbers pass through (minimum 1px), non-finite input

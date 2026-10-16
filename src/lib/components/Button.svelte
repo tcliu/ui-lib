@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { ComponentProps, Snippet } from 'svelte'
   import Tooltip from './Tooltip.svelte'
-  import type { SizeInput } from '$lib/size-scale'
+  import { ICON_RATIO, type SizeInput } from '$lib/size-scale'
   import { dimensionMetrics, iconPadRatio, sizeVarStyle } from './size-metrics'
 
   interface Props {
@@ -80,14 +80,16 @@
   }
 
   // Every metric is a fixed ratio of the size dimension, so each keeps a
-  // constant metric:dimension ratio across the range; the icon is the dimension
-  // itself (ratio 1). Font weight is an emphasis tier, not a length. The ratios
-  // reproduce a compact 13px toolbar button at the default `md` dimension.
-  // `iconPad` is derived so an icon-only button's box (`icon + 2·iconPad`)
-  // equals a text button's (`line + 2·padY`) and the glyph reads as a square at
-  // the text row height instead of a shorter box — see `iconPadRatio`.
+  // constant metric:dimension ratio across the range; the icon slot is the
+  // dimension itself (ratio 1) and the glyph inside renders at the shared icon
+  // ratio, matching every other icon at the same size. Font weight is an
+  // emphasis tier, not a length. The ratios reproduce a compact 13px toolbar
+  // button at the default `md` dimension. `iconPad` is derived so an icon-only
+  // button's box (`icon + 2·iconPad`) equals a text button's (`line + 2·padY`)
+  // and the glyph reads as a square at the text row height instead of a shorter
+  // box — see `iconPadRatio`.
   const BUTTON_RATIOS = { font: 0.8125, line: 1.1607, radius: 0.375, padX: 0.65, padY: 0.45, icon: 1 }
-  const BUTTON_METRICS = { ...BUTTON_RATIOS, iconPad: iconPadRatio(BUTTON_RATIOS) }
+  const BUTTON_METRICS = { ...BUTTON_RATIOS, iconPad: iconPadRatio(BUTTON_RATIOS), glyph: ICON_RATIO }
 
   const metrics = $derived({ ...dimensionMetrics(size, BUTTON_METRICS) })
   const boxStyle = $derived(sizeVarStyle('btn', metrics))
@@ -141,6 +143,9 @@
   })
 
   const iconBoxClass = 'h-[var(--btn-icon)] w-[var(--btn-icon)]'
+  // The slot is the size dimension, but the glyph inside renders at the shared
+  // icon ratio so a button icon matches an icon anywhere else at that size.
+  const iconGlyphClass = '[&_svg]:h-[var(--btn-glyph)] [&_svg]:w-[var(--btn-glyph)]'
 
   function handlePreventFocusSteal(event: PointerEvent) {
     event.preventDefault()
@@ -152,7 +157,7 @@
 {#snippet buttonInner()}
   {#if icon}
     <span class="inline-flex items-center gap-2">
-      <span class={`${iconBoxClass} [&_svg]:h-full [&_svg]:w-full`}>{@render icon()}</span>
+      <span class={`inline-flex items-center justify-center ${iconBoxClass} ${iconGlyphClass}`}>{@render icon()}</span>
       {@render children?.()}
     </span>
   {:else}

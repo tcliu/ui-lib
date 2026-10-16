@@ -104,8 +104,8 @@ test('numeric size scales the SearchInput box and icon by a constant ratio', asy
     const size = SIZES[i]!
     expect(row.font / size).toBeCloseTo(0.8125, 2)
     expect(row.padLeft / size).toBeCloseTo(1.75, 2)
-    // The icon glyph is the size dimension itself.
-    expect(icons[i]! / size).toBeCloseTo(1, 2)
+    // The icon glyph renders at the shared icon ratio of the dimension.
+    expect(icons[i]! / size).toBeCloseTo(0.8125, 2)
   })
 })
 

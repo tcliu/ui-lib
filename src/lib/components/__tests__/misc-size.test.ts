@@ -52,6 +52,8 @@ describe('Checkbox numeric size', () => {
     const label = target.querySelector('label')
     expect(label?.getAttribute('style')).toContain('--cbx-box: 17.5px')
     expect(label?.getAttribute('style')).toContain('--cbx-font: 12.25px')
+    // The icon slot is the size dimension itself, not a fraction of it.
+    expect(label?.getAttribute('style')).toContain('--cbx-icon: 14px')
   })
 
   it('passes out-of-scale numbers through continuously', async () => {

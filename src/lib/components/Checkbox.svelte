@@ -34,7 +34,7 @@
   // Every metric is a fixed ratio of the size dimension, so each keeps a
   // constant metric:dimension ratio across the whole range (calibrated at the
   // md default); the icon box scales with the dimension itself.
-  const CBX_RATIOS = { gap: 0.75, box: 1.25, font: 0.875, icon: 0.875 }
+  const CBX_RATIOS = { gap: 0.75, box: 1.25, font: 0.875, icon: 1 }
 
   const metrics = $derived(dimensionMetrics(size, CBX_RATIOS))
   const boxStyle = $derived(sizeVarStyle('cbx', metrics))

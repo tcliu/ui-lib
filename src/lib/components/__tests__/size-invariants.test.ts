@@ -84,7 +84,7 @@ interface ComponentCase {
 const CASES: ComponentCase[] = [
   {
     name: 'Button',
-    keys: ['btn-font', 'btn-line', 'btn-radius', 'btn-pad-x', 'btn-pad-y', 'btn-icon', 'btn-icon-pad'],
+    keys: ['btn-font', 'btn-line', 'btn-radius', 'btn-pad-x', 'btn-pad-y', 'btn-icon', 'btn-icon-pad', 'btn-glyph'],
     render: size => renderStyle(Button, { size }),
   },
   {

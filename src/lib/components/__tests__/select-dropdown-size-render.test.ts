@@ -61,7 +61,7 @@ describe('SelectDropdown numeric size', () => {
   it('scales the chevron with the numeric size', () => {
     instance = mount(Harness, { target })
     flushSync()
-    expect(document.querySelector('.relative svg')?.getAttribute('width')).toBe('14')
+    expect(document.querySelector('.relative svg')?.getAttribute('width')).toBe('11.375')
   })
 })
 
