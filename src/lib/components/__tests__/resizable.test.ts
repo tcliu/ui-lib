@@ -252,4 +252,33 @@ describe('Resizable', () => {
     key(width, 'ArrowRight')
     expect(onResize).toHaveBeenLastCalledWith(360, 300)
   })
+
+  it('keeps a pointer-only frame out of the tab order', () => {
+    instance = mount(Harness, { target, props: { pointerOnlyHandles: true } })
+    flushSync()
+    const container = target.firstElementChild as HTMLElement
+    const { width, height, both } = handles(target)
+    expect([width, height, both].map(handle => handle.getAttribute('tabindex'))).toEqual([
+      '-1',
+      '-1',
+      '-1',
+    ])
+
+    // The stops never open, however focus moves through the frame: a frame that
+    // is page chrome stays pointer-only.
+    container.dispatchEvent(new FocusEvent('focusin', { bubbles: true }))
+    flushSync()
+    expect([width, height, both].map(handle => handle.getAttribute('tabindex'))).toEqual([
+      '-1',
+      '-1',
+      '-1',
+    ])
+
+    // The handles stay usable by pointer and by programmatic focus.
+    pointer(width, 'pointerdown', 100, 50)
+    pointer(width, 'pointermove', 150, 50)
+    expect((target.firstElementChild as HTMLElement).style.width).toBe('250px')
+    width.focus()
+    expect(document.activeElement).toBe(width)
+  })
 })

@@ -18,6 +18,11 @@
     maxHeight?: ResizeBound
     onResize: (width: number, height: number) => void
     className?: string
+    // Keep the handles out of the tab order: a frame that is page chrome shows
+    // no focus stops and resizes by pointer only, while a frame whose keyboard
+    // resize is the demo's own subject leaves this off, so its handles stay
+    // immediately reachable.
+    pointerOnlyHandles?: boolean
     children: Snippet
   }
 
@@ -30,6 +35,7 @@
     maxHeight = Number.POSITIVE_INFINITY,
     onResize,
     className = '',
+    pointerOnlyHandles = false,
     children,
   }: Props = $props()
 
@@ -55,6 +61,9 @@
   // Drag-start size plus the parent's content box, captured when an interaction
   // begins so a `'parent'` bound clamps against the current container size.
   let rootEl = $state<HTMLElement | null>(null)
+  // A pointer-only frame keeps its handles out of the tab order, so a page whose
+  // frame is chrome adds no invisible focus stops to its tab order.
+  const handleTabIndex = $derived(pointerOnlyHandles ? -1 : 0)
   let startWidth = 0
   let startHeight = 0
   let availableWidth = Number.POSITIVE_INFINITY
@@ -134,7 +143,9 @@
   (a scrollport, an overflow-hidden panel) would cut off handles hanging past
   the edges, hiding them from view and hit-testing. They also carry `z-40` so a
   demo's own overlay (an app-shell backdrop, a drawer) cannot cover the frame
-  handles and trap the pointer. -->
+  handles and trap the pointer. A frame with `pointerOnlyHandles` keeps its
+  stops closed for good, so page chrome adds no invisible focus stops; keyboard
+  resizing stays on a frame that is the demo's own subject. -->
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div
@@ -149,7 +160,7 @@
     aria-valuenow={width}
     aria-valuemin={minWidth}
     aria-valuemax={maxWidthValue}
-    tabindex="0"
+    tabindex={handleTabIndex}
     class="absolute inset-y-0 right-0 z-40 w-3 cursor-e-resize touch-none outline-none select-none focus-visible:ring-2 focus-visible:ring-cyan-500"
     onpointerdown={widthDrag.handlePointerDown}
     onpointermove={widthDrag.handlePointerMove}
@@ -168,7 +179,7 @@
     aria-valuenow={height}
     aria-valuemin={minHeight}
     aria-valuemax={maxHeightValue}
-    tabindex="0"
+    tabindex={handleTabIndex}
     class="absolute inset-x-0 bottom-0 z-40 h-3 cursor-s-resize touch-none outline-none select-none focus-visible:ring-2 focus-visible:ring-cyan-500"
     onpointerdown={heightDrag.handlePointerDown}
     onpointermove={heightDrag.handlePointerMove}
@@ -188,7 +199,7 @@
     aria-valuemin={minWidth}
     aria-valuemax={maxWidthValue}
     aria-valuetext={valueText}
-    tabindex="0"
+    tabindex={handleTabIndex}
     class="absolute right-0 bottom-0 z-40 h-4 w-4 cursor-nwse-resize touch-none outline-none select-none focus-visible:ring-2 focus-visible:ring-cyan-500"
     onpointerdown={bothDrag.handlePointerDown}
     onpointermove={bothDrag.handlePointerMove}

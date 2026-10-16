@@ -14,6 +14,10 @@ test('showcase: the resizable demo resizes from its cursor-only edges', async ({
   const container = widthHandle.locator('..')
   await expect(container).toBeVisible()
 
+  // Keyboard resizing is this page's own subject, so its handles stay in the tab
+  // order from the start (a stage page defers them until its frame is focused).
+  await expect(widthHandle).toHaveAttribute('tabindex', '0')
+
   // The handles carry no visible grip: only the resize cursor marks them.
   await expect(widthHandle.locator('span')).toHaveCount(0)
   await expect

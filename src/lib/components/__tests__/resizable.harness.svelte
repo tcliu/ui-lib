@@ -10,10 +10,11 @@
     minHeight?: number
     maxWidth?: number | 'parent'
     maxHeight?: number | 'parent'
+    pointerOnlyHandles?: boolean
     onResize?: (width: number, height: number) => void
   }
 
-  let { minWidth, minHeight, maxWidth, maxHeight, onResize }: HarnessProps = $props()
+  let { minWidth, minHeight, maxWidth, maxHeight, pointerOnlyHandles, onResize }: HarnessProps = $props()
 
   let width = $state(200)
   let height = $state(150)
@@ -30,6 +31,7 @@
   {minWidth}
   {minHeight}
   {maxWidth}
-  {maxHeight}>
+  {maxHeight}
+  {pointerOnlyHandles}>
   <div data-testid="resizable-content">content</div>
 </Resizable>
