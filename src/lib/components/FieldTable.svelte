@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
   import type BaseDialog from './BaseDialog.svelte'
-  import Button from './Button.svelte'
+  import Button, { iconOnlyBoxPx } from './Button.svelte'
   import Checkbox from './Checkbox.svelte'
   import DataTable, { type DataTableColumn } from './DataTable.svelte'
   import EditDialog from './EditDialog.svelte'
@@ -164,10 +164,12 @@
   }
 
   // Right inset the absolute area clears in a toggle row: the cell's right
-  // padding (12) plus the row gap (8) plus the ghost icon-only eye, which
-  // carries no padding or border and so is exactly the size dimension wide.
+  // padding (12) plus the row gap (8) plus the rendered box of the ghost
+  // icon-only eye. The box is derived from `Button` (the icon slot floored at
+  // the text row height) rather than assumed to be the slot, so a row-height
+  // retune carries the inset with it instead of leaving the area over the glyph.
   function areaRightInset(): number {
-    return 12 + 8 + dimensionMetrics(size, { box: 1 }).box
+    return 12 + 8 + iconOnlyBoxPx(size)
   }
 
   // Shift applied to a number row's eye while its outside clear slot is empty:

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushSync, mount, unmount } from 'svelte'
 import { type FieldConfig } from '../FieldTable.svelte'
+import { iconOnlyBoxPx } from '../Button.svelte'
 import Harness from './field-table.harness.svelte'
 
 let target: HTMLDivElement
@@ -104,10 +105,12 @@ describe('FieldTable', () => {
     )
     expect(table.querySelector('textarea[aria-label="badge value"]')).not.toBeNull()
     expect(table.querySelector('button[aria-label="Apply badge"]')).not.toBeNull()
-    // The row reserves the eye zone (cell padding + gap + eye width at md),
-    // so the absolute area never runs under the eye.
+    // The row reserves the eye zone (cell padding + row gap + the eye's own
+    // rendered box), so the absolute area never runs under the eye. The box is
+    // the icon slot floored at the button's text row height; assuming the slot
+    // alone leaves the inset ~2.6px short at md.
     const row = table.querySelector('div[style*="--area-right"]') as HTMLElement
-    expect(row.style.getPropertyValue('--area-right')).toBe('36px')
+    expect(parseFloat(row.style.getPropertyValue('--area-right'))).toBeCloseTo(12 + 8 + iconOnlyBoxPx('md'), 6)
   })
 
   it('keeps a short text value on a single-line input', () => {

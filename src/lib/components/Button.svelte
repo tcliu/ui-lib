@@ -1,8 +1,34 @@
+<script module lang="ts">
+  import { ICON_RATIO, type SizeInput } from '$lib/size-scale'
+  import { dimensionMetrics, iconPadRatio } from './size-metrics'
+
+  // Every metric is a fixed ratio of the size dimension, so each keeps a
+  // constant metric:dimension ratio across the range; the icon slot is the
+  // dimension itself (ratio 1) and the glyph inside renders at the shared icon
+  // ratio, matching every other icon at the same size. Font weight is an
+  // emphasis tier, not a length. The ratios reproduce a compact 13px toolbar
+  // button at the default `md` dimension. `iconPad` is derived so an icon-only
+  // button's box (`icon + 2·iconPad`) equals a text button's (`line + 2·padY`)
+  // and the glyph reads as a square at the text row height instead of a shorter
+  // box — see `iconPadRatio`.
+  export const BUTTON_RATIOS = { font: 0.8125, line: 1.1607, radius: 0.375, padX: 0.65, padY: 0.45, icon: 1 }
+  export const BUTTON_METRICS = { ...BUTTON_RATIOS, iconPad: iconPadRatio(BUTTON_RATIOS), glyph: ICON_RATIO }
+
+  // A paddingless icon-only button floors its box at the text row height
+  // (`min-w`/`min-h` take `--btn-line`), so it renders wider than its icon slot.
+  // A consumer reserving room beside the glyph — the field table's eye toggle —
+  // derives that box from here instead of assuming the slot, so a row-height
+  // retune cannot leave it overlapping the glyph.
+  export function iconOnlyBoxPx(size: SizeInput): number {
+    const metrics = dimensionMetrics(size, BUTTON_RATIOS)
+    return Math.max(metrics.icon, metrics.line)
+  }
+</script>
+
 <script lang="ts">
   import type { ComponentProps, Snippet } from 'svelte'
   import Tooltip from './Tooltip.svelte'
-  import { ICON_RATIO, type SizeInput } from '$lib/size-scale'
-  import { dimensionMetrics, iconPadRatio, sizeVarStyle } from './size-metrics'
+  import { sizeVarStyle } from './size-metrics'
 
   interface Props {
     variant?: 'primary' | 'secondary' | 'danger' | 'outline' | 'ghost'
@@ -78,18 +104,6 @@
       'border border-violet-500/40 bg-violet-500/10 text-violet-200 hover:border-violet-400 hover:text-violet-100 focus:border-violet-400 focus:text-violet-100 focus-visible:border-transparent',
     rose: 'border border-rose-500/40 bg-rose-500/10 text-rose-200 hover:border-rose-400 hover:text-rose-100 focus:border-rose-400 focus:text-rose-100 focus-visible:border-transparent',
   }
-
-  // Every metric is a fixed ratio of the size dimension, so each keeps a
-  // constant metric:dimension ratio across the range; the icon slot is the
-  // dimension itself (ratio 1) and the glyph inside renders at the shared icon
-  // ratio, matching every other icon at the same size. Font weight is an
-  // emphasis tier, not a length. The ratios reproduce a compact 13px toolbar
-  // button at the default `md` dimension. `iconPad` is derived so an icon-only
-  // button's box (`icon + 2·iconPad`) equals a text button's (`line + 2·padY`)
-  // and the glyph reads as a square at the text row height instead of a shorter
-  // box — see `iconPadRatio`.
-  const BUTTON_RATIOS = { font: 0.8125, line: 1.1607, radius: 0.375, padX: 0.65, padY: 0.45, icon: 1 }
-  const BUTTON_METRICS = { ...BUTTON_RATIOS, iconPad: iconPadRatio(BUTTON_RATIOS), glyph: ICON_RATIO }
 
   const metrics = $derived({ ...dimensionMetrics(size, BUTTON_METRICS) })
   const boxStyle = $derived(sizeVarStyle('btn', metrics))
