@@ -7,6 +7,7 @@
   import { getI18nContext } from '$lib/i18n.svelte'
   import type { SizeInput } from '$lib/size-scale'
   import type { PaginationLabels } from './pagination-labels'
+  import { SELECT_RATIOS } from './select-dropdown-styles'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
   const i18n = getI18nContext()
 
@@ -52,11 +53,21 @@
   // Continuous chrome: every metric is a fixed ratio of the size dimension
   // (calibrated at the md default), so numeric sizes scale smoothly instead
   // of snapping to tiers. The raw size flows to the inner page-size dropdown,
-  // which interpolates it through the same dimension.
-  const PG_RATIOS = { btn: 2.5, padX: 0.75, font: 0.875, icon: 1 }
+  // which interpolates it through the same dimension. The line and vertical
+  // padding are the page-size dropdown trigger's own, so every page block
+  // lands on its height (see `pgStyle` below); the direction glyphs ride a
+  // trimmed share of the icon slot (0.75×, as `NumberInput`'s steppers do) so
+  // they read lighter than the page numbers.
+  const PG_RATIOS = { line: SELECT_RATIOS.line, padY: SELECT_RATIOS.padY, padX: 0.75, font: 0.875, icon: 0.75 }
 
   const pgMetrics = $derived(dimensionMetrics(size, PG_RATIOS))
-  const pgStyle = $derived(sizeVarStyle('pg', pgMetrics))
+  // A page block shares the page-size dropdown trigger's box — the select line
+  // plus its vertical padding, plus the 1px border top and bottom — so the page
+  // buttons, the jump input, and the dropdown all sit at one height. Deriving
+  // it from those ratios keeps the two from drifting when either box is tuned.
+  const pgStyle = $derived(
+    `${sizeVarStyle('pg', pgMetrics)};--pg-btn:calc(var(--pg-line) + 2 * var(--pg-pad-y) + 2px)`,
+  )
   const pgIconPx = $derived(pgMetrics.icon)
 
   const totalPages = $derived(Math.max(1, Math.ceil(total / pageSize)))
