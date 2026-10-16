@@ -47,9 +47,18 @@
   }: Props = $props()
 
   // The input box rides TextInput's shared base metrics; the search icon and
-  // its gutter are the only metrics this wrapper adds. Every metric is a fixed
-  // ratio of the size dimension, so each stays constant across the range.
-  const SEARCH_RATIOS = { padLeft: 1.8, iconLeft: 0.6, icon: 0.9 }
+  // its gutter are the only metrics this wrapper adds. The icon's leading inset
+  // and slot are fixed ratios of the size dimension; the text gutter is derived
+  // from them plus a fixed gap, so tuning the glyph carries the text with it
+  // instead of letting the label slide under the icon.
+  const SEARCH_ICON_LEFT = 0.6
+  const SEARCH_ICON = 0.9
+  const SEARCH_ICON_GAP = 0.3
+  const SEARCH_RATIOS = {
+    iconLeft: SEARCH_ICON_LEFT,
+    icon: SEARCH_ICON,
+    padLeft: SEARCH_ICON_LEFT + SEARCH_ICON + SEARCH_ICON_GAP,
+  }
 
   const metrics = $derived(dimensionMetrics(size, SEARCH_RATIOS))
   const style = $derived(sizeVarStyle('search', metrics))
