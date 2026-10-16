@@ -68,4 +68,17 @@ describe('SelectDropdown derived trigger label', () => {
     flushSync()
     expect(triggerText()).toBe('Pick one')
   })
+
+  // An empty label collapses its span to zero height, which would drop the
+  // trigger below the field row; the row floors itself at the metric line so a
+  // cleared selection keeps the control's height.
+  it('keeps the label row at the line height when the value is empty', () => {
+    instance = mount(Harness, { target, props: { activeValue: '' } })
+    flushSync()
+    expect(triggerText()).toBe('')
+    const row = target.querySelector('button[role=combobox] > span')
+    expect(row?.getAttribute('class')).toContain('min-h-[var(--sel-line)]')
+    const trigger = target.querySelector('button[role=combobox]')
+    expect(trigger?.getAttribute('style')).toContain('--sel-line: 19px')
+  })
 })

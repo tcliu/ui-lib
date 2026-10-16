@@ -163,8 +163,15 @@
 
   // Text sizing follows TextInput: the shared input chrome (`input-chrome.ts`)
   // drives font, line, radius, and padding from the size dimension, emitted as
-  // `--input-*` vars consumed by `INPUT_METRIC_CLASS` below.
-  const metrics = $derived(dimensionMetrics(size, INPUT_RATIOS))
+  // `--input-*` vars consumed by `INPUT_METRIC_CLASS` below. Only the padding is
+  // trimmed 20% so the inline field sits tighter in a dense row; every other
+  // ratio stays shared so the label matches a sibling TextInput's type metrics.
+  const EDITABLE_INPUT_RATIOS = {
+    ...INPUT_RATIOS,
+    padX: INPUT_RATIOS.padX * 0.8,
+    padY: INPUT_RATIOS.padY * 0.8,
+  }
+  const metrics = $derived(dimensionMetrics(size, EDITABLE_INPUT_RATIOS))
   const sizeStyle = $derived(sizeVarStyle('input', metrics))
   const metricClass = INPUT_METRIC_CLASS
   const inputStyle = $derived.by(() => {
@@ -214,7 +221,6 @@
       bind:this={editBtn}
       class="transition group-hover:opacity-100 focus-within:opacity-100 motion-reduce:transition-none [@media(hover:hover)]:opacity-0">
       <Button
-        size="sm"
         variant="ghost"
         ariaLabel={i18n.t('edit.edit')}
         tooltip={i18n.t('edit.edit')}
@@ -236,12 +242,26 @@
   <!-- Don't grow to fill the available space in display mode so sibling elements
        (e.g. tag chips) sit immediately after the filename instead of being
        pushed to the right. Keep min-w-0 so truncation still works.
-       The icon wrappers (edit + copy) get a small downward nudge so they sit on
-       the text's visual center, which rides below the line box's center. -->
-  <div class="group flex min-w-0 items-center gap-2 [&>span]:translate-y-0.5">
+       `items-center` centers the icon wrappers (edit + copy) on the text field's
+       own vertical middle, so no nudge is needed to align them with the text. -->
+  <div class="group flex min-w-0 items-center gap-2">
     {@render displayContent()}
     {#if copyable && text.trim() !== ''}
       <CopyButton {text} ariaLabel={`Copy ${text}`} />
     {/if}
   </div>
 {/if}
+
+<style>
+  /* 16px on touch pointers so iOS Safari does not auto-zoom on focus, matching
+     the guard on TextInput's field; it covers the display label too, so the
+     label keeps the field's rendered size. Plain scoped CSS on purpose: a
+     stacked Tailwind variant inside a class expression never reaches the
+     scanner, so it would silently not exist. */
+  @media (pointer: coarse) {
+    button,
+    input {
+      font-size: 1rem;
+    }
+  }
+</style>

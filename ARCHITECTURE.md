@@ -205,8 +205,9 @@ of building a parallel control.
   as a sibling (`outside`, chosen automatically when a `trailing` adornment
   already owns that edge; override with `clearPlacement`), and the field reserves
   a size-scaled gutter so text never runs under the inside button. The outside
-  row reserves a matching slot (an inert spacer the size of the cross) while
-  empty, so the input keeps the same width empty and filled. `trailer` renders
+  row reserves a matching slot while empty — the cross's own box (`--clear-box`
+  plus its touch floor) — so the input keeps the same width empty and filled.
+  `trailer` renders
   caller content outside the field area, sharing the same size-scaled row the
   outside clear uses; a field whose right edge is already taken shifts the inside
   clear with the `--input-clear-offset` custom property. A `number` Value cell
@@ -237,6 +238,10 @@ of building a parallel control.
   and the glyph rendered into it takes the shared icon ratio (`ICON_RATIO`,
   0.8125) — the text-like font ratio, so an `md` icon lands at 13px, the size of
   its label and the optical size the filled-viewBox glyphs were normalized from.
+  An in-field affordance trims that slot rather than matching the label:
+  `SelectDropdown`'s trigger chevron and clear cross and `TextInput`'s clear
+  cross ride `0.625×` it, `NumberInput`'s steppers `0.75×`, and all still scale
+  with the control.
 - **Icon glyphs** — one glyph is one component: a single `aria-hidden` `<svg>`
   sized by its `size`/`className` props, with no per-glyph style variant. Every
   square glyph uses the one square viewBox (`0 0 20 20`) and authors its artwork
@@ -246,11 +251,13 @@ of building a parallel control.
   transform>` fit stands between the artwork and the grid and
   `resolveIconPx(size)` maps to identical geometry for every icon; that resolver
   applies the shared `ICON_RATIO` (0.8125), so a viewBox-filling glyph still
-  lands at the optical size the components around it were tuned for. The
-  non-square `SortAscIcon`/`SortDescIcon` pair keeps a tight 12×8 crop with a
-  two-thirds-height render. Every glyph carries the same `size`/`className`
-  props and appears on the Icons showcase page, which is the set's index:
-  `demo-snippet.ts` keeps one entry per glyph in name order and a
+  lands at the optical size the components around it were tuned for. The `Caret*`
+  family is the set's filled direction marker: the one triangle cropped tight to
+  the arrow, 12×8 rendering two-thirds tall for up/down and 8×12 rendering
+  two-thirds wide for left/right, used by the table sort pair (up/down) and by
+  navigation and disclosure (left/right). Every glyph carries the same
+  `size`/`className` props and appears on the Icons showcase page, which is the
+  set's index: `demo-snippet.ts` keeps one entry per glyph in name order and a
   directory-parity spec fails when a file under `src/lib/icons` has no entry.
 - **Listbox surfaces** — `SelectDropdown`, `ChipDropdown`, `TagInput`,
   `AutoComplete`, and `Menu` sit on the shared listbox interaction core (Key

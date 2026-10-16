@@ -77,11 +77,12 @@ Project-specific development conventions for the UI Library web app.
 - A dialog panel's footprint is `BaseDialog`'s `widthVariant`/`heightVariant` (or the `size` shorthand setting both; explicit variant wins), not a `SizeInput` metric scale. Mechanism in `ARCHITECTURE.md`.
 - Size svg primitives (icons, spinner) take `size` attributes, never classes.
 - A sized control's icon slot is the size dimension itself (`icon` ratio `1`), while the glyph renders at the shared `ICON_RATIO` (`0.8125`), so an icon matches its label and keeps the optical size the filled-viewBox glyphs were normalized from.
+- An in-field affordance glyph rides a trimmed share of the icon slot rather than the whole slot — the dropdown trigger's chevron and its clear cross and a clearable field's cross at `0.625×`, the number steppers at `0.75×` — so it reads lighter than the label while still scaling with the control.
 - Icon glyphs share one square viewBox (`0 0 20 20`) and author their artwork
   directly in it, already normalized to fill the box (dominant axis, centered)
   on the 0.01 unit step, so every square icon renders at a consistent size per
   `size` value and no per-icon `<g transform>` fit sits between artwork and
-  grid; the sort pair keeps its non-square crop. Mechanism in
+  grid; the caret pair keeps its non-square crop. Mechanism in
   `ARCHITECTURE.md`.
 - Reuse this project's existing UI primitives; every button is the shared
   `Button` (icon-only through its `icon` snippet) per

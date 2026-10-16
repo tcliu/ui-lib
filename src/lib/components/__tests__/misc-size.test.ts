@@ -52,8 +52,9 @@ describe('Checkbox numeric size', () => {
     const label = target.querySelector('label')
     expect(label?.getAttribute('style')).toContain('--cbx-box: 17.5px')
     expect(label?.getAttribute('style')).toContain('--cbx-font: 12.25px')
-    // The icon slot is the size dimension itself, not a fraction of it.
-    expect(label?.getAttribute('style')).toContain('--cbx-icon: 14px')
+    // The tick rides a trimmed share of the slot (0.875 × sm), inside the box's
+    // own 1.25× padding.
+    expect(label?.getAttribute('style')).toContain('--cbx-icon: 12.25px')
   })
 
   it('passes out-of-scale numbers through continuously', async () => {
@@ -102,20 +103,20 @@ describe('Spinner numeric size', () => {
 })
 
 describe('EditableText numeric size', () => {
-  it('follows TextInput metrics for names and numbers', async () => {
+  it('scales the input metrics from names and numbers', async () => {
     instance = mount(EditableText, { target, props: { text: 'hi', onChange: () => {} } })
     flushSync()
     const display = target.querySelector('button')
     expect(display?.className).toContain('var(--input-font)')
     expect(display?.getAttribute('style')).toContain('--input-font: 13px')
-    expect(display?.getAttribute('style')).toContain('--input-pad-x: 10px')
+    expect(display?.getAttribute('style')).toContain('--input-pad-x: 8px')
     await unmount(instance!)
     instance = mount(EditableText, { target, props: { text: 'hi', size: 14, onChange: () => {} } })
     flushSync()
     const custom = target.querySelector('button')
     expect(custom?.className).toContain('var(--input-font)')
     expect(custom?.getAttribute('style')).toContain('--input-font: 11.375px')
-    expect(custom?.getAttribute('style')).toContain('--input-pad-x: 8.75px')
+    expect(custom?.getAttribute('style')).toContain('--input-pad-x: 7px')
     await unmount(instance!)
     instance = null
     // Non-finite numbers fall back to md, never "undefined".

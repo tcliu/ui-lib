@@ -72,11 +72,13 @@
   const metrics = $derived(dimensionMetrics(size, INPUT_RATIOS))
   const style = $derived(sizeVarStyle('input', metrics))
 
-  // Clear-affordance metrics: the icon is the size dimension itself, the inset
-  // matches the field's horizontal padding, and the gutter reserves room for
-  // both. The box reserves the outside row's clear slot so the input keeps the
-  // same width empty and filled.
-  const CLEAR_RATIOS = { inset: 0.625, gutter: 1.875, box: 1 }
+  // Clear-affordance metrics: the button rides a trimmed share of the size
+  // dimension so the cross reads lighter than the field's own icon slot, while
+  // still scaling with the field (the share the trigger affordances ride); the
+  // inset matches the field's horizontal padding, and the gutter reserves room
+  // for both. The box reserves the outside row's clear slot so the input keeps
+  // the same width empty and filled.
+  const CLEAR_RATIOS = { button: 0.625, inset: 0.625, gutter: 1.875, box: 1 }
   const clearMetrics = $derived(dimensionMetrics(size, CLEAR_RATIOS))
   const clearStyle = $derived(sizeVarStyle('clear', clearMetrics))
 
@@ -163,11 +165,11 @@
 {#snippet clearControl()}
   <Button
     variant="ghost"
-    {size}
+    size={clearMetrics.button}
     icon={clearIcon}
     ariaLabel={resolvedClearLabel}
     onClick={handleClear}
-    className="shrink-0" />
+    className="size-[var(--clear-box)] shrink-0" />
 {/snippet}
 
 {#snippet field()}
@@ -201,14 +203,19 @@
       item, it keeps the field's own width instead of occupying the whole row;
       as a block-level flex container it still fills block layouts. The row
       persists whenever a clear or trailer is configured so the input is never
-      recreated. The outside clear slot is reserved even while empty (an
-      inert spacer the size of the cross), so the input keeps the same width
-      empty and filled. -->
-  <span class="flex items-center" style={`gap:${trailerMetrics.gap}px`}>
+      recreated. The clear slot is reserved even while empty: the spacer takes
+      the same box metric the cross button pins itself to (`--clear-box`, and
+      its touch floor where the button floors), so the input keeps exactly the
+      same width empty and filled. -->
+  <span
+    class="flex items-center"
+    style={[`gap:${trailerMetrics.gap}px`, outsideField ? clearStyle : ''].filter(Boolean).join(';')}>
     <span class="min-w-0 flex-1">{@render field()}</span>
     {#if clearOutside}{@render clearControl()}
     {:else if outsideField}
-      <span aria-hidden="true" class="shrink-0" style={`width:${clearMetrics.box}px;height:${clearMetrics.box}px`}></span>
+      <span
+        aria-hidden="true"
+        class="h-[var(--clear-box)] w-[var(--clear-box)] shrink-0 max-[27.999rem]:h-11 max-[27.999rem]:w-11"></span>
     {/if}
     {#if trailer}{@render trailer()}{/if}
   </span>

@@ -61,7 +61,8 @@ describe('SelectDropdown numeric size', () => {
   it('scales the chevron with the numeric size', () => {
     instance = mount(Harness, { target })
     flushSync()
-    expect(document.querySelector('.relative svg')?.getAttribute('width')).toBe('11.375')
+    // The chevron rides 0.625 × the slot (14) → 8.75 × ICON_RATIO.
+    expect(document.querySelector('.relative svg')?.getAttribute('width')).toBe('7.109375')
   })
 })
 
@@ -72,12 +73,11 @@ describe('SelectDropdown clearable sizing', () => {
       props: { options: ['a', 'b'], activeValue: 'a', ariaLabel: 'Pick', clearable: true, size: 18, onSelect: () => {} },
     })
     flushSync()
-    // gap 0.375 * 18, and the clear icon box is the size dimension.
+    // gap 0.375 * 18, and the clear cross rides 0.625 × the dimension.
     const wrapper = target.querySelector('div.relative > span.inline-flex')
     expect(wrapper?.getAttribute('style')).toContain('gap: 6.75px')
     const clear = target.querySelector('button[aria-label="Clear"]')
-    // The icon box is the dimension var (0.65 has no bearing; icon ratio is 1).
-    expect(clear?.getAttribute('style')).toContain('--btn-icon: 18px')
+    expect(clear?.getAttribute('style')).toContain('--btn-icon: 11.25px')
     expect(clear?.innerHTML).toContain('h-[var(--btn-icon)]')
   })
 })

@@ -89,6 +89,18 @@ describe('TextInput clearable', () => {
     expect(frame.getAttribute('style')).toContain('--clear-gutter: 37.5px')
   })
 
+  it('rides a trimmed share of the field so the cross scales with it', async () => {
+    // 0.625 × the field dimension: xs 7.5, md 10, xl 12.5.
+    for (const [size, icon] of [
+      ['xs', '7.5px'],
+      ['md', '10px'],
+      ['xl', '12.5px'],
+    ] as const) {
+      await remount(TextInput, { value: 'hi', clearable: true, size, ariaLabel: 'x' })
+      expect(clearEl()!.style.getPropertyValue('--btn-icon'), size).toBe(icon)
+    }
+  })
+
   it('moves outside when a trailing adornment owns the right edge', async () => {
     await remount(Harness, { trailing: true })
     // The button is a sibling of the field, not inside its frame.
@@ -124,21 +136,23 @@ describe('TextInput clearable', () => {
   it('reserves the outside slot whether the field is empty or filled', async () => {
     await remount(Harness, { trailing: true, clearable: true, value: '' })
     const rowEmpty = target.querySelector(':scope > span')!
-    // No cross yet, but an inert spacer holds its slot so the input keeps the
-    // same width once a value shows the button.
+    // No cross yet, but a spacer holds its slot so the input keeps the same
+    // width once a value shows the button.
     expect(clearEl()).toBeUndefined()
     const spacer = rowEmpty.querySelector('span[aria-hidden="true"]') as HTMLElement | null
     expect(spacer).not.toBeNull()
-    const slotWidth = spacer!.style.width
-    expect(slotWidth).not.toBe('')
-    expect(spacer!.style.height).toBe(slotWidth)
 
     await remount(Harness, { trailing: true, clearable: true, value: 'hi' })
     const rowFilled = target.querySelector(':scope > span')!
     expect(clearEl()).toBeDefined()
     expect(rowFilled.children.length).toBe(rowEmpty.children.length)
-    // The spacer matches the cross button's own icon box exactly.
-    expect(clearEl()!.style.getPropertyValue('--btn-icon')).toBe(slotWidth)
+    // The spacer and the cross reserve the same box (`--clear-box`, plus the
+    // button's touch floor), which is what keeps the input's width fixed.
+    expect(spacer!.className).toContain('w-[var(--clear-box)]')
+    expect(spacer!.className).toContain('h-[var(--clear-box)]')
+    expect(spacer!.className).toContain('max-[27.999rem]:w-11')
+    expect(clearEl()!.className).toContain('size-[var(--clear-box)]')
+    expect(clearEl()!.style.getPropertyValue('--btn-icon')).toBe('10px')
   })
 
   it('renders a caller trailer outside the field', async () => {

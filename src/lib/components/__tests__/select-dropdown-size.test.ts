@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { dimensionMetrics } from '../size-metrics'
 import { SELECT_RATIOS } from '../select-dropdown-styles'
+import { INPUT_RATIOS } from '../input-chrome'
 
 describe('SelectDropdown size metrics', () => {
   it('scales every metric by one constant ratio of the size', () => {
@@ -24,6 +25,17 @@ describe('SelectDropdown size metrics', () => {
       expect(m.gap / px).toBeCloseTo(0.375)
       expect(m.icon / px).toBeCloseTo(1)
       expect(m.chevronInset / px).toBeCloseTo(0.375)
+    }
+  })
+
+  // A trigger and a text field share a row, so the two boxes must measure the
+  // same at every size (the 1px border is shared too). Pinning the line/padY
+  // ratios keeps a padding tweak from silently breaking that alignment.
+  it('keeps the trigger box the same height as the input chrome', () => {
+    for (const px of [12, 14, 16, 18, 20]) {
+      const input = dimensionMetrics(px, INPUT_RATIOS)
+      const select = dimensionMetrics(px, SELECT_RATIOS)
+      expect(input.line + 2 * input.padY).toBeCloseTo(select.line + 2 * select.padY)
     }
   })
 })

@@ -104,10 +104,15 @@
   )
 
   // Every metric is a fixed ratio of the size dimension, so each keeps a
-  // constant metric:dimension ratio across the range; the icon is the dimension
-  // itself (ratio 1).
+  // constant metric:dimension ratio across the range; the icon slot is the
+  // dimension itself (ratio 1).
   const metrics = $derived(dimensionMetrics(size, SELECT_RATIOS))
   const style = $derived(sizeVarStyle('sel', metrics))
+  // The trigger's direction marker and its clear cross ride a trimmed share of
+  // that slot: at the full dimension each reads as loud as the label beside it,
+  // so they take 0.625 of it — the same share `TextInput`'s clear cross rides —
+  // staying lighter affordances that still scale with the control.
+  const affordanceSize = $derived(metrics.icon * 0.625)
 
   const triggerBoxClass = $derived(`${SELECT_TRIGGER_UTILITIES} ${TRIGGER_BASE}`)
 
@@ -331,6 +336,21 @@
     placeCaretAtEnd()
   }
 
+  // Double-clicking the input selects the whole value, so the next keystroke
+  // replaces the filter instead of editing one word inside the echoed value.
+  // A pending caret fix is dropped first: it would otherwise collapse this
+  // selection back to the end.
+  function handleControlDblClick() {
+    if (!inputRef) {
+      return
+    }
+    if (caretRafId !== null) {
+      cancelAnimationFrame(caretRafId)
+      caretRafId = null
+    }
+    inputRef.setSelectionRange(0, inputRef.value.length)
+  }
+
   // Typing into the closed combobox reopens the panel so the edited query
   // filters live. After Enter confirms a value the input keeps focus, so no
   // focus (or click) event fires to open it again.
@@ -542,9 +562,7 @@
   data-escape-capture={open ? '' : null}
   onfocusout={listbox.handleFocusOut}>
   {#snippet triggerChevron()}
-    <ChevronDownIcon
-      size={metrics.icon}
-      className="shrink-0 text-slate-400" />
+    <ChevronDownIcon size={affordanceSize} className="shrink-0 text-slate-400" />
   {/snippet}
   {#snippet triggerControl()}
     {#if filterable}
@@ -564,6 +582,7 @@
           onfocus={handleControlFocus}
           onblur={handleControlBlur}
           onclick={handleControlClick}
+          ondblclick={handleControlDblClick}
           oninput={handleControlInput}
           onkeydown={handleControlKeydown}
           inputClass="field-sizing-content min-w-0 bg-transparent text-left outline-none" />
@@ -585,7 +604,9 @@
         onkeydown={handleControlKeydown}
         class={resolvedButtonClass}
         style={resolvedButtonStyle}>
-        <span class="min-w-0 flex-1 truncate">{resolvedButtonLabel}</span>
+        <!-- The label row keeps the line height even with an empty label (a
+             cleared value), so clearing the selection never trims the trigger. -->
+        <span class="min-h-[var(--sel-line)] min-w-0 flex-1 truncate">{resolvedButtonLabel}</span>
         {@render triggerChevron()}
       </button>
     {/if}
@@ -595,12 +616,12 @@
   {/snippet}
   {#if showClear}
     <!-- The clear affordance scales with the control: its gap is a ratio of the
-      size and its icon box follows the same size. -->
+      size and its icon box rides the trimmed affordance size. -->
     <span class="inline-flex items-center" style={`gap:${metrics.gap}px`}>
       {@render triggerControl()}
       <Button
         variant="ghost"
-        {size}
+        size={affordanceSize}
         icon={closeIcon}
         ariaLabel={resolvedClearLabel}
         onClick={handleClear} />
