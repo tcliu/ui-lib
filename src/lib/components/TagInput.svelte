@@ -243,7 +243,7 @@
   // both, so chips never run under the overlay. The gutter is reserved
   // whenever the inside clear is configured, not only while tags show the
   // button, so the content keeps the same width filled and at default.
-  const CLEAR_RATIOS = { inset: 0.625, gutter: 1.875, box: 1 }
+  const CLEAR_RATIOS = { inset: TAG_INPUT_RATIOS.padX, gutter: 1.875, box: 1 }
   const clearMetrics = $derived(dimensionMetrics(size, CLEAR_RATIOS))
   const clearStyle = $derived(sizeVarStyle('clear', clearMetrics))
   const boxStyle = $derived(
