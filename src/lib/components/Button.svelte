@@ -49,6 +49,8 @@
     focusRing?: boolean
     ariaLabel?: string
     ariaExpanded?: boolean
+    ariaHaspopup?: 'menu' | 'listbox' | 'tree' | 'grid' | 'dialog' | boolean
+    ariaControls?: string
     tooltip?: string
     tooltipAlign?: ComponentProps<typeof Tooltip>['align']
     icon?: Snippet
@@ -71,6 +73,8 @@
     ariaLabel,
     ariaPressed,
     ariaExpanded,
+    ariaHaspopup,
+    ariaControls,
     tooltip,
     tooltipAlign = 'center',
     icon,
@@ -189,6 +193,8 @@
     aria-label={ariaLabel}
     aria-pressed={ariaPressed}
     aria-expanded={ariaExpanded}
+    aria-haspopup={ariaHaspopup}
+    aria-controls={ariaControls}
     onclick={onClick}
     onkeydown={onKeyDown}
     onpointerdown={preventFocusSteal ? handlePreventFocusSteal : undefined}
