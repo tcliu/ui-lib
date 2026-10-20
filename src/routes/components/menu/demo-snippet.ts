@@ -8,6 +8,7 @@
 // snippet carries only the demo content the page authors inside that frame.
 
 import { escapeAttr, escapeText, unescapeAttr } from '$lib/showcase/snippet-build'
+import { sizeAttributeLine } from '$lib/showcase/size-input'
 
 export type TriState = '' | 'yes' | 'no'
 
@@ -92,6 +93,8 @@ export interface MenuSnippetState {
   triggerClassOn: boolean
   panelClass: string
   panelClassOn: boolean
+  size: string
+  sizeOn: boolean
   iconClass: string
   itemPrefix: string
 }
@@ -200,6 +203,8 @@ export function buildMenuSnippet({
   triggerClassOn,
   panelClass,
   panelClassOn,
+  size,
+  sizeOn,
   iconClass,
   itemPrefix,
 }: MenuSnippetState): string {
@@ -230,6 +235,9 @@ export function buildMenuSnippet({
     ...(triggerTooltipEnabled ? tooltipLine(triggerTooltip, triggerTooltipAlign, indent) : []),
     ...(triggerClassOn && triggerClass ? textLine('triggerClass', triggerClass, indent) : []),
     ...(panelClassOn && panelClass ? textLine('panelClass', panelClass, indent) : []),
+    // The trigger's scale rides the shared size axis; the default step is
+    // omitted so Show-code stays minimal.
+    ...(sizeOn && size && size !== 'md' ? sizeAttributeLine(size, indent) : []),
     // Enum rows prefill their component default in the Value column; the
     // builder omits the default so Show-code stays minimal.
     ...(itemRoleOn && itemRole && itemRole !== 'menuitem' ? textLine('itemRole', itemRole, indent) : []),

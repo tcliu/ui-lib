@@ -241,8 +241,9 @@ of building a parallel control.
   anchor/class table and no geometry module. Size svg primitives (icons,
   spinner) take width/height `size` attributes, never classes, so they compose
   with `className`. An icon passed to a `Button` `icon` snippet carries no
-  `size` itself — the button's box sizes it; Menu-trigger icons keep their
-  `size` (Menu has no such override). A
+  `size` itself — the button's box sizes it, and so does a `Menu` trigger,
+  whose button is the shared `Button` (the trigger exposes the same `size`
+  axis, and its glyph follows the button's ratio). A
   sized control's own icon slot is the size dimension itself (`icon` ratio `1`),
   and the glyph rendered into it takes the shared icon ratio (`ICON_RATIO`,
   0.8125) — the text-like font ratio, so an `md` icon lands at 13px, the size of
@@ -303,6 +304,15 @@ of building a parallel control.
   `ListboxPanel`: picking an option writes its label to the bindable `value` and
   reports the option's `value` via `onSelect`, filtering to matches only (no
   full-list fallback) and hiding the panel when nothing matches.
+- **Menu** — an icon-triggered dropdown (desktop popover, phone bottom sheet):
+  its trigger is the shared `Button`, so the box, the hit area, the focus ring,
+  and the glyph's size all come from the shared button, and the `size` prop
+  scales the trigger on the shared axis (the panel chrome keeps its own
+  metrics). The trigger's icon therefore carries no `size` of its own, and
+  `triggerClass` never restates the trigger's padding. The panel is a
+  `role="menu"` listbox over the shared interaction core, with rows taking
+  focus (unlike the never-focused listbox rows) and the phone sheet as the
+  narrow-viewport presentation.
 - **TagInput** — models `string[]` and colours tags from a built-in per-tag
   palette (override with `palette` or `chipClass`, whose function form overrides
   per tag); an app with

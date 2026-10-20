@@ -111,6 +111,19 @@ describe('Menu type-ahead', () => {
     expect(focusedItemLabel()).toBe('Fourteen')
   })
 
+  it('points aria-controls at the open panel and omits it while closed', async () => {
+    mountMenu()
+    // The shared Button carries the trigger's ARIA wiring: closed omits the
+    // controlled id, open points it at the panel and reports the expansion.
+    expect(trigger().getAttribute('aria-controls')).toBeNull()
+    press('f')
+    await tick()
+    const panel = document.querySelector('[role=menu]')
+    expect(panel).not.toBeNull()
+    expect(trigger().getAttribute('aria-controls')).toBe(panel!.id)
+    expect(trigger().getAttribute('aria-expanded')).toBe('true')
+  })
+
   it('does nothing when no itemLabel is provided', async () => {
     mountMenu(items, false)
     press('f')

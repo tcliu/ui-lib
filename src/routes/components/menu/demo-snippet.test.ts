@@ -36,6 +36,8 @@ function state(overrides: Partial<MenuSnippetState> = {}): MenuSnippetState {
     triggerClassOn: false,
     panelClass: 'w-44',
     panelClassOn: true,
+    size: 'md',
+    sizeOn: false,
     iconClass: '',
     itemPrefix: '',
     ...overrides,
@@ -91,6 +93,15 @@ describe('buildMenuSnippet', () => {
     expect(source).toContain('triggerClass="text-cyan-300"')
     expect(source).toContain('panelClass="w-44"')
     expect(source).toContain('itemClass={menuItemClass}')
+  })
+
+  it('emits the trigger scale on the shared size axis and omits the default step', () => {
+    expect(buildMenuSnippet(state({ size: 'sm', sizeOn: true }))).toContain('size="sm"')
+    // A pixel number renders as an expression.
+    expect(buildMenuSnippet(state({ size: '14', sizeOn: true }))).toContain('size={14}')
+    // The default step and the staged (eye off) value both stay out.
+    expect(buildMenuSnippet(state({ size: 'md', sizeOn: true }))).not.toContain('size=')
+    expect(buildMenuSnippet(state({ size: 'sm', sizeOn: false }))).not.toContain('size=')
   })
 
   it('omits component defaults (the Value column prefills them)', () => {

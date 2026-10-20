@@ -22,10 +22,14 @@ export interface ButtonSnippetState {
   iconOn: boolean
   className: string
   classNameOn: boolean
-  ariaLabel: string
-  ariaLabelOn: boolean
+  ariaControls: string
+  ariaControlsOn: boolean
   ariaExpanded: TriState
   ariaExpandedOn: boolean
+  ariaHaspopup: string
+  ariaHaspopupOn: boolean
+  ariaLabel: string
+  ariaLabelOn: boolean
   ariaPressed: TriState
   ariaPressedOn: boolean
   tooltip: string
@@ -58,6 +62,15 @@ function flagLine(name: string, value: TriState, def: TriState = ''): string[] {
   return [`  ${name}${value === 'yes' ? '' : '={false}'}`]
 }
 
+// The popup-kind attribute: a kind renders as a string attribute, the boolean
+// form as an expression.
+function haspopupLine(name: string, value: string): string[] {
+  if (value === 'true' || value === 'false') {
+    return [`  ${name}={${value}}`]
+  }
+  return [`  ${name}="${escapeAttr(value)}"`]
+}
+
 export function buildButtonSnippet({
   label,
   childrenEnabled,
@@ -74,10 +87,14 @@ export function buildButtonSnippet({
   iconOn,
   className,
   classNameOn,
-  ariaLabel,
-  ariaLabelOn,
+  ariaControls,
+  ariaControlsOn,
   ariaExpanded,
   ariaExpandedOn,
+  ariaHaspopup,
+  ariaHaspopupOn,
+  ariaLabel,
+  ariaLabelOn,
   ariaPressed,
   ariaPressedOn,
   tooltip,
@@ -106,8 +123,10 @@ export function buildButtonSnippet({
     ...(disabledOn ? flagLine('disabled', disabled, 'no') : []),
     ...(pendingOn ? flagLine('pending', pending, 'no') : []),
     ...(classNameOn && className ? [`  className="${escapeAttr(className)}"`] : []),
-    ...(ariaLabelOn && ariaLabel ? [`  ariaLabel="${escapeAttr(ariaLabel)}"`] : []),
+    ...(ariaControlsOn && ariaControls ? [`  ariaControls="${escapeAttr(ariaControls)}"`] : []),
     ...(ariaExpandedOn ? flagLine('ariaExpanded', ariaExpanded) : []),
+    ...(ariaHaspopupOn && ariaHaspopup ? haspopupLine('ariaHaspopup', ariaHaspopup) : []),
+    ...(ariaLabelOn && ariaLabel ? [`  ariaLabel="${escapeAttr(ariaLabel)}"`] : []),
     ...(ariaPressedOn ? flagLine('ariaPressed', ariaPressed) : []),
     ...(tooltipOn && tooltip ? [`  tooltip="${escapeAttr(tooltip)}"`] : []),
     ...(tooltipAlignOn && tooltipAlign && tooltipAlign !== 'center' ? [`  tooltipAlign="${tooltipAlign}"`] : []),

@@ -6,6 +6,7 @@ import Button from '../Button.svelte'
 import Chip from '../Chip.svelte'
 import DateInput from '../DateInput.svelte'
 import FormField from '../FormField.svelte'
+import MenuSizeHarness from './menu-size.harness.svelte'
 import NumberInput from '../NumberInput.svelte'
 import PasswordInput from '../PasswordInput.svelte'
 import SearchInput from '../SearchInput.svelte'
@@ -91,6 +92,11 @@ const CASES: ComponentCase[] = [
     name: 'Button',
     keys: ['btn-font', 'btn-line', 'btn-radius', 'btn-pad-x', 'btn-pad-y', 'btn-icon', 'btn-icon-pad', 'btn-glyph'],
     render: size => renderStyle(Button, { size }),
+  },
+  {
+    name: 'Menu',
+    keys: ['btn-font', 'btn-line', 'btn-radius', 'btn-pad-x', 'btn-pad-y', 'btn-icon', 'btn-icon-pad', 'btn-glyph'],
+    render: size => renderStyle(MenuSizeHarness, { size }),
   },
   {
     name: 'TextInput',

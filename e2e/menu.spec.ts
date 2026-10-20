@@ -56,12 +56,19 @@ test('showcase: the Menu icon and item cells edit through dialogs with a reset e
   await expect(iconDialog.getByRole('alert')).toBeVisible()
   await expect(iconOk).toBeDisabled()
 
-  // A valid class applies on OK and the trigger glyph follows it.
+  // A valid class applies on OK. The trigger is the shared Button, so the
+  // glyph keeps the button's own size: the class applies, but it does not
+  // scale the glyph.
   await replaceSnippet(page, iconDialog, '<KebabIcon className="h-6 w-6" />')
   await expect(iconDialog.getByRole('alert')).toHaveCount(0)
   await iconOk.click()
   await expect(iconDialog).toHaveCount(0)
-  await expect(demo.getByRole('button', { name: 'More actions' }).locator('svg')).toHaveClass(/h-6/)
+  const trigger = demo.getByRole('button', { name: 'More actions' })
+  const glyph = trigger.locator('svg')
+  await expect(glyph).toHaveClass(/h-6/)
+  const glyphSize = await trigger.evaluate(el => getComputedStyle(el).getPropertyValue('--btn-glyph').trim())
+  const glyphBox = await glyph.boundingBox()
+  expect(glyphBox?.width).toBeCloseTo(Number.parseFloat(glyphSize), 1)
 
   // The item dialog edits prefix text; unapplying the eye resets the prefix.
   await page.getByRole('button', { name: 'Edit item', exact: true }).click()

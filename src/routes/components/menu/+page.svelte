@@ -4,9 +4,10 @@
   import KebabIcon from '$lib/icons/KebabIcon.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
+  import { parseSizeValue } from '$lib/showcase/size-input'
   import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
   import type { SnippetAttribute } from '$lib/showcase/snippet-attributes'
-  import { enumField, textField, boolField, jsonField, resetToggle, snippetDialog, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
+  import { enumField, textField, boolField, jsonField, resetToggle, snippetDialog, snippetField, snippetToggle, sizeField } from '$lib/showcase/snippet-field'
   import {
     buildMenuIconMarkup,
     buildMenuSnippet,
@@ -50,6 +51,8 @@
     triggerClassOn: false,
     panelClass: 'w-44',
     panelClassOn: true,
+    size: 'md',
+    sizeOn: false,
     id: '',
     idOn: false,
     triggerTooltip: '',
@@ -150,6 +153,8 @@
   const demoItems = $derived<DemoItem[]>(
     pg.items.map(entry => ({ ...entry, onClick: () => (pg.lastAction = entry.label) })),
   )
+  // The trigger's scale: the shared Button sizes the trigger and its glyph.
+  const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
 
   function menuItemClass(item: DemoItem, state: MenuItemState): string {
     return `flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm outline-none transition-none ${
@@ -187,6 +192,8 @@
       triggerClassOn: pg.triggerClassOn,
       panelClass: pg.panelClass,
       panelClassOn: pg.panelClassOn,
+      size: pg.size,
+      sizeOn: pg.sizeOn,
       iconClass: pg.iconClass,
       itemPrefix: pg.itemPrefix,
     }),
@@ -203,7 +210,7 @@
     textField({ name: 'closeLabel', type: 'string?', defaultValue: '—', note: 'Accessible name for the phone sheet close button; required with phoneSheetTitle.', value: pg.closeLabel, onChange: v => (pg.closeLabel = v), clearable: true, enabled: pg.closeLabelOn, setEnabled: v => (pg.closeLabelOn = v) }),
     snippetField({
       name: 'icon',
-      note: 'Trigger icon; the dialog edits its class, and the eye resets the class.',
+      note: 'Trigger icon; the dialog edits its class, and the eye resets the class. The trigger Button sizes the glyph, so the class never carries a size.',
       value: iconMarkup,
       onChange: (draft: string) => {
         const parsed = parseMenuIconMarkup(draft)
@@ -258,7 +265,8 @@
     }),
     textField({ name: 'panelClass', type: 'string?', defaultValue: "''", note: 'Extra classes for the floating panel.', value: pg.panelClass, onChange: v => (pg.panelClass = v), editorDefaultValue: '', clearable: true, enabled: pg.panelClassOn, setEnabled: v => (pg.panelClassOn = v) }),
     textField({ name: 'phoneSheetTitle', type: 'string?', defaultValue: '—', note: 'Opts into the phone bottom-sheet presentation; pair with closeLabel.', value: pg.phoneSheetTitle, onChange: v => (pg.phoneSheetTitle = v), clearable: true, enabled: pg.phoneSheetTitleOn, setEnabled: v => (pg.phoneSheetTitleOn = v) }),
-    textField({ name: 'triggerClass', type: 'string?', defaultValue: "''", note: 'Extra classes for the trigger button.', value: pg.triggerClass, onChange: v => (pg.triggerClass = v), editorDefaultValue: '', clearable: true, enabled: pg.triggerClassOn, setEnabled: v => (pg.triggerClassOn = v) }),
+    sizeField({ note: 'Scale of the trigger button; the trigger glyph follows it, and the panel chrome keeps its own metrics.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
+    textField({ name: 'triggerClass', type: 'string?', defaultValue: "''", note: 'Extra classes for the trigger button; never padding — the trigger takes its box from the Button’s icon-only metrics.', value: pg.triggerClass, onChange: v => (pg.triggerClass = v), editorDefaultValue: '', clearable: true, enabled: pg.triggerClassOn, setEnabled: v => (pg.triggerClassOn = v) }),
     jsonField({
       name: 'triggerTooltip',
       type: '{ text: string; align?: "center" | "left" | "right" }',
@@ -315,6 +323,7 @@
         ariaLabel={triggerLabel}
         align={demoAlign}
         {autoPlace}
+        size={demoSize}
         id={pg.idOn && pg.id ? pg.id : undefined}
         triggerTooltip={pg.triggerTooltipEnabled ? demoTriggerTooltip : undefined}
         triggerClass={pg.triggerClassOn && pg.triggerClass ? pg.triggerClass : undefined}

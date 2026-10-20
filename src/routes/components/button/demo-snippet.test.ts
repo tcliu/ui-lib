@@ -24,10 +24,14 @@ function state(overrides: Partial<ButtonSnippetState> = {}): ButtonSnippetState 
     iconOn: false,
     className: '',
     classNameOn: false,
-    ariaLabel: '',
-    ariaLabelOn: false,
+    ariaControls: '',
+    ariaControlsOn: false,
     ariaExpanded: '',
     ariaExpandedOn: true,
+    ariaHaspopup: '',
+    ariaHaspopupOn: false,
+    ariaLabel: '',
+    ariaLabelOn: false,
     ariaPressed: '',
     ariaPressedOn: true,
     tooltip: '',
@@ -55,7 +59,9 @@ describe('buildButtonSnippet', () => {
     expect(source).not.toContain('{#snippet icon()}')
     expect(source).not.toContain('className=')
     expect(source).not.toContain('ariaLabel=')
+    expect(source).not.toContain('ariaControls=')
     expect(source).not.toContain('ariaExpanded')
+    expect(source).not.toContain('ariaHaspopup')
     expect(source).not.toContain('ariaPressed')
     expect(source).not.toContain('tooltip')
     expect(source).not.toContain('type=')
@@ -82,6 +88,22 @@ describe('buildButtonSnippet', () => {
     expect(applied).toContain('className="ml-2"')
     expect(applied).toContain('ariaLabel="Apply now"')
     expect(applied).toContain('tooltip="Save help"')
+  })
+
+  it('stages the popup-kind and controlled-id rows until applied', () => {
+    const staged = buildButtonSnippet(state({ ariaHaspopup: 'menu', ariaControls: 'panel-1' }))
+    expect(staged).not.toContain('ariaHaspopup=')
+    expect(staged).not.toContain('ariaControls=')
+    const applied = buildButtonSnippet(
+      state({ ariaHaspopup: 'menu', ariaHaspopupOn: true, ariaControls: 'panel-1', ariaControlsOn: true }),
+    )
+    expect(applied).toContain('ariaHaspopup="menu"')
+    expect(applied).toContain('ariaControls="panel-1"')
+  })
+
+  it('emits the boolean form of the popup kind as an expression', () => {
+    expect(buildButtonSnippet(state({ ariaHaspopup: 'true', ariaHaspopupOn: true }))).toContain('ariaHaspopup={true}')
+    expect(buildButtonSnippet(state({ ariaHaspopup: 'false', ariaHaspopupOn: true }))).toContain('ariaHaspopup={false}')
   })
 
   it('omits staged dropdown props while their eyes are off', () => {
@@ -136,7 +158,11 @@ describe('buildButtonSnippet', () => {
         classNameOn: true,
         ariaLabel: 'Apply now',
         ariaLabelOn: true,
+        ariaControls: 'panel-1',
+        ariaControlsOn: true,
         ariaExpanded: 'yes',
+        ariaHaspopup: 'menu',
+        ariaHaspopupOn: true,
         ariaPressed: 'no',
         tooltip: 'Save help',
         tooltipOn: true,
@@ -157,7 +183,9 @@ describe('buildButtonSnippet', () => {
     expect(source).toContain('<CheckIcon />')
     expect(source).toContain('className="ml-2"')
     expect(source).toContain('ariaLabel="Apply now"')
+    expect(source).toContain('ariaControls="panel-1"')
     expect(source).toContain('  ariaExpanded\n')
+    expect(source).toContain('ariaHaspopup="menu"')
     expect(source).toContain('ariaPressed={false}')
     expect(source).toContain('tooltip="Save help"')
     expect(source).toContain('tooltipAlign="right"')

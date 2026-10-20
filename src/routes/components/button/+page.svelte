@@ -37,10 +37,14 @@
     childrenEnabled: true,
     className: '',
     classNameOn: false,
-    ariaLabel: '',
-    ariaLabelOn: false,
+    ariaControls: '',
+    ariaControlsOn: false,
     ariaExpanded: '' as TriState,
     ariaExpandedOn: false,
+    ariaHaspopup: '',
+    ariaHaspopupOn: false,
+    ariaLabel: '',
+    ariaLabelOn: false,
     ariaPressed: '' as TriState,
     ariaPressedOn: false,
     tooltip: '',
@@ -60,6 +64,11 @@
   const accents = ['cyan', 'emerald', 'amber', 'violet', 'rose']
   const tooltipAligns = ['center', 'left', 'right']
   const types = ['button', 'submit', 'reset']
+  // The ARIA popup kinds, plus the boolean form (`aria-haspopup="true"`).
+  const ariaHaspopupOptions = ['menu', 'listbox', 'tree', 'grid', 'dialog', 'true', 'false'].map(value => ({
+    value,
+    label: value,
+  }))
 
   const demoVariant = $derived(
     pg.variantOn
@@ -76,6 +85,14 @@
   const pending = $derived(pg.pendingOn ? flagOn(pg.pending) : undefined)
   const ariaExpanded = $derived(pg.ariaExpandedOn ? flagOn(pg.ariaExpanded) : undefined)
   const ariaPressed = $derived(pg.ariaPressedOn ? flagOn(pg.ariaPressed) : undefined)
+  // The popup kind is a token or the boolean form; the editor carries both as
+  // text, so the boolean spellings map back to real booleans.
+  const demoAriaHaspopup = $derived.by(() => {
+    if (!pg.ariaHaspopupOn || !pg.ariaHaspopup) return undefined
+    if (pg.ariaHaspopup === 'true') return true
+    if (pg.ariaHaspopup === 'false') return false
+    return pg.ariaHaspopup as 'menu' | 'listbox' | 'tree' | 'grid' | 'dialog'
+  })
   const demoTooltipAlign = $derived(
     pg.tooltipAlignOn ? ((pg.tooltipAlign || undefined) as 'center' | 'left' | 'right' | undefined) : undefined,
   )
@@ -105,10 +122,14 @@
       iconOn: pg.iconOn,
       className: pg.className,
       classNameOn: pg.classNameOn,
-      ariaLabel: pg.ariaLabel,
-      ariaLabelOn: pg.ariaLabelOn,
+      ariaControls: pg.ariaControls,
+      ariaControlsOn: pg.ariaControlsOn,
       ariaExpanded: pg.ariaExpanded,
       ariaExpandedOn: pg.ariaExpandedOn,
+      ariaHaspopup: pg.ariaHaspopup,
+      ariaHaspopupOn: pg.ariaHaspopupOn,
+      ariaLabel: pg.ariaLabel,
+      ariaLabelOn: pg.ariaLabelOn,
       ariaPressed: pg.ariaPressed,
       ariaPressedOn: pg.ariaPressedOn,
       tooltip: pg.tooltip,
@@ -127,7 +148,9 @@
   
   const fields: SyncableFieldConfig[] = $derived([
     enumField({ name: 'accent', type: "'cyan' | 'emerald' | 'amber' | 'violet' | 'rose'", defaultValue: "'cyan'", note: 'Tint for primary and outline.', options: accents.map(value => ({ value, label: value })), value: pg.accent, onChange: v => (pg.accent = v), placeholder: 'cyan', clearLabel: 'Clear accent', enabled: pg.accentOn, setEnabled: v => (pg.accentOn = v) }),
+    textField({ name: 'ariaControls', type: 'string?', defaultValue: '—', note: 'Id of the element the button controls (a popup trigger’s panel).', value: pg.ariaControls, onChange: v => (pg.ariaControls = v), clearable: true, enabled: pg.ariaControlsOn, setEnabled: v => (pg.ariaControlsOn = v) }),
     boolField({ name: 'ariaExpanded', defaultValue: '—', note: 'Disclosure state for popover triggers.', value: pg.ariaExpanded, onChange: v => (pg.ariaExpanded = v as TriState), enabled: pg.ariaExpandedOn, setEnabled: v => (pg.ariaExpandedOn = v) }),
+    enumField({ name: 'ariaHaspopup', type: "'menu' | 'listbox' | 'tree' | 'grid' | 'dialog' | boolean", defaultValue: '—', note: 'Kind of popup the button opens; true/false set the boolean form.', options: ariaHaspopupOptions, value: pg.ariaHaspopup, onChange: v => (pg.ariaHaspopup = v), clearLabel: 'Clear aria haspopup', enabled: pg.ariaHaspopupOn, setEnabled: v => (pg.ariaHaspopupOn = v) }),
     textField({ name: 'ariaLabel', type: 'string?', defaultValue: '—', note: 'Accessible name for icon-only buttons.', value: pg.ariaLabel, onChange: v => (pg.ariaLabel = v), clearable: true, enabled: pg.ariaLabelOn, setEnabled: v => (pg.ariaLabelOn = v) }),
     boolField({ name: 'ariaPressed', defaultValue: '—', note: 'Toggle state for pressable buttons.', value: pg.ariaPressed, onChange: v => (pg.ariaPressed = v as TriState), enabled: pg.ariaPressedOn, setEnabled: v => (pg.ariaPressedOn = v) }),
     snippetField({
@@ -199,7 +222,9 @@
       icon={pg.iconOn ? demoButtonIcon : undefined}
       className={pg.classNameOn && pg.className ? pg.className : undefined}
       ariaLabel={pg.ariaLabelOn && pg.ariaLabel ? pg.ariaLabel : undefined}
+      ariaControls={pg.ariaControlsOn && pg.ariaControls ? pg.ariaControls : undefined}
       ariaExpanded={ariaExpanded}
+      ariaHaspopup={demoAriaHaspopup}
       ariaPressed={ariaPressed}
       tooltip={pg.tooltipOn && pg.tooltip ? pg.tooltip : undefined}
       tooltipAlign={demoTooltipAlign}
