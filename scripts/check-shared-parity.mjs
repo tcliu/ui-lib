@@ -81,14 +81,19 @@ const SHARED = [...SHARED_DIRS.flatMap(walk), ...SHARED_FILES, ...SHARED_SERVER_
 // Per-project exceptions with the reason each may legitimately differ. A
 // two-element entry exempts the file for every app; a three-element entry
 // `[app, path, reason]` exempts it for that app alone, so the canonical copy is
-// still byte-compared against the other apps.
+// still byte-compared against the other apps. A file that carries no
+// project-specific content left (the schema apply script) is compared
+// byte-for-byte and excepted per app only for the apps still carrying their
+// own fork.
 const EXCEPTIONS = [
   ['src/lib/column-width-storage.ts', 'per-app storage-key prefix'],
   ['src/lib/i18n.svelte.ts', 'per-app locale dictionaries'],
-  ['scripts/apply-schema.mjs', 'per-project schema fork'],
   ['scripts/db-config.mjs', 'per-project database configuration fork'],
   ['scripts/deploy.config.mjs', 'project-owned plugin/target-availability/required-env selection'],
   ['scripts/lib/cron-job.mjs', 'per-app scan job title'],
+  ['oms', 'scripts/apply-schema.mjs', 'per-project schema fork'],
+  ['project-catalog', 'scripts/apply-schema.mjs', 'per-project schema fork'],
+  ['session-catalog', 'scripts/apply-schema.mjs', 'per-project schema fork'],
   ['session-catalog', 'src/lib/server/cron-expression.ts', 'session-catalog has no scheduler; the cron parser is unused'],
   ['oms', 'src/lib/components/BaseDialog.svelte', 'oms adoption pending its in-flight full implementation'],
   ['oms', 'src/lib/components/SelectDropdown.svelte', 'oms adoption pending its in-flight full implementation'],
