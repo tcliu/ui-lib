@@ -12,8 +12,8 @@ Project-specific development conventions for the UI Library web app.
 
 ## File editing
 
-- Edit the smallest possible range: only the changed lines, complete final content; after a rejection or external change, re-read and issue a new minimal edit.
-- An `edit` rejection about the body restating adjacent lines means unchanged context leaked in: shrink to the changed lines and resend, not retry.
+- Edit with the smallest possible range: select only the lines that change and put their complete final content in the edit body; if an edit is rejected or the file changed since the last read, re-read the section and issue a new minimal edit rather than retrying.
+- An `edit` rejection saying the body "restates" adjacent lines means unchanged context lines leaked into the body: shrink the range to exactly the lines that change and resend; do not retry the same payload.
 
 ## Read first
 
@@ -72,7 +72,8 @@ Project-specific development conventions for the UI Library web app.
 - `AppShell` pane presentation derives from one container-measured `floating`
   boolean, never viewport breakpoint classes; docked and floating are the only
   presentations. Mechanics are in `ARCHITECTURE.md`.
-- Labels resolve as `$derived(prop ?? i18n.t('key'))`; a consuming app's locale
+- Labels resolve as `$derived(prop ?? i18n.t('key'))` per
+  `~/.agents/references/svelte-i18n.md` (Label resolution); a consuming app's locale
   dictionaries must define the shared keys. Keys, dictionaries, and the exact
   list are in `ARCHITECTURE.md`.
 - Component attributes stay camelCase.
@@ -188,6 +189,7 @@ Project-specific development conventions for the UI Library web app.
 - Follow `~/.agents/references/responsive-design.md` for breakpoints, touch targets, and overlay drawers.
 - Follow `~/.agents/references/portals.md` for portal and overlay positioning, viewport clamping, and flip-when-crowded placement.
 - Follow `~/.agents/references/ui-patterns.md` for dialogs, form dialogs, icons, comboboxes, and the two-arrow table sort pattern.
+- Follow `~/.agents/references/svelte-i18n.md` for the locale store, the message-key tree, and label resolution.
 - Follow `~/.agents/references/cross-browser.md` for browser-owned viewport and keyboard differences.
 - Follow `~/.agents/references/reliability.md` for state safety, async flows, and concurrency guards.
 - Follow `~/.agents/references/verification.md` for lint, typecheck, and test validation tiering.
@@ -201,10 +203,10 @@ Project-specific development conventions for the UI Library web app.
 - When a code change establishes or revises a project-specific convention, update
   this `AGENTS.md` in the same change.
 - When a code change establishes or revises a generic reusable convention, update the appropriate `$AI_CONFIG_DIR/references/` file in the same change rather than duplicating it here.
-- After a behavior-affecting change, run the `doc` skill in the same change so the managed docs stay reconciled.
+- After a behavior-affecting change, invoke the `doc` skill to reconcile the managed docs (`README.md`, `ARCHITECTURE.md`, `docs/design.md`, `docs/spec.md`) in the same change, per `~/.agents/references/conventions-extraction.md` (Document roles).
 - Shared reference files under `$AI_CONFIG_DIR/references/` must stay generic: no project-specific paths, component names, routes, or internal identifiers; put project-level details here instead.
 - When recording a convention borrowed from a sibling project, describe only the rule and its content; never name the source project.
-- This `AGENTS.md` holds development conventions, not feature descriptions; keep each bullet to the rule plus briefest rationale, architecture detail in `ARCHITECTURE.md`, behavior in `docs/design.md`.
+- This `AGENTS.md` holds project-specific *development conventions* — rules to follow when writing code — not feature descriptions or implementation narratives. Keep each bullet to the rule plus the briefest rationale; architecture detail belongs in the project's architecture document (`ARCHITECTURE.md`, or its spec when the project hosts architecture there) and user-facing behavior in `docs/design.md`.
 - Offer `learn` on a correction, approval, or new convention per `~/.agents/references/learning-flow.md`, the single owner of the correction signals; do not restate them here.
 
 ## Quality checks
