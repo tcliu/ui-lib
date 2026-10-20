@@ -112,6 +112,27 @@ test('showcase: the AppShell demo opens a floating right drawer', async ({ page,
   // assertions never catch a mid-transition duplicate.
   await expect(demo.locator('[data-drawer-presentation="docked"]')).toHaveCount(0)
 
+  // Both floating panes paint above the shared backdrop: a point inside a pane
+  // resolves into that pane, never into the backdrop layered over it.
+  const floatingPanes = demo.locator('[data-drawer-presentation="floating"]')
+  await expect(floatingPanes).toHaveCount(2)
+  for (const floatingPane of await floatingPanes.all()) {
+    const box = await floatingPane.boundingBox()
+    expect(box).not.toBeNull()
+    const aboveBackdrop = await floatingPane.evaluate(
+      (pane, point) => Boolean(pane.contains(document.elementFromPoint(point.x, point.y))),
+      { x: box!.x + box!.width / 2, y: box!.y + box!.height / 2 },
+    )
+    expect(aboveBackdrop, 'floating pane must sit above its backdrop').toBe(true)
+  }
+
+  // A pointer press inside the right drawer reaches the drawer, so it stays
+  // open; with the backdrop painted on top this click would dismiss it instead.
+  const rightBox = await rightPane().boundingBox()
+  expect(rightBox).not.toBeNull()
+  await page.mouse.click(rightBox!.x + rightBox!.width / 2, rightBox!.y + rightBox!.height / 2)
+  await expect(rightPane()).toBeVisible()
+
   // Escape closes the right drawer first, then the left one.
   await page.keyboard.press('Escape')
   await expect(rightPane()).toBeHidden()

@@ -99,11 +99,18 @@ Project-specific development conventions for the UI Library web app.
 - Reuse this project's existing UI primitives; every button is the shared
   `Button` (icon-only through its `icon` snippet) per
   `~/.agents/references/ui-patterns.md`, never a raw `<button>`.
+- A composite trigger that renders the shared `Button` (the `Menu` trigger)
+  inherits its box, hit area, focus ring, and glyph size, so the trigger's
+  icon carries no `size` and a trigger class never restates padding; the
+  composite forwards the shared `size` axis to that button. Mechanism in
+  `ARCHITECTURE.md`.
 - Apply code changes in a separate branch and worktree under `.worktrees/` per `~/.agents/references/git.md`, unless the user opts for the current worktree.
 - Worktree deletion refuses targets with running processes; the explicit
   terminate-and-delete step (`--kill`) is in `ARCHITECTURE.md`.
-- Z ladder: sticky content `z-10`, drawer `z-20`, overlays `z-40`, dev tag
-  `z-50` — keep overlays at or below `z-40` so the tag is never covered.
+- Z ladder: sticky content `z-10`, drawer backdrop `z-30`, floating drawer and
+  other overlays (dialogs, menus) `z-40`, dev tag `z-50` — a floating pane must
+  paint above its own backdrop, and overlays stay at or below `z-40` so the tag
+  is never covered.
 - Portal dialogs to `document.body` through `positionPanel` sheet mode so no
   ancestor stacking context can clip or trap them.
 - Temporary scratch (plans in `.tmp/plans/`, requirements in `.tmp/features/`)

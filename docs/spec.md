@@ -67,7 +67,8 @@ No POST routes exist. The only API route is `GET /api/info` above.
 
 - Theme palettes live only in `src/styles.css` (`[data-theme]` overrides of the
   Tailwind palette variables; `dark` is the default with no attribute)
-- Z-index ladder: sticky `z-10`, drawer `z-20`, overlays `z-40`, dev tag `z-50`
+- Z-index ladder: sticky `z-10`, drawer backdrop `z-30`, floating drawer and
+  overlays `z-40`, dev tag `z-50`
 - AppShell presentation follows one ruler: the shell container width against
   the 768px breakpoint (`auto` docks at/above, overlays below;
   `docked`/`floating` pin one behavior; rail always docks). No viewport
