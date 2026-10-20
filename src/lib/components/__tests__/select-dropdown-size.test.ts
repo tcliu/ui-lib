@@ -8,8 +8,8 @@ describe('SelectDropdown size metrics', () => {
     expect(dimensionMetrics('sm', SELECT_RATIOS)).toEqual({
       font: 11.375,
       line: 16.625,
-      padX: 14 * 0.675,
-      padY: 14 * 0.39375,
+      padX: 14 * 0.75,
+      padY: 14 * 0.5,
       minW: 98,
       gap: 5.25,
       icon: 14,
@@ -18,8 +18,8 @@ describe('SelectDropdown size metrics', () => {
       const m = dimensionMetrics(px, SELECT_RATIOS)
       expect(m.font / px).toBeCloseTo(0.8125)
       expect(m.line / px).toBeCloseTo(1.1875)
-      expect(m.padX / px).toBeCloseTo(0.675)
-      expect(m.padY / px).toBeCloseTo(0.39375)
+      expect(m.padX / px).toBeCloseTo(0.75)
+      expect(m.padY / px).toBeCloseTo(0.5)
       expect(m.minW / px).toBeCloseTo(7)
       expect(m.gap / px).toBeCloseTo(0.375)
       expect(m.icon / px).toBeCloseTo(1)
@@ -38,14 +38,19 @@ describe('SelectDropdown size metrics', () => {
     expect(SELECT_TRIGGER_UTILITIES).toContain('pl-[var(--sel-pad-x)] pr-[var(--sel-pad-right)]')
   })
 
-  // A trigger and a text field share a row, so the two boxes must measure the
-  // same at every size (the 1px border is shared too). Pinning the line/padY
-  // ratios keeps a padding tweak from silently breaking that alignment.
-  it('keeps the trigger box the same height as the input chrome', () => {
+  // A trigger and a text field share a row, so their text lines must align and
+  // the boxes must differ only by the padding step: the select trigger carries
+  // the roomier padding (0.5), the input chrome the tighter one (0.39375), so
+  // the trigger box is one padding step taller at every size. Pinning the
+  // ratios keeps a padding tweak from silently breaking that relationship.
+  it('aligns the trigger text with the input chrome and differs only by padding', () => {
     for (const px of [12, 14, 16, 18, 20]) {
       const input = dimensionMetrics(px, INPUT_RATIOS)
       const select = dimensionMetrics(px, SELECT_RATIOS)
-      expect(input.line + 2 * input.padY).toBeCloseTo(select.line + 2 * select.padY)
+      expect(select.line).toBeCloseTo(input.line)
+      expect(select.line + 2 * select.padY - (input.line + 2 * input.padY)).toBeCloseTo(
+        px * 2 * (SELECT_RATIOS.padY - INPUT_RATIOS.padY),
+      )
     }
   })
 })

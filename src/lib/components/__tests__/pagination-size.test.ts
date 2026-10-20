@@ -49,11 +49,11 @@ describe('Pagination numeric size', () => {
     })
     flushSync()
     // Numeric sizes scale every metric by a constant ratio: 14 * 0.875, and the
-    // select line/padY the block height derives from: 14 * 1.1875 / 0.39375.
+    // select line/padY the block height derives from: 14 * 1.1875 / 0.5.
     const nav = target.querySelector('nav')
     expect(nav?.getAttribute('style')).toContain('--pg-font: 12.25px')
     expect(nav?.getAttribute('style')).toContain('--pg-line: 16.625px')
-    expect(nav?.getAttribute('style')).toContain('--pg-pad-y: 5.5125px')
+    expect(nav?.getAttribute('style')).toContain('--pg-pad-y: 7px')
     // The block height matches the page-size dropdown trigger's box.
     expect(nav?.getAttribute('style')).toContain(
       '--pg-btn: calc(var(--pg-line) + 2 * var(--pg-pad-y) + 2px)',

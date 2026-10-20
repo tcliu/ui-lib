@@ -150,7 +150,7 @@ describe('TextInput clearable', () => {
     // button's touch floor), which is what keeps the input's width fixed.
     expect(spacer!.className).toContain('w-[var(--clear-box)]')
     expect(spacer!.className).toContain('h-[var(--clear-box)]')
-    expect(spacer!.className).toContain('max-[27.999rem]:w-11')
+    expect(spacer!.className).toContain('max-phone:w-11')
     expect(clearEl()!.className).toContain('size-[var(--clear-box)]')
     expect(clearEl()!.style.getPropertyValue('--btn-icon')).toBe('10px')
   })

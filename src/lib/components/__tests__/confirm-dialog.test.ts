@@ -124,19 +124,19 @@ describe('ConfirmDialog props', () => {
   it('honors the width and height variants on the panel', () => {
     const ui = open({ widthVariant: 'xl', heightVariant: 'md' })
     expect(ui.dialog().className).toContain('max-w-xl')
-    expect(ui.dialog().className).toContain('h-[28rem]')
+    expect(ui.dialog().className).toContain('h-112')
   })
 
   it('applies the size shorthand to both panel axes', () => {
     const ui = open({ size: 'lg' })
     expect(ui.dialog().className).toContain('max-w-lg')
-    expect(ui.dialog().className).toContain('h-[32rem]')
+    expect(ui.dialog().className).toContain('h-128')
   })
 
   it('lets an explicit variant win over the size shorthand', () => {
     const ui = open({ size: 'lg', widthVariant: 'xl' })
     expect(ui.dialog().className).toContain('max-w-xl')
-    expect(ui.dialog().className).toContain('h-[32rem]')
+    expect(ui.dialog().className).toContain('h-128')
   })
 })
 
