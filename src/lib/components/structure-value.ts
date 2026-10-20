@@ -85,6 +85,18 @@ export function setAtPath(root: unknown, path: string[], value: unknown): unknow
   return { ...(root as Record<string, unknown>), [key]: setAtPath((root as Record<string, unknown>)[key], rest, value) }
 }
 
+// The format a plain-text document reads as: XML when it opens with a tag,
+// JSON when it parses, YAML otherwise.
+export function detectFormat(text: string): 'json' | 'yaml' | 'xml' {
+  if (text.trim().startsWith('<')) return 'xml'
+  try {
+    JSON.parse(text.trim() || 'null')
+    return 'json'
+  } catch {
+    return 'yaml'
+  }
+}
+
 export function renameKeyAtPath(root: unknown, path: string[], oldKey: string, newKey: string): unknown {
   if (oldKey === newKey) return root
   if (path.length === 0) {
