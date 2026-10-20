@@ -200,7 +200,10 @@ of building a parallel control.
   number steppers) paints no border of its own: it reserves the ring with a
   transparent border so the base border, focus, and disabled colors stay in
   lockstep. `SelectDropdown`'s box shares the same line/padY ratios so text,
-  search, and select align on one row. `clearable` renders one shared clear
+  search, and select align on one row; a date picker's single-mode field *is*
+  this `TextInput` (with the calendar affordance in its `trailing` slot), and its
+  range trigger reuses the same field font, line, and padding (`INPUT_RATIOS`),
+  so both sit level with a field too. `clearable` renders one shared clear
   affordance: it overlays the field's own right edge (`inside`) or sits after it
   as a sibling (`outside`, chosen automatically when a `trailing` adornment
   already owns that edge; override with `clearPlacement`), and the field reserves
@@ -250,7 +253,24 @@ of building a parallel control.
   leading search icon `0.9×`, and all still scale with the control.
   `Pagination`'s page blocks reuse the select trigger's line and vertical
   padding (plus its 1px border), so the numbered blocks, the jump input, and the
-  page-size dropdown land on one height.
+  page-size dropdown land on one height. `ChipDropdown`'s `CHIP_RATIOS` make
+  every metric — the label font and line, padding, the label→chevron and
+  chip→clear-slot gaps, the chevron slot, the clear cross, and the label height
+  floor — a fixed ratio of the dimension, calibrated so the default `md`
+  reproduces the original 12px chip's label, padding, and gaps; its chevron
+  instead rides `SelectDropdown`'s `0.625` affordance share so the two markers
+  match. It forwards `size` to its inner clear
+  `Button`, and its `CHIP_PANEL_RATIOS` scale the menu rows, empty row, and
+  search field (with a size-scaled row min-width flooring the content-fit panel
+  at the original 256px at `md`), so the option panel resizes with the chip like
+  `SelectDropdown`'s. `Chip` scales its own padding, font, line, and label→remove
+  gap (and the remove cross) from the dimension, leaving `chipClass` to carry
+  color and the static pill's shape. `FormField` scales its label, gaps, and
+  inline label column; `Tabs` scales the nav and tab text, padding, and radius.
+  The date input shares one `PICKER_RATIOS` set (`date-input-core.ts`) covering
+  the field's calendar gutter and the panel (width/padding, nav buttons, day
+  cells, weekday and meta text); each field's own chrome is the input family's
+  (`--input-*` from `TextInput`), so a date field sits level with a text field.
 - **Icon glyphs** — one glyph is one component: a single `aria-hidden` `<svg>`
   sized by its `size`/`className` props, with no per-glyph style variant. Every
   square glyph uses the one square viewBox (`0 0 20 20`) and authors its artwork
@@ -289,8 +309,52 @@ of building a parallel control.
   a richer tag object maps it to `string[]` at the call site. It reports the
   typed draft via `onQueryChange`, renders chips through `Chip`, and exports
   `focus()`.
-- **DateRangePicker** — a `theme` prop of per-part color classes replaces only
-  those color classes; structural classes stay fixed.
+- **DateInput** — one control for a date or a date-time, single or a range:
+  `DateInput` composes the fields (`DateField` owns the field chrome and the
+  portalled panel, over `use-calendar-grid.svelte.ts` for the visible month,
+  roving focus, and day nodes, `use-date-text-field.svelte.ts` for the draft and
+  strict commit, and `use-time-segments.svelte.ts` for the hour/minute/second
+  row), with a `time`/`range` pair of options, a `format` prop (a dayjs
+  display pattern for the field *and* the pattern the typed text is parsed
+  against, strictly and locale-aware), and a `theme` prop of per-part color
+  classes (structural classes stay fixed). `time` makes every field a date-time
+  (its panel gains an hour/minute/second row and the value serializes as
+  `YYYY-MM-DDTHH:mm:ss`); `range` renders two independent fields (`from`/`to`,
+  each with its own calendar and panel) around a separator, each behaving exactly
+  as the single field, so both options coexist — a date-time range is two
+  date-time fields. The field is the shared `TextInput`: the calendar icon sits
+  in its `trailing` slot and opens the panel, typing is filtered to characters
+  the pattern can contain, and each commit parses strictly — a valid entry writes
+  back through the internal value format, anything else (including a rollover
+  such as Feb 31) reverts to the committed text, with no error state. The grid
+  re-anchors its visible month on the value: every change while the panel is
+  closed, a value updated from outside while it is open (a typed commit, a
+  parent write, restored data), and a complete, valid entry previewed as it is
+  typed — so retyping the year moves the view and the highlighted day before the
+  commit lands, while the field summary keeps showing the stored value, and a
+  rejected entry leaves the grid on the committed value, so the calendar never
+  shows a month other than the field's own value. A value
+  that carries a time keeps it when only the day changes. Each panel's footer
+  pairs a summary of the field's value with the shared icon-only `Button` as its
+  clear affordance (the field cross, named for assistive tech rather than
+  labelled in text, riding `0.8×` of the icon slot so it reads lighter than the
+  calendar glyph). Each field's width hugs
+  the pattern's own text in `ch`, plus the chrome the input carries (its padding
+  and the calendar gutter), so the value sits close to the affordance rather than
+  in a wide field with slack. Each time segment is edited as clock seconds, so a
+  step or entry past its own range carries into the next unit and a clock at the
+  top of the day rolls the date (23:59:59 + 1s is the next day's 00:00:00)
+  instead of clamping; the inputs carry no `min`/`max` for exactly that reason,
+  and a roll moves the grid without taking focus from the segment being stepped
+  (only a day grid that holds focus hands it to the new day).
+  Date math, pattern
+  formatting, and the width estimate ride on `dayjs` (a new runtime dependency
+  for any app that vendors the input), with the `customParseFormat` plugin
+  extended once in `date-input-core.ts`. `DateInput` scales every field and its
+  calendar from one `size` (`PICKER_RATIOS` in `date-input-core.ts`): its root
+  carries the `--pick-*` set, and each portalled panel gets the same set through
+  `sizeVarAction` — it is detached from the root, and a `style` binding would
+  replace the inline styles the positioner owns.
 - **DataGrid** — models `string[][]`; header/column-label, fixed-column,
   resize-persistence, and read-only are props (`showHeaders`, `columnLabels`,
   `maxColumns`, `editable`, `storageKey`) over the `use-grid-*` hooks
@@ -339,20 +403,54 @@ of building a parallel control.
 - **StructureTree / StructureNode** — display and inline-edit a JSON-shaped
   `value`: `StructureTree` renders the top-level container (or a leaf), and each
   `StructureNode` row expands/collapses, renames its key, edits its value
-  through a dialog, and copies it. The node's measured inline text field
-  (edit key/text/min-width, focus and auto-width effects, begin/cancel) lives in
-  `use-structure-inline-edit.svelte.ts`; its object-edit dialog (open flag,
+  through a dialog, and copies it. The node's inline text field (edit
+  key/text/width, focus-at-end effect, begin/cancel) lives in
+  `use-structure-inline-edit.svelte.ts`: each field is sized to the width of the
+  text it replaces, so editing it never moves the rest of the row — the colon
+  and the value carry a wider gap so the field's focus ring clears the colon —
+  typing scrolls inside the field, and focusing collapses the caret to the end
+  of the text (the press gesture that opened the field is left unselected too,
+  since a field can mount underneath it and the browser would otherwise select
+  the word; once the field is open a double-click selects its text normally);
+  its object-edit dialog (open flag,
   seed/draft pair, save/format/reset/close) lives in
   `use-structure-object-editor.svelte.ts`. The value helpers (`isContainer`,
   `childEntries`, `jsonPath`, `setAtPath`, `renameKeyAtPath`, …) live in
-  `structure-value.ts`.
+  `structure-value.ts`. Both components take `size`; `structureStyle` emits the
+  node's `--tree-*` metrics from `STRUCTURE_RATIOS` (calibrated so `md`
+  reproduces the original 14px/19.25px text and the `xs`/`sm` control steps) and
+  a `--tree-gutter` that matches the container caret column — the caret
+  button's own box plus the default row-gap difference — so a leaf key and a
+  container label share a left edge at every level and size.
+- **BarChart** — renders a generic series as `columns: { label, segments,
+  tip? }[]`: a column with one segment is a plain bar, several stack (each
+  segment growing by its `value` within the column). Column height is its
+  segment sum over the tallest column, floored at 2% so the smallest stays
+  visible; a wide series thins the axis labels (`ceil(count / 16)`). A
+  segment's optional `tone` picks a palette fill from `chart-tones.ts`
+  (`CHART_TONES`/`TONE_CLASS`) — literal utilities, so `[data-theme]` remaps
+  apply; unset, the tone cycles by segment index. Segment labels build the
+  legend (one row per distinct label, summed across columns) unless `legend` is
+  false, and a column's `tip` rides the shared `Tooltip`. The plot is a
+  `role="img"` named by `ariaLabel` (`chart.label` fallback), with the axis
+  `aria-hidden`. `size` scales every metric on the shared axis, calibrated so
+  `md` reproduces the ported chart (a 140px plot, 56px max column, 10px axis,
+  12px legend); `height` overrides only the plot box (a number is px, a string
+  verbatim) — a footprint override, like `BaseDialog`'s height variant, rather
+  than a second size dimension — while the metrics keep scaling.
 - **FormField** — `layout="stacked"` (default) puts the label above the control;
-  `layout="inline"` puts it in a 6rem column at >=sm and stacks below sm. The
-  inline track is a literal arbitrary value, not a theme token, so a consuming
-  app need not define an app-private grid-columns entry.
+  `layout="inline"` puts it in the shared inline column at >=sm (6rem at `md`,
+  scaling with `size`) and stacks below sm. The inline track is an arbitrary
+  value driven by `--ff-inline-col`, not a theme token, so a consuming app need
+  not define an app-private grid-columns entry.
 - **Tooltip** — plain-text hints use the `tooltip` prop with the shared
   `Tooltip` component. A `tooltip` on a disabled `Button` rides the
-  non-disabled wrapper.
+  non-disabled wrapper. The component leaves only a hidden anchor in its
+  parent (its content portals to `document.body`, and no whitespace text node
+  sits beside the anchor), so an inline trigger's own text and layout are never
+  disturbed: placing `<Tooltip>` inside an element makes that element the
+  trigger with no `trigger` ref, and the explicit `trigger` prop stays for
+  cases where the anchor sits elsewhere.
 - **Dialogs** — `ConfirmDialog` routes its dismiss affordances to `onCancel` when
   one is passed, and `confirmOnDismiss` makes Escape/overlay/close perform the
   confirm instead of cancelling. Dialog content portals to `document.body`
@@ -375,10 +473,10 @@ of building a parallel control.
   against `src/lib/locales/` (nested `as const` trees with a dotted-path
   `MessageKey`; non-default locales are typed `LocaleMessages<typeof en>` so a
   missing key fails the build). A consuming app's dictionaries define `common.*`,
-  `number.*`, `dropdown.*`, `pagination.*`, `tabs.label`, `search.placeholder`,
-  `splitter.*`, `password.*`, `chip.remove`, `tagInput.*`, `copy.*`, `edit.*`,
-  `editor.*`, `structure.*`, `range.*`, `grid.*`, `resizable.*`, and
-  `appShell.*`.
+  `number.*`, `dropdown.*`, `pagination.*`, `tabs.label`, `chart.label`,
+  `search.placeholder`, `splitter.*`, `password.*`, `chip.remove`, `tagInput.*`,
+  `copy.*`, `edit.*`, `editor.*`, `structure.*`, `range.*`, `date.*`,
+  `time.*`, `grid.*`, `resizable.*`, and `appShell.*`.
 - **CodeEditor / LazyCodeEditor** — load language packs on demand through a
   `docType` lookup; the CodeMirror theme package needs `@babel/runtime` in any
   app that vendors it.
@@ -391,7 +489,7 @@ attributes in place). These isolated infrastructure helpers are the only
 exceptions, and the pattern must not be copied into feature code:
 `position-panel.svelte.ts`, `BaseDialog` + `use-app-shell-drawer.svelte.ts`,
 `use-dropdown.svelte.ts`, `click-outside.ts`, `use-focusout-close.ts`,
-`drag-close-down.ts`, `Tooltip.svelte`, `AppShell.svelte`,
+`focus-within.ts`, `drag-close-down.ts`, `Tooltip.svelte`, `AppShell.svelte`,
 `use-grid-autoscroll.svelte.ts`, `grid-cell-refs.ts`,
 `use-table-scroll-sync.svelte.ts`, `theme.svelte.ts`, and
 `i18n.svelte.ts`.

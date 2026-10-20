@@ -40,7 +40,7 @@ Project-specific development conventions for the UI Library web app.
 - The dropdown/menu surfaces share `use-listbox.svelte.ts` (and `ListboxPanel` where the panel shape fits); compose them for a new listbox surface, never re-wiring the helpers by hand.
 - Free-text suggestions stay one shared control (`AutoComplete`), filtering to
   matches only and hiding the panel when nothing matches.
-- Give `DateRangePicker` its `theme` prop instead of forking it for a different
+- Give `DateInput` its `theme` prop instead of forking it for a different
   palette.
 - `SelectDropdown` derives its trigger label from the committed value; pass
   `buttonLabel` only to override it.
@@ -50,6 +50,10 @@ Project-specific development conventions for the UI Library web app.
   `FieldConfig[]` props tables; pagination is optional (omit it for no footer).
 - Tree/JSON-shaped display stays one shared control (`StructureTree`); reuse it
   instead of forking a tree viewer.
+- Charted data display stays one shared control (`BarChart`), with its tones in
+  `chart-tones.ts` (literal palette utilities only, so `[data-theme]` remaps
+  apply); a chart's footprint override is its `height` prop beside the `size`
+  axis, never a second size dimension. Mechanism in `ARCHITECTURE.md`.
 - Two-axis container resizing stays one shared control (`Resizable`); reuse it
   instead of reimplementing pointer capture and keyboard nudges.
 - `FormField` carries a `layout` prop (`stacked` default, `inline` label column
@@ -78,7 +82,14 @@ Project-specific development conventions for the UI Library web app.
 - A dialog panel's footprint is `BaseDialog`'s `widthVariant`/`heightVariant` (or the `size` shorthand setting both; explicit variant wins), not a `SizeInput` metric scale. Mechanism in `ARCHITECTURE.md`.
 - Size svg primitives (icons, spinner) take `size` attributes, never classes.
 - A sized control's icon slot is the size dimension itself (`icon` ratio `1`), while the glyph renders at the shared `ICON_RATIO` (`0.8125`), so an icon matches its label and keeps the optical size the filled-viewBox glyphs were normalized from.
-- An in-field affordance glyph rides a trimmed share of the icon slot rather than the whole slot — the dropdown trigger's chevron and its clear cross and a clearable field's cross at `0.625×`, the number steppers at `0.75×`, the search icon at `0.9×` — so it reads lighter than the label while still scaling with the control.
+- An in-field affordance glyph rides a trimmed share of the icon slot rather than the whole slot — the dropdown trigger's chevron and its clear cross and a clearable field's cross at `0.625×`, the number steppers at `0.75×`, the date panel's clear cross at `0.8×`, the search icon at `0.9×` — so it reads lighter than the label while still scaling with the control.
+- `ChipDropdown` scales on the shared size axis (its ratios calibrated so `md` reproduces the original chip's label, padding, and gaps, with its chevron on `SelectDropdown`'s `0.625×` affordance share) and reserves the clear slot while holding its own label width, so clearing never resizes it.
+- `Chip` owns its size-scaled spacing (padding, font, line, gap) on the shared axis; `chipClass` supplies color and the static pill's shape (radius), so a caller passes `size` instead of baking padding/font into the class.
+- `FormField` and `Tabs` scale their own chrome on the shared axis — `FormField`: label, gaps, and inline label column; `Tabs`: nav/tab text, padding, and radius; the controls slotted into a `FormField` stay the caller's to size.
+- The date input is one control: a single `DateField` owns the shared `TextInput` field and the calendar, and `DateInput` composes one field or a `range` pair with a separator — each field behaving as the single field, so a range and a time coexist — so the calendar, the `size` axis, the dayjs `format` pattern, and the `theme` live in the one field.
+- A date field edits its value as text: filter keystrokes to the characters the `format` pattern can contain, parse strictly and locale-aware on commit, and revert to the committed text on anything else (a rollover like Feb 31 is rejected, never normalized) — no error state; a calendar pick writes back through the picker's own value format, so a value that carries a time keeps it when only the date changes. Mechanism in `ARCHITECTURE.md`.
+- A date field's width hugs the `format` pattern's own text in `ch` (no prompt floor, no growth), so the value sits close to its calendar affordance and no slack opens between them.
+- A `time` field's segments carry instead of clamping: a segment stepped or typed past its own range advances the next unit, and 23:59:59 + 1s rolls the date to the next day's 00:00:00. Mechanism in `ARCHITECTURE.md`.
 - Icon glyphs share one square viewBox (`0 0 20 20`) and author their artwork
   directly in it, already normalized to fill the box (dominant axis, centered)
   on the 0.01 unit step, so every square icon renders at a consistent size per

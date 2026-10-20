@@ -75,6 +75,15 @@ suggestion's label into the field, and a query that matches nothing hides the
 panel instead of falling back to the full list. `Escape` dismisses the
 suggestions while keeping focus and the typed text.
 
+A bar chart renders one bar per column, stacking a column's segments; each bar's
+height is its total against the tallest column (with a small floor so a zero
+column stays visible), and a wide series thins the axis labels so they still
+fit. Segments take a colour from the shared tone palette, cycling when a segment
+names none, and the legend lists one row per labelled segment with its value
+summed across columns; a column with a tip shows it on hover. The whole plot
+scales with its `size`, and `height` overrides only the plot box when a fixed
+footprint is needed.
+
 ## Theming
 
 The app supports ten themes; `dark` is the default palette (no `data-theme`
