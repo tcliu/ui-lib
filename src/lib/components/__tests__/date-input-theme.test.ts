@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushSync, mount, unmount } from 'svelte'
-import DateRangePicker from '../DateRangePicker.svelte'
+import DateInput from '../DateInput.svelte'
 
 // jsdom lacks ResizeObserver (positionPanel), matchMedia, and scrollIntoView.
 function installDomStubs(): void {
@@ -40,19 +40,18 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 
+// A range pair renders two fields, so this also covers the themed pair: the
+// theme reaches every field's panel.
 function open(theme: Record<string, string> = {}) {
-  instance = mount(DateRangePicker, {
+  instance = mount(DateInput, {
     target,
-    props: { from: '', to: '', onFrom: () => {}, onTo: () => {}, theme },
+    props: { range: true, from: '', to: '', onFrom: () => {}, onTo: () => {}, theme },
   })
   flushSync()
-  const trigger = target.querySelector('button[aria-haspopup="dialog"]') as HTMLButtonElement
+  const trigger = target.querySelector('button') as HTMLButtonElement
   trigger.click()
   flushSync()
-  return {
-    trigger,
-    panel: () => document.querySelector('[role="dialog"]') as HTMLElement,
-  }
+  return { trigger, panel: () => document.querySelector('[role="dialog"]') as HTMLElement }
 }
 
 function byLabel(label: string): HTMLElement {
@@ -61,26 +60,21 @@ function byLabel(label: string): HTMLElement {
   return element
 }
 
-describe('DateRangePicker theme', () => {
+describe('DateInput theme', () => {
   it('leaves every part on its default palette without a theme', () => {
-    const { trigger } = open()
-    expect(trigger.className).toContain('text-slate-500!')
+    open()
     expect(byLabel('Previous month').className).toContain('text-slate-400')
     expect(document.querySelector('[role="columnheader"]')?.className).toContain('text-slate-500')
     expect(document.querySelector('button[aria-current="date"]')?.className).toContain('text-cyan-300')
   })
 
   it('applies each theme override and drops the default for that part', () => {
-    const { trigger } = open({
-      unsetText: 'text-fuchsia-400!',
+    open({
       navButton: 'text-fuchsia-400',
       columnHeader: 'text-fuchsia-400',
       today: 'text-fuchsia-400',
       metaText: 'text-fuchsia-400',
     })
-
-    expect(trigger.className).toContain('text-fuchsia-400!')
-    expect(trigger.className).not.toContain('text-slate-500!')
 
     const prev = byLabel('Previous month')
     expect(prev.className).toContain('text-fuchsia-400')
@@ -92,7 +86,11 @@ describe('DateRangePicker theme', () => {
     const today = document.querySelector('button[aria-current="date"]') as HTMLElement
     expect(today.className).toContain('text-fuchsia-400')
 
-    const clear = [...document.querySelectorAll('button')].find(button => button.textContent?.trim() === 'Clear dates') as HTMLElement
-    expect(clear.className).toContain('text-fuchsia-400')
+    const clear = document.querySelector('button[aria-label="Clear date"]') as HTMLElement
+    // The clear affordance is an icon-only Button now, so the per-part color
+    // reaches the summary text and not the button's own ghost palette.
+    expect(clear.className).not.toContain('text-fuchsia-400')
+    const summary = [...document.querySelectorAll('[role="dialog"] span')].find(span => span.textContent?.trim() === 'From')
+    expect(summary?.className).toContain('text-fuchsia-400')
   })
 })

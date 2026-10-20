@@ -32,6 +32,9 @@ export const zhTW = {
   tabs: {
     label: '頁籤',
   },
+  chart: {
+    label: '圖表',
+  },
   search: {
     placeholder: '搜尋...',
   },
@@ -68,11 +71,21 @@ export const zhTW = {
     label: '更多操作',
   },
   range: {
-    selectDates: '選擇日期',
-    calendar: '選擇日期範圍',
+    from: '開始',
+    to: '結束',
+  },
+  date: {
+    select: '選擇日期',
+    selectTime: '選擇日期與時間',
+    calendar: '選擇日期',
     prevMonth: '上個月',
     nextMonth: '下個月',
     clear: '清除日期',
+  },
+  time: {
+    hour: '小時',
+    minute: '分鐘',
+    second: '秒',
   },
   grid: {
     toggleHeader: '切換表頭',

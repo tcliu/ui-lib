@@ -1,0 +1,162 @@
+import { expect, test } from '@playwright/test'
+
+// DateInput follows the converted showcase layout: the code toggle sits beside
+// the component title, the demo sits in a resizable frame, and the props table
+// appends a Value column.
+test('showcase: DateInput reproduces its demo from Show code', async ({ page }) => {
+  await page.goto('/components/date-input')
+  await page.waitForLoadState('networkidle')
+
+  const demo = page.locator('[data-showcase-demo]').first()
+  await expect(page.getByRole('heading', { level: 1, name: 'DateInput' })).toBeVisible()
+  // The demo sits in a resizable frame (Resizable renders width/height/corner).
+  await expect(demo.locator('[role="separator"]')).toHaveCount(3)
+
+  const before = (await demo.innerText()).replace(/\s+/g, ' ').trim()
+  await page.locator('main header').getByRole('button', { name: 'Show code' }).click()
+  await expect(page.locator('main .cm-content').first()).toBeVisible()
+  await expect.poll(async () => (await demo.innerText()).replace(/\s+/g, ' ').trim(), { timeout: 15000 }).toBe(before)
+  await expect(page.locator('main').getByRole('alert')).toHaveCount(0)
+})
+
+test('showcase: picking a DateInput day updates the demo readout', async ({ page }) => {
+  await page.goto('/components/date-input')
+  await page.waitForLoadState('networkidle')
+
+  const demo = page.locator('[data-showcase-demo]').first()
+  await demo.getByRole('button', { name: 'Choose a date' }).click()
+  await page.locator('[role="dialog"] button[aria-current="date"]').click()
+  await expect(demo).toContainText(/value: \d{4}-\d{2}-\d{2}/)
+})
+
+test('showcase: typing in the DateInput field commits a valid date and reverts a bad one', async ({ page }) => {
+  await page.goto('/components/date-input')
+  await page.waitForLoadState('networkidle')
+
+  const demo = page.locator('[data-showcase-demo]').first()
+  const field = demo.getByRole('textbox')
+  await field.fill('2026-10-05')
+  await field.blur()
+  await expect(demo).toContainText('value: 2026-10-05')
+  // An impossible date is rejected and the field reverts to the committed value.
+  await field.fill('2026-02-31')
+  await field.blur()
+  await expect(field).toHaveValue('2026-10-05')
+  await expect(demo).toContainText('value: 2026-10-05')
+})
+
+test('showcase: the open calendar follows a value typed into the field', async ({ page }) => {
+  await page.goto('/components/date-input')
+  await page.waitForLoadState('networkidle')
+
+  const demo = page.locator('[data-showcase-demo]').first()
+  const field = demo.getByRole('textbox')
+  // The field's own key opens the panel without moving focus out of it.
+  await field.click()
+  await field.press('ArrowDown')
+  const panel = page.locator('[role="dialog"]')
+  await expect(panel).toBeVisible()
+
+  // A valid entry moves the grid as it is typed, before anything is committed,
+  // and highlights the previewed day in it.
+  await field.fill('2027-03-04')
+  await expect(panel).toContainText('March 2027')
+  const selectedCell = panel.locator('[role="gridcell"][aria-selected="true"]')
+  await expect(selectedCell.getByRole('button', { name: /March 4, 2027/ })).toBeVisible()
+  await expect(demo).not.toContainText('value: 2027-03-04')
+
+  // Committing the same text keeps the grid and the highlight there, and lands
+  // the value.
+  await field.press('Enter')
+  await expect(demo).toContainText('value: 2027-03-04')
+  await expect(panel).toContainText('March 2027')
+  await expect(selectedCell.getByRole('button', { name: /March 4, 2027/ })).toBeVisible()
+})
+
+test('showcase: the range toggle turns the field into a from/to pair', async ({ page }) => {
+  await page.goto('/components/date-input')
+  await page.waitForLoadState('networkidle')
+
+  const demo = page.locator('[data-showcase-demo]').first()
+  await expect(demo.getByRole('textbox')).toHaveCount(1)
+
+  await page.getByRole('checkbox', { name: 'range value', exact: true }).check({ force: true })
+  // Two independent fields, each with its own calendar affordance.
+  await expect(demo.getByRole('textbox')).toHaveCount(2)
+  await expect(demo.getByRole('button', { name: 'From: Choose a date' })).toBeVisible()
+  // A pick in the end field writes that end only.
+  await demo.getByRole('button', { name: 'To: Choose a date' }).click()
+  await page.locator('[role="dialog"] button[aria-current="date"]').click()
+  await expect(demo).toContainText(/range: — – \d{4}-\d{2}-\d{2}/)
+})
+
+test('showcase: the time row carries a stepped segment and rolls the date', async ({ page }) => {
+  await page.goto('/components/date-input')
+  await page.waitForLoadState('networkidle')
+
+  const demo = page.locator('[data-showcase-demo]').first()
+  await page.getByRole('checkbox', { name: 'time value', exact: true }).check({ force: true })
+  // Seed the day the row edits: a date-only value carries no time yet.
+  await page.getByRole('textbox', { name: 'value value', exact: true }).fill('2026-09-05')
+  await demo.getByRole('button', { name: 'Choose a date' }).click()
+
+  // The panel is portalled to document.body, so the row is asserted page-wide.
+  const hour = page.locator('[role="dialog"] input[aria-label="Hour"]')
+  const minute = page.locator('[role="dialog"] input[aria-label="Minute"]')
+  const second = page.locator('[role="dialog"] input[aria-label="Second"]')
+  await expect(hour).toHaveValue('00')
+  await expect(minute).toHaveValue('00')
+  await expect(second).toHaveValue('00')
+
+  // A minute stepped past 59 carries into the hour.
+  await minute.fill('59')
+  await minute.press('ArrowUp')
+  await expect(minute).toHaveValue('00')
+  await expect(hour).toHaveValue('01')
+  await expect(demo).toContainText('value: 2026-09-05T01:00:00')
+
+  // The top of the day rolls the date, so the clock never clamps or rewinds.
+  await hour.fill('23')
+  await expect(demo).toContainText('value: 2026-09-05T23:00:00')
+  await minute.fill('59')
+  await expect(demo).toContainText('value: 2026-09-05T23:59:00')
+  await second.fill('59')
+  await expect(demo).toContainText('value: 2026-09-05T23:59:59')
+  await second.press('ArrowUp')
+  await expect(demo).toContainText('value: 2026-09-06T00:00:00')
+  // The rolled date does not steal the focus from the segment being stepped.
+  await expect(second).toBeFocused()
+})
+
+test('showcase: the DateInput size Value cell scales the picker', async ({ page }) => {
+  await page.goto('/components/date-input')
+  await page.waitForLoadState('networkidle')
+
+  const demo = page.locator('[data-showcase-demo]').first()
+  await page.getByRole('combobox', { name: 'size value' }).click()
+  await page.getByRole('option', { name: 'lg' }).click()
+
+  // lg = 18px dimension → a 14.625px field font.
+  await expect(demo.locator('[style*="--pick-font"]').first()).toHaveAttribute('style', /--pick-font:\s*14\.625px/)
+})
+
+test('showcase: the DateInput format Value cell drives the field text', async ({ page }) => {
+  await page.goto('/components/date-input')
+  await page.waitForLoadState('networkidle')
+
+  const demo = page.locator('[data-showcase-demo]').first()
+  await page.getByRole('textbox', { name: 'value value', exact: true }).fill('2026-09-19')
+  await page.getByRole('textbox', { name: 'format value', exact: true }).fill('D MMM YYYY')
+  await expect(demo.getByRole('textbox')).toHaveValue('19 Sep 2026')
+})
+
+test('showcase: the open calendar carries the size metrics on the portalled panel', async ({ page }) => {
+  await page.goto('/components/date-input')
+  await page.waitForLoadState('networkidle')
+
+  const demo = page.locator('[data-showcase-demo]').first()
+  await demo.getByRole('button', { name: 'Choose a date' }).click()
+  // The panel is portalled to document.body, so it must carry its own
+  // `--pick-*` set (not inherit the picker root's).
+  await expect(page.locator('[role="dialog"]')).toHaveAttribute('style', /--pick-panel-width:\s*272px/)
+})

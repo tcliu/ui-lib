@@ -32,6 +32,9 @@ export const zhCN = {
   tabs: {
     label: '标签页',
   },
+  chart: {
+    label: '图表',
+  },
   search: {
     placeholder: '搜索...',
   },
@@ -68,11 +71,21 @@ export const zhCN = {
     label: '更多操作',
   },
   range: {
-    selectDates: '选择日期',
-    calendar: '选择日期范围',
+    from: '开始',
+    to: '结束',
+  },
+  date: {
+    select: '选择日期',
+    selectTime: '选择日期和时间',
+    calendar: '选择日期',
     prevMonth: '上个月',
     nextMonth: '下个月',
     clear: '清除日期',
+  },
+  time: {
+    hour: '小时',
+    minute: '分钟',
+    second: '秒',
   },
   grid: {
     toggleHeader: '切换表头',

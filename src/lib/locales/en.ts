@@ -32,6 +32,9 @@ export const en = {
   tabs: {
     label: 'Tabs',
   },
+  chart: {
+    label: 'Chart',
+  },
   search: {
     placeholder: 'Search...',
   },
@@ -68,11 +71,21 @@ export const en = {
     label: 'More actions',
   },
   range: {
-    selectDates: 'Select dates',
-    calendar: 'Choose a date range',
+    from: 'From',
+    to: 'To',
+  },
+  date: {
+    select: 'Select date',
+    selectTime: 'Select date and time',
+    calendar: 'Choose a date',
     prevMonth: 'Previous month',
     nextMonth: 'Next month',
-    clear: 'Clear dates',
+    clear: 'Clear date',
+  },
+  time: {
+    hour: 'Hour',
+    minute: 'Minute',
+    second: 'Second',
   },
   grid: {
     toggleHeader: 'Toggle header',
