@@ -7,6 +7,7 @@ export interface ShowcaseComponent {
 export const SHOWCASE_COMPONENTS: ShowcaseComponent[] = [
   { slug: 'app-shell', name: 'AppShell' },
   { slug: 'autocomplete', name: 'AutoComplete' },
+  { slug: 'bar-chart', name: 'BarChart' },
   { slug: 'base-dialog', name: 'BaseDialog' },
   { slug: 'button', name: 'Button' },
   { slug: 'buttons', name: 'Buttons' },
@@ -16,11 +17,10 @@ export const SHOWCASE_COMPONENTS: ShowcaseComponent[] = [
   { slug: 'code-editor', name: 'CodeEditor' },
   { slug: 'column-chooser', name: 'ColumnChooser' },
   { slug: 'confirm-dialog', name: 'ConfirmDialog' },
-  { slug: 'copy-button', name: 'CopyButton' },
   { slug: 'copyable', name: 'Copyable' },
   { slug: 'data-grid', name: 'DataGrid' },
   { slug: 'data-table', name: 'DataTable' },
-  { slug: 'date-range-picker', name: 'DateRangePicker' },
+  { slug: 'date-input', name: 'DateInput' },
   { slug: 'edit-dialog', name: 'EditDialog' },
   { slug: 'editable-text', name: 'EditableText' },
   { slug: 'field-table', name: 'FieldTable' },
@@ -51,7 +51,7 @@ export const SHOWCASE_COMPONENTS: ShowcaseComponent[] = [
 // together, which makes the relation symmetric by construction.
 export const SHOWCASE_COMPONENT_GROUPS: Record<string, readonly string[]> = {
   // Overlay selectors built on the shared dropdown engine.
-  selectors: ['select-dropdown', 'autocomplete', 'chip-dropdown', 'menu', 'column-chooser', 'date-range-picker'],
+  selectors: ['select-dropdown', 'autocomplete', 'chip-dropdown', 'menu', 'column-chooser', 'date-input'],
   // Surfaces where typing filters the option list.
   textFilter: ['select-dropdown', 'autocomplete', 'tag-input'],
   // Chip and tag editing surfaces.
@@ -61,9 +61,9 @@ export const SHOWCASE_COMPONENT_GROUPS: Record<string, readonly string[]> = {
   // Form inputs.
   inputs: ['number-input', 'search-input', 'text-input', 'autocomplete', 'textarea', 'password-input', 'editable-text', 'form-field', 'tag-input', 'checkbox'],
   // Click/action affordances.
-  actions: ['button', 'buttons', 'copy-button', 'copyable'],
-  // Tabular data display.
-  tables: ['data-grid', 'data-table', 'field-table', 'pagination', 'column-chooser', 'structure-tree'],
+  actions: ['button', 'buttons', 'copyable'],
+  // Tabular and charted data display.
+  tables: ['data-grid', 'data-table', 'field-table', 'pagination', 'column-chooser', 'structure-tree', 'bar-chart'],
   // Code editing.
   code: ['code-editor', 'lazy-code-editor'],
   // Shell and layout primitives.

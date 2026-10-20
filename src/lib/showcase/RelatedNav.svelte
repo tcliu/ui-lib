@@ -14,16 +14,16 @@
   // shared base (shape + hover) is repeated so every entry is a literal class
   // string Tailwind can see.
   const RELATED_CHIP_CLASSES = [
-    'rounded-full border border-cyan-700/60 bg-cyan-500/15 px-2 py-0.5 text-xs text-cyan-200 transition hover:brightness-110 motion-reduce:transition-none',
-    'rounded-full border border-amber-700/60 bg-amber-500/15 px-2 py-0.5 text-xs text-amber-200 transition hover:brightness-110 motion-reduce:transition-none',
-    'rounded-full border border-violet-700/60 bg-violet-500/15 px-2 py-0.5 text-xs text-violet-200 transition hover:brightness-110 motion-reduce:transition-none',
-    'rounded-full border border-emerald-700/60 bg-emerald-500/15 px-2 py-0.5 text-xs text-emerald-200 transition hover:brightness-110 motion-reduce:transition-none',
-    'rounded-full border border-rose-700/60 bg-rose-500/15 px-2 py-0.5 text-xs text-rose-200 transition hover:brightness-110 motion-reduce:transition-none',
-    'rounded-full border border-sky-700/60 bg-sky-500/15 px-2 py-0.5 text-xs text-sky-200 transition hover:brightness-110 motion-reduce:transition-none',
-    'rounded-full border border-indigo-700/60 bg-indigo-500/15 px-2 py-0.5 text-xs text-indigo-200 transition hover:brightness-110 motion-reduce:transition-none',
-    'rounded-full border border-teal-700/60 bg-teal-500/15 px-2 py-0.5 text-xs text-teal-200 transition hover:brightness-110 motion-reduce:transition-none',
-    'rounded-full border border-fuchsia-700/60 bg-fuchsia-500/15 px-2 py-0.5 text-xs text-fuchsia-200 transition hover:brightness-110 motion-reduce:transition-none',
-    'rounded-full border border-orange-700/60 bg-orange-500/15 px-2 py-0.5 text-xs text-orange-200 transition hover:brightness-110 motion-reduce:transition-none',
+    'rounded-full border border-cyan-700/60 bg-cyan-500/15 text-cyan-200 transition hover:brightness-110 motion-reduce:transition-none',
+    'rounded-full border border-amber-700/60 bg-amber-500/15 text-amber-200 transition hover:brightness-110 motion-reduce:transition-none',
+    'rounded-full border border-violet-700/60 bg-violet-500/15 text-violet-200 transition hover:brightness-110 motion-reduce:transition-none',
+    'rounded-full border border-emerald-700/60 bg-emerald-500/15 text-emerald-200 transition hover:brightness-110 motion-reduce:transition-none',
+    'rounded-full border border-rose-700/60 bg-rose-500/15 text-rose-200 transition hover:brightness-110 motion-reduce:transition-none',
+    'rounded-full border border-sky-700/60 bg-sky-500/15 text-sky-200 transition hover:brightness-110 motion-reduce:transition-none',
+    'rounded-full border border-indigo-700/60 bg-indigo-500/15 text-indigo-200 transition hover:brightness-110 motion-reduce:transition-none',
+    'rounded-full border border-teal-700/60 bg-teal-500/15 text-teal-200 transition hover:brightness-110 motion-reduce:transition-none',
+    'rounded-full border border-fuchsia-700/60 bg-fuchsia-500/15 text-fuchsia-200 transition hover:brightness-110 motion-reduce:transition-none',
+    'rounded-full border border-orange-700/60 bg-orange-500/15 text-orange-200 transition hover:brightness-110 motion-reduce:transition-none',
   ]
 
   // The routed slug drives relatedness, so a nav needs no extra prop. A

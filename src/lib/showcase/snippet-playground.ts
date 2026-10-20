@@ -9,6 +9,7 @@ import {
 } from './snippet-source'
 import AppShell from '$lib/components/AppShell.svelte'
 import AutoComplete from '$lib/components/AutoComplete.svelte'
+import BarChart from '$lib/components/BarChart.svelte'
 import BaseDialog from '$lib/components/BaseDialog.svelte'
 import Button from '$lib/components/Button.svelte'
 import Buttons from '$lib/components/Buttons.svelte'
@@ -19,10 +20,9 @@ import CodeEditor from '$lib/components/CodeEditor.svelte'
 import ColumnChooser from '$lib/components/ColumnChooser.svelte'
 import ConfirmDialog from '$lib/components/ConfirmDialog.svelte'
 import Copyable from '$lib/components/Copyable.svelte'
-import CopyButton from '$lib/components/CopyButton.svelte'
 import DataGrid from '$lib/components/DataGrid.svelte'
 import DataTable from '$lib/components/DataTable.svelte'
-import DateRangePicker from '$lib/components/DateRangePicker.svelte'
+import DateInput from '$lib/components/DateInput.svelte'
 import EditableText from '$lib/components/EditableText.svelte'
 import EditDialog from '$lib/components/EditDialog.svelte'
 import FieldTable from '$lib/components/FieldTable.svelte'
@@ -114,6 +114,7 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'svelte/internal/client': svelteClient,
   'ui/AppShell.svelte': { default: AppShell },
   'ui/AutoComplete.svelte': { default: AutoComplete },
+  'ui/BarChart.svelte': { default: BarChart },
   'ui/BaseDialog.svelte': { default: BaseDialog },
   'ui/Button.svelte': { default: Button },
   'ui/Buttons.svelte': { default: Buttons },
@@ -124,10 +125,9 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/ColumnChooser.svelte': { default: ColumnChooser },
   'ui/ConfirmDialog.svelte': { default: ConfirmDialog },
   'ui/Copyable.svelte': { default: Copyable },
-  'ui/CopyButton.svelte': { default: CopyButton },
   'ui/DataGrid.svelte': { default: DataGrid },
   'ui/DataTable.svelte': { default: DataTable },
-  'ui/DateRangePicker.svelte': { default: DateRangePicker },
+  'ui/DateInput.svelte': { default: DateInput },
   'ui/EditableText.svelte': { default: EditableText },
   'ui/EditDialog.svelte': { default: EditDialog },
   'ui/FieldTable.svelte': { default: FieldTable },
