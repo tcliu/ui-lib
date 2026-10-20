@@ -29,7 +29,6 @@
   {autoPlace}
   itemRole="menuitemradio"
   itemChecked={option => i18n.locale === option.code}
-  triggerClass="p-1.5 relative before:absolute before:-inset-1.5 before:content-['']"
   phoneSheetTitle={i18n.t('showcase.language')}
   closeLabel={i18n.t('common.close')}
   {itemClass}>

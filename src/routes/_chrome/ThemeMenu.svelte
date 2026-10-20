@@ -37,7 +37,6 @@
   {autoPlace}
   itemRole="menuitemradio"
   itemChecked={option => option.value === currentTheme}
-  triggerClass="p-1.5 relative before:absolute before:-inset-1.5 before:content-['']"
   phoneSheetTitle={i18n.t('showcase.theme')}
   closeLabel={i18n.t('common.close')}
   {itemClass}>

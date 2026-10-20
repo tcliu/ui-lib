@@ -1,5 +1,5 @@
 <script module lang="ts">
-  import type { ComponentProps, Snippet } from 'svelte'
+  import type { Snippet } from 'svelte'
 
   export interface MenuItemState {
     index: number
@@ -14,7 +14,7 @@
   import { positionPanel } from '$lib/position-panel.svelte'
   import { useListbox } from '$lib/actions/use-listbox.svelte'
   import { PHONE_SHEET_QUERY, type DropdownPanelProps } from '$lib/dropdown-chrome'
-  import Tooltip from './Tooltip.svelte'
+  import Button from './Button.svelte'
   import MenuSheet from './MenuSheet.svelte'
 
   interface MenuBaseProps extends DropdownPanelProps {
@@ -25,8 +25,11 @@
     item: Snippet<[T, MenuItemState]>
     ariaLabel: string
     id?: string
+    // Extra classes for the shared Button trigger. Never padding: the trigger
+    // takes its box from Button's icon-only metrics so it matches every other
+    // icon button.
     triggerClass?: string
-    triggerTooltip?: { text: string; align?: ComponentProps<typeof Tooltip>['align'] }
+    triggerTooltip?: { text: string; align?: 'left' | 'center' | 'right' }
     itemClass?: (item: T, state: MenuItemState) => string
     itemRole?: 'menuitem' | 'menuitemradio'
     itemChecked?: (item: T) => boolean
@@ -64,6 +67,9 @@
   }: Props = $props()
 
   const fallbackId = $props.id()
+  // The icon snippet is re-exposed as a `Button` icon prop; keep an alias so
+  // the local `{#snippet icon()}` declaration does not shadow the prop.
+  const triggerIcon = $derived(icon)
   const menuId = $derived(`menu-${id ?? fallbackId}`)
   const sheetTitleId = $derived(`${menuId}-title`)
   // closeLabel is required alongside phoneSheetTitle (see Props); the
@@ -74,7 +80,6 @@
   let open = $state(false)
   let containerRef = $state<HTMLDivElement | null>(null)
   let triggerRef = $state<HTMLButtonElement | null>(null)
-  let tooltipTriggerEl = $state<HTMLElement | null>(null)
   let overlayRef = $state<HTMLDivElement | null>(null)
   let panelRef = $state<HTMLDivElement | null>(null)
   let dialogRef = $state<HTMLDivElement | null>(null)
@@ -247,18 +252,21 @@
 </script>
 
 {#snippet triggerButton()}
-  <button
-    type="button"
-    bind:this={triggerRef}
-    aria-label={ariaLabel}
-    aria-haspopup="menu"
-    aria-expanded={open}
-    aria-controls={open ? menuId : undefined}
-    onclick={toggle}
-    onkeydown={handleTriggerKeydown}
-    class={`inline-flex items-center justify-center rounded-md border border-slate-700 bg-slate-950 text-slate-200 transition outline-none hover:border-cyan-500 hover:text-cyan-300 focus-visible:border-transparent focus-visible:ring-2 focus-visible:ring-cyan-500 motion-reduce:transition-none ${triggerClass}`}>
-    {@render icon()}
-  </button>
+  <Button
+    ariaLabel={ariaLabel}
+    ariaHaspopup="menu"
+    ariaExpanded={open}
+    ariaControls={open ? menuId : undefined}
+    tooltip={triggerTooltip?.text}
+    tooltipAlign={triggerTooltip?.align ?? 'center'}
+    className={triggerClass}
+    bind:buttonEl={triggerRef}
+    onClick={toggle}
+    onKeyDown={handleTriggerKeydown}>
+    {#snippet icon()}
+      {@render triggerIcon()}
+    {/snippet}
+  </Button>
 {/snippet}
 
 {#snippet menuOptions()}
@@ -287,14 +295,7 @@
   bind:this={containerRef}
   data-escape-capture={open ? '' : null}
   onfocusout={listbox.handleFocusOut}>
-  {#if triggerTooltip}
-    <span bind:this={tooltipTriggerEl} class="group relative inline-flex">
-      {@render triggerButton()}
-      <Tooltip align={triggerTooltip.align ?? 'center'} trigger={tooltipTriggerEl}>{triggerTooltip.text}</Tooltip>
-    </span>
-  {:else}
-    {@render triggerButton()}
-  {/if}
+  {@render triggerButton()}
   {#if open}
     {#if usePhoneSheet}
       <MenuSheet

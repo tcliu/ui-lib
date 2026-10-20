@@ -32,8 +32,8 @@ function state(overrides: Partial<MenuSnippetState> = {}): MenuSnippetState {
     phoneSheetTitleOn: true,
     closeLabel: '',
     closeLabelOn: true,
-    triggerClass: 'p-2',
-    triggerClassOn: true,
+    triggerClass: '',
+    triggerClassOn: false,
     panelClass: 'w-44',
     panelClassOn: true,
     iconClass: '',
@@ -76,6 +76,8 @@ describe('buildMenuSnippet', () => {
         itemRoleOn: true,
         phoneSheetTitle: 'Actions',
         closeLabel: 'Close',
+        triggerClass: 'text-cyan-300',
+        triggerClassOn: true,
       }),
     )
     expect(source).toContain('align="left"')
@@ -86,7 +88,7 @@ describe('buildMenuSnippet', () => {
     expect(source).toContain('itemRole="menuitemradio"')
     expect(source).toContain('phoneSheetTitle="Actions"')
     expect(source).toContain('closeLabel="Close"')
-    expect(source).toContain('triggerClass="p-2"')
+    expect(source).toContain('triggerClass="text-cyan-300"')
     expect(source).toContain('panelClass="w-44"')
     expect(source).toContain('itemClass={menuItemClass}')
   })
@@ -125,14 +127,14 @@ describe('buildMenuSnippet', () => {
 
   it('omits staged id and chrome classes while their eye is off and emits them while on', () => {
     const off = buildMenuSnippet(
-      state({ id: 'row-actions', idOn: false, triggerClass: 'p-2', triggerClassOn: false, panelClass: 'w-44', panelClassOn: false }),
+      state({ id: 'row-actions', idOn: false, triggerClass: 'text-cyan-300', triggerClassOn: false, panelClass: 'w-44', panelClassOn: false }),
     )
     expect(off).not.toMatch(/^\s*id=/m)
     expect(off).not.toContain('triggerClass=')
     expect(off).not.toContain('panelClass=')
-    const on = buildMenuSnippet(state({ id: 'row-actions' }))
+    const on = buildMenuSnippet(state({ id: 'row-actions', triggerClass: 'text-cyan-300', triggerClassOn: true }))
     expect(on).toContain('id="row-actions"')
-    expect(on).toContain('triggerClass="p-2"')
+    expect(on).toContain('triggerClass="text-cyan-300"')
     expect(on).toContain('panelClass="w-44"')
   })
 
