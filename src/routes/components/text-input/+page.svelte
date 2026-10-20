@@ -42,6 +42,8 @@
     idOn: false,
     inputClass: '',
     inputClassOn: false,
+    variant: 'bordered',
+    variantOn: false,
     className: '',
     classNameOn: false,
     clearable: 'no' as TriState,
@@ -84,6 +86,11 @@
     { value: 'outside', label: 'outside' },
   ]
 
+  const variantOptions = [
+    { value: 'bordered', label: 'bordered' },
+    { value: 'embedded', label: 'embedded' },
+  ]
+
   const demoAriaLabel = $derived(pg.ariaLabelOn && pg.ariaLabel ? pg.ariaLabel : i18n.t('common.apply'))
   const demoAutocomplete = $derived((pg.autocompleteOn && pg.autocomplete ? pg.autocomplete : undefined) as HTMLInputAttributes['autocomplete'])
   const demoInputmode = $derived((pg.inputmodeOn && pg.inputmode ? pg.inputmode : undefined) as HTMLInputAttributes['inputmode'])
@@ -99,6 +106,9 @@
       : undefined,
   )
   const demoDefaultValue = $derived(pg.defaultValueOn && pg.defaultValue ? pg.defaultValue : undefined)
+  const demoVariant = $derived(
+    pg.variantOn ? ((pg.variant || undefined) as 'bordered' | 'embedded' | undefined) : undefined,
+  )
   const demoClassName = $derived(
     adornmentClassName(pg.classNameOn ? pg.className : '', pg.leadingEnabled ? pg.leading : '', pg.trailingEnabled ? pg.trailing : '') ||
       undefined,
@@ -127,6 +137,8 @@
       idOn: pg.idOn,
       inputClass: pg.inputClass,
       inputClassOn: pg.inputClassOn,
+      variant: pg.variant,
+      variantOn: pg.variantOn,
       className: pg.className,
       classNameOn: pg.classNameOn,
       clearable: pg.clearable,
@@ -233,6 +245,7 @@
       ),
       sync: { kind: 'script' },
     },
+    enumField({ name: 'variant', type: "'bordered' | 'embedded'", defaultValue: "'bordered'", note: 'Chrome variant; embedded drops the border, the background, and the focus ring for a field rendered inside another surface.', options: variantOptions, value: pg.variant, onChange: v => (pg.variant = v), placeholder: 'bordered', clearLabel: 'Clear variant', enabled: pg.variantOn, setEnabled: v => (pg.variantOn = v) }),
     textField({ name: 'wrapperStyle', type: 'string?', defaultValue: '—', note: 'Metric custom properties for the adornments, set on the wrapping frame.', value: pg.wrapperStyle, onChange: v => (pg.wrapperStyle = v), clearable: true, enabled: pg.wrapperStyleOn, setEnabled: v => (pg.wrapperStyleOn = v) }),
     { name: 'inputRef', type: 'HTMLInputElement | null', defaultValue: 'null', note: 'Bindable native input.' },
     {
@@ -294,6 +307,7 @@
         inputmode={demoInputmode}
         name={pg.nameOn && pg.name ? pg.name : undefined}
         inputClass={pg.inputClassOn && pg.inputClass ? pg.inputClass : undefined}
+        variant={demoVariant}
         inputStyle={pg.inputStyleOn && pg.inputStyle ? pg.inputStyle : undefined}
         wrapperStyle={pg.wrapperStyleOn && pg.wrapperStyle ? pg.wrapperStyle : undefined}
         className={demoClassName}

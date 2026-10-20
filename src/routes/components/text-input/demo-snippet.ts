@@ -26,6 +26,8 @@ export interface TextInputSnippetState {
   idOn: boolean
   inputClass: string
   inputClassOn: boolean
+  variant: string
+  variantOn: boolean
   className: string
   classNameOn: boolean
   clearable: TriState
@@ -102,6 +104,8 @@ export function buildTextInputSnippet({
   idOn,
   inputClass,
   inputClassOn,
+  variant,
+  variantOn,
   className,
   classNameOn,
   clearable,
@@ -155,6 +159,9 @@ export function buildTextInputSnippet({
     ...(inputmodeOn && inputmode ? [`${attributeIndent}inputmode="${escapeAttr(inputmode)}"`] : []),
     ...(nameOn && name ? [`${attributeIndent}name="${escapeAttr(name)}"`] : []),
     ...(inputClassOn && inputClass ? [`${attributeIndent}inputClass="${escapeAttr(inputClass)}"`] : []),
+    // Enum rows prefill their component default in the Value column; the
+    // builder omits the default so Show-code stays minimal.
+    ...(variantOn && variant && variant !== 'bordered' ? [`${attributeIndent}variant="${escapeAttr(variant)}"`] : []),
     ...(inputStyleOn && inputStyle ? [`${attributeIndent}inputStyle="${escapeAttr(inputStyle)}"`] : []),
     ...(wrapperStyleOn && wrapperStyle ? [`${attributeIndent}wrapperStyle="${escapeAttr(wrapperStyle)}"`] : []),
     ...(composedClassName ? [`${attributeIndent}className="${escapeAttr(composedClassName)}"`] : []),

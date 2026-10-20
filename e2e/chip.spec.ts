@@ -6,9 +6,11 @@ test('showcase: the Chip disabled Value cell disables the remove button', async 
 
   const demo = page.locator('[data-showcase-demo]').first()
 
-  // Switch to removable mode through the settings panel.
-  await page.getByRole('combobox', { name: 'Mode' }).click()
-  await page.getByRole('option', { name: 'Removable' }).click()
+  // Switch to removable mode through the `removable` Value cell.
+  const removableBox = page.getByRole('checkbox', { name: 'removable value', exact: true })
+  await removableBox.focus()
+  await page.keyboard.press('Space')
+  await expect(removableBox).toBeChecked()
   const remove = demo.getByRole('button').first()
   await expect(remove).toBeEnabled()
 

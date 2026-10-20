@@ -21,6 +21,8 @@ function state(overrides: Partial<TextInputSnippetState> = {}): TextInputSnippet
     idOn: false,
     inputClass: '',
     inputClassOn: false,
+    variant: 'bordered',
+    variantOn: false,
     className: '',
     classNameOn: true,
     clearable: '',
@@ -154,6 +156,8 @@ describe('buildTextInputSnippet', () => {
         clearableOn: true,
         clearPlacement: 'auto',
         clearPlacementOn: true,
+        variant: 'bordered',
+        variantOn: true,
       }),
     )
     expect(source).not.toMatch(/^\s*size=/m)
@@ -162,6 +166,22 @@ describe('buildTextInputSnippet', () => {
     expect(source).not.toContain('required')
     expect(source).not.toContain('clearable')
     expect(source).not.toContain('clearPlacement')
+    expect(source).not.toContain('variant=')
+  })
+
+  it('emits the embedded variant while it is set', () => {
+    const staged = buildTextInputSnippet(state({ variant: 'embedded' }))
+    expect(staged).not.toContain('variant=')
+    const applied = buildTextInputSnippet(state({ variant: 'embedded', variantOn: true }))
+    expect(applied).toContain('variant="embedded"')
+  })
+
+  it('compiles the generated snippet with the embedded variant', { timeout: 30000 }, async () => {
+    const component = await createSnippetComponent(
+      buildTextInputSnippet(state({ variant: 'embedded', variantOn: true })),
+      { applyLabel: 'Name' },
+    )
+    expect(typeof component).toBe('function')
   })
 
   it('omits staged text props while the eye is off and emits them while on', () => {

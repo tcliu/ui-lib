@@ -3,7 +3,8 @@ import { DEFAULT_CHIP_CLASS, buildChipSnippet, type ChipSnippetState } from './d
 
 function state(overrides: Partial<ChipSnippetState> = {}): ChipSnippetState {
   return {
-    mode: '',
+    removable: '',
+    removableOn: true,
     label: '',
     labelOn: true,
     chipClass: '',
@@ -33,6 +34,7 @@ describe('buildChipSnippet', () => {
     expect(source).toContain(`chipClass="${DEFAULT_CHIP_CLASS}"`)
     expect(source).not.toContain('onRemove=')
     expect(source).not.toContain('onClick=')
+    expect(source).not.toContain('removable')
     expect(source).not.toContain('removeLabel=')
     expect(source).not.toContain('disabled')
     expect(source).not.toContain('style=')
@@ -41,9 +43,10 @@ describe('buildChipSnippet', () => {
   })
 
   it('wraps the removable chip in a removed guard', () => {
-    const source = buildChipSnippet(state({ mode: 'removable', label: 'Draft', removeLabel: 'Remove it', removeLabelOn: true, disabled: 'yes', removeButtonClass: 'btn-x', removeButtonClassOn: true, removeButtonStyle: 'color:red', removeButtonStyleOn: true }))
+    const source = buildChipSnippet(state({ removable: 'yes', label: 'Draft', removeLabel: 'Remove it', removeLabelOn: true, disabled: 'yes', removeButtonClass: 'btn-x', removeButtonClassOn: true, removeButtonStyle: 'color:red', removeButtonStyleOn: true }))
     expect(source).toContain('{#if !removed}')
     expect(source).toContain('label="Draft"')
+    expect(source).toContain('    removable\n')
     expect(source).toContain('removeLabel="Remove it"')
     expect(source).toContain('    disabled\n')
     expect(source).toContain('removeButtonClass="btn-x"')
@@ -65,22 +68,22 @@ describe('buildChipSnippet', () => {
     expect(buildChipSnippet(state({ size: '18', sizeOn: true }))).toContain('  size={18}')
     expect(buildChipSnippet(state({ size: 'md', sizeOn: true }))).not.toContain('size=')
     expect(buildChipSnippet(state({ size: 'lg', sizeOn: false }))).not.toContain('size=')
-    expect(buildChipSnippet(state({ mode: 'removable', size: 'lg', sizeOn: true }))).toContain('    size="lg"')
+    expect(buildChipSnippet(state({ removable: 'yes', size: 'lg', sizeOn: true }))).toContain('    size="lg"')
   })
 
   it('omits component defaults (the Value column prefills them)', () => {
-    const source = buildChipSnippet(state({ mode: 'removable', label: 'Draft', disabled: 'no', disabledOn: true }))
+    const source = buildChipSnippet(state({ removable: 'yes', label: 'Draft', disabled: 'no', disabledOn: true }))
     expect(source).not.toContain('disabled')
   })
 
   it('stages the eye-gated text rows until applied', () => {
-    const staged = buildChipSnippet(state({ mode: 'removable', label: 'Draft', labelOn: false, removeLabel: 'Remove it', removeLabelOn: false, removeButtonClass: 'btn-x', removeButtonClassOn: false, removeButtonStyle: 'color:red', removeButtonStyleOn: false, style: 'font-weight:bold', styleOn: false, tooltip: 'Pill tip', tooltipOn: false }))
+    const staged = buildChipSnippet(state({ removable: 'yes', label: 'Draft', labelOn: false, removeLabel: 'Remove it', removeLabelOn: false, removeButtonClass: 'btn-x', removeButtonClassOn: false, removeButtonStyle: 'color:red', removeButtonStyleOn: false, style: 'font-weight:bold', styleOn: false, tooltip: 'Pill tip', tooltipOn: false }))
     expect(staged).not.toContain('removeLabel=')
     expect(staged).not.toContain('removeButtonClass=')
     expect(staged).not.toContain('removeButtonStyle=')
     expect(staged).not.toContain('style=')
     expect(staged).not.toContain('tooltip=')
-    const applied = buildChipSnippet(state({ mode: 'removable', label: 'Draft', removeLabel: 'Remove it', removeLabelOn: true, removeButtonClass: 'btn-x', removeButtonClassOn: true, removeButtonStyle: 'color:red', removeButtonStyleOn: true, style: 'font-weight:bold', styleOn: true, tooltip: 'Pill tip', tooltipOn: true }))
+    const applied = buildChipSnippet(state({ removable: 'yes', label: 'Draft', removeLabel: 'Remove it', removeLabelOn: true, removeButtonClass: 'btn-x', removeButtonClassOn: true, removeButtonStyle: 'color:red', removeButtonStyleOn: true, style: 'font-weight:bold', styleOn: true, tooltip: 'Pill tip', tooltipOn: true }))
     expect(applied).toContain('removeLabel="Remove it"')
     expect(applied).toContain('removeButtonClass="btn-x"')
     expect(applied).toContain('removeButtonStyle="color:red"')
@@ -89,7 +92,7 @@ describe('buildChipSnippet', () => {
   })
 
   it('falls back to the scope label and default class and omits the flag while their eyes are off', () => {
-    const off = buildChipSnippet(state({ mode: 'removable', label: 'Draft', labelOn: false, chipClass: 'text-cyan-200', chipClassOn: false, disabled: 'yes', disabledOn: false }))
+    const off = buildChipSnippet(state({ removable: 'yes', label: 'Draft', labelOn: false, chipClass: 'text-cyan-200', chipClassOn: false, disabled: 'yes', disabledOn: false }))
     expect(off).not.toContain('label="Draft"')
     expect(off).toContain('label={defaultLabel}')
     expect(off).not.toContain('chipClass="text-cyan-200"')

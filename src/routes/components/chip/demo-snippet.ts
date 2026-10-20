@@ -8,13 +8,14 @@ import { sizeAttributeLine } from '$lib/showcase/size-input'
 export type TriState = '' | 'yes' | 'no'
 
 export interface ChipSnippetState {
-  mode: string
   label: string
   labelOn: boolean
   chipClass: string
   chipClassOn: boolean
   size: string
   sizeOn: boolean
+  removable: TriState
+  removableOn: boolean
   removeLabel: string
   removeLabelOn: boolean
   disabled: TriState
@@ -47,7 +48,7 @@ function sizeLine(size: string, sizeOn: boolean, indent = '  '): string[] {
   return sizeOn && size !== '' && size !== 'md' ? sizeAttributeLine(size, indent) : []
 }
 
-export function buildChipSnippet({ mode, label, labelOn, chipClass, chipClassOn, size, sizeOn, removeLabel, removeLabelOn, disabled, disabledOn, removeButtonClass, removeButtonClassOn, removeButtonStyle, removeButtonStyleOn, style, styleOn, tooltip, tooltipOn }: ChipSnippetState): string {
+export function buildChipSnippet({ label, labelOn, chipClass, chipClassOn, size, sizeOn, removable, removableOn, removeLabel, removeLabelOn, disabled, disabledOn, removeButtonClass, removeButtonClassOn, removeButtonStyle, removeButtonStyleOn, style, styleOn, tooltip, tooltipOn }: ChipSnippetState): string {
   const labelAttr = labelOn && label ? `label="${escapeAttr(label)}"` : 'label={defaultLabel}'
   const classAttr = `chipClass="${escapeAttr(chipClassOn && chipClass ? chipClass : DEFAULT_CHIP_CLASS)}"`
   // Style/tooltip ride the pill in every mode; the remove props only render in
@@ -56,13 +57,14 @@ export function buildChipSnippet({ mode, label, labelOn, chipClass, chipClassOn,
     ...(styleOn && style ? [`  style="${escapeAttr(style)}"`] : []),
     ...(tooltipOn && tooltip ? [`  tooltip="${escapeAttr(tooltip)}"`] : []),
   ]
-  if (mode === 'removable') {
+  if (removableOn && removable === 'yes') {
     return [
       '{#if !removed}',
       '  <Chip',
       `    ${labelAttr}`,
       `    ${classAttr}`,
       ...sizeLine(size, sizeOn, '    '),
+      '    removable',
       ...(removeLabelOn && removeLabel ? [`    removeLabel="${escapeAttr(removeLabel)}"`] : []),
       ...(disabledOn ? flagLine('disabled', disabled, 'no').map(line => `  ${line}`) : []),
       ...(removeButtonClassOn && removeButtonClass ? [`    removeButtonClass="${escapeAttr(removeButtonClass)}"`] : []),
