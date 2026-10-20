@@ -125,7 +125,6 @@ export const en = {
     loadFailed: 'Failed to load editor',
   },
   structure: {
-    copyNode: 'Copy node',
     copyValue: 'Copy {name}',
     collapse: 'Collapse {name}',
     expand: 'Expand {name}',

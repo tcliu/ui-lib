@@ -41,7 +41,7 @@ const DICTIONARIES: Record<Locale, LocaleMessages<typeof en>> = {
 }
 
 // A Symbol context key can never collide with another module's context.
-const CONTEXT_KEY = Symbol('ui-lib-i18n')
+const CONTEXT_KEY = Symbol('i18n')
 
 export interface I18nStore<TKey extends string = MessageKey, TLocale extends string = Locale> {
   readonly locale: TLocale

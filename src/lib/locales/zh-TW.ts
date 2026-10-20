@@ -125,7 +125,6 @@ export const zhTW = {
     loadFailed: '編輯器載入失敗',
   },
   structure: {
-    copyNode: '複製節點',
     copyValue: '複製 {name}',
     collapse: '摺疊 {name}',
     expand: '展開 {name}',

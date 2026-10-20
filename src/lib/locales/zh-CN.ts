@@ -125,7 +125,6 @@ export const zhCN = {
     loadFailed: '编辑器加载失败',
   },
   structure: {
-    copyNode: '复制节点',
     copyValue: '复制 {name}',
     collapse: '折叠 {name}',
     expand: '展开 {name}',
