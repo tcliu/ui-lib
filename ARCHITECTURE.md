@@ -188,6 +188,7 @@ of building a parallel control.
 - **Input family** — `TextInput` is the canonical field: it renders the
   `<input>` and owns the base chrome, which lives in `input-chrome.ts`
   (`INPUT_CHROME` surface/border/focus/disabled/read-only/motion,
+  `INPUT_EMBEDDED` the chrome-less base for a field inside another surface,
   `INPUT_METRIC_CLASS` the `--input-*` metric classes, `INPUT_RATIOS` the
   metric ratios). `PasswordInput`, `SearchInput`, and `NumberInput` compose
   `TextInput`, passing their adornment (eye toggle, search icon, steppers)
@@ -196,11 +197,17 @@ of building a parallel control.
   `h-full` so it fills its container height by default. A wrapper sets
   its adornment metrics on the frame with `wrapperStyle` and clears the adornment
   with an appended `className` gutter; a caller that owns the whole visual
-  replaces the base with `inputClass`. An adornment over the field's border (the
-  number steppers) paints no border of its own: it reserves the ring with a
-  transparent border so the base border, focus, and disabled colors stay in
-  lockstep. `SelectDropdown`'s box shares the same line/padY ratios so text,
-  search, and select align on one row; a date picker's single-mode field *is*
+  replaces the base with `inputClass`, while a field rendered inside another
+  surface (a tag row, a select trigger, a stepper-less numeric field) takes
+  `variant="embedded"`, where the container owns the border, the background, and
+  the focus ring and the field adds only the text rules it owns. `EditableText`
+  rides `TextInput` the same way and keeps its own skin — an outline ring
+  standing in for the text — through that override, since it paints its own
+  surface rather than sitting inside another one. An adornment over
+  the field's border (the number steppers) paints no border of its own: it reserves
+  the ring with a transparent border so the base border, focus, and disabled
+  colors stay in lockstep. `SelectDropdown`'s box shares the same line/padY ratios
+  so text, search, and select align on one row; a date picker's single-mode field *is*
   this `TextInput` (with the calendar affordance in its `trailing` slot), and its
   range trigger reuses the same field font, line, and padding (`INPUT_RATIOS`),
   so both sit level with a field too. `clearable` renders one shared clear

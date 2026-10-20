@@ -58,3 +58,35 @@ describe('TextInput dimension ratios', () => {
     expect(target.querySelector('input')?.className).not.toContain('var(--input-font)')
   })
 })
+
+describe('TextInput chrome variants', () => {
+  it('keeps the shared chrome by default', async () => {
+    instance = mount(TextInput, { target, props: { value: '', ariaLabel: 'Name', size: 14 } })
+    flushSync()
+    const className = target.querySelector('input')?.className ?? ''
+    expect(className).toContain('border-slate-700')
+    expect(className).toContain('var(--input-font)')
+  })
+
+  it('drops the chrome for a field embedded in another surface', async () => {
+    instance = mount(TextInput, { target, props: { value: '', ariaLabel: 'Name', size: 14, variant: 'embedded' } })
+    flushSync()
+    const className = target.querySelector('input')?.className ?? ''
+    expect(className).toContain('bg-transparent')
+    expect(className).toContain('outline-none')
+    // The container owns the border, the background, and the metrics.
+    expect(className).not.toContain('border-slate-700')
+    expect(className).not.toContain('var(--input-font)')
+  })
+
+  it('appends the caller classes to the embedded base', async () => {
+    instance = mount(TextInput, {
+      target,
+      props: { value: '', ariaLabel: 'Name', size: 14, variant: 'embedded', className: 'font-mono' },
+    })
+    flushSync()
+    const className = target.querySelector('input')?.className ?? ''
+    expect(className).toContain('bg-transparent')
+    expect(className).toContain('font-mono')
+  })
+})
