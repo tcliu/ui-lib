@@ -60,7 +60,9 @@ describe('copy affordance wiring', () => {
     })
     flushSync()
 
-    clickCopy('button[aria-label="Copy hi"]')
+    // The copy affordance takes its accessible name from the shared locale
+    // key (`common.copy`), not from a hardcoded English string.
+    clickCopy('button[aria-label="Copy"]')
 
     await vi.waitFor(() => expect(writeText).toHaveBeenCalledWith('hi'))
     await vi.waitFor(() => expect(toast.success).toHaveBeenCalledTimes(1))
