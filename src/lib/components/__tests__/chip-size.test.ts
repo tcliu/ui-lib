@@ -42,7 +42,7 @@ describe('Chip dimension ratios', () => {
         await unmount(instance)
         instance = null
       }
-      instance = mount(Chip, { target, props: { label: 'tag', chipClass: 'rounded-full', size: name, onRemove: () => {} } })
+      instance = mount(Chip, { target, props: { label: 'tag', chipClass: 'rounded-full', size: name, removable: true, onRemove: () => {} } })
       flushSync()
       const style = styleOf()
       expect(num(style, 'font') / px).toBeCloseTo(0.75)
@@ -50,9 +50,12 @@ describe('Chip dimension ratios', () => {
       expect(num(style, 'pad-x') / px).toBeCloseTo(0.5)
       expect(num(style, 'pad-y') / px).toBeCloseTo(0.125)
       expect(num(style, 'gap') / px).toBeCloseTo(0.25)
-      expect(num(style, 'icon') / px).toBeCloseTo(0.75)
-      // The remove cross renders at the shared icon ratio of the chip's slot.
-      expect(Number(target.querySelector('svg')?.getAttribute('width'))).toBeCloseTo(resolveIconPx(px * 0.75))
+      // The cross reads at 0.75 of the size dimension — 0.75 of the previous
+      // cross: the slot is 0.75 of the dimension and the cross is 0.75 of the
+      // slot. The slot carries the ratio, because the shared icon ratio trims
+      // the artwork inside the box.
+      expect(num(style, 'icon') / px).toBeCloseTo(0.5625)
+      expect(Number(target.querySelector('svg')?.getAttribute('width'))).toBeCloseTo(resolveIconPx(px * 0.5625))
     }
   })
 
