@@ -216,12 +216,11 @@ describe('StructureTree', () => {
 
   // Portal teardown does not detach in jsdom (the Close path shows the same),
   // so dialog dismissal is covered by the browser e2e spec instead.
-  it('saves the untouched draft through onChange with the node path', () => {
-    const onChange = vi.fn()
-    const { dialog } = openNestedObjectDialog(onChange)
-    buttonByName(dialog, /^OK$/).click()
-    flushSync()
-    expect(onChange).toHaveBeenCalledWith(['nested'], { a: 1 })
+  it('keeps OK disabled while the object draft is clean', () => {
+    const { dialog } = openNestedObjectDialog(vi.fn())
+    // Editable form dialogs disable the primary action while the draft matches
+    // the open-time snapshot, so an untouched draft is not re-saved.
+    expect(buttonByName(dialog, /^OK$/).disabled).toBe(true)
   })
 
   it('keeps Reset disabled while the object draft is clean', () => {
