@@ -216,15 +216,14 @@
   }
 </script>
 
-<span bind:this={anchor} class="hidden"></span>
-
-{#if visible}
-  <span
+<!-- Only the hidden anchor stays in the parent; the tooltip content portals to
+  document.body, and no text node sits beside the anchor, so the trigger's own
+  inline text (and its layout) is never disturbed. This lets a trigger be the
+  anchor's parent with no explicit `trigger` ref. -->
+<span bind:this={anchor} class="hidden"></span>{#if visible}<span
     bind:this={tooltipEl}
     use:portal
     role="tooltip"
     class={`st-tooltip ${extraClass}`}
-    style={`top:${top}px; left:${left}px; opacity:1;`}>
-    {@render children()}
-  </span>
-{/if}
+    style={`top:${top}px; left:${left}px; opacity:1;`}
+    >{@render children()}</span>{/if}
