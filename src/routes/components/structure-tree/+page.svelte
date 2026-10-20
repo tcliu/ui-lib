@@ -8,7 +8,8 @@
   import { isContainer, renameKeyAtPath, setAtPath } from '$lib/components/structure-value'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { boolField, jsonField, resetToggle, snippetToggle } from '$lib/showcase/snippet-field'
+  import { boolField, jsonField, resetToggle, sizeField, snippetToggle } from '$lib/showcase/snippet-field'
+  import { parseSizeValue } from '$lib/showcase/size-input'
   import {
     buildStructureTreeSnippet,
     DEFAULT_TREE_VALUE,
@@ -36,6 +37,8 @@
     containerRowClassOn: false,
     leafRowClass: '',
     leafRowClassOn: false,
+    size: 'md',
+    sizeOn: false,
   }
   let pg = $state(structuredClone(INITIAL))
   // The component requires a tree value, so the eye resets to the default
@@ -46,6 +49,7 @@
   // built-ins below.
 
   const editable = $derived(pg.editableOn ? flagOn(pg.editable) : undefined)
+  const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
 
   function handleNodeChange(path: string[], next: unknown): void {
     if (!isContainer(pg.value)) return
@@ -75,6 +79,8 @@
       containerRowClassOn: pg.containerRowClassOn,
       leafRowClass: pg.leafRowClass,
       leafRowClassOn: pg.leafRowClassOn,
+      size: pg.size,
+      sizeOn: pg.sizeOn,
     }),
   )
 
@@ -138,6 +144,7 @@
         },
       },
     },
+    sizeField({ note: 'Control scale; the tree text and its edit/copy controls follow it.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
     jsonField({
       name: 'value',
       type: 'unknown',
@@ -175,6 +182,7 @@
       onChange={handleNodeChange}
       onRenameKey={handleRenameKey}
       {editable}
+      size={demoSize}
       containerRowClass={pg.containerRowClassOn && pg.containerRowClass ? pg.containerRowClass : undefined}
       leafRowClass={pg.leafRowClassOn && pg.leafRowClass ? pg.leafRowClass : undefined} />
 </ShowcasePage>

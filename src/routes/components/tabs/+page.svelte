@@ -5,8 +5,9 @@
   import Tabs from '$lib/components/Tabs.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
+  import { parseSizeValue } from '$lib/showcase/size-input'
   import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { textField, snippetToggle } from '$lib/showcase/snippet-field'
+  import { textField, sizeField, snippetToggle } from '$lib/showcase/snippet-field'
   import { buildTabsSnippet } from './demo-snippet'
 
   const i18n = getI18nContext()
@@ -32,6 +33,8 @@
     ariaLabelOn: true,
     pathname: '',
     pathnameOn: false,
+    size: 'md',
+    sizeOn: false,
   }
   let pg = $state(structuredClone(INITIAL))
 
@@ -39,13 +42,14 @@
 
   const overviewPath = $derived(pg.routeMode ? '#overview' : 'overview')
   const detailsPath = $derived(pg.routeMode ? '#details' : 'details')
+  const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
 
   function clearPlayground() {
     pg = structuredClone(INITIAL)
   }
 
   const code = $derived.by(() =>
-    buildTabsSnippet({ routeMode: pg.routeMode, className: pg.className, classNameOn: pg.classNameOn, ariaLabel: pg.ariaLabel, ariaLabelOn: pg.ariaLabelOn, pathname: pg.pathname, pathnameOn: pg.pathnameOn }),
+    buildTabsSnippet({ routeMode: pg.routeMode, className: pg.className, classNameOn: pg.classNameOn, ariaLabel: pg.ariaLabel, ariaLabelOn: pg.ariaLabelOn, pathname: pg.pathname, pathnameOn: pg.pathnameOn, size: pg.size, sizeOn: pg.sizeOn }),
   )
 
   // The page owns the preview so the shell can host the code toggle (and the
@@ -62,6 +66,7 @@
     { name: 'ariaLabel', type: 'string?', defaultValue: "'Tabs'", editorDefaultValue: 'Tabs', note: 'Accessible name for the nav.', editor: 'text', clearable: true, value: pg.ariaLabel, onChange: value => { pg.ariaLabel = value; pg.ariaLabelOn = true; }, placeholder: 'Tabs', toggle: snippetToggle(pg.ariaLabelOn, enabled => (pg.ariaLabelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'componentsLabel' } },
     textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes appended to the header row.', value: pg.className, onChange: v => (pg.className = v), editorDefaultValue: '', clearable: true, enabled: pg.classNameOn, setEnabled: v => (pg.classNameOn = v) }),
     textField({ name: 'pathname', type: 'string?', defaultValue: '—', note: 'Route mode: active path drives link rendering.', value: pg.pathname, onChange: v => (pg.pathname = v), clearable: true, enabled: pg.pathnameOn, setEnabled: v => (pg.pathnameOn = v) }),
+    sizeField({ note: 'Control scale; numbers are icon-scale pixels. Scales the nav and tab text and chrome.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
     // Read-only: the generic demo state object has no literal editor.
     { name: 'state', type: 'TState', defaultValue: '—', note: 'Passed to the toolbar/content snippets.' },
     { name: 'tabs', type: 'Tab<TState>[]', defaultValue: '—', note: 'Label, path, optional toolbar snippet, content snippet.' },
@@ -139,5 +144,6 @@
       state={demoState}
       pathname={pg.pathnameOn && pg.pathname ? pg.pathname : (pg.routeMode ? pg.routePath : undefined)}
       className={pg.classNameOn && pg.className ? pg.className : undefined}
-      ariaLabel={pg.ariaLabelOn && pg.ariaLabel ? pg.ariaLabel : i18n.t('showcase.components')} />
+      ariaLabel={pg.ariaLabelOn && pg.ariaLabel ? pg.ariaLabel : i18n.t('showcase.components')}
+      size={demoSize} />
   </ShowcasePage>

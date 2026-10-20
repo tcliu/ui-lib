@@ -12,6 +12,8 @@ function state(overrides: Partial<ChipDropdownSnippetState> = {}): ChipDropdownS
     valueOn: true,
     defaultValue: '',
     defaultValueOn: true,
+    size: 'md',
+    sizeOn: false,
     variant: '',
     variantOn: true,
     filterable: '',
@@ -154,6 +156,14 @@ describe('buildChipDropdownSnippet', () => {
     expect(on).toContain('buttonClass="w-40"')
     expect(on).toContain('defaultValue="active"')
     expect(on).toContain('clearLabel="Clear it"')
+  })
+
+  it('emits a non-default size and omits the md default', () => {
+    expect(buildChipDropdownSnippet(state({ size: 'lg', sizeOn: true }))).toContain('size="lg"')
+    expect(buildChipDropdownSnippet(state({ size: '24', sizeOn: true }))).toContain('size={24}')
+    // The `md` default and an eye-off override both emit nothing.
+    expect(buildChipDropdownSnippet(state({ size: 'md', sizeOn: true }))).not.toContain('size')
+    expect(buildChipDropdownSnippet(state({ size: 'lg', sizeOn: false }))).not.toContain('size')
   })
 
   it('seeds the committed value as script-local state', () => {

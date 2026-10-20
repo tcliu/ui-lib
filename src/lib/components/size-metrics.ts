@@ -46,3 +46,29 @@ export function sizeVarStyle(prefix: string, metrics: Record<string, number>): s
     })
     .join(';')
 }
+
+export interface SizeVarOptions {
+  prefix: string
+  metrics: Record<string, number>
+}
+
+// Svelte action applying the same metric custom properties as `sizeVarStyle`
+// directly onto a node, one property at a time. A portalled panel is detached
+// from the sized root, so it cannot inherit the root's custom-property set, and
+// a `style` binding would replace the inline styles the positioner owns
+// (`left`/`top`/`visibility`); this writes the variables without touching those.
+export function sizeVarAction(node: HTMLElement, options: SizeVarOptions) {
+  function apply({ prefix, metrics }: SizeVarOptions) {
+    for (const declaration of sizeVarStyle(prefix, metrics).split(';')) {
+      if (!declaration) continue
+      const separator = declaration.indexOf(':')
+      node.style.setProperty(declaration.slice(0, separator), declaration.slice(separator + 1))
+    }
+  }
+  apply(options)
+  return {
+    update(next: SizeVarOptions) {
+      apply(next)
+    },
+  }
+}

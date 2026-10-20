@@ -92,18 +92,15 @@
 
   // Every metric is a fixed ratio of the size dimension, so each keeps a
   // constant metric:dimension ratio across the whole range. The container pads
-  // like a text field (padX matches --input-pad-x); chips and the input ride
+  // like a text field (padX matches --input-pad-x); the chips size themselves
+  // from the same dimension (their metrics live in `Chip`), and the input rides
   // tighter type so mixed content stays compact.
   const TAG_INPUT_RATIOS = {
     font: FONT_RATIO,
     line: 1.25,
-    chipFont: 0.75,
-    chipLine: 1,
     padX: 0.625,
     padY: 0.375,
     gap: 0.375,
-    chipPadX: 0.5,
-    chipPadY: 0.125,
     inputPadY: 0.125,
   }
 
@@ -374,7 +371,8 @@
         {:else}
           <Chip
             label={tag}
-            chipClass={`rounded-full border px-[var(--tag-chip-pad-x)] py-[var(--tag-chip-pad-y)] text-[length:var(--tag-chip-font)] leading-[var(--tag-chip-line)] ${resolveChipClass(tag)}`}
+            chipClass={`rounded-full border ${resolveChipClass(tag)}`}
+            size={size}
             removeLabel={i18n.t('tagInput.remove', { name: tag })}
             onRemove={() => removeAt(index)}
             {disabled}

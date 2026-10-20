@@ -6,6 +6,7 @@
 // snippet carries only the demo content the page authors inside that frame.
 
 import { escapeAttr } from '$lib/showcase/snippet-build'
+import { sizeAttributeLine } from '$lib/showcase/size-input'
 
 export type TriState = '' | 'yes' | 'no'
 
@@ -27,6 +28,8 @@ export interface ChipDropdownSnippetState {
   valueOn: boolean
   defaultValue: string
   defaultValueOn: boolean
+  size: string
+  sizeOn: boolean
   variant: string
   variantOn: boolean
   filterable: TriState
@@ -69,6 +72,8 @@ export function buildChipDropdownSnippet({
   valueOn,
   defaultValue,
   defaultValueOn,
+  size,
+  sizeOn,
   variant,
   variantOn,
   filterable,
@@ -104,6 +109,9 @@ export function buildChipDropdownSnippet({
     ...(valueOn ? [`${indent}activeValue={value}`] : []),
     // Baseline the clear button compares against; the eye stages it.
     ...(defaultValueOn && defaultValue ? [`${indent}defaultValue="${escapeAttr(defaultValue)}"`] : []),
+    // Enum rows prefill their component default in the Value column; the
+    // builder omits the default so Show-code stays minimal.
+    ...(sizeOn && size !== '' && size !== 'md' ? sizeAttributeLine(size, indent) : []),
     `${indent}ariaLabel="${escapeAttr(ariaLabelOn && ariaLabel ? ariaLabel : DEFAULT_CHIP_DROPDOWN_ARIA_LABEL)}"`,
     // Enum rows prefill their component default in the Value column; the
     // builder omits the default so Show-code stays minimal.

@@ -34,7 +34,7 @@ const styleOf = (): string => target.firstElementChild?.getAttribute('style') ??
 const num = (style: string, name: string): number => Number(new RegExp(`--${name}:\\s*([\\d.]+)`).exec(style)?.[1])
 
 describe('TagInput dimension ratios', () => {
-  it('keeps font, line, padding, gap, and chip metrics a constant ratio of the size', async () => {
+  it('keeps font, line, padding, and gap a constant ratio of the size', async () => {
     for (const name of Object.keys(AXIS) as (keyof typeof AXIS)[]) {
       const px = AXIS[name]
       if (instance) {
@@ -46,14 +46,13 @@ describe('TagInput dimension ratios', () => {
       const style = styleOf()
       expect(num(style, 'tag-font') / px).toBeCloseTo(0.875)
       expect(num(style, 'tag-line') / px).toBeCloseTo(1.25)
-      expect(num(style, 'tag-chip-font') / px).toBeCloseTo(0.75)
-      expect(num(style, 'tag-chip-line') / px).toBeCloseTo(1)
       expect(num(style, 'tag-pad-x') / px).toBeCloseTo(0.625)
       expect(num(style, 'tag-pad-y') / px).toBeCloseTo(0.375)
       expect(num(style, 'tag-gap') / px).toBeCloseTo(0.375)
-      expect(num(style, 'tag-chip-pad-x') / px).toBeCloseTo(0.5)
-      expect(num(style, 'tag-chip-pad-y') / px).toBeCloseTo(0.125)
       expect(num(style, 'tag-input-pad-y') / px).toBeCloseTo(0.125)
+      // The built-in chip sizes itself from the same dimension.
+      const chip = target.querySelector<HTMLElement>('[style*="--chip-font"]')
+      expect(num(chip?.getAttribute('style') ?? '', 'chip-font') / px).toBeCloseTo(0.75)
     }
   })
 

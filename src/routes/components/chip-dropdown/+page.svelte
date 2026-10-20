@@ -5,7 +5,8 @@
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import { parseOptionArrayJson } from '$lib/showcase/option-json'
-  import { enumField, textField, boolField, jsonField, resetToggle, snippetToggle } from '$lib/showcase/snippet-field'
+  import { parseSizeValue } from '$lib/showcase/size-input'
+  import { enumField, textField, boolField, sizeField, jsonField, resetToggle, snippetToggle } from '$lib/showcase/snippet-field'
   import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
   import {
     buildChipDropdownSnippet,
@@ -62,6 +63,8 @@
     autoPlaceOn: true,
     panelClass: '',
     panelClassOn: false,
+    size: 'md',
+    sizeOn: false,
     stageWidth: CHIP_STAGE_DEFAULT_WIDTH,
   }
   let pg = $state(structuredClone(INITIAL))
@@ -96,6 +99,7 @@
   const demoFilterPlaceholder = $derived(pg.filterPlaceholderOn && pg.filterPlaceholder ? pg.filterPlaceholder : undefined)
   const demoEmptyText = $derived(pg.emptyTextOn && pg.emptyText ? pg.emptyText : undefined)
   const demoPanelClass = $derived(pg.panelClassOn && pg.panelClass ? pg.panelClass : undefined)
+  const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
 
   const variantOptions = ['sky', 'violet', 'amber', 'fuchsia', 'emerald'].map(value => ({ value, label: value }))
   const alignOptions = [
@@ -119,6 +123,8 @@
       valueOn: pg.valueOn,
       defaultValue: pg.defaultValue,
       defaultValueOn: pg.defaultValueOn,
+      size: pg.size,
+      sizeOn: pg.sizeOn,
       variant: pg.variant,
       variantOn: pg.variantOn,
       filterable: pg.filterable,
@@ -179,6 +185,7 @@
       ),
     }),
     textField({ name: 'panelClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the floating panel classes.', value: pg.panelClass, onChange: v => (pg.panelClass = v), clearable: true, enabled: pg.panelClassOn, setEnabled: v => (pg.panelClassOn = v) }),
+    sizeField({ note: 'Chip scale; numbers are icon-scale pixels interpolated between the steps.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
     enumField({ name: 'variant', type: "'sky' | 'violet' | 'amber' | 'fuchsia' | 'emerald'", defaultValue: "'violet'", note: 'Chip color scheme.', options: variantOptions, value: pg.variant, onChange: v => (pg.variant = v), placeholder: 'violet', clearLabel: 'Clear variant', enabled: pg.variantOn, setEnabled: v => (pg.variantOn = v) }),
     {
       name: 'onClear',
@@ -215,6 +222,7 @@
       defaultValue={demoDefaultValue}
       ariaLabel={pg.ariaLabelOn && pg.ariaLabel ? pg.ariaLabel : DEFAULT_CHIP_DROPDOWN_ARIA_LABEL}
       variant={demoVariant}
+      size={demoSize}
       {filterable}
       {disabled}
       {clearable}

@@ -1,12 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushSync, mount, unmount } from 'svelte'
 import AutoComplete from '../AutoComplete.svelte'
+import BarChart from '../BarChart.svelte'
 import Button from '../Button.svelte'
+import Chip from '../Chip.svelte'
+import DateInput from '../DateInput.svelte'
+import FormField from '../FormField.svelte'
 import NumberInput from '../NumberInput.svelte'
 import PasswordInput from '../PasswordInput.svelte'
 import SearchInput from '../SearchInput.svelte'
 import SelectDropdown from '../SelectDropdown.svelte'
 import TextInput from '../TextInput.svelte'
+import TabsHarness from './tabs-size.harness.svelte'
 import { dimensionMetrics, resolveSize } from '../size-metrics'
 
 function installDomStubs(): void {
@@ -135,6 +140,86 @@ const CASES: ComponentCase[] = [
     name: 'PasswordInput',
     keys: ['input-font', 'input-line', 'input-radius', 'input-pad-x', 'input-pad-y', 'pwd-icon', 'pwd-box', 'pwd-inset'],
     render: size => renderStyle(PasswordInput, { value: '', size }),
+  },
+  {
+    name: 'Chip',
+    keys: ['chip-font', 'chip-line', 'chip-pad-x', 'chip-pad-y', 'chip-gap', 'chip-icon'],
+    render: size => renderStyle(Chip, { label: 'tag', chipClass: 'rounded-full', size }),
+  },
+  {
+    name: 'FormField',
+    keys: ['ff-font', 'ff-gap', 'ff-inline-gap', 'ff-inline-col'],
+    render: size => renderStyle(FormField, { label: 'label', size }),
+  },
+  {
+    name: 'Tabs',
+    keys: ['tabs-font', 'tabs-pad-x', 'tabs-pad-y', 'tabs-radius', 'tabs-nav-pad', 'tabs-nav-radius'],
+    render: size => renderStyle(TabsHarness, { size }),
+  },
+  {
+    name: 'DateInput',
+    keys: [
+      'btn-font',
+      'btn-glyph',
+      'btn-icon',
+      'btn-icon-pad',
+      'btn-line',
+      'btn-pad-x',
+      'btn-pad-y',
+      'btn-radius',
+      'input-font',
+      'input-line',
+      'input-pad-x',
+      'input-pad-y',
+      'input-radius',
+      'pick-font',
+      'pick-line',
+      'pick-radius',
+      'pick-pad-x',
+      'pick-pad-y',
+      'pick-gap',
+      'pick-icon',
+      'pick-panel-width',
+      'pick-panel-radius',
+      'pick-panel-pad',
+      'pick-block-gap',
+      'pick-tight-gap',
+      'pick-nav-size',
+      'pick-sm-font',
+      'pick-head-font',
+      'pick-tight-pad-y',
+      'pick-cell-size',
+    ],
+    render: size => renderStyle(DateInput, { value: '', size }),
+  },
+  {
+    name: 'BarChart',
+    keys: [
+      'chart-plot-height',
+      'chart-col-max',
+      'chart-col-min',
+      'chart-col-gap',
+      'chart-axis-font',
+      'chart-axis-line',
+      'chart-axis-gap',
+      'chart-legend-font',
+      'chart-legend-line',
+      'chart-legend-gap-x',
+      'chart-legend-gap-y',
+      'chart-legend-gap-top',
+      'chart-swatch',
+      'chart-swatch-radius',
+      'chart-swatch-gap',
+      'chart-bar-radius',
+    ],
+    render: size =>
+      renderStyle(BarChart, {
+        columns: [
+          { label: 'A', segments: [{ value: 4, label: 'x' }, { value: 2, label: 'y' }] },
+          { label: 'B', segments: [{ value: 6, label: 'x' }] },
+        ],
+        size,
+      }),
   },
 ]
 

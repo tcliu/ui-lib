@@ -16,10 +16,6 @@
      in both themes. */
   --color-onaccent: rgb(2 6 23);
 
-  /* Inline form-row grid: a fixed label column beside a flexible control.
-     Lives here so the template is a named utility, not an arbitrary value. */
-  --grid-template-columns-form-inline: 6rem minmax(0, 1fr);
-
   /* Room a demo stage leaves outside its frame while still clipping whatever
      outgrows it, so a control sitting flush at the frame edge paints its focus
      ring or border instead of being cut off at the edge. */

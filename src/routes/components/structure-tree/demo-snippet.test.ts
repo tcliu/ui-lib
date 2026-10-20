@@ -17,6 +17,8 @@ function state(overrides: Partial<StructureTreeSnippetState> = {}): StructureTre
     containerRowClassOn: false,
     leafRowClass: '',
     leafRowClassOn: false,
+    size: 'md',
+    sizeOn: false,
     ...overrides,
   }
 }
@@ -67,6 +69,12 @@ describe('buildStructureTreeSnippet', () => {
     )
     expect(source).toContain('  containerRowClass="group flex gap-4"')
     expect(source).toContain('  leafRowClass="group flex gap-&quot;3&quot;&amp;"')
+  })
+
+  it('emits a non-default size and omits the md default', () => {
+    expect(buildStructureTreeSnippet(state({ size: 'lg', sizeOn: true }))).toContain('  size="lg"')
+    expect(buildStructureTreeSnippet(state({ size: 'md', sizeOn: true }))).not.toMatch(/^\s*size=/m)
+    expect(buildStructureTreeSnippet(state({ size: 'lg', sizeOn: false }))).not.toMatch(/^\s*size=/m)
   })
 
   it('parses any JSON document as a tree value', () => {

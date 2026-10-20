@@ -1,8 +1,9 @@
 // Show-code source for the FormField demo section. Pure string building over
-// the playground form state: the section regenerates the editor text from
-// this, so the editor always shows the markup behind the demo above.
+// the playground form state: the section regenerates the editor text from this,
+// so the editor always shows the markup behind the demo above.
 import { escapeAttr, escapeRawLine, unescapeAttr } from '$lib/showcase/snippet-build'
 import { isBasicHtmlMarkup } from '$lib/showcase/snippet-html'
+import { sizeAttributeFragment } from '$lib/showcase/size-input'
 
 export interface FormFieldSnippetState {
   label: string
@@ -13,6 +14,8 @@ export interface FormFieldSnippetState {
   classNameOn: boolean
   layout: string
   layoutOn: boolean
+  size: string
+  sizeOn: boolean
   // Raw children markup committed from the row's code dialog; empty renders
   // the canonical TextInput below.
   children: string
@@ -111,6 +114,8 @@ export function buildFormFieldSnippet({
   classNameOn,
   layout,
   layoutOn,
+  size,
+  sizeOn,
   children,
   childrenEnabled,
 }: FormFieldSnippetState): string {
@@ -120,6 +125,8 @@ export function buildFormFieldSnippet({
   // builder omits the default so Show-code stays minimal.
   const layoutAttr = layoutOn && layout && layout !== 'stacked' ? ` layout="${escapeAttr(layout)}"` : ''
   const classAttr = classNameOn && className ? ` className="${escapeAttr(className)}"` : ''
+  // The size row prefills its `md` default; the builder omits it too.
+  const sizeAttr = sizeOn && size && size !== 'md' ? sizeAttributeFragment(size) : ''
   // The eye toggle off means no children are applied. Otherwise custom
   // children emit verbatim; unset, the canonical TextInput reads the
   // localized default label from scope alongside its bound value.
@@ -130,7 +137,7 @@ export function buildFormFieldSnippet({
       ? children.split('\n').map(line => (line ? `  ${escapeRawLine(line)}` : line))
       : [`  ${buildFormFieldChildrenMarkup({ htmlFor: canonicalHtmlFor })}`]
   if (childLines.length === 0) {
-    return [`<FormField${labelAttr}${forAttr}${layoutAttr}${classAttr}></FormField>`].join('\n')
+    return [`<FormField${labelAttr}${forAttr}${layoutAttr}${classAttr}${sizeAttr}></FormField>`].join('\n')
   }
-  return [`<FormField${labelAttr}${forAttr}${layoutAttr}${classAttr}>`, ...childLines, '</FormField>'].join('\n')
+  return [`<FormField${labelAttr}${forAttr}${layoutAttr}${classAttr}${sizeAttr}>`, ...childLines, '</FormField>'].join('\n')
 }

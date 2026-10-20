@@ -176,3 +176,177 @@ test('showcase: the StructureTree row class eyes apply and unapply without losin
   await page.getByRole('button', { name: 'Apply containerRowClass' }).click()
   await expect(customized.first()).toBeVisible()
 })
+
+test('showcase: editing a StructureTree key or value never moves the row text', async ({ page }) => {
+  await page.goto('/components/structure-tree')
+  await page.waitForLoadState('networkidle')
+
+  const demo = page.locator('[data-showcase-demo]').first()
+  await expect(demo).toContainText('"Engineer"')
+
+  // The name-edit row keeps the value as a span, the value-edit row swaps it for
+  // the input, so the anchor is whichever exists; positions are read from the
+  // row's own children and compared across the three states.
+  const geometry = () =>
+    demo.evaluate(el => {
+      const anchor =
+        [...el.querySelectorAll('span')].find(span => span.textContent === '"Engineer"') ??
+        el.querySelector('input')
+      const row = anchor!.closest('div[class*="w-fit"]') as HTMLElement
+      const rect = row.getBoundingClientRect()
+      const spans = [...row.querySelectorAll(':scope > span')]
+      const key = spans.find(span => span.textContent === 'role')
+      const colon = spans.find(span => span.textContent === ':')
+      const valueSpan = spans.find(span => span.textContent === '"Engineer"')
+      const input = row.querySelector('input')
+      const valueButton = row.querySelector(':scope > button')
+      const inputRect = input?.getBoundingClientRect()
+      return {
+        rowTop: rect.top,
+        rowHeight: rect.height,
+        colonLeft: colon ? colon.getBoundingClientRect().left : null,
+        colonRight: colon ? colon.getBoundingClientRect().right : null,
+        valueLeft: valueButton
+          ? valueButton.getBoundingClientRect().left
+          : valueSpan
+            ? valueSpan.getBoundingClientRect().left
+            : (inputRect?.left ?? null),
+        valueWidth: valueButton
+          ? valueButton.getBoundingClientRect().width
+          : (valueSpan?.getBoundingClientRect().width ?? null),
+        keyWidth: key ? key.getBoundingClientRect().width : null,
+        inputWidth: inputRect?.width ?? null,
+        ringLeft: input && inputRect
+          ? inputRect.left - Number.parseFloat(getComputedStyle(input).outlineOffset)
+          : null,
+      }
+    })
+
+  const before = await geometry()
+
+  // Renaming the key: the input takes the key's exact box, so the colon and the
+  // value behind it keep their positions and the row keeps its height.
+  await demo.evaluate(el => {
+    ;[...el.querySelectorAll('span')]
+      .find(span => span.textContent === 'role')
+      ?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+  })
+  await expect(demo.locator('input')).toBeVisible()
+  const renaming = await geometry()
+  expect(renaming.inputWidth).toBeCloseTo(before.keyWidth!, 0)
+  expect(renaming.rowTop).toBeCloseTo(before.rowTop, 0)
+  expect(renaming.rowHeight).toBeCloseTo(before.rowHeight, 0)
+  expect(renaming.colonLeft).toBeCloseTo(before.colonLeft!, 0)
+  expect(renaming.valueLeft).toBeCloseTo(before.valueLeft!, 0)
+
+  // Typing past the field width scrolls inside it: nothing in the row moves.
+  await page.keyboard.type('a-very-long-renamed-key')
+  const renamingTyped = await geometry()
+  expect(renamingTyped.rowHeight).toBeCloseTo(before.rowHeight, 0)
+  expect(renamingTyped.colonLeft).toBeCloseTo(before.colonLeft!, 0)
+  expect(renamingTyped.inputWidth).toBeCloseTo(renaming.inputWidth!, 0)
+  await page.keyboard.press('Escape')
+
+  // Editing the value: the field lands on the displayed value's box (quotes
+  // included) with no shift, and the wider colon→value spacing keeps its ring
+  // clear of the colon.
+  await demo.evaluate(el => {
+    ;[...el.querySelectorAll('button')]
+      .find(button => button.textContent === '"Engineer"')
+      ?.click()
+  })
+  await expect(demo.locator('input')).toBeVisible()
+  const editingValue = await geometry()
+  expect(editingValue.rowTop).toBeCloseTo(before.rowTop, 0)
+  expect(editingValue.rowHeight).toBeCloseTo(before.rowHeight, 0)
+  expect(editingValue.colonLeft).toBeCloseTo(before.colonLeft!, 0)
+  expect(editingValue.valueLeft).toBeCloseTo(before.valueLeft!, 0)
+  expect(editingValue.ringLeft!).toBeGreaterThanOrEqual(editingValue.colonRight!)
+  expect(editingValue.inputWidth).toBeCloseTo(before.valueWidth!, 0)
+})
+
+test('showcase: double-clicking a StructureTree key or value puts the caret at the end', async ({
+  page,
+}) => {
+  await page.goto('/components/structure-tree')
+  await page.waitForLoadState('networkidle')
+
+  const demo = page.locator('[data-showcase-demo]').first()
+  await expect(demo).toContainText('"Engineer"')
+
+  const caret = (length: number) => [length, length, length]
+
+  // The value button enters edit on the first click, so the second click of a
+  // double-click lands inside the freshly mounted field; the caret must still
+  // land at the end rather than the browser selecting the word.
+  await demo.locator('button').filter({ hasText: '"Engineer"' }).first().dblclick()
+  const valueInput = demo.locator('input')
+  await expect(valueInput).toBeVisible()
+  await expect.poll(() => valueInput.evaluate(el => [el.value.length, el.selectionStart, el.selectionEnd])).toEqual(caret(8))
+
+  // Once the field is open, a double-click selects the whole value again.
+  await valueInput.dblclick()
+  await expect.poll(() => valueInput.evaluate(el => [el.selectionStart, el.selectionEnd])).toEqual([0, 8])
+
+  // The key rename field, mounted by the double-click itself, behaves the same.
+  await page.keyboard.press('Escape')
+  await demo.getByRole('button', { name: 'role', exact: true }).dblclick()
+  const nameInput = demo.locator('input')
+  await expect(nameInput).toBeVisible()
+  await expect.poll(() => nameInput.evaluate(el => [el.value.length, el.selectionStart, el.selectionEnd])).toEqual(caret(4))
+  await nameInput.dblclick()
+  await expect.poll(() => nameInput.evaluate(el => [el.selectionStart, el.selectionEnd])).toEqual([0, 4])
+})
+
+test('showcase: a StructureTree row action pair sits tight and vertically centered', async ({
+  page,
+}) => {
+  await page.goto('/components/structure-tree')
+  await page.waitForLoadState('networkidle')
+
+  const demo = page.locator('[data-showcase-demo]').first()
+  await expect(demo).toContainText('"Engineer"')
+
+  const pair = await demo.evaluate(el => {
+    const button = (name: string) =>
+      [...el.querySelectorAll('button')].find(b => b.getAttribute('aria-label') === name)!
+    const edit = button('Edit $.role').getBoundingClientRect()
+    const copy = button('Copy $.role').getBoundingClientRect()
+    return {
+      gap: copy.left - edit.right,
+      editCenter: edit.top + edit.height / 2,
+      copyCenter: copy.top + copy.height / 2,
+    }
+  })
+
+  expect(pair.gap).toBeGreaterThanOrEqual(0)
+  expect(pair.gap).toBeLessThanOrEqual(2)
+  expect(pair.editCenter).toBeCloseTo(pair.copyCenter, 0)
+})
+
+test('showcase: StructureTree hints use the custom tooltip, never a native title', async ({
+  page,
+}) => {
+  await page.goto('/components/structure-tree')
+  await page.waitForLoadState('networkidle')
+
+  const demo = page.locator('[data-showcase-demo]').first()
+  await expect(demo).toContainText('"Engineer"')
+
+  // The key rename hint: no native `title`, the shared Tooltip renders it.
+  const key = demo.getByRole('button', { name: 'role', exact: true })
+  expect(await key.getAttribute('title')).toBeNull()
+  await key.hover()
+  await expect(page.getByRole('tooltip')).toHaveText('Double-click to rename')
+  await page.mouse.move(2, 2)
+  await expect(page.getByRole('tooltip')).toHaveCount(0)
+
+  // The value hint carries its node path and is custom too. Its Tooltip sits
+  // flush in the button, so no stray whitespace widens the row's text.
+  const value = demo.locator('button').filter({ hasText: '"Engineer"' }).first()
+  expect(await value.getAttribute('title')).toBeNull()
+  const valueText = await value.textContent()
+  expect(valueText).toBe(valueText?.trim())
+  await value.hover()
+  await expect(page.getByRole('tooltip')).toHaveText('Edit $.role')
+})

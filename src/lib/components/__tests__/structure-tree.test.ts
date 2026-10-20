@@ -104,6 +104,66 @@ describe('StructureTree', () => {
     expect(root.querySelector('button[aria-label="Copy $.name"]')).not.toBeNull()
   })
 
+  it('sizes the value field to the text and keeps that width while typing', () => {
+    const onChange = vi.fn()
+    const root = render({ name: 'root' }, { onChange })
+
+    buttonByName(root, /^Edit \$\.name$/).click()
+    flushSync()
+    const input = root.querySelector('input') as HTMLInputElement
+    const width = input.style.width
+    setInputValue(input, 'a much longer replacement value')
+    // A fixed width means typing scrolls inside the field instead of widening
+    // it, so the colon and the rest of the row never move.
+    expect(input.style.width).toBe(width)
+  })
+
+  it('keeps the row action cluster mounted while a value is edited', () => {
+    const root = render({ name: 'root' }, { onChange: vi.fn() })
+
+    buttonByName(root, /^Edit \$\.name$/).click()
+    flushSync()
+    const input = root.querySelector('input') as HTMLInputElement
+    // The cluster (with its copy button) sets the row height, so unmounting it
+    // while editing would let the row shrink and the tree shift up.
+    const row = input.closest('div[class*="w-fit"]')
+    expect(row?.querySelector('button[aria-label="Copy $.name"]')).not.toBeNull()
+  })
+
+  it('focuses an inline field with the caret at the end of its text', () => {
+    const root = render({ name: 'root' }, { onChange: vi.fn() })
+
+    buttonByName(root, /^Edit \$\.name$/).click()
+    flushSync()
+    const input = root.querySelector('input') as HTMLInputElement
+    // Not a select-all: an edit continues the text instead of overwriting it.
+    expect(input.selectionStart).toBe(input.value.length)
+    expect(input.selectionEnd).toBe(input.value.length)
+  })
+
+  it('calibrates the default size to the existing 14px row text', () => {
+    const root = render({ name: 'root' }, { onChange: vi.fn() })
+    const style = root.getAttribute('style') ?? ''
+    expect(style).toMatch(/--tree-font:\s*14px/)
+    expect(style).toMatch(/--tree-line:\s*19\.25px/)
+  })
+
+  it('scales the tree text and its inner controls with size', () => {
+    const root = render({ name: 'root' }, { onChange: vi.fn(), size: 'xl' })
+    expect(root.getAttribute('style')).toMatch(/--tree-font:\s*17\.5px/)
+    expect(root.querySelector('button[aria-expanded]')?.getAttribute('style')).toContain('--btn-font')
+    expect(root.querySelector('button[aria-label^="Copy"]')?.getAttribute('style')).toContain('--btn-font')
+  })
+
+  it('aligns a leaf key with a container label at the same level', () => {
+    const root = render({ nested: { a: 1 }, name: 'root' }, { onChange: vi.fn() })
+    const style = root.getAttribute('style') ?? ''
+    // The gutter equals the caret button's own box plus the row-gap difference,
+    // so a leaf key and a container label share a left edge.
+    const gutter = Number.parseFloat(/--tree-gutter:\s*([\d.]+)px/.exec(style)?.[1] ?? '0')
+    expect(gutter).toBeGreaterThan(16)
+  })
+
   it('leaves no measured text in the hidden measure span after editing', () => {
     const onChange = vi.fn()
     const root = render({ name: 'root' }, { onChange })

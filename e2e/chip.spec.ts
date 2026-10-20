@@ -29,3 +29,15 @@ test('showcase: the Chip tooltip Value cell wraps the pill', async ({ page }) =>
   // The tooltip box portals to document.body, so anchor on the page.
   await expect(page.getByText('Pill tip')).toBeVisible()
 })
+
+test('showcase: the Chip size Value cell scales the pill', async ({ page }) => {
+  await page.goto('/components/chip')
+  await page.waitForLoadState('networkidle')
+
+  const demo = page.locator('[data-showcase-demo]').first()
+  await page.getByRole('combobox', { name: 'size value' }).click()
+  await page.getByRole('option', { name: 'lg' }).click()
+
+  // lg = 18px dimension → a 13.5px label on the chip root.
+  await expect(demo.locator('[style*="--chip-font"]').first()).toHaveAttribute('style', /--chip-font:\s*13\.5px/)
+})

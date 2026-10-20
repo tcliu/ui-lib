@@ -6,6 +6,7 @@
 // resolves from its module registry.
 
 import { escapeAttr } from '$lib/showcase/snippet-build'
+import { sizeAttributeLine } from '$lib/showcase/size-input'
 
 export type TriState = '' | 'yes' | 'no'
 
@@ -17,6 +18,8 @@ export interface StructureTreeSnippetState {
   containerRowClassOn: boolean
   leafRowClass: string
   leafRowClassOn: boolean
+  size: string
+  sizeOn: boolean
 }
 
 // Default tree contents, shared by the page and the snippet seed so the static
@@ -112,6 +115,8 @@ export function buildStructureTreeSnippet({
   containerRowClassOn,
   leafRowClass,
   leafRowClassOn,
+  size,
+  sizeOn,
 }: StructureTreeSnippetState): string {
   return [
     '<script>',
@@ -125,6 +130,9 @@ export function buildStructureTreeSnippet({
     ...(editableOn ? flagLine('editable', editable, 'yes') : []),
     ...classLine('containerRowClass', containerRowClass, containerRowClassOn),
     ...classLine('leafRowClass', leafRowClass, leafRowClassOn),
+    // The size prefills its `md` default in the Value column; the builder omits
+    // the default so Show-code stays minimal.
+    ...(sizeOn && size !== '' && size !== 'md' ? sizeAttributeLine(size) : []),
     '/>',
   ].join('\n')
 }

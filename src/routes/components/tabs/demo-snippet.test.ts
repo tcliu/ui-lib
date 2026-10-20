@@ -10,6 +10,8 @@ function state(overrides: Partial<TabsSnippetState> = {}): TabsSnippetState {
     ariaLabelOn: true,
     pathname: '',
     pathnameOn: false,
+    size: '',
+    sizeOn: false,
     ...overrides,
   }
 }
@@ -74,6 +76,13 @@ describe('buildTabsSnippet', () => {
     expect(source).not.toContain('className=')
     expect(source).not.toContain('pathname="')
     expect(source).not.toContain('<Button onClick=')
+  })
+
+  it('emits a non-default size and omits the md default', () => {
+    expect(buildTabsSnippet(state({ size: 'lg', sizeOn: true }))).toContain('  size="lg"')
+    expect(buildTabsSnippet(state({ size: '18', sizeOn: true }))).toContain('  size={18}')
+    expect(buildTabsSnippet(state({ size: 'md', sizeOn: true }))).not.toContain('size=')
+    expect(buildTabsSnippet(state({ size: 'lg', sizeOn: false }))).not.toContain('size=')
   })
 
   it('reads the scope label while the staged ariaLabel eye is off', () => {

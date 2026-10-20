@@ -3,8 +3,9 @@
   import TextInput from '$lib/components/TextInput.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
+  import { parseSizeValue } from '$lib/showcase/size-input'
   import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { enumField, textField, snippetDialog, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
+  import { enumField, textField, sizeField, snippetDialog, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
   import {
     buildFormFieldChildrenMarkup,
     buildFormFieldSnippet,
@@ -34,6 +35,8 @@
     classNameOn: false,
     layout: 'stacked',
     layoutOn: false,
+    size: 'md',
+    sizeOn: false,
     children: '',
     childrenOn: true,
   }
@@ -45,6 +48,7 @@
   const demoHtmlFor = $derived(pg.htmlForOn && pg.htmlFor ? pg.htmlFor : undefined)
   const demoClassName = $derived(pg.classNameOn && pg.className ? pg.className : undefined)
   const demoLayout = $derived(pg.layoutOn && pg.layout === 'inline' ? 'inline' : undefined)
+  const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
   // Custom markup renders as committed; unset, the canonical TextInput reads
   // the dynamic id. Stored drafts are always valid, so the fallback only
   // covers the empty state.
@@ -72,6 +76,8 @@
       classNameOn: pg.classNameOn,
       layout: pg.layout,
       layoutOn: pg.layoutOn,
+      size: pg.size,
+      sizeOn: pg.sizeOn,
       children: pg.children,
       childrenEnabled: pg.childrenOn,
     }),
@@ -105,7 +111,8 @@
     textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes for the field wrapper.', value: pg.className, onChange: v => (pg.className = v), editorDefaultValue: '', clearable: true, enabled: pg.classNameOn, setEnabled: v => (pg.classNameOn = v) }),
     textField({ name: 'htmlFor', type: 'string?', defaultValue: '—', note: 'Associates the label with a control id.', value: pg.htmlFor, onChange: v => (pg.htmlFor = v), clearable: true, enabled: pg.htmlForOn, setEnabled: v => (pg.htmlForOn = v) }),
     { name: 'label', type: 'string', defaultValue: '—', note: 'Visible field label.', editor: 'text', clearable: true, value: pg.label, onChange: value => { pg.label = value; pg.labelOn = true; }, toggle: snippetToggle(pg.labelOn, enabled => (pg.labelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'defaultLabel' } },
-    enumField({ name: 'layout', type: "'stacked' | 'inline'", defaultValue: "'stacked'", note: 'Stacked puts the label above the control; inline puts it in a 6rem column beside it.', options: layoutOptions, value: pg.layout, onChange: v => (pg.layout = v), placeholder: 'stacked', clearLabel: 'Clear layout', enabled: pg.layoutOn, setEnabled: v => (pg.layoutOn = v) }),
+    enumField({ name: 'layout', type: "'stacked' | 'inline'", defaultValue: "'stacked'", note: 'Stacked puts the label above the control; inline puts it in the size-scaled inline column beside it (6rem at md).', options: layoutOptions, value: pg.layout, onChange: v => (pg.layout = v), placeholder: 'stacked', clearLabel: 'Clear layout', enabled: pg.layoutOn, setEnabled: v => (pg.layoutOn = v) }),
+    sizeField({ note: 'Control scale; numbers are icon-scale pixels. Scales the label, gaps, and inline label column.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
   ])
 
   // With an unset label the demo reads the localized default from scope, which
@@ -124,7 +131,7 @@
     scopeRefresh={() => [demoLabel]}
     scopeRefreshWhen={() => !(pg.labelOn && pg.label)}
   >
-    <FormField label={demoLabel} htmlFor={demoHtmlFor} className={demoClassName} layout={demoLayout}>
+    <FormField label={demoLabel} htmlFor={demoHtmlFor} className={demoClassName} layout={demoLayout} size={demoSize}>
       {#if pg.childrenOn}
         {#each demoChildren as segment}
           {#if segment.kind === 'textinput'}

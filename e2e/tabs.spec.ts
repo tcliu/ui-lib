@@ -29,3 +29,15 @@ test('showcase: the Tabs pathname Value cell switches the tabs to links', async 
   await expect(demo.getByRole('link')).toHaveCount(0)
   await expect(demo.getByRole('button').first()).toBeVisible()
 })
+
+test('showcase: the Tabs size Value cell scales the tab bar', async ({ page }) => {
+  await page.goto('/components/tabs')
+  await page.waitForLoadState('networkidle')
+
+  const demo = page.locator('[data-showcase-demo]').first()
+  await page.getByRole('combobox', { name: 'size value' }).click()
+  await page.getByRole('option', { name: 'lg' }).click()
+
+  // lg = 18px dimension → a 15.75px label on the tab root.
+  await expect(demo.locator('[style*="--tabs-font"]').first()).toHaveAttribute('style', /--tabs-font:\s*15\.75px/)
+})

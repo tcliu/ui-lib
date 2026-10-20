@@ -1,9 +1,10 @@
 <script lang="ts">
   import { onDestroy, tick } from 'svelte'
   import Button from './Button.svelte'
-  import CopyButton from './CopyButton.svelte'
+  import CopyIcon from '$lib/icons/CopyIcon.svelte'
   import EditIcon from '$lib/icons/EditIcon.svelte'
   import type { SizeInput } from '$lib/size-scale'
+  import { copyToClipboard } from './copy-to-clipboard'
   import { INPUT_METRIC_CLASS, INPUT_RATIOS } from './input-chrome'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
   import { getI18nContext } from '$lib/i18n.svelte'
@@ -240,7 +241,28 @@
   <div class="group flex min-w-0 items-center gap-2">
     {@render displayContent()}
     {#if copyable && text.trim() !== ''}
-      <CopyButton {text} ariaLabel={`Copy ${text}`} />
+      <span class="shrink-0 transition group-hover:opacity-100 focus-within:opacity-100 [@media(hover:hover)]:opacity-0">
+        <Button
+          variant="ghost"
+          ariaLabel={`Copy ${text}`}
+          tooltip={i18n.t('common.copy')}
+          onClick={event => {
+            event.preventDefault()
+            event.stopPropagation()
+            void copyToClipboard(text, {
+              copied: i18n.t('editor.toast.copied'),
+              failed: i18n.t('editor.toast.copyFailed'),
+            })
+          }}
+          onKeyDown={event => {
+            if (event.key === 'Enter' || event.key === ' ') event.stopPropagation()
+          }}
+          className="bg-transparent text-slate-400 hover:text-cyan-300">
+          {#snippet icon()}
+            <CopyIcon />
+          {/snippet}
+        </Button>
+      </span>
     {/if}
   </div>
 {/if}

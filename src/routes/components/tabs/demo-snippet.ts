@@ -3,6 +3,7 @@
 // the editor always shows the markup behind the demo above.
 
 import { escapeAttr } from '$lib/showcase/snippet-build'
+import { sizeAttributeLine } from '$lib/showcase/size-input'
 
 export interface TabsSnippetState {
   routeMode: string
@@ -12,11 +13,13 @@ export interface TabsSnippetState {
   ariaLabelOn: boolean
   pathname: string
   pathnameOn: boolean
+  size: string
+  sizeOn: boolean
 }
 
 export const STYLED_HEADER = 'flex w-full items-center gap-2 rounded-lg border border-cyan-500/40 p-2'
 
-export function buildTabsSnippet({ routeMode, className, classNameOn, ariaLabel, ariaLabelOn, pathname, pathnameOn }: TabsSnippetState): string {
+export function buildTabsSnippet({ routeMode, className, classNameOn, ariaLabel, ariaLabelOn, pathname, pathnameOn, size, sizeOn }: TabsSnippetState): string {
   const overviewPath = routeMode ? '#overview' : 'overview'
   const detailsPath = routeMode ? '#details' : 'details'
   const lines = [
@@ -36,6 +39,8 @@ export function buildTabsSnippet({ routeMode, className, classNameOn, ariaLabel,
     // A literal pathname wins; unset, route mode reads the path from scope.
     ...(pathnameOn && pathname ? [`  pathname="${escapeAttr(pathname)}"`] : routeMode ? ['  pathname={routePath}'] : []),
     ...(classNameOn && className ? [`  className="${className}"`] : []),
+    // The size row prefills its `md` default; the builder omits it.
+    ...(sizeOn && size !== '' && size !== 'md' ? sizeAttributeLine(size) : []),
     // A custom label renders as a literal; unset, the nav reads the scope label.
     ...(ariaLabelOn && ariaLabel ? [`  ariaLabel="${escapeAttr(ariaLabel)}"`] : ['  ariaLabel={componentsLabel}']),
     '/>',

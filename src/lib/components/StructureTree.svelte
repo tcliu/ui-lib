@@ -1,7 +1,8 @@
 <script lang="ts">
-  import StructureNode from './StructureNode.svelte'
+  import StructureNode, { STRUCTURE_TEXT_CLASS, structureStyle } from './StructureNode.svelte'
   import { containerSummary, isContainer, valueClass, valueText } from './structure-value'
   import { getI18nContext } from '$lib/i18n.svelte'
+  import type { SizeInput } from '$lib/size-scale'
   const i18n = getI18nContext()
 
   interface Props {
@@ -13,9 +14,14 @@
     containerRowClass?: string
     /** Replaces the tunable leaf row classes (gaps, padding, highlight). */
     leafRowClass?: string
+    /** Control scale; the tree's text and inner controls follow it. */
+    size?: SizeInput
   }
 
-  let { value, onChange, onRenameKey, editable = true, containerRowClass, leafRowClass }: Props = $props()
+  let { value, onChange, onRenameKey, editable = true, containerRowClass, leafRowClass, size = 'md' }: Props =
+    $props()
+
+  const treeStyle = $derived(structureStyle(size))
 
   function containerLabel(value: unknown): string {
     return Array.isArray(value)
@@ -24,9 +30,9 @@
   }
 </script>
 
-<div class="text-slate-300">
+<div class={`text-slate-300 ${STRUCTURE_TEXT_CLASS}`} style={treeStyle}>
   {#if value === undefined}
-    <div class="text-sm italic text-slate-400">{i18n.t('structure.noContent')}</div>
+    <div class="text-[length:var(--tree-font)] italic text-slate-400">{i18n.t('structure.noContent')}</div>
   {:else if !isContainer(value)}
     <pre class={valueClass(value)}>{valueText(value)}</pre>
   {:else}
@@ -38,6 +44,7 @@
       {onRenameKey}
       {editable}
       {containerRowClass}
-      {leafRowClass} />
+      {leafRowClass}
+      {size} />
   {/if}
 </div>

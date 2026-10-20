@@ -88,6 +88,39 @@ test('showcase: the ChipDropdown options cell edits JSON through a dialog', asyn
   await expect(demo).toContainText('active')
 })
 
+test('showcase: the ChipDropdown keeps its size when cleared', async ({ page }) => {
+  await page.goto('/components/chip-dropdown')
+  await page.waitForLoadState('networkidle')
+
+  const demo = page.locator('[data-showcase-demo]').first()
+  const chip = demo.locator('div.relative.inline-flex').first()
+  const trigger = page.getByRole('combobox', { name: 'Set status' })
+
+  // Turn on clearable via the props table.
+  await page.getByRole('checkbox', { name: 'clearable value' }).check({ force: true })
+  await expect(trigger).toBeVisible()
+
+  const clear = demo.getByRole('button', { name: 'Clear', exact: true })
+  await expect(clear).toBeVisible()
+
+  const before = (await chip.boundingBox())!
+  const pillBefore = (await trigger.boundingBox())!
+
+  // Dispatch the click directly: the stage's bottom resize handle overlaps the
+  // chip and would swallow a coordinate-based click.
+  await clear.evaluate((el: HTMLButtonElement) => el.click())
+  await expect(demo.getByRole('button', { name: 'Clear', exact: true })).toHaveCount(0)
+
+  const after = (await chip.boundingBox())!
+  const pillAfter = (await trigger.boundingBox())!
+  // Both the row and the pill stay put: the cleared label holds its width and
+  // the reserved clear slot keeps the cross's space.
+  expect(Math.round(after.width)).toBe(Math.round(before.width))
+  expect(Math.round(after.height)).toBe(Math.round(before.height))
+  expect(Math.round(pillAfter.width)).toBe(Math.round(pillBefore.width))
+  expect(Math.round(pillAfter.height)).toBe(Math.round(pillBefore.height))
+})
+
 test('showcase: the ChipDropdown options eye resets to the defaults', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.goto('/components/chip-dropdown')

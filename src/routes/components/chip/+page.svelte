@@ -5,8 +5,9 @@
   import SelectDropdown from '$lib/components/SelectDropdown.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
+  import { parseSizeValue } from '$lib/showcase/size-input'
   import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { textField, boolField, snippetToggle } from '$lib/showcase/snippet-field'
+  import { textField, boolField, sizeField, snippetToggle } from '$lib/showcase/snippet-field'
   import { DEFAULT_CHIP_CLASS, buildChipSnippet, type TriState } from './demo-snippet'
 
   const i18n = getI18nContext()
@@ -23,6 +24,8 @@
     labelOn: true,
     chipClass: '',
     chipClassOn: false,
+    size: 'md',
+    sizeOn: false,
     removed: false,
     ariaLabel: '',
     ariaLabelOn: false,
@@ -45,6 +48,7 @@
 
   const demoLabel = $derived(pg.labelOn && pg.label ? pg.label : i18n.t('showcase.default'))
   const demoChipClass = $derived(pg.chipClassOn && pg.chipClass ? pg.chipClass : DEFAULT_CHIP_CLASS)
+  const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
   const disabled = $derived(pg.disabledOn ? flagOn(pg.disabled) : undefined)
   const demoAriaLabel = $derived(pg.ariaLabelOn && pg.ariaLabel ? pg.ariaLabel : undefined)
   const demoRemoveButtonClass = $derived(pg.removeButtonClassOn && pg.removeButtonClass ? pg.removeButtonClass : undefined)
@@ -63,6 +67,8 @@
       labelOn: pg.labelOn,
       chipClass: pg.chipClass,
       chipClassOn: pg.chipClassOn,
+      size: pg.size,
+      sizeOn: pg.sizeOn,
       removeLabel: pg.ariaLabel,
       removeLabelOn: pg.ariaLabelOn,
       disabled: pg.disabled,
@@ -88,6 +94,7 @@
     textField({ name: 'removeButtonClass', type: 'string?', defaultValue: "''", note: 'Extra classes for the remove button. Applies in removable mode.', value: pg.removeButtonClass, onChange: v => (pg.removeButtonClass = v), editorDefaultValue: '', clearable: true, enabled: pg.removeButtonClassOn, setEnabled: v => (pg.removeButtonClassOn = v) }),
     textField({ name: 'removeButtonStyle', type: 'string?', defaultValue: "''", note: 'Inline style for the remove button. Applies in removable mode.', value: pg.removeButtonStyle, onChange: v => (pg.removeButtonStyle = v), editorDefaultValue: '', clearable: true, enabled: pg.removeButtonStyleOn, setEnabled: v => (pg.removeButtonStyleOn = v) }),
     textField({ name: 'removeLabel', type: 'string?', defaultValue: 'locale', note: 'Accessible name for the remove button. Applies in removable mode.', value: pg.ariaLabel, onChange: v => (pg.ariaLabel = v), clearable: true, enabled: pg.ariaLabelOn, setEnabled: v => (pg.ariaLabelOn = v) }),
+    sizeField({ note: 'Control scale; numbers are icon-scale pixels. Chip owns its size-scaled padding, font, and line.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
     textField({ name: 'style', type: 'string?', defaultValue: "''", note: 'Inline style for the pill.', value: pg.style, onChange: v => (pg.style = v), editorDefaultValue: '', clearable: true, enabled: pg.styleOn, setEnabled: v => (pg.styleOn = v) }),
     textField({ name: 'tooltip', type: 'string?', defaultValue: '—', note: 'Tooltip text for the pill.', value: pg.tooltip, onChange: v => (pg.tooltip = v), clearable: true, enabled: pg.tooltipOn, setEnabled: v => (pg.tooltipOn = v) }),
     { name: 'onRemove', type: '() => void', defaultValue: '—', note: 'Renders the remove button.' },
@@ -134,6 +141,7 @@
         <Chip
           label={demoLabel}
           chipClass={demoChipClass}
+          size={demoSize}
           removeLabel={demoAriaLabel}
           {disabled}
           removeButtonClass={demoRemoveButtonClass}
@@ -143,6 +151,6 @@
           onRemove={() => (pg.removed = true)} />
       {/if}
     {:else}
-      <Chip label={demoLabel} chipClass={demoChipClass} style={demoStyle} tooltip={demoTooltip} />
+      <Chip label={demoLabel} chipClass={demoChipClass} size={demoSize} style={demoStyle} tooltip={demoTooltip} />
     {/if}
   </ShowcasePage>
