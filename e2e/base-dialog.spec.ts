@@ -246,48 +246,6 @@ test('showcase: the BaseDialog header cell edits the Copyable title through a di
   await page.keyboard.press('Escape')
 })
 
-test('showcase: the BaseDialog footer cell edits the fixed action row through a dialog applied by the eye', async ({
-  page,
-  context,
-}) => {
-  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
-  await page.goto('/components/base-dialog')
-  await page.waitForLoadState('networkidle')
-
-  await page.getByRole('button', { name: 'Edit footer' }).click()
-  const dialog = page
-    .getByRole('dialog')
-    .filter({ has: page.getByRole('heading', { name: 'Edit footer' }) })
-  await expect(dialog).toBeVisible()
-  await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  const ok = dialog.getByRole('button', { name: 'OK', exact: true })
-
-  // Anything but the Buttons block shape blocks OK behind an error.
-  await replaceSnippet(page, dialog, 'nope')
-  await expect(dialog.getByRole('alert')).toBeVisible()
-  await expect(ok).toBeDisabled()
-
-  // A valid edit applies on OK; the footer button dismisses the demo dialog.
-  await replaceSnippet(
-    page,
-    dialog,
-    ['<Buttons align="right">', '  <Button variant="primary">Go</Button>', '</Buttons>'].join('\n'),
-  )
-  await expect(dialog.getByRole('alert')).toHaveCount(0)
-  await ok.click()
-  await expect(dialog).toHaveCount(0)
-  await page.getByRole('button', { name: 'Open dialog' }).click()
-  const demo = page.getByRole('dialog')
-  await demo.getByRole('button', { name: 'Go' }).click()
-  await expect(page.getByRole('dialog')).toHaveCount(0)
-
-  // Unapplying drops the footer from the dialog.
-  await page.getByRole('button', { name: 'Unapply footer' }).click()
-  await page.getByRole('button', { name: 'Open dialog' }).click()
-  await expect(page.getByRole('dialog').getByRole('button', { name: 'Go' })).toHaveCount(0)
-  await page.keyboard.press('Escape')
-})
-
 test('showcase: committing the canonical header keeps the snippet in Show-code', async ({
   page,
   context,

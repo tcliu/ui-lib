@@ -24,11 +24,6 @@ export interface BaseDialogSnippetState {
   header: string
   // The eye toggle off means no header snippet is applied.
   headerOn: boolean
-  // Raw footer markup committed from the row's code dialog; empty renders no
-  // footer below the body.
-  footer: string
-  // The eye toggle off means no footer snippet is applied.
-  footerOn: boolean
 }
 
 export const STYLED_PANEL = 'border-cyan-500/40'
@@ -162,64 +157,6 @@ function unescapeRawLine(value: string): string {
   return value.replace(/&amp;/g, '&')
 }
 
-// Footer buttons committed from the row's code dialog: variant plus label per
-// line. The static demo replays the same buttons with dismiss handlers while
-// committed markup renders verbatim in the seed, so the dialog rejects
-// anything the demo cannot reproduce exactly.
-export interface BaseFooterButton {
-  variant: BaseBodyButtonVariant | null
-  label: string
-}
-
-const FOOTER_OPEN = '<Buttons align="right">'
-const FOOTER_CLOSE = '</Buttons>'
-
-// Parse a footer draft into its buttons, or null unless it is exactly the
-// Buttons block above with one or more plain-label Button lines (an absent
-// variant reads as the Button default); an empty draft is not (the eye toggle
-// covers removal).
-export function parseFooterMarkup(draft: string): BaseFooterButton[] | null {
-  const lines = draft
-    .split('\n')
-    .map(line => line.trim())
-    .filter(line => line.length > 0)
-  if (lines.length < 3 || lines[0] !== FOOTER_OPEN || lines[lines.length - 1] !== FOOTER_CLOSE) {
-    return null
-  }
-  const buttons: BaseFooterButton[] = []
-  for (const line of lines.slice(1, -1)) {
-    const match = line.match(/^<Button(?: variant="([^"]*)")?>([^<>{}]*)<\/Button>$/)
-    if (!match || match[2] === undefined) {
-      return null
-    }
-    const variant = match[1] ?? null
-    if (variant !== null && !BASE_BUTTON_VARIANTS.includes(variant as BaseBodyButtonVariant)) {
-      return null
-    }
-    const label = unescapeRawLine(match[2].trim())
-    if (label === '') {
-      return null
-    }
-    buttons.push({ variant: variant as BaseBodyButtonVariant | null, label })
-  }
-  return buttons
-}
-
-// Canonical footer lines from literals: the Buttons block around the given
-// buttons. Used for the row seed and for comparing a commit back to the
-// resolved default. `&` escapes for compilation; `<`/`{` cannot appear
-// (validation rejects them).
-export function buildFooterLines(buttons: BaseFooterButton[]): string {
-  return [
-    FOOTER_OPEN,
-    ...buttons.map(
-      ({ variant, label }) =>
-        `  <Button${variant ? ` variant="${variant}"` : ''}>${escapeRawLine(label)}</Button>`,
-    ),
-    FOOTER_CLOSE,
-  ].join('\n')
-}
-
 export function buildBaseDialogSnippet({
   widthVariant,
   widthVariantOn,
@@ -237,8 +174,6 @@ export function buildBaseDialogSnippet({
   closeLabelOn,
   header,
   headerOn,
-  footer,
-  footerOn,
 }: BaseDialogSnippetState): string {
   // The eye toggle off means no children are applied. Otherwise custom
   // children render from their parsed segments (buttons gain the dismiss
@@ -249,19 +184,11 @@ export function buildBaseDialogSnippet({
   // compiles them.
   const parsed = childrenOn ? parseBaseBodyMarkup(children) : null
   // Slot snippets sit inside the dialog behind the body so the seed compiles
-  // the same header/footer the static demo renders; committed lines emit
+  // the same header the static demo renders; committed lines emit
   // verbatim (validation at commit guarantees the shape).
   const headerLines =
     headerOn && header ? ['    {#snippet header()}', `      ${escapeRawLine(header)}`, '    {/snippet}'] : []
-  const footerLines =
-    footerOn && footer
-      ? [
-          '    {#snippet footer()}',
-          ...footer.split('\n').map(line => (line ? `      ${escapeRawLine(line)}` : line)),
-          '    {/snippet}',
-        ]
-      : []
-  const slotLines = [...headerLines, ...footerLines]
+  const slotLines = [...headerLines]
   const childLines = parsed
     ? [
         '    onCancel={() => (open = false)}>',

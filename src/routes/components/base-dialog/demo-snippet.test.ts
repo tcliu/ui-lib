@@ -4,9 +4,7 @@ import {
   STYLED_PANEL,
   buildBaseBodyLines,
   buildBaseDialogSnippet,
-  buildFooterLines,
   parseBaseBodyMarkup,
-  parseFooterMarkup,
   type BaseDialogSnippetState,
 } from './demo-snippet'
 
@@ -36,8 +34,6 @@ function state(overrides: Partial<BaseDialogSnippetState> = {}): BaseDialogSnipp
     closeLabelOn: true,
     header: '',
     headerOn: false,
-    footer: '',
-    footerOn: false,
     ...overrides,
   }
 }
@@ -50,7 +46,7 @@ describe('buildBaseDialogSnippet', () => {
     expect(source).not.toContain('widthVariant=')
     expect(source).not.toContain('heightVariant=')
     expect(source).not.toContain('size=')
-    // Indented: the static <Buttons> footer line also carries a className.
+    // Indented: the static <Buttons> row line also carries a className.
     expect(source).not.toContain('    className=')
     expect(source).toContain('<p>Dialog body content.</p>')
     expect(source).toContain('<Buttons align="right">')
@@ -175,20 +171,16 @@ describe('buildBaseDialogSnippet', () => {
     expect(on).toContain('className="border-cyan-500/40"')
   })
 
-  it('emits header and footer snippets while applied', () => {
+  it('emits the header snippet while applied', () => {
     const source = buildBaseDialogSnippet(
       state({
         header: '<Copyable text="$.user"><span>$.user</span></Copyable>',
         headerOn: true,
-        footer: '<Buttons align="right">\n  <Button variant="primary">Go</Button>\n</Buttons>',
-        footerOn: true,
       }),
     )
     expect(source).toContain('    {#snippet header()}')
     expect(source).toContain('      <Copyable text="$.user"><span>$.user</span></Copyable>')
     expect(source).toContain('    {/snippet}')
-    expect(source).toContain('    {#snippet footer()}')
-    expect(source).toContain('      <Button variant="primary">Go</Button>')
     expect(source).toContain('</BaseDialog>')
   })
 
@@ -206,32 +198,13 @@ describe('buildBaseDialogSnippet', () => {
     expect(source).not.toContain('Dialog body content.')
   })
 
-  it('omits slot snippets while their eyes are off', () => {
+  it('omits the header snippet while its eye is off', () => {
     const source = buildBaseDialogSnippet(
       state({
         header: '<Copyable text="t"><span>t</span></Copyable>',
         headerOn: false,
-        footer: '<Buttons align="right">\n  <Button>Go</Button>\n</Buttons>',
-        footerOn: false,
       }),
     )
     expect(source).not.toContain('{#snippet header()}')
-    expect(source).not.toContain('{#snippet footer()}')
-  })
-
-  it('round-trips footer markup through parse and build', () => {
-    const markup =
-      '<Buttons align="right">\n  <Button variant="primary">Go</Button>\n  <Button>Later</Button>\n</Buttons>'
-    expect(parseFooterMarkup(markup)).toEqual([
-      { variant: 'primary', label: 'Go' },
-      { variant: null, label: 'Later' },
-    ])
-    expect(buildFooterLines(parseFooterMarkup(markup) ?? [])).toBe(markup)
-    expect(parseFooterMarkup('nope')).toBeNull()
-    expect(parseFooterMarkup('<Buttons align="right">\n</Buttons>')).toBeNull()
-    expect(
-      parseFooterMarkup('<Buttons align="right">\n  <Button variant="unknown">Go</Button>\n</Buttons>'),
-    ).toBeNull()
-    expect(parseFooterMarkup('<Buttons align="right">\n  <Button></Button>\n</Buttons>')).toBeNull()
   })
 })

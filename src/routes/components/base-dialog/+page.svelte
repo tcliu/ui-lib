@@ -12,11 +12,8 @@
     DISMISS_HANDLER,
     buildBaseDialogSnippet,
     buildBaseBodyLines,
-    buildFooterLines,
     parseBaseBodyMarkup,
-    parseFooterMarkup,
     type BaseBodyContent,
-    type BaseFooterButton,
   } from './demo-snippet'
 
   const i18n = getI18nContext()
@@ -44,8 +41,6 @@
     closeLabelOn: false,
     header: '',
     headerOn: false,
-    footer: '',
-    footerOn: false,
   }
   let pg = $state(structuredClone(INITIAL))
   // The children row edits the inner markup the dialog lays out (demo data,
@@ -53,8 +48,7 @@
   // unset, so defaults keep flowing from scope (e.g. on locale change).
   // The header row edits the Copyable title the dialog heading renders (demo
   // data, so it has no single prop); committing the canonical shape resets to
-  // unset, so defaults keep flowing from the title. The footer row edits the
-  // fixed action row below the body; same reset rule.
+  // unset, so defaults keep flowing from the title.
 
   const demoWidthVariant = $derived(
     pg.widthVariantOn
@@ -136,11 +130,6 @@
   const canonicalHeader = $derived(buildHeaderLine({ text: demoTitle, inner: demoTitle }))
   const headerMarkup = $derived(pg.header || canonicalHeader)
   const headerContent = $derived(parseHeaderMarkup(pg.header) ?? { text: demoTitle, inner: demoTitle })
-  const canonicalFooter = $derived(buildFooterLines([{ variant: 'primary', label: i18n.t('common.ok') }]))
-  const footerMarkup = $derived(pg.footer || canonicalFooter)
-  const footerButtons = $derived<BaseFooterButton[]>(
-    parseFooterMarkup(pg.footer) ?? [{ variant: 'primary', label: i18n.t('common.ok') }],
-  )
 
   function clearPlayground() {
     pg = structuredClone(INITIAL)
@@ -164,8 +153,6 @@
       closeLabelOn: pg.closeLabelOn,
       header: headerMarkup,
       headerOn: pg.headerOn,
-      footer: footerMarkup,
-      footerOn: pg.footerOn,
     }),
   )
 
@@ -201,23 +188,6 @@
     textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes for the dialog panel.', value: pg.className, onChange: v => (pg.className = v), editorDefaultValue: '', clearable: true, enabled: pg.classNameOn, setEnabled: v => (pg.classNameOn = v) }),
     textField({ name: 'closeLabel', type: 'string?', defaultValue: 'locale', note: 'Overrides the close accessible name.', value: pg.closeLabel, onChange: v => (pg.closeLabel = v), clearable: true, enabled: pg.closeLabelOn, setEnabled: v => (pg.closeLabelOn = v) }),
     snippetField({
-      name: 'footer',
-      note: 'Fixed action row below the body; one Buttons block of plain-label Button lines, committing applies it. Demo buttons dismiss.',
-      value: footerMarkup,
-      onChange: (draft: string) => {
-        const parsed = parseFooterMarkup(draft)
-        if (!parsed) return
-        const normalized = buildFooterLines(parsed)
-        pg.footer = normalized === canonicalFooter ? '' : normalized
-        pg.footerOn = true
-      },
-      dialog: snippetDialog(
-        parseFooterMarkup,
-        'Use a <Buttons align="right"> block of <Button variant="…">Label</Button> lines; a missing variant reads as the Button default.',
-      ),
-      toggle: snippetToggle(pg.footerOn, enabled => (pg.footerOn = enabled)),
-    }),
-    snippetField({
       name: 'header',
       note: 'Copyable title heading; one Copyable line, committing applies it. The plain title keeps rendering while off.',
       value: headerMarkup,
@@ -247,16 +217,6 @@
   <Copyable text={headerContent.text}><span>{headerContent.inner}</span></Copyable>
 {/snippet}
 
-{#snippet dialogFooter()}
-  <Buttons align="right">
-    {#each footerButtons as button}
-      <Button variant={button.variant ?? undefined} onClick={() => (pg.open = false)}>
-        {button.label}
-      </Button>
-    {/each}
-  </Buttons>
-{/snippet}
-
 <ShowcasePage
     {fields}
     title="BaseDialog"
@@ -277,7 +237,6 @@
       <BaseDialog
         title={demoTitle}
         header={pg.headerOn ? dialogHeader : undefined}
-        footer={pg.footerOn ? dialogFooter : undefined}
         closeLabel={demoCloseLabel}
         className={pg.classNameOn && pg.className ? pg.className : undefined}
         widthVariant={demoWidthVariant}
