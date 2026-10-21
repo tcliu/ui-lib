@@ -105,6 +105,11 @@ const EXCEPTIONS = [
     'src/lib/components/EditableText.svelte',
     'project-catalog has an in-flight EditableText rewrite; the file is unreferenced until that work lands',
   ],
+  [
+    'project-catalog',
+    'src/lib/text-size.ts',
+    'project-catalog has an in-flight EditableText rewrite; the module it imports is unreferenced until that work lands',
+  ],
 ]
 const globalExceptions = new Set(EXCEPTIONS.filter(entry => entry.length === 2).map(([p]) => p))
 const appExceptions = EXCEPTIONS.filter(entry => entry.length === 3)
