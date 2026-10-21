@@ -12,6 +12,9 @@ function state(overrides: Partial<ButtonsSnippetState> = {}): ButtonsSnippetStat
     alignOn: true,
     className: '',
     classNameOn: false,
+    size: 'md',
+    sizeOn: false,
+    buttonSize: 'md',
     children: '',
     childrenEnabled: true,
     ...overrides,
@@ -57,6 +60,63 @@ describe('buildButtonsSnippet', () => {
   it('emits the stacked class override', () => {
     const source = buildButtonsSnippet(state({ className: STACKED_CLASS, classNameOn: true }))
     expect(source).toContain('className="flex flex-col items-start gap-1"')
+  })
+
+  it('emits the chosen size', () => {
+    const source = buildButtonsSnippet(state({ size: 'lg', sizeOn: true }))
+    expect(source).toContain('<Buttons size="lg">')
+  })
+
+  it('emits a numeric size as an expression', () => {
+    const source = buildButtonsSnippet(state({ size: '20', sizeOn: true }))
+    expect(source).toContain('<Buttons size={20}>')
+  })
+
+  it('omits the default size (the Value column prefills it)', () => {
+    const source = buildButtonsSnippet(state({ size: 'md', sizeOn: true }))
+    expect(source).toContain('<Buttons>')
+    expect(source).not.toContain('size=')
+  })
+
+  it('omits the staged size while its eye is off', () => {
+    const source = buildButtonsSnippet(state({ size: 'lg', sizeOn: false }))
+    expect(source).not.toContain('size=')
+  })
+
+  it('drops the size when className takes over', () => {
+    const source = buildButtonsSnippet(state({ size: 'lg', sizeOn: true, className: STACKED_CLASS, classNameOn: true }))
+    expect(source).not.toContain('size=')
+    expect(source).toContain(`className="${STACKED_CLASS}"`)
+  })
+
+  it('emits the button size on every button of the canonical pair', () => {
+    const source = buildButtonsSnippet(state({ buttonSize: 'lg' }))
+    expect(source).toContain('<Button size="lg" variant="primary">{okLabel}</Button>')
+    expect(source).toContain('<Button size="lg" variant="outline">{cancelLabel}</Button>')
+  })
+
+  it('emits a numeric button size as an expression', () => {
+    const source = buildButtonsSnippet(state({ buttonSize: '20' }))
+    expect(source).toContain('<Button size={20} variant="primary">')
+  })
+
+  it('omits the button size while it is unset or at the default', () => {
+    expect(buildButtonsSnippet(state())).not.toContain('size=')
+    expect(buildButtonsSnippet(state({ buttonSize: 'md' }))).not.toContain('size=')
+    expect(buildButtonsSnippet(state({ buttonSize: '' }))).not.toContain('size=')
+  })
+
+  it('injects the button size into custom children', () => {
+    const source = buildButtonsSnippet(
+      state({ buttonSize: 'lg', children: '<Button variant="primary">Create</Button>\n<Button>Reset</Button>' }),
+    )
+    expect(source).toContain('<Button size="lg" variant="primary">Create</Button>')
+    expect(source).toContain('<Button size="lg">Reset</Button>')
+  })
+
+  it('leaves custom children untouched without a button size', () => {
+    const source = buildButtonsSnippet(state({ buttonSize: '', children: '<Button variant="primary">Create</Button>' }))
+    expect(source).toContain('<Button variant="primary">Create</Button>')
   })
 
   it('stages the className override until applied', () => {

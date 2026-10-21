@@ -305,6 +305,61 @@ test('showcase: the Buttons children editor updates the demo and snippet', async
   await expect(page.getByRole('dialog')).toHaveCount(0)
 })
 
+// The Buttons size row drives the gap between the demo's buttons and lands in
+// the snippet, so Show-code reproduces the demo.
+test('showcase: the Buttons size Value cell scales the gap and lands in the snippet', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.goto('/components/buttons')
+  await page.waitForLoadState('networkidle')
+  const demo = page.locator('[data-showcase-demo]').first()
+  // The row carries `shrink-0`; nothing else in the demo does.
+  const row = demo.locator('div.shrink-0').first()
+
+  // md = 16px dimension → the gap-2 step (8px).
+  await expect(row).toHaveCSS('row-gap', '8px')
+
+  await page.getByRole('combobox', { name: 'size value' }).click()
+  await page.getByRole('option', { name: 'lg' }).click()
+
+  // lg = 18px dimension → a 9px gap.
+  await expect(row).toHaveCSS('row-gap', '9px')
+
+  await page.locator('main header').getByRole('button', { name: 'Show code' }).click()
+  await expect(page.locator('main .cm-content').first()).toBeVisible()
+  expect(await editorContains(page, page.locator('main'), 'size="lg"')).toBe(true)
+})
+
+// The Buttons config-panel size preset drives the row's gap and the size of
+// every button in it, and both land in the snippet.
+test('showcase: the Buttons size preset scales the row and its buttons', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.goto('/components/buttons')
+  await page.waitForLoadState('networkidle')
+  const demo = page.locator('[data-showcase-demo]').first()
+  // The row carries `shrink-0`; nothing else in the demo does.
+  const row = demo.locator('div.shrink-0').first()
+
+  // The preset starts on the md step.
+  await expect(page.getByRole('combobox', { name: 'Size', exact: true })).toHaveValue('md')
+
+  // md = 16px dimension → the gap-2 step (8px) and a 13px button label.
+  await expect(row).toHaveCSS('row-gap', '8px')
+  await expect(demo.getByRole('button', { name: 'OK', exact: true })).toHaveCSS('font-size', '13px')
+
+  await page.getByRole('combobox', { name: 'Size', exact: true }).click()
+  await page.getByRole('option', { name: 'lg' }).click()
+
+  // lg = 18px dimension → a 9px gap and a 14.6px button label.
+  await expect(row).toHaveCSS('row-gap', '9px')
+  await expect(demo.getByRole('button', { name: 'OK', exact: true })).toHaveCSS('font-size', '14.625px')
+
+  // The snippet carries the size on the row and on each button.
+  await page.locator('main header').getByRole('button', { name: 'Show code' }).click()
+  await expect(page.locator('main .cm-content').first()).toBeVisible()
+  expect(await editorContains(page, page.locator('main'), '<Buttons size="lg">')).toBe(true)
+  expect(await editorContains(page, page.locator('main'), '<Button size="lg" variant="primary">')).toBe(true)
+})
+
 // The header Reset (after the code toggle) restores every playground field to
 // unset, and the demo and editor stay pinned while the props table scrolls.
 test('showcase: the header Reset clears the Button playground', async ({ page, context }) => {

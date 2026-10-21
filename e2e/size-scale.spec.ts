@@ -135,3 +135,21 @@ test('numeric size scales the SelectDropdown trigger by a constant ratio', async
     expect(row.minWidth / size).toBeCloseTo(7, 2)
   })
 })
+
+test('numeric size scales the Buttons gap by a constant ratio', async ({ page }) => {
+  const snippet = [
+    '<div class="flex flex-col items-start gap-2">',
+    ...SIZES.map(s => `  <Buttons size={${s}}><Button>a</Button><Button>b</Button></Buttons>`),
+    '</div>',
+  ].join('\n')
+  // The row carries `shrink-0`; nothing else in the demo does.
+  await applySnippet(page, '/components/buttons', snippet, SIZES.length, 'div.shrink-0')
+
+  const gaps = await page
+    .locator('[data-showcase-demo] div.shrink-0')
+    .evaluateAll(nodes => nodes.map(node => parseFloat(getComputedStyle(node).rowGap)))
+  expect(gaps).toHaveLength(SIZES.length)
+  gaps.forEach((gap, i) => {
+    expect(gap / SIZES[i]!).toBeCloseTo(0.5, 2)
+  })
+})

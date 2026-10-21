@@ -3,6 +3,7 @@ import { flushSync, mount, unmount } from 'svelte'
 import AutoComplete from '../AutoComplete.svelte'
 import BarChart from '../BarChart.svelte'
 import Button from '../Button.svelte'
+import Buttons from '../Buttons.svelte'
 import Chip from '../Chip.svelte'
 import DateInput from '../DateInput.svelte'
 import FormField from '../FormField.svelte'
@@ -92,6 +93,11 @@ const CASES: ComponentCase[] = [
     name: 'Button',
     keys: ['btn-font', 'btn-line', 'btn-radius', 'btn-pad-x', 'btn-pad-y', 'btn-icon', 'btn-icon-pad', 'btn-glyph'],
     render: size => renderStyle(Button, { size }),
+  },
+  {
+    name: 'Buttons',
+    keys: ['buttons-gap'],
+    render: size => renderStyle(Buttons, { size }),
   },
   {
     name: 'Menu',

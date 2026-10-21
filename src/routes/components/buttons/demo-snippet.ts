@@ -3,6 +3,7 @@
 // the editor always shows the markup behind the demo above.
 
 import { escapeRawLine } from '$lib/showcase/snippet-build'
+import { sizeAttributeFragment } from '$lib/showcase/size-input'
 
 export type ButtonsButtonVariant = 'primary' | 'secondary' | 'danger' | 'outline' | 'ghost'
 
@@ -13,6 +14,12 @@ export interface ButtonsSnippetState {
   alignOn: boolean
   className: string
   classNameOn: boolean
+  // The row's scale (a step name or a pixel number); empty is the `md` default.
+  size: string
+  sizeOn: boolean
+  // The size every button in the row takes (demo data: the buttons are the
+  // page's own markup, so the size rides them, not the row).
+  buttonSize: string
   // Raw children markup committed from the row's code dialog; empty renders
   // the canonical pair below.
   children: string
@@ -100,13 +107,28 @@ export function normalizeButtonsDraft(draft: string): string {
 // for compilation; `<`/`{` cannot appear (validation rejects them), and the
 // tags themselves carry no `&`.
 
-export function buildButtonsSnippet({ align, alignOn, className, classNameOn, children, childrenEnabled }: ButtonsSnippetState): string {
+// The size every button in the row takes rides each button, not the row: the
+// buttons are the page's own markup, so the `Buttons` prop cannot reach them.
+// The attribute is injected after the `<Button` tag, where it stays a plain
+// attribute; `<Buttons` never appears in a committed draft (validation
+// rejects it), so the lookahead keeps the tag boundary exact.
+function withButtonSize(children: string, sizeAttr: string): string {
+  if (!sizeAttr) return children
+  return children.replace(/<Button(?=[\s>])/g, `<Button${sizeAttr}`)
+}
+
+export function buildButtonsSnippet({ align, alignOn, className, classNameOn, size, sizeOn, buttonSize, children, childrenEnabled }: ButtonsSnippetState): string {
   // A custom className replaces the default row, so align is omitted with it.
   const appliedClassName = classNameOn && className ? className : ''
   const attrs = [
     ...(!appliedClassName && alignOn && align && align !== 'left' ? [` align="${align}"`] : []),
+    // The size drives the row's gap, which the custom className replaces too.
+    ...(!appliedClassName && sizeOn && size !== '' && size !== 'md' ? [sizeAttributeFragment(size)] : []),
     ...(appliedClassName ? [` className="${appliedClassName}"`] : []),
   ].join('')
+  // The buttons' own size is a separate knob: it rides each button, and the
+  // `md` default is left implicit (a button at its default carries no size).
+  const buttonSizeAttr = buttonSize && buttonSize !== 'md' ? sizeAttributeFragment(buttonSize) : ''
   // The eye toggle off means no children are applied: the layout renders empty.
   // Otherwise custom children emit verbatim; unset, the pair reads the localized
   // defaults from scope. `buildSource` drops the same-named scope key once
@@ -114,7 +136,12 @@ export function buildButtonsSnippet({ align, alignOn, className, classNameOn, ch
   const childLines = !childrenEnabled
     ? []
     : children
-      ? children.split('\n').map(line => (line ? `  ${escapeRawLine(line)}` : line))
-      : ['  <Button variant="primary">{okLabel}</Button>', '  <Button variant="outline">{cancelLabel}</Button>']
+      ? withButtonSize(children, buttonSizeAttr)
+          .split('\n')
+          .map(line => (line ? `  ${escapeRawLine(line)}` : line))
+      : [
+          `  <Button${buttonSizeAttr} variant="primary">{okLabel}</Button>`,
+          `  <Button${buttonSizeAttr} variant="outline">{cancelLabel}</Button>`,
+        ]
   return [`<Buttons${attrs}>`, ...childLines, '</Buttons>'].join('\n')
 }
