@@ -1,11 +1,11 @@
 <script lang="ts">
   import { resolveIconPx, type IconSizeInput } from './icon-size'
-  import { CHEVRON_STYLE, type ChevronVariant } from './chevron-stroke'
+  import { DOUBLE_CHEVRON_STYLE, type DoubleChevronVariant } from './icon-variants'
 
   interface Props {
     className?: string
     size?: IconSizeInput
-    variant?: ChevronVariant
+    variant?: DoubleChevronVariant
   }
 
   // Width/height attributes (not classes) so `size` composes with `className`:
@@ -14,11 +14,11 @@
   // the set's lighter `regular` stroke and scaled as a pair so the ink fills the
   // box on the stacking axis; `variant` picks the treatment — regular by
   // default, bold a chunky flat-ended, sharp-apex pair whose inset artwork still
-  // fits the box.
+  // fits the box, heavy the full-extent pair whose two chevrons close up.
 
   let { className = '', size = 'md', variant = 'regular' }: Props = $props()
 
-  const style = $derived(CHEVRON_STYLE[variant])
+  const style = $derived(DOUBLE_CHEVRON_STYLE[variant])
 </script>
 
 <svg
@@ -34,7 +34,9 @@
   class={className}>
   {#if variant === 'regular'}
     <path d="M 1.4 3.4L 8 10L 1.4 16.6M 12 3.4L 18.6 10L 12 16.6" />
-  {:else}
+  {:else if variant === 'bold'}
     <path d="M 1.62 4.1L 7.52 10L 1.62 15.9M 10.92 4.1L 16.82 10L 10.92 15.9" />
+  {:else}
+    <path d="M 10 1.67L 17.41 10L 10 18.33M 2.59 1.67L 10 10L 2.59 18.33" />
   {/if}
 </svg>
