@@ -9,6 +9,8 @@
     size?: SizeInput
     palette?: readonly string[]
     chipClass?: string | ((tag: string) => string)
+    chipStyle?: (tag: string) => string | undefined
+    optionDotStyle?: (tag: string) => string | undefined
     onQueryChange?: (query: string) => void
     onChange?: (next: string[]) => void
   }
@@ -20,9 +22,21 @@
     size = 'md',
     palette,
     chipClass,
+    chipStyle,
+    optionDotStyle,
     onQueryChange,
     onChange,
   }: Props = $props()
 </script>
 
-<TagInput {value} {options} {disabled} {size} {palette} {chipClass} {onQueryChange} {onChange} />
+<TagInput
+  {value}
+  {options}
+  {disabled}
+  {size}
+  {palette}
+  {chipClass}
+  {chipStyle}
+  {optionDotStyle}
+  {onQueryChange}
+  {onChange} />

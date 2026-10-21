@@ -76,11 +76,21 @@ function openPanel(): void {
   flushSync()
 }
 
+// The chip's inner span, the parent of its remove button.
+function chipSpans(): HTMLElement[] {
+  return [...target.querySelectorAll('button[aria-label^="Remove "]')].map(
+    el => el.parentElement as HTMLElement,
+  )
+}
+
 // The colour class of each rendered chip (the Chip's inner span).
 function chipClasses(): string[] {
-  return [...target.querySelectorAll('span')]
-    .filter(el => el.className.includes('rounded-full'))
-    .map(el => el.className)
+  return chipSpans().map(el => el.className)
+}
+
+// The inline style of each rendered chip.
+function chipStyles(): string[] {
+  return chipSpans().map(el => el.getAttribute('style') ?? '')
 }
 
 describe('TagInput suggestions', () => {
@@ -233,5 +243,26 @@ describe('TagInput chip colours', () => {
   it('lets a function chipClass override the palette per tag', () => {
     render({ value: ['svelte'], options: [], chipClass: () => 'text-amber-200' })
     expect(chipClasses()[0]).toContain('text-amber-200')
+  })
+
+  it('lets a caller chipClass own the whole chip class string', () => {
+    render({ value: ['svelte'], options: [], chipClass: 'rounded-md border' })
+    expect(chipClasses()[0]).toContain('rounded-md')
+    expect(chipClasses()[0]).not.toContain('rounded-full')
+  })
+
+  it('applies the caller chip style to the chip', () => {
+    render({ value: ['svelte'], options: [], chipStyle: () => 'color: rgb(1, 2, 3)' })
+    expect(chipStyles()[0]).toContain('color: rgb(1, 2, 3)')
+  })
+
+  it('renders the caller dot style before the option label', () => {
+    render({ value: [], options: ['svelte'], optionDotStyle: () => 'background-color: rgb(1, 2, 3)' })
+    openPanel()
+    const row = document.querySelector('[role=listbox] [role=option]')
+    const dot = row?.querySelector('span.rounded-full')
+    expect(dot?.getAttribute('style')).toContain('background-color: rgb(1, 2, 3)')
+    // The label keeps the row's own text, so the dot never replaces it.
+    expect(row?.textContent?.trim()).toBe('svelte')
   })
 })

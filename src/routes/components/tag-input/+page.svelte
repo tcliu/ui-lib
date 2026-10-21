@@ -139,7 +139,7 @@
       onChange: value => (pg.chipPrefix = value),
       toggle: snippetToggle(pg.chipOn, enabled => (pg.chipOn = enabled)),
     }),
-    textField({ name: 'chipClass', type: 'string | ((tag: string) => string)?', defaultValue: '—', note: 'Chip classes; a string applies to all, a function overrides per tag (wins over the palette).', value: pg.chipClass, onChange: v => (pg.chipClass = v), clearable: true, enabled: pg.chipClassOn, setEnabled: v => (pg.chipClassOn = v) }),
+    textField({ name: 'chipClass', type: 'string | ((tag: string) => string)?', defaultValue: '—', note: 'Chip classes; a string applies to all, a function overrides per tag (wins over the palette) and owns the whole class string, shape included.', value: pg.chipClass, onChange: v => (pg.chipClass = v), clearable: true, enabled: pg.chipClassOn, setEnabled: v => (pg.chipClassOn = v) }),
     textField({ name: 'clearLabel', type: 'string?', defaultValue: "'Clear tags'", note: 'Accessible name for the clear button.', value: pg.clearLabel, onChange: v => (pg.clearLabel = v), editorDefaultValue: 'Clear tags', clearable: true, placeholder: 'Clear tags', enabled: pg.clearLabelOn, setEnabled: v => (pg.clearLabelOn = v) }),
     enumField({ name: 'clearPlacement', type: "'auto' | 'inside' | 'outside'", defaultValue: "'auto'", note: 'Inside overlays the box edge; outside sits after it; auto renders inside with the tags.', options: clearPlacementOptions, value: pg.clearPlacement, onChange: v => (pg.clearPlacement = v), placeholder: 'auto', clearLabel: 'Clear placement', enabled: pg.clearPlacementOn, setEnabled: v => (pg.clearPlacementOn = v) }),
     boolField({ name: 'clearable', defaultValue: 'false', note: 'Appends a cross button that resets the tags to the default value.', value: pg.clearable, onChange: v => (pg.clearable = v as TriState), enabled: pg.clearableOn, setEnabled: v => (pg.clearableOn = v) }),
@@ -208,6 +208,7 @@
       toggle: snippetToggle(pg.valueEnabled, enabled => (pg.valueEnabled = enabled)),
       sync: { kind: 'scriptJson', parseJson: parseTagListValue, setJson: value => (pg.value = value as typeof pg.value) },
     }),
+    { name: 'chipStyle', type: '(tag: string) => string | undefined', defaultValue: '—', note: 'Inline style per tag for the chip; the caller owns the colour treatment.' },
     { name: 'onChange', type: '(next: string[]) => void', defaultValue: '—', note: 'Called with the new tag list.' },
     {
       name: 'onClear',
@@ -220,7 +221,8 @@
       type: '(query: string) => void',
       defaultValue: '—',
       note: 'Called on every keystroke; supply externally filtered options.',
-    }
+    },
+    { name: 'optionDotStyle', type: '(tag: string) => string | undefined', defaultValue: '—', note: 'Inline style for the dot before the option label; the dot itself is the component’s.' },
   ])
 
 </script>
