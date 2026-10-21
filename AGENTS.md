@@ -68,6 +68,9 @@ Project-specific development conventions for the UI Library web app.
 - Keep the `DataGrid` ARIA grid pattern and its documented scoped
   `svelte-ignore` comment; never add another `a11y_*` suppression.
 - Never combine `align` with `className` on `Buttons`: the custom class replaces the default row and drops `align`; spell the row out (`flex w-full … justify-end`).
+- `Buttons` takes the shared `size` axis for the gap between its buttons (its
+  only metric); the buttons keep the size the caller gives them, and a custom
+  `className` replaces the row, dropping the gap with it.
 - The `AppShell` aside carries no padding; left-pane content owns its spacing.
 - `AppShell` pane presentation derives from one container-measured `floating`
   boolean, never viewport breakpoint classes; docked and floating are the only
@@ -95,8 +98,14 @@ Project-specific development conventions for the UI Library web app.
   directly in it, already normalized to fill the box (dominant axis, centered)
   on the 0.01 unit step, so every square icon renders at a consistent size per
   `size` value and no per-icon `<g transform>` fit sits between artwork and
-  grid; the caret pair keeps its non-square crop. Mechanism in
-  `ARCHITECTURE.md`.
+  grid; the caret pair keeps its non-square crop. A glyph ported in from
+  another project is re-normalized on the way in: its artwork reaches at least
+  two edges of the box (the space is clipped, not padded around), so it reads
+  at the set's weight. Mechanism in `ARCHITECTURE.md`.
+- A glyph that renders a concept the set already has takes that glyph's
+  `variant` rather than a second file; its variants and stroke treatments live
+  in the shared variant registry, which the icon viewport spec reads. Mechanism
+  in `ARCHITECTURE.md`.
 - Reuse this project's existing UI primitives; every button is the shared
   `Button` (icon-only through its `icon` snippet) per
   `~/.agents/references/ui-patterns.md`, never a raw `<button>`.
@@ -134,6 +143,7 @@ Project-specific development conventions for the UI Library web app.
   from a close existing one; the add-a-page checklist is in `ARCHITECTURE.md`
   (Showcase component pages).
 - The Icons page indexes the whole set: every glyph under `src/lib/icons` gets an entry, in name order, so a directory-parity spec fails when one is missing.
+- The variant playground control offers every registered variant; a glyph takes the chosen one only when it carries it, and the rest keep their default.
 - Every page uses the converted shell so the props table drives the live demo, and is listed in `CONVERTED_PAGE_SLUGS`; shape in `ARCHITECTURE.md`.
 - Converted-page props table: list editable props first (primitives, data, snippets, A–Z), then function props (A–Z); a function prop or object carrying functions stays read-only.
 - Every Snippet-typed prop is editable through the markup dialog; demo data with no prop row lives in the settings panel. Mechanism in `ARCHITECTURE.md`.
@@ -156,6 +166,7 @@ Project-specific development conventions for the UI Library web app.
 - Before closing a props-table task, re-audit all rows, not just the requested type: every editor-less primitive-typed row is made editable or its read-only reason recorded.
 - A playground preset that derives other props fills their panel fields from the shared builder constants, so demo, Show-code, and live render stay identical.
 - Every `size` prop gets a settings-panel control.
+- A settings-panel control that drives several props at once is a preset: it writes them, so the props table mirrors it (the Buttons page's size sets the row's gap and every button's size).
 - Wide and container-sensitive demos follow the stage rules in `ARCHITECTURE.md`; a demo frame carries no inline-start or top padding, matching the settings panel's left edge.
 - A stage frame clips with the shared clip margin, never at its edge, so a flush control keeps its focus ring or border.
 - The stage's resize handles stay out of the tab order.

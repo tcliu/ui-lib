@@ -127,8 +127,9 @@ Server endpoint (api/info/+server.ts via src/lib/server/card.ts)
   filtering, and value commit. The aria-activedescendant surfaces render
   `use-active-highlight` flags; `Menu` focuses the active item instead.
   `SelectDropdown`, `TagInput`, and `AutoComplete` share the panel chrome through
-  `ListboxPanel.svelte` (positioning, option rows, empty row, and the `option`
-  snippet for row content).
+  `ListboxPanel.svelte` (positioning, option rows, empty row, the `leading`
+  element rendered before the default label, and the `option` snippet for row
+  content).
 - **Thin routes** — `+page.svelte` is mostly declarative markup; all logic
   lives in composables and `page/` helpers.
 - **Theme system** — themes are CSS variable overrides in `src/styles.css`
@@ -224,6 +225,23 @@ of building a parallel control.
   that drives live interaction state (its setter ignores blank input —
   pagination `currentPage`/`pageSize`/`total`, resizable `width`, splitter
   `value`) stays non-clearable.
+- **Button** — the canonical button: `variant` (`primary`, `secondary`,
+  `danger`, `outline`, `ghost`), `size` on the shared axis, an `icon` snippet for
+  an icon-only control, and `className` for the caller's own additions. An
+  icon-only button (`icon` with no children) takes its box from the icon
+  metrics alone, so it matches a text button's row height; `pending` disables
+  the button and marks it `aria-busy` for assistive tech, so a caller never
+  hand-writes that state. A `className` adds utilities; it never restates a
+  variant utility: the button's own classes win on source order, so an
+  override reads as applied while changing nothing — a state the button already
+  models (`aria-pressed`) is styled through a state variant instead.
+- **Buttons** — the row that lays out a set of buttons: `align` (`left`,
+  `center`, `right`) positions the default row, `size` on the shared axis drives
+  the gap between the buttons, and `className` replaces the default layout
+  classes — dropping `align` and the size-driven gap with them, so the caller
+  owns the whole row. The gap is the row's only metric (a fixed ratio of the
+  size dimension, so `md` lands on the `gap-2` step (8px)), and the buttons
+  keep the size the caller gives them.
 - **Size metrics** — a sized component exposes one numeric size dimension;
   `xs`–`xl` are aliases of the shared `SIZE_PX` axis (`xs:12 … xl:20`). Every
   metric scales by a fixed ratio of that dimension (`metric = ratio ×
@@ -275,12 +293,18 @@ of building a parallel control.
   gap (and the remove cross) from the dimension, leaving `chipClass` to carry
   color and the static pill's shape. `FormField` scales its label, gaps, and
   inline label column; `Tabs` scales the nav and tab text, padding, and radius.
+  `Buttons` scales the gap between the buttons from the dimension.
   The date input shares one `PICKER_RATIOS` set (`date-input-core.ts`) covering
   the field's calendar gutter and the panel (width/padding, nav buttons, day
   cells, weekday and meta text); each field's own chrome is the input family's
   (`--input-*` from `TextInput`), so a date field sits level with a text field.
 - **Icon glyphs** — one glyph is one component: a single `aria-hidden` `<svg>`
-  sized by its `size`/`className` props, with no per-glyph style variant. Every
+  sized by its `size`/`className` props, with no per-glyph style variant. A
+  glyph whose concept the set already carries renders it through that glyph's
+  `variant` prop rather than through a second component; the variant names and
+  their stroke treatments live in `src/lib/icons/icon-variants.ts`, the registry
+  the icon viewport spec reads, so every rendering is checked on its own
+  geometry instead of against the union of the glyph's renderings. Every
   square glyph uses the one square viewBox (`0 0 20 20`) and authors its artwork
   directly in that grid: the glyph is normalized at authoring time to fill the
   box on the dominant axis (centered, no distortion, no empty edge, geometry on
@@ -288,7 +312,11 @@ of building a parallel control.
   transform>` fit stands between the artwork and the grid and
   `resolveIconPx(size)` maps to identical geometry for every icon; that resolver
   applies the shared `ICON_RATIO` (0.8125), so a viewBox-filling glyph still
-  lands at the optical size the components around it were tuned for. The `Caret*`
+  lands at the optical size the components around it were tuned for. A glyph
+  ported from another project is re-normalized on the way in: its artwork
+  reaches at least two edges of the box (the space is clipped, not padded
+  around), so a ported mark reads at the same weight as the set it joins rather
+  than floating inside its own frame. The `Caret*`
   family is the set's filled direction marker: the one triangle cropped tight to
   the arrow, 12×8 rendering two-thirds tall for up/down and 8×12 rendering
   two-thirds wide for left/right, used by the table sort pair (up/down) and by
@@ -322,10 +350,12 @@ of building a parallel control.
   narrow-viewport presentation.
 - **TagInput** — models `string[]` and colours tags from a built-in per-tag
   palette (override with `palette` or `chipClass`, whose function form overrides
-  per tag); an app with
-  a richer tag object maps it to `string[]` at the call site. It reports the
-  typed draft via `onQueryChange`, renders chips through `Chip`, and exports
-  `focus()`.
+  per tag and owns the whole chip class string, shape included); an app with
+  a richer tag object maps it to `string[]` at the call site and supplies the
+  per-tag colour through `chipStyle` (the chip) and `optionDotStyle` (the dot
+  before the option label), keeping its own colour model out of the markup. It
+  reports the typed draft via `onQueryChange`, renders chips through `Chip`, and
+  exports `focus()`.
 - **DateInput** — one control for a date or a date-time, single or a range:
   `DateInput` composes the fields (`DateField` owns the field chrome and the
   portalled panel, over `use-calendar-grid.svelte.ts` for the visible month,
@@ -405,7 +435,11 @@ of building a parallel control.
   `variant="docs"` swaps the viewer chrome for the static docs chrome.
   `bordered={false}` drops the viewer/split container chrome for borderless
   embedding. `FieldTable` rides on `DataTable` to render `FieldConfig[]`
-  props tables, so docs and viewer share one table.
+  props tables, so docs and viewer share one table. Its dialog-backed rows
+  open an *action* dialog (not `FormDialog`): the editor's primary applies
+  the content, so it stays enabled while the content is valid — confirming the
+  unchanged seeded content is still the intended action — and dismissing the
+  editor mutates nothing.
 - **Resizable** — two-axis resize: `width` + `height` plus `onResize(width, height)`,
   bounds via `minWidth`/`minHeight`/`maxWidth`/`maxHeight`, and three
   invisible cursor-only handles. Every drag and key nudge reports whole pixels
@@ -479,11 +513,18 @@ of building a parallel control.
   container-equivalent values, capped by the panel's own `max-h-[90vh]`. A
   `ConfirmDialog`'s confirm-button scale is `buttonSize`, distinct from the
   panel `size`. `BaseDialog` composes the panel as fixed header, scrolling
-  body, fixed footer: the optional `header`/`footer` snippets render in the
-  pinned regions (the header region still labels the dialog; `title` renders
-  the default heading when no header is passed), while `children` scrolls
-  between them. `EditDialog` forwards `header` and renders its action row
-  through `footer` (the form keeps wrapping the body so Enter still submits);
+  body: the optional `header` snippet renders in the pinned header region (the
+  region still labels the dialog; `title` renders the default heading when no
+  header is passed), while `children` scrolls between it. The action row is
+  part of the content, not a panel region: a dialog that keeps its row visible
+  composes it as a `flex-none` sibling of its own scroll area, which is what
+  `ConfirmDialog` and `FormDialog` do. `FormDialog` forwards `header`, wraps the
+  body in a `<form>` (so Enter still submits), and owns the action row: the
+  built-in save/reset pair, extra `actions` buttons before it, or a caller
+  `footer` that replaces the pair — the footer renders inside the form, so a
+  `type="submit"` button in it submits the form. Its discard confirm takes
+  `confirmOnDismiss` — with it the confirm's own dismissal performs the
+  discard, without it the dismissal returns to the form with the draft intact.
   `ConfirmDialog` renders its message as the body with the confirm row in
   `footer`.
 - **i18n** — a primitive resolves its label as `$derived(prop ?? i18n.t('key'))`
