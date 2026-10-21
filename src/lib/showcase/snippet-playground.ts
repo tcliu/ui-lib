@@ -24,7 +24,7 @@ import DataGrid from '$lib/components/DataGrid.svelte'
 import DataTable from '$lib/components/DataTable.svelte'
 import DateInput from '$lib/components/DateInput.svelte'
 import EditableText from '$lib/components/EditableText.svelte'
-import EditDialog from '$lib/components/EditDialog.svelte'
+import FormDialog from '$lib/components/FormDialog.svelte'
 import FieldTable from '$lib/components/FieldTable.svelte'
 import FormField from '$lib/components/FormField.svelte'
 import LazyCodeEditor from '$lib/components/LazyCodeEditor.svelte'
@@ -129,7 +129,7 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/DataTable.svelte': { default: DataTable },
   'ui/DateInput.svelte': { default: DateInput },
   'ui/EditableText.svelte': { default: EditableText },
-  'ui/EditDialog.svelte': { default: EditDialog },
+  'ui/FormDialog.svelte': { default: FormDialog },
   'ui/FieldTable.svelte': { default: FieldTable },
   'ui/FormField.svelte': { default: FormField },
   'ui/LazyCodeEditor.svelte': { default: LazyCodeEditor },

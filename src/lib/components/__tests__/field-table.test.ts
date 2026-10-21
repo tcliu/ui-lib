@@ -343,7 +343,7 @@ describe('FieldTable', () => {
     }
   })
 
-  it('opens a dialog row and keeps OK disabled until the draft changes', () => {
+  it('opens a dialog row whose OK applies the seeded value', () => {
     const onChange = vi.fn()
     const table = render(fields({ options: { value: '["a"]', onChange } }))
     const button = table.querySelector('button[aria-label="Edit options"]') as HTMLButtonElement
@@ -351,13 +351,13 @@ describe('FieldTable', () => {
     flushSync()
     expect(document.body.textContent).toContain('Edit options')
     const ok = [...document.querySelectorAll('button')].find(b => b.textContent?.trim() === 'OK') as HTMLButtonElement
-    // The dialog is seeded with the stored value, so there is nothing to
-    // persist yet: the shared dialog contract keeps OK disabled on a clean
-    // draft, and a clean draft must not reach the change handler.
-    expect(ok.disabled).toBe(true)
+    // The editor is an action dialog: its OK applies the content, and
+    // confirming the unchanged content is still the intended action, so the
+    // primary stays enabled while the content is valid.
+    expect(ok.disabled).toBe(false)
     ok.click()
     flushSync()
-    expect(onChange).not.toHaveBeenCalled()
+    expect(onChange).toHaveBeenCalledWith('["a"]')
   })
 
   it('derives JSON validity by default and blocks OK on invalid JSON', () => {

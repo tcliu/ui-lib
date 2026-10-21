@@ -21,7 +21,7 @@ export const SHOWCASE_COMPONENTS: ShowcaseComponent[] = [
   { slug: 'data-grid', name: 'DataGrid' },
   { slug: 'data-table', name: 'DataTable' },
   { slug: 'date-input', name: 'DateInput' },
-  { slug: 'edit-dialog', name: 'EditDialog' },
+  { slug: 'form-dialog', name: 'FormDialog' },
   { slug: 'editable-text', name: 'EditableText' },
   { slug: 'field-table', name: 'FieldTable' },
   { slug: 'form-field', name: 'FormField' },
@@ -57,7 +57,7 @@ export const SHOWCASE_COMPONENT_GROUPS: Record<string, readonly string[]> = {
   // Chip and tag editing surfaces.
   tags: ['chip', 'tag-input', 'chip-dropdown'],
   // Modal dialogs.
-  dialogs: ['base-dialog', 'confirm-dialog', 'edit-dialog'],
+  dialogs: ['base-dialog', 'confirm-dialog', 'form-dialog'],
   // Form inputs.
   inputs: ['number-input', 'search-input', 'text-input', 'autocomplete', 'textarea', 'password-input', 'editable-text', 'form-field', 'tag-input', 'checkbox'],
   // Click/action affordances.

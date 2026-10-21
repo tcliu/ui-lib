@@ -1,10 +1,10 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
-  import type BaseDialog from './BaseDialog.svelte'
+  import BaseDialog from './BaseDialog.svelte'
+  import Buttons from './Buttons.svelte'
   import Button, { iconOnlyBoxPx } from './Button.svelte'
   import Checkbox from './Checkbox.svelte'
   import DataTable, { type DataTableColumn } from './DataTable.svelte'
-  import EditDialog from './EditDialog.svelte'
   import LazyCodeEditor from './LazyCodeEditor.svelte'
   import NumberInput from './NumberInput.svelte'
   import SelectDropdown from './SelectDropdown.svelte'
@@ -466,32 +466,40 @@
   fillHeight />
 
 {#if dialogField}
-  <EditDialog
+  <!-- An action dialog, not a form dialog: the editor's primary applies the
+       content, and confirming the unchanged content is still the intended
+       action (it commits the seeded canonical value). So the primary stays
+       enabled while the content is valid, and dismissing the editor mutates
+       nothing. -->
+  <BaseDialog
     title={dialogTitle}
     widthVariant={dialogWidthVariant}
     closeLabel={i18n.t('common.close')}
-    saveLabel={i18n.t('common.ok')}
-    resetLabel={i18n.t('common.reset')}
-    discardTitle={i18n.t('common.discardTitle')}
-    discardMessage={i18n.t('common.discardMessage')}
-    discardLabel={i18n.t('common.discard')}
-    dirty={dialogDirty}
-    saveDisabled={!dialogValid}
-    onSave={saveDialog}
-    onReset={() => (draft = dialogContent)}
-    onClose={closeDialog}>
-    <div class="flex min-h-0 flex-col gap-3">
-      <LazyCodeEditor
-        bind:content={draft}
-        docType={dialogDocType}
-        editorAriaLabel={`${dialogField.name} editor`}
-        containerClass={`${dialogHeightClass} overflow-hidden rounded-md border border-slate-700 bg-slate-950`}
-        editorClass="h-full" />
-      {#if !dialogValid && dialogInvalidMessage}
-        <p role="alert" class="rounded-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
-          {dialogInvalidMessage}
-        </p>
-      {/if}
+    onCancel={closeDialog}>
+    <div class="flex min-h-0 flex-1 flex-col">
+      <div class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
+        <LazyCodeEditor
+          bind:content={draft}
+          docType={dialogDocType}
+          editorAriaLabel={`${dialogField.name} editor`}
+          containerClass={`${dialogHeightClass} overflow-hidden rounded-md border border-slate-700 bg-slate-950`}
+          editorClass="h-full" />
+        {#if !dialogValid && dialogInvalidMessage}
+          <p role="alert" class="rounded-md border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
+            {dialogInvalidMessage}
+          </p>
+        {/if}
+      </div>
+      <div class="flex-none">
+        <Buttons align="right">
+          <Button variant="primary" accent="cyan" onClick={saveDialog} disabled={!dialogValid}>
+            {i18n.t('common.ok')}
+          </Button>
+          <Button variant="outline" onClick={() => (draft = dialogContent)} disabled={!dialogDirty}>
+            {i18n.t('common.reset')}
+          </Button>
+        </Buttons>
+      </div>
     </div>
-  </EditDialog>
+  </BaseDialog>
 {/if}

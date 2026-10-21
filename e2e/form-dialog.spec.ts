@@ -1,12 +1,12 @@
 import { expect, test } from '@playwright/test'
 import { replaceSnippet } from './helpers'
 
-test('showcase: the EditDialog children cell edits the body input through a dialog applied by the eye', async ({
+test('showcase: the FormDialog children cell edits the body input through a dialog applied by the eye', async ({
   page,
   context,
 }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
-  await page.goto('/components/edit-dialog')
+  await page.goto('/components/form-dialog')
   await page.waitForLoadState('networkidle')
 
   await page.getByRole('button', { name: 'Edit children' }).click()
@@ -45,8 +45,8 @@ test('showcase: the EditDialog children cell edits the body input through a dial
   await page.keyboard.press('Escape')
 })
 
-test('showcase: the EditDialog title Value cell edits the dialog heading', async ({ page }) => {
-  await page.goto('/components/edit-dialog')
+test('showcase: the FormDialog title Value cell edits the dialog heading', async ({ page }) => {
+  await page.goto('/components/form-dialog')
   await page.waitForLoadState('networkidle')
 
   await page.getByRole('textbox', { name: 'title value', exact: true }).fill('Custom heading')
@@ -55,12 +55,12 @@ test('showcase: the EditDialog title Value cell edits the dialog heading', async
   await page.keyboard.press('Escape')
 })
 
-test('showcase: the EditDialog actions cell edits footer buttons through a dialog applied by the eye', async ({
+test('showcase: the FormDialog actions cell edits footer buttons through a dialog applied by the eye', async ({
   page,
   context,
 }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
-  await page.goto('/components/edit-dialog')
+  await page.goto('/components/form-dialog')
   await page.waitForLoadState('networkidle')
 
   await page.getByRole('button', { name: 'Edit actions' }).click()
@@ -93,12 +93,12 @@ test('showcase: the EditDialog actions cell edits footer buttons through a dialo
   await page.keyboard.press('Escape')
 })
 
-test('showcase: the EditDialog header cell edits the Copyable title through a dialog applied by the eye', async ({
+test('showcase: the FormDialog header cell edits the Copyable title through a dialog applied by the eye', async ({
   page,
   context,
 }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
-  await page.goto('/components/edit-dialog')
+  await page.goto('/components/form-dialog')
   await page.waitForLoadState('networkidle')
 
   await page.getByRole('button', { name: 'Edit header' }).click()

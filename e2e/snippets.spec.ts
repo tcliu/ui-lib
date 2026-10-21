@@ -69,7 +69,7 @@ const CONVERTED_PAGE_SLUGS = [
   'data-grid',
   'data-table',
   'date-input',
-  'edit-dialog',
+  'form-dialog',
   'editable-text',
   'field-table',
   'form-field',

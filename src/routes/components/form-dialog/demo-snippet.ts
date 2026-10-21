@@ -1,4 +1,4 @@
-// Show-code source for the EditDialog demo section. Pure string building over
+// Show-code source for the FormDialog demo section. Pure string building over
 // the playground form state: the section regenerates the editor text from
 // this, so the editor always shows the markup behind the demo above.
 
@@ -8,7 +8,7 @@ import { buildHeaderLine, parseHeaderMarkup } from '$lib/showcase/snippet-header
 
 export type TriState = '' | 'yes' | 'no'
 
-export interface EditDialogSnippetState {
+export interface FormDialogSnippetState {
   widthVariant: string
   widthVariantOn: boolean
   heightVariant: string
@@ -17,6 +17,8 @@ export interface EditDialogSnippetState {
   sizeOn: boolean
   dirty: TriState
   dirtyOn: boolean
+  confirmOnDismiss: TriState
+  confirmOnDismissOn: boolean
   pending: TriState
   pendingOn: boolean
   saveDisabled: TriState
@@ -31,6 +33,11 @@ export interface EditDialogSnippetState {
   actions: string
   // The eye toggle off means no actions snippet is applied.
   actionsEnabled: boolean
+  // Raw footer markup committed from the row's code dialog; empty renders the
+  // built-in save/reset row.
+  footer: string
+  // The eye toggle off means the built-in row is used.
+  footerEnabled: boolean
   closeLabel: string
   closeLabelOn: boolean
   discardLabel: string
@@ -163,6 +170,12 @@ export function buildEditActionsMarkup({ label }: { label: string }): string {
   return `<Button variant="outline" type="button">${label || 'Format'}</Button>`
 }
 
+// Canonical footer markup: the caller's own action row, replacing the built-in
+// save/reset pair. A submit button inside it submits the form.
+export function buildEditFooterMarkup({ label }: { label: string }): string {
+  return `<Button variant="primary" type="submit">${label || 'Save'}</Button>`
+}
+
 // Normalize a committed actions draft for storage: one trimmed line.
 export function normalizeEditActionsDraft(draft: string): string {
   return draft
@@ -173,6 +186,8 @@ export function normalizeEditActionsDraft(draft: string): string {
 }
 
 const ACTIONS_RE = /^<Button variant="outline" type="button">([^<>{}]+)<\/Button>$/
+
+const FOOTER_RE = /^<Button variant="primary" type="submit">([^<>{}]+)<\/Button>$/
 
 // Parse the label out of validated actions markup, or null unless it is exactly
 // the single outline Button line the static demo can reproduce.
@@ -195,6 +210,26 @@ export function parseEditActionsMarkup(draft: string): string | null {
   return parseEditActionsLabel(normalized) === null ? null : normalized
 }
 
+// Parse the label out of validated footer markup, or null unless it is exactly
+// the single submit Button line the static demo can reproduce.
+export function parseEditFooterLabel(markup: string): string | null {
+  const match = normalizeEditActionsDraft(markup).match(FOOTER_RE)
+  if (!match || !match[1] || match[1].trim() === '') {
+    return null
+  }
+  return match[1]
+}
+
+// Parse an edited footer draft into the normalized markup to store, or null
+// unless it is exactly the single submit Button line above.
+export function parseEditFooterMarkup(draft: string): string | null {
+  const normalized = normalizeEditActionsDraft(draft)
+  if (normalized === '') {
+    return null
+  }
+  return parseEditFooterLabel(normalized) === null ? null : normalized
+}
+
 // A tri-state line: omitted while unset or at the component default, bare
 // while Yes, ={false} while No.
 function flagLine(name: string, value: TriState, def: TriState = ''): string[] {
@@ -213,7 +248,7 @@ function escapeActionsLabel(label: string): string {
   return label.replace(/&/g, '&amp;')
 }
 
-export function buildEditDialogSnippet({
+export function buildFormDialogSnippet({
   widthVariant,
   widthVariantOn,
   heightVariant,
@@ -222,6 +257,8 @@ export function buildEditDialogSnippet({
   sizeOn,
   dirty,
   dirtyOn,
+  confirmOnDismiss,
+  confirmOnDismissOn,
   pending,
   pendingOn,
   saveDisabled,
@@ -230,6 +267,8 @@ export function buildEditDialogSnippet({
   childrenEnabled,
   actions,
   actionsEnabled,
+  footer,
+  footerEnabled,
   closeLabel,
   closeLabelOn,
   discardLabel,
@@ -246,7 +285,7 @@ export function buildEditDialogSnippet({
   titleOn,
   header,
   headerOn,
-}: EditDialogSnippetState): string {
+}: FormDialogSnippetState): string {
   // The body sits at 4 spaces, matching the dialog. Unset labels read the
   // localized defaults from scope, so customized text rides literals while the
   // cleared form applies no overrides. The eye toggle off means no body is
@@ -277,13 +316,24 @@ export function buildEditDialogSnippet({
     headerOn && header
       ? ['    {#snippet header()}', `      ${escapeActionsLabel(header)}`, '    {/snippet}']
       : []
+  // The footer snippet replaces the built-in save/reset row; it renders inside
+  // the form, so a submit button in it submits the form.
+  const footerLabel = footerEnabled ? (parseEditFooterLabel(footer) ?? 'Save') : null
+  const footerLines =
+    footerLabel === null
+      ? []
+      : [
+          `${bodyIndent}{#snippet footer()}`,
+          `${bodyIndent}  ${footer.split('\n').map(line => (line ? `    ${escapeRawLine(line)}` : line)).join('\n')}`,
+          `${bodyIndent}{/snippet}`,
+        ]
   const labelLine = (name: string, value: string, scopeRef: string, on: boolean): string =>
     value && on ? `${bodyIndent}${name}="${escapeAttr(value)}"` : `${bodyIndent}${name}={${scopeRef}}`
   return [
     '<Button variant="primary" onClick={() => (open = true)}>{openDialogLabel}</Button>',
     '',
     '{#if open}',
-    '  <EditDialog',
+    '  <FormDialog',
     labelLine('title', title, 'dialogTitle', titleOn),
     labelLine('closeLabel', closeLabel, 'closeLabel', closeLabelOn),
     labelLine('saveLabel', saveLabel, 'okLabel', saveLabelOn),
@@ -295,12 +345,20 @@ export function buildEditDialogSnippet({
     ...(heightVariantOn && heightVariant && heightVariant !== 'auto' ? [`    heightVariant="${heightVariant}"`] : []),
     ...(sizeOn && size ? [`    size="${size}"`] : []),
     ...(dirtyOn ? flagLine('dirty', dirty, 'no') : []),
+    ...(confirmOnDismissOn ? flagLine('confirmOnDismiss', confirmOnDismiss, 'no') : []),
     ...(pendingOn ? flagLine('pending', pending, 'no') : []),
     ...(saveDisabledOn ? flagLine('saveDisabled', saveDisabled, 'no') : []),
     '    onSave={() => (open = false)}',
     '    onReset={() => (draft = saved)}',
-    ...(childLines.length > 0 || actionLines.length > 0 || headerLines.length > 0
-      ? ['    onClose={() => (open = false)}>', ...actionLines, ...headerLines, ...childLines, '  </EditDialog>']
+    ...(childLines.length > 0 || actionLines.length > 0 || headerLines.length > 0 || footerLines.length > 0
+      ? [
+          '    onClose={() => (open = false)}>',
+          ...actionLines,
+          ...headerLines,
+          ...childLines,
+          ...footerLines,
+          '  </FormDialog>',
+        ]
       : ['    onClose={() => (open = false)} />']),
     '{/if}',
   ].join('\n')
