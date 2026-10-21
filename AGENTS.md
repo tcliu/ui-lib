@@ -105,6 +105,10 @@ Project-specific development conventions for the UI Library web app.
   icon carries no `size` and a trigger class never restates padding; the
   composite forwards the shared `size` axis to that button. Mechanism in
   `ARCHITECTURE.md`.
+- Icons and buttons take the shared default size: a call site never restates
+  the size step, and an icon inside a `Button`'s `icon` snippet carries no
+  `size` because the button's box sizes the glyph. Per
+  `~/.agents/references/ui-patterns.md` (Shared components).
 - Apply code changes in a separate branch and worktree under `.worktrees/` per `~/.agents/references/git.md`, unless the user opts for the current worktree.
 - Worktree deletion refuses targets with running processes; the explicit
   terminate-and-delete step (`--kill`) is in `ARCHITECTURE.md`.
