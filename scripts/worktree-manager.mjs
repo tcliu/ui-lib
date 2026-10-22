@@ -1308,7 +1308,14 @@ function scanDeprecated() {
 // terminal frozen on the dialog frame). Failures surface as status text.
 // Fire-and-forget: callers ignore the return, and every await sits inside the
 // try so a rejection can never escape as an unhandled rejection.
+// Re-entry guard: the dialog closes before the multi-second terminate await, so
+// a second delete could otherwise start while the first is still terminating
+// processes in the same paths.
+let deleteInFlight = false
+
 async function resolveConfirm(confirmed) {
+  // Ignore rather than queue a second confirm: it would race the same paths.
+  if (deleteInFlight) return
   const cfm = state.confirm
   state.mode = 'list'
   state.confirm = null
@@ -1316,6 +1323,7 @@ async function resolveConfirm(confirmed) {
     redraw()
     return
   }
+  deleteInFlight = true
   try {
     if (cfm.terminate) {
       state.status = `${c.yellow}Terminating processes…${c.reset}`
@@ -1339,6 +1347,8 @@ async function resolveConfirm(confirmed) {
     executeBatchDelete(cfm.rows)
   } catch (e) {
     state.status = `${c.red}Delete failed: ${e?.message ?? e}${c.reset}`
+  } finally {
+    deleteInFlight = false
   }
   redraw()
 }
