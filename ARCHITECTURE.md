@@ -36,6 +36,7 @@ ui-lib/
 │       ├── showcase/             # Showcase shell (ShowcasePage/ShowcaseStage, snippet playground, RelatedNav)
 │       ├── server/               # Server-only: SvelteKit keeps this out of the client bundle
 │       │   ├── card.ts           # Shared card contract (normalize + resolve)
+│       │   ├── cron-expression.ts # Shared cron parser (scheduler apps)
 │       │   ├── logging.ts        # Server-side structured event logging
 │       │   ├── log-format.mjs    # Shared log-line formatter (server runtime + scripts)
 │       │   ├── sql-rewrite.mjs   # Postgres→SQLite token rewrite (app runtime + scripts)
@@ -84,8 +85,9 @@ ui-lib/
    menus), the searchable component list, and the AppShell that separates them.
 
 2. **`src/lib/showcase-components.ts`** — the showcase index (`SHOWCASE_COMPONENTS`)
-   and browsing groups (`SHOWCASE_COMPONENT_GROUPS`); `/` redirects to the first
-   entry. Helpers in `src/lib/showcase/` (`ShowcasePage`, `SnippetPreview` +
+   and browsing groups (`SHOWCASE_COMPONENT_GROUPS`); `/` redirects to
+   `/components/base-dialog`. Helpers in `src/lib/showcase/` (`ShowcasePage`,
+   `SnippetPreview` +
    `snippet-playground.ts`, `FieldTable` rows) compose each page.
 
 ## Layering
@@ -485,7 +487,11 @@ of building a parallel control.
   `Button` cannot express (sort arrows, segmented page numbers, the row/column
   selectors, the live-rename affordances) stay raw `<button>`/`role="button"`
   elements per the ui-patterns inline-glyph exception; every other button is the
-  shared `Button`.
+  shared `Button`. Its sticky header and corner cells sit at `z-20`/`z-30`, above
+  the app ladder's `z-10` sticky step: the corner is painted last within the
+  grid's own stacking context, and lowering it to `z-10` would let the body's
+  sticky row headers (equal `z-index`, later in DOM order) paint over it. The
+  values stay scoped to the grid and never escape into an overlay.
 - **DataTable / FieldTable** — `DataTable` models paged `rows` + `columns`; its
   `pagination` object (`total`, `pageSize`, `currentPage`, `onPageChange`,
   `onPageSizeChange`, `pageSizeOptions`, `labels`, `trailing`) is optional, and omitting it renders
@@ -524,6 +530,13 @@ of building a parallel control.
   `pointerOnlyHandles` keeps their tab stops closed for good, so a frame that is
   page chrome adds no invisible focus stops (the showcase stage sets it; a frame
   whose keyboard resize is the demo's own subject leaves it off).
+- **Splitter** — the one-axis seam between two panes: `value` plus `onChange`,
+  `min`/`max` in the same `unit` (`'px'` default, `'%'` for percentage mode,
+  where the pointer delta is converted against the flex container's width
+  measured on drag start so callers track a plain percentage). It renders a
+  zero-sized in-flow wrapper with an absolutely centered, focusable
+  `role="separator"` handle that keeps the 12px target and its focus ring while
+  the panes stay flush. `AppShell` and the showcase stage build on it.
 - **StructureTree / StructureNode** — display and inline-edit a JSON-shaped
   `value`: `StructureTree` renders the top-level container (or a leaf), and each
   `StructureNode` row expands/collapses, renames its key, edits its value
@@ -609,7 +622,7 @@ of building a parallel control.
   `number.*`, `dropdown.*`, `pagination.*`, `tabs.label`, `chart.label`,
   `search.placeholder`, `splitter.*`, `password.*`, `chip.remove`, `tagInput.*`,
   `copy.*`, `edit.*`, `editor.*`, `structure.*`, `range.*`, `date.*`,
-  `time.*`, `grid.*`, `resizable.*`, and `appShell.*`.
+  `time.*`, `grid.*`, `table.*`, `resizable.*`, and `appShell.*`.
 - **CodeEditor / LazyCodeEditor** — load language packs on demand through a
   `docType` lookup; the CodeMirror theme package needs `@babel/runtime` in any
   app that vendors it.
@@ -636,8 +649,8 @@ DataGrid (`a11y_no_static_element_interactions`) subtrees; never suppress anothe
 
 Each component has one route, `src/routes/components/<slug>/+page.svelte`,
 registered in `src/lib/showcase-components.ts`: `SHOWCASE_COMPONENTS`
-(`{ slug, name }[]`) is the index and route source (`/` redirects to the first
-entry), and `SHOWCASE_COMPONENT_GROUPS` (`Record<group, slug[]>`) declares the
+(`{ slug, name }[]`) is the index and route source (`/` redirects to
+`/components/base-dialog`), and `SHOWCASE_COMPONENT_GROUPS` (`Record<group, slug[]>`) declares the
 relatedness behind each page's `RelatedNav` chips — two components are related
 when they share a group, so the relation is symmetric by construction.
 
@@ -782,8 +795,9 @@ scripts, or event handlers — and renders and emits it verbatim.
 references through `scope`. A snippet must reproduce its static demo exactly —
 same structure, full class strings, localized text via `scope`, same props — so
 default Show-code is pixel-identical to the demo. Compile and render failures show inline and keep the
-previous render; the live demo row is `contain: paint` so a snippet that renders
-a fixed overlay cannot cover the page (portaled dialogs escape it by design). A
+previous render. The live demo row carries no paint containment: containment clips
+at the box edge, so a control flush there would lose its focus ring, which means a
+snippet that renders a fixed overlay can cover the page. A
 snippet may declare local values (data arrays, column defs) in a single leading
 `<script>` block, which `snippet-source.ts` splits out and merges into the
 compiled preamble's instance script; the block must come first and must not use
