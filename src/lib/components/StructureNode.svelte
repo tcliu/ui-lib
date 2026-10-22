@@ -501,6 +501,7 @@
       discardTitle={i18n.t('common.discardTitle')}
       discardMessage={i18n.t('common.discardMessage')}
       discardLabel={i18n.t('common.discard')}
+      confirmOnDismiss
       dirty={objectEditor.dirty}
       saveDisabled={!objectEditor.valid}
       onSave={objectEditor.save}
