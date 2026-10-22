@@ -10,6 +10,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { LOCAL_ONLY_ENV_KEYS } from '../env-file.mjs'
+import { secretKeys as configuredSecretKeys } from '../deploy.config.mjs'
 import { logEvent } from '../log-event.mjs'
 import { echoCommand } from '../_run.mjs'
 import { loadTargetEnv } from './target-env.mjs'
@@ -233,6 +234,10 @@ export function resolveCloudflareAppUrl({ root = process.cwd(), runner = default
 // `secrets` (secret-store only). Local-only keys never sync; empty values
 // keep the remote value. Shared by sync-cloudflare-env.mjs and deploy.mjs
 // (auth-step generation) so the split cannot drift.
+// Credential key names pushed to the Pages secret store instead of a plaintext
+// [vars] entry. The defaults cover the shared surface; an app adds its own
+// database/credential names through `secretKeys` in the ungated
+// `deploy.config.json`, so a project-owned key never has to be hardcoded here.
 export const CLOUDFLARE_SECRET_KEYS = new Set([
   'DATABASE_URL',
   'ADMIN_PASSWORD',
@@ -246,13 +251,13 @@ export const CLOUDFLARE_SECRET_KEYS = new Set([
   'VERCEL_ACCOUNT_NAME',
   'VERCEL_TEAM_ID',
   'VERCEL_TEAM_SLUG',
+  ...(Array.isArray(configuredSecretKeys) ? configuredSecretKeys : []),
 ])
 
 // Keys that must never exist on the Cloudflare Pages project, whatever the
 // app: a synced Neon URL silently wins over the D1 binding, and synced Vercel
-// credentials would re-couple the Cloudflare target to Vercel. Add an app's
-// own database/credential key names here. The env sync removes them;
-// deploy.mjs re-reads to prove it before deploying.
+// credentials would re-couple the Cloudflare target to Vercel. The env sync
+// removes them; deploy.mjs re-reads to prove it before deploying.
 export const CLOUDFLARE_FORBIDDEN_KEYS = new Set([
   'DATABASE_URL',
   'VERCEL_TOKEN',

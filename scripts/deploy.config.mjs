@@ -35,3 +35,7 @@ const config = loadConfig()
 
 export const plugins = config.plugins
 export const requiredEnv = config.requiredEnv
+// Credential key names this app must push to the secret store rather than a
+// plaintext [vars] entry. App-specific names live in `deploy.config.json` so
+// this module stays identical across apps.
+export const secretKeys = config.secretKeys
