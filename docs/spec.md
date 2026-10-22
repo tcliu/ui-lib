@@ -22,7 +22,7 @@ organized, see `ARCHITECTURE.md`; for how to write code in this project, see
 | `CLOUDFLARE_PROJECT` | Cloudflare only | — | Pages project name; the live URL is the Pages production hostname derived from it |
 | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare only | — | Cloudflare account ID for the Pages/API steps |
 | `DEV_TAG` | No | — | Worktree badge label (set in `.env.local` by `scripts/create-worktree.mjs`) |
-| `PROFILE` | No | `dev` | Explicit `dev`/`prod` runtime profile; `NODE_ENV=production` also selects `prod` |
+| `PROFILE` | No | — | Explicit `dev`/`prod` runtime profile. The scripts fall back to `dev` when it is unset; the `/api/info` card reports it as `null` in an app with no runtime profile |
 | `SQLITE_PATH` | No | `.data/dev.sqlite` | Dev database file (SQLite) |
 | `DATABASE_URL` | Prod only | — | Neon connection string; required when `PROFILE=prod` |
 | `SCHEMA_NAME` | No | `public` | Postgres schema to create tables in |
@@ -78,6 +78,7 @@ No POST routes exist. The only API route is `GET /api/info` above.
 ## Error handling
 
 - Surface client-side failures through the shared toast (`svelte-sonner`); the
-  app has no server routes, so there is no server-error wire contract.
+  only server route is `GET /api/info`, which returns no error payload, so there
+  is no server-error wire contract.
 - Log unexpected errors with enough context to reproduce; never surface raw
   technical detail as user-facing text.
