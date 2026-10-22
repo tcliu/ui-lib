@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process'
 import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
   desiredPagesVars,
@@ -316,5 +316,49 @@ describe('detectProductionBranch', () => {
     const dir = mkdtempSync(join(tmpdir(), 'prod-branch-'))
     execFileSync('git', ['init', '-b', 'trunk'], { cwd: dir, stdio: 'pipe' })
     expect(detectProductionBranch(dir)).toBe('trunk')
+  })
+})
+
+describe('CLOUDFLARE_SECRET_KEYS', () => {
+  // The set is built from the shared defaults plus the app's own credential
+  // names, read from `secretKeys` in the ungated `deploy.config.json`. The
+  // config is a module-level read, so the module is re-imported against a
+  // mocked config to observe the union.
+  async function loadWithConfig(secretKeys) {
+    vi.resetModules()
+    vi.doMock('../deploy.config.mjs', () => ({ secretKeys }))
+    return import('./cloudflare.mjs')
+  }
+
+  afterEach(() => {
+    vi.doUnmock('../deploy.config.mjs')
+    vi.resetModules()
+  })
+
+  it('keeps the shared credential defaults when the app configures none', async () => {
+    const { CLOUDFLARE_SECRET_KEYS } = await loadWithConfig(undefined)
+    expect(CLOUDFLARE_SECRET_KEYS.has('SESSION_SECRET')).toBe(true)
+    expect(CLOUDFLARE_SECRET_KEYS.has('CRON_SECRET')).toBe(true)
+  })
+
+  it("adds an app's configured credential names to the shared defaults", async () => {
+    const { CLOUDFLARE_SECRET_KEYS } = await loadWithConfig(['APP_TOKEN'])
+    expect(CLOUDFLARE_SECRET_KEYS.has('APP_TOKEN')).toBe(true)
+    expect(CLOUDFLARE_SECRET_KEYS.has('SESSION_SECRET')).toBe(true)
+  })
+
+  it('routes a configured credential name to the secret store, not to plain vars', async () => {
+    const { splitCloudflareEnv } = await loadWithConfig(['APP_TOKEN'])
+    const { vars, secrets } = splitCloudflareEnv({ APP_TOKEN: 'token-value', SESSION_SECRET: 'secret-value', PLAIN: 'plain-value' })
+    expect(secrets.APP_TOKEN).toBe('token-value')
+    expect(vars.APP_TOKEN).toBeUndefined()
+    expect(secrets.SESSION_SECRET).toBe('secret-value')
+    expect(vars.PLAIN).toBe('plain-value')
+  })
+
+  it('ignores a malformed secretKeys value instead of failing the import', async () => {
+    const { CLOUDFLARE_SECRET_KEYS } = await loadWithConfig('not-an-array')
+    expect(CLOUDFLARE_SECRET_KEYS.has('SESSION_SECRET')).toBe(true)
+    expect(CLOUDFLARE_SECRET_KEYS.has('not-an-array')).toBe(false)
   })
 })
