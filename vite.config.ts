@@ -64,7 +64,9 @@ export default defineConfig(async ({ command, mode }) => {
     test: {
       environment: 'jsdom',
       globals: true,
-      include: ['src/**/*.{test,spec}.{js,ts}', 'scripts/**/*.test.mjs', 'test/**/*.test.ts'],
+      // A unit test sits beside the module it exercises, so the suite is
+      // collected by name wherever it lives; `tests/` belongs to Playwright.
+      include: ['src/**/*.test.{js,ts}', 'scripts/**/*.test.{js,ts,mjs}'],
     },
   }
 })

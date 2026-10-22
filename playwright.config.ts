@@ -6,9 +6,9 @@ if (!baseURL) {
 }
 
 export default defineConfig({
-  testDir: './e2e',
+  testDir: './tests',
   outputDir: './.tmp/e2e/artifacts',
-  globalTeardown: './e2e/global-teardown.ts',
+  globalTeardown: './tests/global-teardown.ts',
   timeout: 60_000,
   expect: { timeout: 10_000 },
   fullyParallel: false,
