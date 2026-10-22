@@ -162,7 +162,7 @@ byte-identically by the consuming apps through the parity gate's server list.
   `invert`ed so its handle tracks the cursor while the pane widens), the
   overlay/backdrop, `inert` on the main column, Escape dismissal, and the slide
   axis. There is no viewport
-  breakpoint class and no stacked docked state; one wrapper per pane keeps the
+  breakpoint class and no stacked docked state; one `AppShellPane` per pane keeps the
   pane mounted across the docked/floating switch — the opaque surface and the
   explicit `w-[var(--pane-w)]` (capped at `max-w-[calc(100%-3rem)]`) live on the
   wrapper, the aside yields (`min-w-0`, no `shrink-0`) so it can never overflow
@@ -367,7 +367,7 @@ of building a parallel control.
   `triggerClass` never restates the trigger's padding. The panel is a
   `role="menu"` listbox over the shared interaction core, with rows taking
   focus (unlike the never-focused listbox rows) and the phone sheet as the
-  narrow-viewport presentation.
+  narrow-viewport presentation (`MenuSheet` is that sheet).
 - **TagInput** — models `string[]` and colours tags from a built-in per-tag
   palette (override with `palette` or `chipClass`, whose function form overrides
   per tag and owns the whole chip class string, shape included); an app with
@@ -501,6 +501,18 @@ of building a parallel control.
   the content, so it stays enabled while the content is valid — confirming the
   unchanged seeded content is still the intended action — and dismissing the
   editor mutates nothing.
+- **ColumnChooser** — the column-visibility control: an icon trigger opens a
+  panel of checkboxes (one per column, labelled by its header) that toggle
+  columns on and off, beside a reset button that restores the default set.
+  The trigger and reset labels are passed translated, and the panel is the
+  shared portalled placement, so it clamps and flips like the other panels.
+- **Copyable** — a text and its copy affordance: the text (or a caller's
+  content) beside a ghost copy button that copies `copyText` (defaulting to the
+  text) and reports the result through the shared toast. The button appears on
+  hover or focus and stays visible on touch, and it is omitted entirely when
+  there is nothing to copy; `copyPosition` places it inline (default) or at the
+  content's top-right corner. The write-and-report step is the shared
+  `copy-to-clipboard` helper, which `EditableText` uses too.
 - **Resizable** — two-axis resize: `width` + `height` plus `onResize(width, height)`,
   bounds via `minWidth`/`minHeight`/`maxWidth`/`maxHeight`, and three
   invisible cursor-only handles. Every drag and key nudge reports whole pixels
