@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushSync, mount, unmount } from 'svelte'
-import DateInput from '../DateInput.svelte'
+import DateInput from './DateInput.svelte'
 
 // jsdom lacks ResizeObserver (positionPanel), matchMedia, and scrollIntoView.
 function installDomStubs(): void {

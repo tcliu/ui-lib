@@ -1,4 +1,4 @@
-import { DEFAULT_DATE_FORMAT, filterPatternText, formatDate, parsePattern } from './date-input-core'
+import { DEFAULT_DATE_FORMAT, filterPatternText, formatDate, parseEntry, toValue } from './date-input-core'
 
 interface DateTextFieldOptions {
   getValue: () => string
@@ -60,7 +60,7 @@ export function createDateTextField(options: DateTextFieldOptions) {
     const filtered = filterPatternText(input.value, getFormat())
     if (filtered !== input.value) input.value = filtered
     draft = filtered
-    const preview = getOpen() ? parsePattern(filtered.trim(), getFormat(), getLocale()) : null
+    const preview = getOpen() ? parseEntry(filtered.trim(), getFormat(), getLocale()) : null
     previewDay = preview ? preview.format(DEFAULT_DATE_FORMAT) : ''
     if (preview) previewTo(previewDay)
   }
@@ -74,14 +74,13 @@ export function createDateTextField(options: DateTextFieldOptions) {
       draft = ''
       return
     }
-    const parsed = parsePattern(text, getFormat(), getLocale())
-    if (!parsed) {
+    const next = toValue(text, getFormat(), getValueFormat(), getLocale())
+    if (!next) {
       draft = getCommittedText()
       // A rejected entry leaves the grid on the committed value too.
       if (getOpen() && getSingle() && hadPreview) previewTo(getSingle())
       return
     }
-    const next = parsed.format(getValueFormat())
     if (next !== getValue()) onChange(next)
     draft = formatDate(next, getFormat(), getLocale())
   }

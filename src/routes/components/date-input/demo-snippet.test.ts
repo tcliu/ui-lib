@@ -14,6 +14,7 @@ const base = {
   placeholder: '',
   placeholderOn: false,
   closeOnSelect: '' as const,
+  highlightRange: '' as const,
   size: '',
   sizeOn: false,
 }
@@ -68,6 +69,13 @@ describe('buildDateInputSnippet', () => {
     expect(buildDateInputSnippet({ ...base, closeOnSelect: 'no' })).toContain('closeOnSelect={false}')
     expect(buildDateInputSnippet({ ...base, closeOnSelect: '' })).not.toContain('closeOnSelect')
     expect(buildDateInputSnippet({ ...base, range: 'yes', closeOnSelect: 'no' })).toContain('closeOnSelect={false}')
+  })
+
+  it('emits the range highlight flag in both forms', () => {
+    expect(buildDateInputSnippet({ ...base, highlightRange: 'yes' })).toContain('  highlightRange')
+    expect(buildDateInputSnippet({ ...base, highlightRange: 'no' })).toContain('highlightRange={false}')
+    expect(buildDateInputSnippet({ ...base, highlightRange: '' })).not.toContain('highlightRange')
+    expect(buildDateInputSnippet({ ...base, range: 'yes', highlightRange: 'yes' })).toContain('  highlightRange')
   })
 
   it('emits a non-default size and omits the md default', () => {

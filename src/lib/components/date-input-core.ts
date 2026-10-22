@@ -1,12 +1,14 @@
-// Pure date/time helpers and the shared metric ratios for `DateInput`:
-// `DateField` owns the calendar, so every helper and every ratio lives here
-// once. Date handling, the display pattern, and the typed-text width estimate
-// ride on dayjs (format tokens are dayjs's: `YYYY`, `MM`, `DD`, `HH`, `mm`, …).
+// Pure date/time helpers for the date input: the date math, the display
+// pattern, and the typed-text conversions (a typed entry to a valid date or
+// date-time). `DateField` owns the calendar, so every helper lives here once;
+// the input's presentation (its metric ratios and its per-part colors) sits in
+// `date-input-metrics.ts`, so this module carries no UI. Date handling, the
+// display pattern, and the typed-text width estimate ride on dayjs (format
+// tokens are dayjs's: `YYYY`, `MM`, `DD`, `HH`, `mm`, …).
 import dayjs, { type Dayjs } from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 import 'dayjs/locale/zh-cn'
 import 'dayjs/locale/zh-tw'
-import { INPUT_RATIOS } from './input-chrome'
 
 // Pattern-driven parsing (the editable field's text → a real date) needs the
 // custom-parse plugin; it is extended once, here, so every picker shares it.
@@ -114,6 +116,77 @@ export function parsePattern(text: string, pattern: string, locale: string): Day
 const PATTERN_TOKENS = /\[([^\]]*)\]|YYYY|YY|MMMM|MMM|MM|M|DD|Do|D|dddd|ddd|HH|H|hh|h|mm|m|ss|s|A|a|Q|ZZ|Z|S{1,3}|ww|w/g
 // Patterns whose text may carry words (month/day/meridiem names).
 const PATTERN_NAMES = /MMMM|MMM|dddd|ddd|Do|A|a/
+// The clock tokens of a pattern: the ones a date-only entry leaves out.
+const TIME_TOKEN = /^(?:HH|H|hh|h|mm|m|ss|s|A|a)$/
+
+// The clock tokens of a pattern.
+const CLOCK_TOKENS = new Set(['HH', 'H', 'hh', 'h', 'mm', 'm', 'ss', 's'])
+
+// The pattern's date part: the same pattern up to its first clock token, with
+// the separator that glued the two trimmed away. A date-time field's typed
+// entry can then carry the date alone ("2026-10-14" in a "YYYY-MM-DD HH:mm:ss"
+// field) and commit with the time defaulted to midnight. A pattern without a
+// clock is its own date part; one that starts with the clock has none.
+export function datePattern(pattern: string): string {
+  const tokens = new RegExp(PATTERN_TOKENS)
+  let match = tokens.exec(pattern)
+  while (match !== null) {
+    // A bracketed literal is text, not a token, so it never starts the clock.
+    if (match[1] === undefined && TIME_TOKEN.test(match[0])) {
+      return match.index === 0 ? '' : pattern.slice(0, match.index).trim()
+    }
+    match = tokens.exec(pattern)
+  }
+  return pattern
+}
+
+// The patterns a typed entry may match, longest first: the pattern itself, the
+// pattern up to each of its clock tokens (so a date-time entry may carry the
+// clock in part — "2026-01-12 03" in a "YYYY-MM-DD HH:mm:ss" field), and the
+// pattern's date part (the clock defaulted whole). A pattern whose clock is
+// 12-hour or carries a meridiem keeps its clock whole, since a clock without
+// its meridiem would be ambiguous.
+export function entryPatterns(pattern: string): string[] {
+  const tokens = new RegExp(PATTERN_TOKENS)
+  const prefixes: string[] = []
+  let meridiem = false
+  let twelveHour = false
+  let match = tokens.exec(pattern)
+  while (match !== null) {
+    // A bracketed literal is text, not a token, so it never starts the clock.
+    if (match[1] === undefined) {
+      const token = match[0]
+      if (token === 'A' || token === 'a') meridiem = true
+      if (token === 'hh' || token === 'h') twelveHour = true
+      if (CLOCK_TOKENS.has(token)) prefixes.push(pattern.slice(0, tokens.lastIndex))
+    }
+    match = tokens.exec(pattern)
+  }
+  const dateOnly = datePattern(pattern)
+  if (meridiem || twelveHour) return [pattern, dateOnly].filter(Boolean)
+  return [...new Set([pattern, ...prefixes.reverse(), dateOnly])].filter(Boolean)
+}
+
+// A typed entry parsed leniently: the pattern's own text, or the parts of it
+// the entry carries with the rest defaulted — a date-time field accepts
+// "2026-01-12" (the clock defaults to midnight) and "2026-01-12 03"
+// ("03:00:00"). An entry that matches none of the pattern's forms is null.
+export function parseEntry(text: string, pattern: string, locale: string): Dayjs | null {
+  for (const candidate of entryPatterns(pattern)) {
+    const parsed = parsePattern(text, candidate, locale)
+    if (parsed) return parsed
+  }
+  return null
+}
+
+// The value a typed entry converts to under a value format, or '' when the
+// entry matches nothing: the pattern's own text, or the parts of it the entry
+// carries with the rest defaulted — a date-time field converts "2026-01-12"
+// to "2026-01-12T00:00:00" and "2026-01-12 03" to "2026-01-12T03:00:00".
+export function toValue(text: string, pattern: string, valueFormat: string, locale: string): string {
+  const parsed = parseEntry(text, pattern, locale)
+  return parsed ? parsed.format(valueFormat) : ''
+}
 
 // Reject characters that could never belong to a value in this pattern, so the
 // field only ever holds a plausible entry; the strict parse on commit is the
@@ -132,6 +205,26 @@ export function filterPatternText(text: string, pattern: string): string {
 export function dayAtTime(day: string, source: Dayjs | null): Dayjs {
   const picked = dayjs(day)
   return source ? picked.hour(source.hour()).minute(source.minute()).second(source.second()) : picked
+}
+
+// The committed day of a value under a value format (`YYYY-MM-DD`, or the date
+// of a date-time), or '' when the value is unset or does not parse strictly —
+// so an invalid value reads as unset rather than poisoning a comparison.
+export function valueDay(value: string, valueFormat: string, locale: string): string {
+  const parsed = parsePattern(value, valueFormat, locale)
+  return parsed ? parsed.format(DEFAULT_DATE_FORMAT) : ''
+}
+
+// Compare two values by the instants they carry: -1, 0, or 1. A value that
+// does not parse strictly reads as unset and never compares, so an unset (or
+// invalid) end never swaps with a set one.
+export function compareValues(a: string, b: string, valueFormat: string, locale: string): number | null {
+  const first = parsePattern(a, valueFormat, locale)
+  const second = parsePattern(b, valueFormat, locale)
+  if (!first || !second) return null
+  if (first.isBefore(second)) return -1
+  if (first.isAfter(second)) return 1
+  return 0
 }
 
 // How wide a pattern's text prints, per token: a name takes its longest form, a
@@ -203,45 +296,20 @@ export function setTimeSegment(value: string, unit: TimeUnit, entered: number): 
   return base.add((entered - current) * seconds, 'second').format(DATETIME_VALUE_FORMAT)
 }
 
-// Optional per-part color overrides so an app can theme the field without
-// forking it: each value replaces the default color classes for that part while
-// the structural classes (layout, size, focus ring) stay fixed. Omitted keys
-// keep the app's palette, so the default render is unchanged. Shared by every
-// field of the input (a range pair themes both ends).
-export interface DateInputTheme {
-  /** Prev/next month buttons (default `text-slate-400 hover:bg-slate-800 hover:text-cyan-300`). */
-  navButton?: string
-  /** Weekday column headers (default `text-slate-500`). */
-  columnHeader?: string
-  /** Today's day button (default `text-cyan-300`). */
-  today?: string
-  /** Footer summary text (default `text-slate-500`). */
-  metaText?: string
+// What a field exposes to its pair: the action that takes the focus and opens
+// its calendar (optionally on a given day).
+export interface DateFieldHandle {
+  focusAndOpen: (day?: string) => void
 }
 
-// Every metric is a fixed ratio of the size dimension. The panel metrics are
-// calibrated so the default `md` reproduces the original 17rem panel with 32px
-// day cells, and the in-field calendar affordance reuses the panel's own
-// padding, icon box, and gap for its gutter. `radius` is the calendar's corner.
-// The field (the shared `TextInput`) carries its own `--input-*` set; the field
-// gutter and the panel both read this set from the `DateInput` root, so one
-// `--pick-*` set serves them.
-export const PICKER_RATIOS = {
-  font: INPUT_RATIOS.font,
-  line: INPUT_RATIOS.line,
-  radius: 0.375,
-  padX: INPUT_RATIOS.padX,
-  padY: INPUT_RATIOS.padY,
-  gap: 0.5,
-  icon: 0.875,
-  panelWidth: 17,
-  panelRadius: 0.5,
-  panelPad: 0.5,
-  blockGap: 0.375,
-  tightGap: 0.25,
-  navSize: 1.75,
-  smFont: 0.75,
-  headFont: 0.625,
-  tightPadY: 0.125,
-  cellSize: 2,
+// The pair's other end, as a field sees it: the day it holds ('' when unset)
+// and the handle that takes the focus there.
+export interface DateFieldSibling extends DateFieldHandle {
+  day: string
+}
+
+// The span a range field's calendar highlights: the two bounds as days.
+export interface DateSpan {
+  from: string
+  to: string
 }

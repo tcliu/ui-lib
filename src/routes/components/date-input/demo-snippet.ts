@@ -25,6 +25,7 @@ export interface DateInputSnippetState {
   placeholder: string
   placeholderOn: boolean
   closeOnSelect: TriState
+  highlightRange: TriState
   size: string
   sizeOn: boolean
 }
@@ -49,6 +50,7 @@ export function buildDateInputSnippet({
   placeholder,
   placeholderOn,
   closeOnSelect,
+  highlightRange,
   size,
   sizeOn,
 }: DateInputSnippetState): string {
@@ -60,6 +62,7 @@ export function buildDateInputSnippet({
     ...(range === 'yes' ? ['range'] : flagLine('range', range)),
     ...flagLine('time', time),
     ...flagLine('closeOnSelect', closeOnSelect),
+    ...flagLine('highlightRange', highlightRange),
   ].map(line => `${indent}${line}`)
   const body =
     range === 'yes'

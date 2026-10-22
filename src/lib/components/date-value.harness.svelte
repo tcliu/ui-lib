@@ -1,5 +1,5 @@
 <script lang="ts">
-  import DateInput from '../DateInput.svelte'
+  import DateInput from './DateInput.svelte'
 
   let { time = false }: { time?: boolean } = $props()
 

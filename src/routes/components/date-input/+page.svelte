@@ -32,6 +32,8 @@
     placeholderOn: false,
     closeOnSelect: 'no' as TriState,
     closeOnSelectOn: false,
+    highlightRange: 'no' as TriState,
+    highlightRangeOn: false,
     size: 'md',
     sizeOn: false,
     stageWidth: DATE_STAGE_DEFAULT_WIDTH,
@@ -46,6 +48,7 @@
   const demoRange = $derived(pg.rangeOn ? flagOn(pg.range) : undefined)
   const demoTime = $derived(pg.timeOn ? flagOn(pg.time) : undefined)
   const demoCloseOnSelect = $derived(pg.closeOnSelectOn ? flagOn(pg.closeOnSelect) : undefined)
+  const demoHighlightRange = $derived(pg.highlightRangeOn ? flagOn(pg.highlightRange) : undefined)
 
   function clearPlayground() {
     pg = structuredClone(INITIAL)
@@ -63,6 +66,7 @@
       placeholder: pg.placeholder,
       placeholderOn: pg.placeholderOn,
       closeOnSelect: pg.closeOnSelectOn ? pg.closeOnSelect : '',
+      highlightRange: pg.highlightRangeOn ? pg.highlightRange : '',
       size: pg.size,
       sizeOn: pg.sizeOn,
     }),
@@ -95,6 +99,7 @@
       ),
       sync: { kind: 'script', attr: 'from', unsetAbsent: true },
     },
+    boolField({ name: 'highlightRange', defaultValue: 'false', note: 'Highlight the days between the two ends in each end’s calendar, so the range reads as one span; the ends stay the selected days. Applies while `range` is on.', value: pg.highlightRange, onChange: v => (pg.highlightRange = v as TriState), enabled: pg.highlightRangeOn, setEnabled: v => (pg.highlightRangeOn = v) }),
     textField({ name: 'placeholder', type: 'string?', defaultValue: '—', note: 'Prompt shown while the single field is empty; defaults to the shared message. A range pair names each field after its own end.', value: pg.placeholder, onChange: v => (pg.placeholder = v), clearable: true, enabled: pg.placeholderOn, setEnabled: v => (pg.placeholderOn = v) }),
     boolField({ name: 'range', defaultValue: 'false', note: 'Render a from/to pair of independent fields, each behaving as the single field with its own calendar.', value: pg.range, onChange: v => (pg.range = v as TriState), enabled: pg.rangeOn, setEnabled: v => (pg.rangeOn = v) }),
     sizeField({ note: 'Control scale; numbers are icon-scale pixels. Scales every field and its calendar.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
@@ -187,6 +192,7 @@
           onFrom={value => (pg.from = value)}
           onTo={value => (pg.to = value)}
           closeOnSelect={demoCloseOnSelect}
+          highlightRange={demoHighlightRange}
           format={demoFormat}
           size={demoSize} />
         <span class="text-sm text-slate-400">range: {pg.from || '—'} – {pg.to || '—'}</span>
@@ -197,6 +203,7 @@
           value={pg.value}
           onChange={value => (pg.value = value)}
           closeOnSelect={demoCloseOnSelect}
+          highlightRange={demoHighlightRange}
           format={demoFormat}
           placeholder={demoPlaceholder}
           size={demoSize} />

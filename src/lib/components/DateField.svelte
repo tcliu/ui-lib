@@ -27,10 +27,12 @@
     formatDate,
     parsePattern,
     patternWidth,
-    PICKER_RATIOS,
     todayIso,
-    type DateInputTheme,
+    valueDay,
+    type DateFieldSibling,
+    type DateSpan,
   } from './date-input-core'
+  import { PICKER_RATIOS, type DateInputTheme } from './date-input-metrics'
   import { createCalendarGrid } from './use-calendar-grid.svelte'
   import { createDateTextField } from './use-date-text-field.svelte'
   import { createTimeSegments } from './use-time-segments.svelte'
@@ -55,6 +57,13 @@
     theme?: DateInputTheme
     // Keep the panel open after a pick, so the time can be set.
     closeOnSelect?: boolean
+    // The pair's other end (a range field): the day it holds and the action
+    // that takes the focus there. A field that is filled while the other end
+    // is empty hands the focus over, so the range continues in the next field.
+    sibling?: DateFieldSibling
+    // The span the calendar highlights: the days between the two bounds read
+    // as one highlighted range, its ends as the selected days.
+    highlight?: DateSpan
   }
 
   let {
@@ -67,6 +76,8 @@
     actionLabel,
     theme = {},
     closeOnSelect = true,
+    sibling,
+    highlight,
   }: Props = $props()
 
   const metrics = $derived(dimensionMetrics(size, PICKER_RATIOS))
@@ -80,7 +91,13 @@
   // changes.
   const hasTime = $derived(/[Hhms]/.test(valueFormat))
   const hasValue = $derived(!!committed)
-  const anchorDay = $derived(single || todayIso())
+  // The day the closed or freshly opened grid anchors on: the field's own
+  // value, else the pair's other end (the calendar opens on the month the
+  // range already sits in), else today.
+  const anchorDay = $derived(single || sibling?.day || todayIso())
+  // The highlighted span: the two bounds and the days between them.
+  const spanStart = $derived(highlight?.from ?? '')
+  const spanEnd = $derived(highlight?.to ?? '')
   // The rendered text for the committed value, used by the field and the summary.
   const committedText = $derived(committed ? formatDate(value, format, i18n.locale) : '')
 
@@ -108,7 +125,7 @@
     getHasValue: () => hasValue,
     getSingle: () => single,
     getOpen: () => open,
-    onChange: next => onChange?.(next),
+    onChange: next => commitValue(next),
     previewTo: day => grid.anchorView(day),
     openPanel: () => openPanel(),
   })
@@ -132,6 +149,14 @@
   )
 
   const isSelected = (day: string) => day === (field.previewDay || single)
+  // The span's own ends read as the selected days; the days between them read
+  // as one highlighted range.
+  const isSpanEnd = (day: string) => !!spanStart && !!spanEnd && (day === spanStart || day === spanEnd)
+  const inSpan = (day: string) => !!spanStart && !!spanEnd && day > spanStart && day < spanEnd
+  // The whole highlighted span: its two bounds and the days between them. AT
+  // reads every one of them as a selected cell, so the range is not carried by
+  // the tint alone.
+  const isRangeDay = (day: string) => isSpanEnd(day) || inSpan(day)
 
   function close(restoreFocus = false) {
     if (!open) return
@@ -150,6 +175,28 @@
     void tick().then(() => grid.focusDayNode(anchor))
   }
 
+  // Take the focus and open the panel: the pair's other end hands the focus
+  // here once this field is filled, so the calendar opens where the range
+  // continues. The anchor day is the one the pair hands over (the end that was
+  // filled), else this field's own value, else today.
+  export function focusAndOpen(day?: string) {
+    grid.anchorView(day || anchorDay)
+    open = true
+    // The panel is rendered after the flush; the focus stays in the field, so
+    // the user can keep typing into it.
+    void tick().then(() => fieldRef?.focus())
+  }
+
+  // Commit a value. A field that is filled while the pair's other end is still
+  // empty hands the focus over to it: the range continues in the next field.
+  function commitValue(next: string, handOff = true) {
+    onChange?.(next)
+    if (!handOff || !next || !sibling || sibling.day) return
+    // The calendar goes with the focus, so only one panel stays open.
+    close()
+    sibling.focusAndOpen(valueDay(next, valueFormat, i18n.locale))
+  }
+
   function toggle() {
     if (open) close()
     else openPanel()
@@ -157,7 +204,9 @@
 
   function selectDay(day: string) {
     // A field whose value carries a time keeps it when only the day changes.
-    onChange?.(dayAtTime(day, hasTime ? committed : null).format(valueFormat))
+    // A pick that keeps the panel open (the time row) does not hand the focus
+    // over: the user is still working in this field.
+    commitValue(dayAtTime(day, hasTime ? committed : null).format(valueFormat), closeOnSelect)
     if (closeOnSelect) close(true)
     else grid.setFocusDay(day)
   }
@@ -268,7 +317,12 @@
         </button>
       </div>
 
-      <div bind:this={grid.gridRef} class="grid grid-cols-7 gap-[var(--pick-tight-gap)]" role="grid" aria-label={panelAriaLabel}>
+      <div
+        bind:this={grid.gridRef}
+        class="grid grid-cols-7 gap-[var(--pick-tight-gap)]"
+        role="grid"
+        aria-label={panelAriaLabel}
+        aria-multiselectable={highlight ? 'true' : undefined}>
         <div class="contents" role="row">
           {#each grid.weekdayLabels as label}
             <div
@@ -283,10 +337,12 @@
             {#each week as cell, ci (cell.day ?? `blank-${ci}`)}
               <div
                 role="gridcell"
-                aria-selected={cell.day ? isSelected(cell.day) : undefined}
+                aria-selected={cell.day ? isSelected(cell.day) || isRangeDay(cell.day) : undefined}
                 class="flex justify-center">
                 {#if cell.day}
                   {@const selected = isSelected(cell.day)}
+                  {@const spanBound = isSpanEnd(cell.day)}
+                  {@const between = inSpan(cell.day)}
                   <button
                     type="button"
                     use:grid.dayRef={cell.day}
@@ -296,11 +352,13 @@
                     onclick={() => selectDay(cell.day as string)}
                     onkeydown={event => grid.onDayKeydown(event, cell.day as string)}
                     class={`flex h-[var(--pick-cell-size)] w-[var(--pick-cell-size)] items-center justify-center rounded-[var(--pick-radius)] text-[length:var(--pick-sm-font)] transition outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 motion-reduce:transition-none ${
-                      selected
+                      selected || spanBound
                         ? 'bg-cyan-500 font-semibold text-onaccent'
-                        : cell.day === todayIso()
-                            ? `font-semibold ${theme.today ?? 'text-cyan-300'} hover:bg-slate-800`
-                            : 'text-slate-300 hover:bg-slate-800 hover:text-slate-100'
+                        : between
+                            ? `underline decoration-dotted underline-offset-2 ${theme.rangeSpan ?? 'bg-cyan-500/15 text-cyan-100'}`
+                            : cell.day === todayIso()
+                                ? `font-semibold ${theme.today ?? 'text-cyan-300'} hover:bg-slate-800`
+                                : 'text-slate-300 hover:bg-slate-800 hover:text-slate-100'
                     }`}>
                     {grid.numberFormat.format(cell.label)}
                   </button>
