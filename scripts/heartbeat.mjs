@@ -96,6 +96,7 @@ async function main() {
     }
     provider = await pickProvider()
   }
+  let result
   try {
     // The Cloudflare live URL is the Pages production domain derived from
     // the project: resolve it instead of reading APP_BASE_URL (absent on
@@ -107,11 +108,17 @@ async function main() {
       seedCloudflareCredentials({ token: merged, accountId: merged })
       baseUrl = resolveCloudflareAppUrl()
     }
-    await applyHeartbeat(provider, undefined, target, { baseUrl })
+    result = await applyHeartbeat(provider, undefined, target, { baseUrl })
   } catch (error) {
     failExit(error?.message || error)
   }
-  console.log(`OK heartbeat -> ${provider} (${target})`)
+  // Report what actually happened: a step that skipped (no scan route, missing
+  // credentials) must not print the same success line as an applied heartbeat.
+  if (result && result.applied === false) {
+    console.log(`SKIPPED heartbeat -> ${provider} (${target}): ${result.reason ?? 'nothing to apply'}`)
+  } else {
+    console.log(`OK heartbeat -> ${provider} (${target})`)
+  }
 }
 
 main().catch(error => {
