@@ -43,23 +43,28 @@ const SHARED_DIRS = [
 // subdirectories, locales, and tests, so only these files are gated.
 const SHARED_FILES = [
   'src/lib/app-shell.ts',
-  'src/lib/d1-binding.mjs',
   'src/lib/dropdown-chrome.ts',
   'src/lib/position-panel.svelte.ts',
   'src/lib/size-scale.ts',
-  'src/lib/sql-rewrite.mjs',
   'src/lib/text-size.ts',
 ]
 
-// Shared server utilities carried byte-identically by the consuming apps.
+// Shared server utilities carried byte-identically by the consuming apps. A
+// directory named `server` marks its content server-only in SvelteKit, so the
+// app cannot pull these into a client bundle.
 const SHARED_SERVER_FILES = [
   'src/lib/server/cron-expression.ts',
+  'src/lib/server/d1-binding.mjs',
+  'src/lib/server/log-format.mjs',
+  'src/lib/server/sql-rewrite.mjs',
 ]
 
-// Never gated: colocated tests, test directories, and this gate itself
-// (siblings do not carry it).
-const SKIP_BASENAMES = new Set(['check-shared-parity.mjs'])
-const SKIP_SUFFIXES = ['.test.ts', '.test.mjs']
+// Never gated: a test file, the fixture a test drives, a test directory, and
+// the project's own gates (siblings do not carry them). The layout gate
+// (`check-test-layout.mjs`) keeps a test beside the module it exercises, so
+// these never reach the ported surface.
+const SKIP_BASENAMES = new Set(['check-shared-parity.mjs', 'check-test-layout.mjs'])
+const SKIP_FILE_RE = /(\.test\.[a-z]+|\.harness\.svelte)$/
 const SKIP_DIRS = new Set(['__tests__'])
 
 function walk(dir) {
@@ -69,7 +74,7 @@ function walk(dir) {
     const rel = `${dir}/${entry.name}`
     if (entry.isDirectory()) {
       if (!SKIP_DIRS.has(entry.name)) out.push(...walk(rel))
-    } else if (!SKIP_BASENAMES.has(entry.name) && !SKIP_SUFFIXES.some(suffix => entry.name.endsWith(suffix))) {
+    } else if (!SKIP_BASENAMES.has(entry.name) && !SKIP_FILE_RE.test(entry.name)) {
       out.push(rel)
     }
   }
