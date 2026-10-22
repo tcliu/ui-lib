@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { snippetEditor } from './helpers'
 
 test('showcase: the Textarea rows eye stages the number in Show-code', async ({ page }) => {
   await page.goto('/components/textarea')
@@ -12,7 +13,7 @@ test('showcase: the Textarea rows eye stages the number in Show-code', async ({ 
   await page.keyboard.press('ControlOrMeta+a')
   await page.keyboard.type('5')
   await page.getByRole('button', { name: 'Show code' }).click()
-  const editor = page.locator('main .cm-content').first()
+  const editor = snippetEditor(page)
   await expect(editor).toBeVisible({ timeout: 15000 })
   await expect(editor).toContainText('rows={5}')
 

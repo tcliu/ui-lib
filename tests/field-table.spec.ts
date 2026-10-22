@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test'
-import { editorContains, replaceSnippet } from './helpers'
+import { editorContains, headerReset, replaceSnippet, showcaseDemo } from './helpers'
 
 test('showcase: FieldTable demo edits sample values through built-in editors', async ({ page }) => {
   await page.goto('/components/field-table')
   await page.waitForLoadState('networkidle')
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   // Each editor kind renders in the demo's Value column.
   await expect(demo.getByRole('textbox', { name: 'name value' })).toBeVisible()
@@ -20,7 +20,7 @@ test('showcase: the FieldTable headers cell edits JSON through a dialog', async 
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.goto('/components/field-table')
   await page.waitForLoadState('networkidle')
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   const firstHeader = demo.getByRole('columnheader').first()
   await expect(firstHeader).toHaveText('Prop')
 
@@ -33,33 +33,29 @@ test('showcase: the FieldTable headers cell edits JSON through a dialog', async 
   const ok = dialog.getByRole('button', { name: 'OK', exact: true })
 
   // Invalid JSON blocks OK behind an inline error.
-  await replaceSnippet(page, dialog, 'nope')
+  await replaceSnippet(page, 'nope', dialog)
   await expect(dialog.getByRole('alert')).toBeVisible()
   await expect(ok).toBeDisabled()
 
   // A valid object applies on OK and the demo follows it.
-  await replaceSnippet(
-    page,
-    dialog,
-    JSON.stringify(
+  await replaceSnippet(page, JSON.stringify(
       { prop: 'Field', type: 'Kind', default: 'Fallback', value: 'Entry', note: 'Remarks' },
       null,
       2,
-    ),
-  )
+    ), dialog)
   await expect(dialog.getByRole('alert')).toHaveCount(0)
   await ok.click()
   await expect(dialog).toHaveCount(0)
   await expect(firstHeader).toHaveText('Field')
 
-  await page.locator('main header').getByRole('button', { name: 'Reset', exact: true }).click()
+  await headerReset(page).click()
   await expect(firstHeader).toHaveText('Prop')
 })
 
 test('showcase: FieldTable dialog rows open and commit through the built-in editor', async ({ page }) => {
   await page.goto('/components/field-table')
   await page.waitForLoadState('networkidle')
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   await demo.getByRole('button', { name: 'Edit notes' }).click()
   const dialog = page.getByRole('dialog')
@@ -72,22 +68,18 @@ test('showcase: the FieldTable headers eye omits and the notes eye resets', asyn
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.goto('/components/field-table')
   await page.waitForLoadState('networkidle')
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   const firstHeader = demo.getByRole('columnheader').first()
 
   // Commit custom headers through the dialog.
   await page.getByRole('button', { name: 'Edit headers' }).click()
   const dialog = page.getByRole('dialog', { name: 'Edit headers' })
   await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(
-    page,
-    dialog,
-    JSON.stringify(
+  await replaceSnippet(page, JSON.stringify(
       { prop: 'Field', type: 'Kind', default: 'Fallback', value: 'Entry', note: 'Remarks' },
       null,
       2,
-    ),
-  )
+    ), dialog)
   await dialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(firstHeader).toHaveText('Field')
 
@@ -101,7 +93,7 @@ test('showcase: the FieldTable headers eye omits and the notes eye resets', asyn
   await page.getByRole('button', { name: 'Edit notes' }).click()
   const notesDialog = page.getByRole('dialog').filter({ has: page.getByRole('heading', { name: 'Edit notes' }) })
   await expect(notesDialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, notesDialog, 'Note-123')
+  await replaceSnippet(page, 'Note-123', notesDialog)
   await notesDialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(notesDialog).toHaveCount(0)
 
@@ -109,7 +101,7 @@ test('showcase: the FieldTable headers eye omits and the notes eye resets', asyn
   await page.getByRole('button', { name: 'Edit notes' }).click()
   const resetDialog = page.getByRole('dialog').filter({ has: page.getByRole('heading', { name: 'Edit notes' }) })
   await expect(resetDialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  expect(await editorContains(page, resetDialog, 'Note-123')).toBe(false)
+  expect(await editorContains(page, 'Note-123', resetDialog)).toBe(false)
   await resetDialog.getByRole('button', { name: 'Close', exact: true }).click()
 
   // Re-applying the eye re-applies the required row with its reset default; it
@@ -119,6 +111,6 @@ test('showcase: the FieldTable headers eye omits and the notes eye resets', asyn
   await page.getByRole('button', { name: 'Edit notes' }).click()
   const reappliedDialog = page.getByRole('dialog').filter({ has: page.getByRole('heading', { name: 'Edit notes' }) })
   await expect(reappliedDialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  expect(await editorContains(page, reappliedDialog, 'Note-123')).toBe(false)
+  expect(await editorContains(page, 'Note-123', reappliedDialog)).toBe(false)
   await reappliedDialog.getByRole('button', { name: 'Close', exact: true }).click()
 })

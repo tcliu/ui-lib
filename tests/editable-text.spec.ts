@@ -1,10 +1,11 @@
 import { expect, test } from '@playwright/test'
+import { showcaseDemo } from './helpers'
 
 test('showcase: the EditableText maxWidth Value cell caps the editing input width', async ({ page }) => {
   await page.goto('/components/editable-text')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   await expect(demo).toContainText('Untitled project')
 
   // The NumberInput is controlled and prefilled, so select-all + type

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { editorContains, normalizeDemoText, replaceSnippet } from './helpers'
+import { editorContains, normalizeDemoText, replaceSnippet, showCodeToggle, showcaseDemo, snippetEditor, snippetError } from './helpers'
 
 // StructureTree follows the converted showcase layout: the code toggle sits
 // beside the component title and the props table appends an editable Value
@@ -11,8 +11,8 @@ test('showcase: StructureTree hosts its code toggle in the title row beside a Va
   // Hydration binds the toggle and compile handlers; wait before interacting.
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
-  const toggle = page.locator('main header').getByRole('button', { name: 'Show code' })
+  const demo = showcaseDemo(page)
+  const toggle = showCodeToggle(page)
 
   await expect(page.getByRole('heading', { level: 1, name: 'StructureTree' })).toBeVisible()
   await expect(toggle).toHaveCount(1)
@@ -24,9 +24,9 @@ test('showcase: StructureTree hosts its code toggle in the title row beside a Va
   // Opening Show code compiles the snippet, which reproduces the demo.
   const before = normalizeDemoText(await demo.textContent())
   await toggle.click()
-  await expect(page.locator('main .cm-content').first()).toBeVisible()
+  await expect(snippetEditor(page)).toBeVisible()
   await expect.poll(async () => normalizeDemoText(await demo.textContent()), { timeout: 15000 }).toBe(before)
-  await expect(page.locator('main').getByRole('alert')).toHaveCount(0)
+  await expect(snippetError(page)).toHaveCount(0)
 })
 
 test('showcase: the StructureTree value cell edits JSON through a dialog', async ({ page, context }) => {
@@ -34,7 +34,7 @@ test('showcase: the StructureTree value cell edits JSON through a dialog', async
   await page.goto('/components/structure-tree')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   await expect(demo).toContainText('Ada Lovelace')
 
   await page.getByRole('button', { name: 'Edit value' }).click()
@@ -44,12 +44,12 @@ test('showcase: the StructureTree value cell edits JSON through a dialog', async
   const ok = dialog.getByRole('button', { name: 'OK', exact: true })
 
   // Invalid JSON blocks OK behind an inline error.
-  await replaceSnippet(page, dialog, 'nope')
+  await replaceSnippet(page, 'nope', dialog)
   await expect(dialog.getByRole('alert')).toBeVisible()
   await expect(ok).toBeDisabled()
 
   // A valid document applies on OK and the demo follows it.
-  await replaceSnippet(page, dialog, '{"ship": "it"}')
+  await replaceSnippet(page, '{"ship": "it"}', dialog)
   await expect(dialog.getByRole('alert')).toHaveCount(0)
   await ok.click()
   await expect(dialog).toHaveCount(0)
@@ -57,16 +57,16 @@ test('showcase: the StructureTree value cell edits JSON through a dialog', async
   await expect(demo).not.toContainText('Ada Lovelace')
 
   // The Show-code seed regenerates from the committed value.
-  await page.locator('main header').getByRole('button', { name: 'Show code' }).click()
-  await expect(page.locator('main .cm-content').first()).toBeVisible()
-  expect(await editorContains(page, page.locator('main'), '"ship":"it"')).toBe(true)
+  await showCodeToggle(page).click()
+  await expect(snippetEditor(page)).toBeVisible()
+  expect(await editorContains(page, '"ship":"it"')).toBe(true)
 })
 
 test('showcase: editing a StructureTree leaf updates the demo in place', async ({ page }) => {
   await page.goto('/components/structure-tree')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   await expect(demo).toContainText('Ada Lovelace')
 
   await demo.getByRole('button', { name: 'Edit $.role' }).click()
@@ -83,13 +83,13 @@ test('showcase: the StructureTree value eye resets to the default tree', async (
   await page.goto('/components/structure-tree')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   // Commit a custom document through the dialog.
   await page.getByRole('button', { name: 'Edit value' }).click()
   const dialog = page.getByRole('dialog', { name: 'Edit value' })
   await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, dialog, '{"ship": "it"}')
+  await replaceSnippet(page, '{"ship": "it"}', dialog)
   await dialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(demo).toContainText('ship')
   await expect(demo).not.toContainText('Ada Lovelace')
@@ -107,7 +107,7 @@ test('showcase: editing a nested object through its edit dialog formats and save
   await page.goto('/components/structure-tree')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   await expect(demo).toContainText('Ada Lovelace')
 
   // Container headers carry a hover edit button, including the root.
@@ -120,9 +120,9 @@ test('showcase: editing a nested object through its edit dialog formats and save
   await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
 
   // Compact JSON formats to two-space indent on Format.
-  await replaceSnippet(page, dialog, '{"city":"Paris"}')
+  await replaceSnippet(page, '{"city":"Paris"}', dialog)
   await dialog.getByRole('button', { name: 'Format' }).click()
-  expect(await editorContains(page, dialog, '"city": "Paris"')).toBe(true)
+  expect(await editorContains(page, '"city": "Paris"', dialog)).toBe(true)
 
   // OK commits the parsed object to the node path. The node stays collapsed
   // as object{1}, so expand it to see the saved value.
@@ -137,7 +137,7 @@ test('showcase: renaming a nested object key through double-click', async ({ pag
   await page.goto('/components/structure-tree')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   await expect(demo).toContainText('Ada Lovelace')
 
   await demo.getByRole('button', { name: 'address', exact: true }).dblclick()
@@ -155,7 +155,7 @@ test('showcase: the StructureTree row class eyes apply and unapply without losin
   await page.goto('/components/structure-tree')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   // The applied override class is the demo's own marker: anchor on it instead
   // of a DOM-nesting chain, and prove it is absent first so the later counts
   // cannot pass vacuously.
@@ -181,7 +181,7 @@ test('showcase: editing a StructureTree key or value never moves the row text', 
   await page.goto('/components/structure-tree')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   await expect(demo).toContainText('"Engineer"')
 
   // The name-edit row keeps the value as a span, the value-edit row swaps it for
@@ -195,11 +195,15 @@ test('showcase: editing a StructureTree key or value never moves the row text', 
       const row = anchor!.closest('div[class*="w-fit"]') as HTMLElement
       const rect = row.getBoundingClientRect()
       const spans = [...row.querySelectorAll(':scope > span')]
-      const key = spans.find(span => span.textContent === 'role')
       const colon = spans.find(span => span.textContent === ':')
       const valueSpan = spans.find(span => span.textContent === '"Engineer"')
       const input = row.querySelector('input')
-      const valueButton = row.querySelector(':scope > button')
+      const key = [...row.querySelectorAll(':scope > button')].find(
+        button => button.textContent === 'role',
+      )
+      const valueButton = [...row.querySelectorAll(':scope > button')].find(
+        button => button.textContent === '"Engineer"',
+      )
       const inputRect = input?.getBoundingClientRect()
       return {
         rowTop: rect.top,
@@ -227,8 +231,8 @@ test('showcase: editing a StructureTree key or value never moves the row text', 
   // Renaming the key: the input takes the key's exact box, so the colon and the
   // value behind it keep their positions and the row keeps its height.
   await demo.evaluate(el => {
-    ;[...el.querySelectorAll('span')]
-      .find(span => span.textContent === 'role')
+    ;[...el.querySelectorAll('button')]
+      .find(button => button.textContent === 'role')
       ?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
   })
   await expect(demo.locator('input')).toBeVisible()
@@ -271,7 +275,7 @@ test('showcase: double-clicking a StructureTree key or value puts the caret at t
   await page.goto('/components/structure-tree')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   await expect(demo).toContainText('"Engineer"')
 
   const caret = (length: number) => [length, length, length]
@@ -312,7 +316,7 @@ test('showcase: a StructureTree row action pair sits tight and vertically center
   await page.goto('/components/structure-tree')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   await expect(demo).toContainText('"Engineer"')
 
   const pair = await demo.evaluate(el => {
@@ -338,7 +342,7 @@ test('showcase: StructureTree hints use the custom tooltip, never a native title
   await page.goto('/components/structure-tree')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   await expect(demo).toContainText('"Engineer"')
 
   // The key rename hint: no native `title`, the shared Tooltip renders it.

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { replaceSnippet } from './helpers'
+import { replaceSnippet, snippetEditor } from './helpers'
 
 test('showcase: BaseDialog page opens the dialog with content', async ({ page }) => {
   await page.goto('/components/base-dialog')
@@ -59,20 +59,20 @@ test('showcase: the BaseDialog children cell edits the body markup through a dia
   const ok = dialog.getByRole('button', { name: 'OK', exact: true })
 
   // Anything but the paragraph-plus-buttons shape blocks OK behind an error.
-  await replaceSnippet(page, dialog, 'nope')
+  await replaceSnippet(page, 'nope', dialog)
   await expect(dialog.getByRole('alert')).toBeVisible()
   await expect(ok).toBeDisabled()
 
   // A valid edit applies on OK with working dismiss buttons.
   await replaceSnippet(
     page,
-    dialog,
     [
       '<p>Custom body</p>',
       '<Buttons align="right">',
       '  <Button variant="primary">Go</Button>',
       '</Buttons>',
     ].join('\n'),
+    dialog,
   )
   await expect(dialog.getByRole('alert')).toHaveCount(0)
   await ok.click()
@@ -106,13 +106,13 @@ test('showcase: the BaseDialog children dialog supports custom button handlers',
   await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
   await replaceSnippet(
     page,
-    dialog,
     [
       '<p>Custom body</p>',
       '<Buttons align="right">',
       `  <Button variant="primary" onClick={() => alert('hi')}>Go</Button>`,
       '</Buttons>',
     ].join('\n'),
+    dialog,
   )
   await expect(dialog.getByRole('alert')).toHaveCount(0)
   await dialog.getByRole('button', { name: 'OK', exact: true }).click()
@@ -195,8 +195,8 @@ test('showcase: the component pane docks beside content on wide viewports', asyn
   await expect(page.locator('[data-drawer-presentation="docked"]')).toHaveCount(1)
 
   // Docked shares the row: the pane ends where the main column begins.
-  const paneBox = await page.locator('aside').boundingBox()
-  const mainBox = await page.locator('main').boundingBox()
+  const paneBox = await page.getByRole('complementary', { name: 'Left pane' }).boundingBox()
+  const mainBox = await page.getByRole('main').boundingBox()
   expect(paneBox).not.toBeNull()
   expect(mainBox).not.toBeNull()
   expect(Math.abs(paneBox!.x + paneBox!.width - mainBox!.x)).toBeLessThanOrEqual(2)
@@ -225,12 +225,12 @@ test('showcase: the BaseDialog header cell edits the Copyable title through a di
   const ok = dialog.getByRole('button', { name: 'OK', exact: true })
 
   // Anything but the single Copyable line blocks OK behind an error.
-  await replaceSnippet(page, dialog, 'nope')
+  await replaceSnippet(page, 'nope', dialog)
   await expect(dialog.getByRole('alert')).toBeVisible()
   await expect(ok).toBeDisabled()
 
   // A valid edit applies on OK; the opened dialog shows the Copyable title.
-  await replaceSnippet(page, dialog, '<Copyable text="$.user"><span>$.user</span></Copyable>')
+  await replaceSnippet(page, '<Copyable text="$.user"><span>$.user</span></Copyable>', dialog)
   await expect(dialog.getByRole('alert')).toHaveCount(0)
   await ok.click()
   await expect(dialog).toHaveCount(0)
@@ -265,7 +265,7 @@ test('showcase: committing the canonical header keeps the snippet in Show-code',
   await expect(dialog).toHaveCount(0)
 
   await page.getByRole('button', { name: 'Show code' }).click()
-  const editor = page.locator('main .cm-content').first()
+  const editor = snippetEditor(page)
   await expect(editor).toBeVisible({ timeout: 15000 })
   await expect(editor).toContainText('{#snippet header()}')
   await expect(editor).toContainText('<Copyable text="Dialog title">')
@@ -291,7 +291,7 @@ test('showcase: a custom title survives compiling with the header applied', asyn
   // Compiling the seed must not wipe the ignored title: unapplying the eye
   // restores the custom heading.
   await page.getByRole('button', { name: 'Show code' }).click()
-  await expect(page.locator('main .cm-content').first()).toBeVisible({ timeout: 15000 })
+  await expect(snippetEditor(page)).toBeVisible({ timeout: 15000 })
   await page.waitForTimeout(1000)
   await expect(page.getByRole('textbox', { name: 'title value', exact: true })).toHaveValue('Custom heading')
   await page.getByRole('button', { name: 'Hide code' }).click()

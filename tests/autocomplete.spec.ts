@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { replaceSnippet } from './helpers'
+import { replaceSnippet, showCodeToggle, showcaseDemo, snippetEditor, snippetError } from './helpers'
 
 // AutoComplete is a converted showcase page: the code toggle sits in the page
 // title row, the demo renders inside a `Resizable` stage, and the props table
@@ -10,8 +10,8 @@ test('showcase: AutoComplete hosts its code toggle in the title row beside a res
   // Hydration binds the toggle and compile handlers; wait before interacting.
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
-  const toggle = page.locator('main header').getByRole('button', { name: 'Show code' })
+  const demo = showcaseDemo(page)
+  const toggle = showCodeToggle(page)
 
   await expect(page.getByRole('heading', { level: 1, name: 'AutoComplete' })).toBeVisible()
   await expect(toggle).toHaveCount(1)
@@ -28,18 +28,18 @@ test('showcase: AutoComplete hosts its code toggle in the title row beside a res
   // Opening Show code compiles the stage snippet, which reproduces the demo.
   const before = (await demo.innerText()).replace(/\s+/g, ' ').trim()
   await toggle.click()
-  await expect(page.locator('main .cm-content').first()).toBeVisible()
+  await expect(snippetEditor(page)).toBeVisible()
   await expect.poll(async () => (await demo.innerText()).replace(/\s+/g, ' ').trim(), { timeout: 15000 }).toBe(before)
-  await expect(page.locator('main').getByRole('alert')).toHaveCount(0)
+  await expect(snippetError(page)).toHaveCount(0)
 })
 
 test('showcase: the AutoComplete live demo filters and accepts a suggestion', async ({ page }) => {
   await page.goto('/components/autocomplete')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
-  await page.locator('main header').getByRole('button', { name: 'Show code' }).click()
-  await expect(page.locator('main .cm-content').first()).toBeVisible()
+  const demo = showcaseDemo(page)
+  await showCodeToggle(page).click()
+  await expect(snippetEditor(page)).toBeVisible()
   // Wait out the initial compile so the live instance is mounted.
   await expect
     .poll(async () => (await demo.innerText()).replace(/\s+/g, ' ').trim(), { timeout: 15000 })
@@ -59,7 +59,7 @@ test('showcase: the AutoComplete live demo filters and accepts a suggestion', as
   await expect
     .poll(async () => (await demo.innerText()).replace(/\s+/g, ' ').trim(), { timeout: 15000 })
     .toBe('value: Three')
-  await expect(page.locator('main').getByRole('alert')).toHaveCount(0)
+  await expect(snippetError(page)).toHaveCount(0)
 })
 
 test('showcase: the AutoComplete options eye resets to the defaults', async ({ page, context }) => {
@@ -67,7 +67,7 @@ test('showcase: the AutoComplete options eye resets to the defaults', async ({ p
   await page.goto('/components/autocomplete')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   const input = demo.locator('input[role="combobox"]')
   const options = page.locator('[role="listbox"] [role="option"]')
 
@@ -75,7 +75,7 @@ test('showcase: the AutoComplete options eye resets to the defaults', async ({ p
   await page.getByRole('button', { name: 'Edit options' }).click()
   const dialog = page.getByRole('dialog', { name: 'Edit options' })
   await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, dialog, '["solo"]')
+  await replaceSnippet(page, '["solo"]', dialog)
   await dialog.getByRole('button', { name: 'OK', exact: true }).click()
   await input.click()
   await input.fill('so')

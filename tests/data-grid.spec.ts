@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { replaceSnippet } from './helpers'
+import { replaceSnippet, showcaseDemo } from './helpers'
 
 // The DataGrid demo is the canonical spreadsheet control: a header row plus
 // body cells, in-place editing with history, and keyboard navigation. These
@@ -69,7 +69,7 @@ test('showcase: DataGrid keeps grid focus when pasting into an appended row', as
 test('showcase: DataGrid editable and showHeaders Value cells drive the grid', async ({ page }) => {
   await page.goto('/components/data-grid')
   await page.waitForLoadState('networkidle')
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   const root = demo.locator('[data-testid="data-grid"]')
 
   // Pristine: editable, header row present.
@@ -147,13 +147,13 @@ test('showcase: the DataGrid columnLabels Value cell relabels the header row', a
   const ok = dialog.getByRole('button', { name: 'OK', exact: true })
 
   // Invalid JSON blocks OK behind an inline error.
-  await replaceSnippet(page, dialog, 'nope')
+  await replaceSnippet(page, 'nope', dialog)
   await expect(dialog.getByRole('alert')).toBeVisible()
   await expect(ok).toBeDisabled()
 
   // A valid list applies on OK: the label row shows it while the header-row
   // cells keep their own values.
-  await replaceSnippet(page, dialog, '["Alpha", "Beta", "Gamma"]')
+  await replaceSnippet(page, '["Alpha", "Beta", "Gamma"]', dialog)
   await expect(dialog.getByRole('alert')).toHaveCount(0)
   await ok.click()
   await expect(dialog).toHaveCount(0)
@@ -175,12 +175,12 @@ test('showcase: the DataGrid value Value cell edits grid data through a dialog',
   const ok = dialog.getByRole('button', { name: 'OK', exact: true })
 
   // Invalid JSON blocks OK behind an inline error.
-  await replaceSnippet(page, dialog, 'nope')
+  await replaceSnippet(page, 'nope', dialog)
   await expect(dialog.getByRole('alert')).toBeVisible()
   await expect(ok).toBeDisabled()
 
   // Valid grid data applies on OK and renders in the grid.
-  await replaceSnippet(page, dialog, '[["Name", "Role"], ["Ada", "Engineer"]]')
+  await replaceSnippet(page, '[["Name", "Role"], ["Ada", "Engineer"]]', dialog)
   await expect(dialog.getByRole('alert')).toHaveCount(0)
   await ok.click()
   await expect(dialog).toHaveCount(0)
@@ -223,7 +223,7 @@ test('showcase: the DataGrid value eye applies and unapplies the data', async ({
   await page.getByRole('button', { name: 'Edit value' }).click()
   const dialog = page.getByRole('dialog', { name: 'Edit grid data' })
   await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, dialog, '[["Name", "Role"], ["Ada", "Engineer"]]')
+  await replaceSnippet(page, '[["Name", "Role"], ["Ada", "Engineer"]]', dialog)
   await dialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(root.locator('textarea[data-row="1"][data-col="0"]')).toHaveValue('Ada')
 

@@ -1,10 +1,11 @@
 import { expect, test } from '@playwright/test'
+import { showcaseDemo } from './helpers'
 
 test('showcase: the Tabs ariaLabel Value cell renames the nav', async ({ page }) => {
   await page.goto('/components/tabs')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   await expect(demo.getByRole('navigation')).toBeVisible()
 
   await page.getByRole('textbox', { name: 'ariaLabel value', exact: true }).fill('Custom tabs')
@@ -18,7 +19,7 @@ test('showcase: the Tabs pathname Value cell switches the tabs to links', async 
   await page.goto('/components/tabs')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   await expect(demo.getByRole('link')).toHaveCount(0)
 
   await page.getByRole('textbox', { name: 'pathname value', exact: true }).fill('details')
@@ -34,7 +35,7 @@ test('showcase: the Tabs size Value cell scales the tab bar', async ({ page }) =
   await page.goto('/components/tabs')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   await page.getByRole('combobox', { name: 'size value' }).click()
   await page.getByRole('option', { name: 'lg' }).click()
 

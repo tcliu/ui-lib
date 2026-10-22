@@ -1,10 +1,11 @@
 import { expect, test } from '@playwright/test'
+import { showcaseDemo } from './helpers'
 
 test('showcase: the Splitter value Value cell moves the divider', async ({ page }) => {
   await page.goto('/components/splitter')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   const separator = demo.getByRole('separator')
   await expect(separator).toBeVisible()
   await expect(separator).toHaveAttribute('aria-valuenow', '160')
@@ -22,7 +23,7 @@ test('showcase: the Splitter min/max Value cells re-clamp the demo', async ({ pa
   await page.goto('/components/splitter')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   const separator = demo.getByRole('separator')
   await expect(separator).toBeVisible()
   await expect(separator).toHaveAttribute('aria-valuemin', '120')
@@ -39,7 +40,7 @@ test('showcase: the Splitter className Value cell styles the separator', async (
   await page.goto('/components/splitter')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   const separator = demo.getByRole('separator')
   await expect(separator).toBeVisible()
 

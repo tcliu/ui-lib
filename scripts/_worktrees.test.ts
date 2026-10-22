@@ -68,11 +68,11 @@ describe('listProtectedPids', () => {
 type TerminateResult = { killed: { pid: number }[]; skipped: { pid: number | null; reason: string }[] }
 
 // /proc-gated: the terminate helper resolves process roots through /proc,
-// which only exists on Linux. Elsewhere the scan is unreadable by design.
-const itLinux = existsSync('/proc') ? it : it.skip
-
-describe('terminateProcessesInPath', () => {
-  itLinux('terminates a spawned sleeper rooted in the target dir', async () => {
+// which only exists on Linux. Elsewhere the scan is unreadable by design, so
+// the whole group is skipped rather than each case marked individually —
+// skipped cases are a documented coverage gap, not a silent pass.
+describe.skipIf(!existsSync('/proc'))('terminateProcessesInPath', () => {
+  it('terminates a spawned sleeper rooted in the target dir', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'terminate-probe-'))
     const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], { cwd: dir })
     const pid = child.pid
@@ -102,7 +102,7 @@ describe('terminateProcessesInPath', () => {
     }
   })
 
-  itLinux('is a no-op when nothing is rooted in the target dir', async () => {
+  it('is a no-op when nothing is rooted in the target dir', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'terminate-empty-'))
     try {
       const { killed, skipped } = (await terminateProcessesInPath(dir, { graceMs: 10 })) as TerminateResult

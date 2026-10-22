@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { replaceSnippet } from './helpers'
+import { replaceSnippet, showCodeToggle, showcaseDemo, snippetEditor, snippetError } from './helpers'
 
 // TagInput follows the converted showcase layout: the code toggle sits beside
 // the component title, the demo sits in a borderless resizable frame, and the
@@ -9,8 +9,8 @@ test('showcase: TagInput hosts its code toggle in the title row beside a resizab
   // Hydration binds the toggle and compile handlers; wait before interacting.
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
-  const toggle = page.locator('main header').getByRole('button', { name: 'Show code' })
+  const demo = showcaseDemo(page)
+  const toggle = showCodeToggle(page)
 
   await expect(page.getByRole('heading', { level: 1, name: 'TagInput' })).toBeVisible()
   await expect(toggle).toHaveCount(1)
@@ -25,9 +25,9 @@ test('showcase: TagInput hosts its code toggle in the title row beside a resizab
   // Opening Show code compiles the stage snippet, which reproduces the demo.
   const before = (await demo.innerText()).replace(/\s+/g, ' ').trim()
   await toggle.click()
-  await expect(page.locator('main .cm-content').first()).toBeVisible()
+  await expect(snippetEditor(page)).toBeVisible()
   await expect.poll(async () => (await demo.innerText()).replace(/\s+/g, ' ').trim(), { timeout: 15000 }).toBe(before)
-  await expect(page.locator('main').getByRole('alert')).toHaveCount(0)
+  await expect(snippetError(page)).toHaveCount(0)
 })
 
 test('showcase: the TagInput chip and option cells edit prefix text applied by the eye', async ({
@@ -38,7 +38,7 @@ test('showcase: the TagInput chip and option cells edit prefix text applied by t
   await page.goto('/components/tag-input')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   await expect(demo).toContainText('tags: svelte, kit')
 
   // The chip dialog commits prefix text but the eye stays off.
@@ -46,7 +46,7 @@ test('showcase: the TagInput chip and option cells edit prefix text applied by t
   const chipDialog = page.getByRole('dialog', { name: 'Edit chip', exact: true })
   await expect(chipDialog).toBeVisible()
   await expect(chipDialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, chipDialog, '#')
+  await replaceSnippet(page, '#', chipDialog)
   await chipDialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(chipDialog).toHaveCount(0)
   await expect(demo).not.toContainText('#svelte')
@@ -64,7 +64,7 @@ test('showcase: the TagInput chip and option cells edit prefix text applied by t
     .filter({ has: page.getByRole('heading', { name: 'Edit option', exact: true }) })
   await expect(optionDialog).toBeVisible()
   await expect(optionDialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, optionDialog, '»')
+  await replaceSnippet(page, '»', optionDialog)
   await optionDialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(optionDialog).toHaveCount(0)
   await page.getByRole('button', { name: 'Apply option', exact: true }).click()
@@ -84,7 +84,7 @@ test('showcase: the TagInput value cell edits JSON through a dialog', async ({ p
   await page.goto('/components/tag-input')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   await expect(demo).toContainText('tags: svelte, kit')
 
   await page.getByRole('button', { name: 'Edit value' }).click()
@@ -95,12 +95,12 @@ test('showcase: the TagInput value cell edits JSON through a dialog', async ({ p
   await expect(dialog.getByRole('button', { name: 'Reset', exact: true })).toBeVisible()
 
   // Invalid JSON blocks OK behind an inline error.
-  await replaceSnippet(page, dialog, 'nope')
+  await replaceSnippet(page, 'nope', dialog)
   await expect(dialog.getByRole('alert')).toBeVisible()
   await expect(ok).toBeDisabled()
 
   // A valid list applies on OK and the demo follows it.
-  await replaceSnippet(page, dialog, '["svelte", "forms"]')
+  await replaceSnippet(page, '["svelte", "forms"]', dialog)
   await expect(dialog.getByRole('alert')).toHaveCount(0)
   await ok.click()
   await expect(dialog).toHaveCount(0)
@@ -112,13 +112,13 @@ test('showcase: the TagInput options and value eyes apply and unapply the lists'
   await page.goto('/components/tag-input')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   // Commit a custom value list through the dialog.
   await page.getByRole('button', { name: 'Edit value' }).click()
   const valueDialog = page.getByRole('dialog', { name: 'Edit value' })
   await expect(valueDialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, valueDialog, '["solo"]')
+  await replaceSnippet(page, '["solo"]', valueDialog)
   await valueDialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(demo).toContainText('tags: solo')
 
@@ -143,7 +143,7 @@ test('showcase: the TagInput defaultValue cell stages a clear baseline through a
   await page.goto('/components/tag-input')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   await expect(demo).toContainText('tags: svelte, kit')
 
   // Enabling clearable shows the cross: the value differs from the component
@@ -163,13 +163,13 @@ test('showcase: the TagInput defaultValue cell stages a clear baseline through a
   const ok = dialog.getByRole('button', { name: 'OK', exact: true })
 
   // Invalid JSON blocks OK behind an inline error.
-  await replaceSnippet(page, dialog, 'nope')
+  await replaceSnippet(page, 'nope', dialog)
   await expect(dialog.getByRole('alert')).toBeVisible()
   await expect(ok).toBeDisabled()
 
   // A valid list applies on OK, staging the baseline: the lists match, so
   // the cross hides and the eye offers unapply.
-  await replaceSnippet(page, dialog, '["svelte", "kit"]')
+  await replaceSnippet(page, '["svelte", "kit"]', dialog)
   await expect(dialog.getByRole('alert')).toHaveCount(0)
   await ok.click()
   await expect(dialog).toHaveCount(0)
@@ -184,7 +184,7 @@ test('showcase: the TagInput defaultValue cell stages a clear baseline through a
     .getByRole('dialog')
     .filter({ has: page.getByRole('heading', { name: 'Edit value', exact: true }) })
   await expect(valueDialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, valueDialog, '["solo"]')
+  await replaceSnippet(page, '["solo"]', valueDialog)
   await valueDialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(demo).toContainText('tags: solo')
   await expect(clearButton).toBeVisible()

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { replaceSnippet } from './helpers'
+import { replaceSnippet, showCodeToggle, showcaseDemo, snippetEditor, snippetError } from './helpers'
 
 // The numeric-size model renders every dimension metric through CSS custom
 // properties consumed by var-driven Tailwind utilities. The vitest size tests
@@ -17,11 +17,11 @@ const SIZES = [12, 14, 16, 18, 20]
 async function applySnippet(page: Page, path: string, snippet: string, count: number, selector: string): Promise<void> {
   await page.goto(path)
   await page.waitForLoadState('networkidle')
-  await page.locator('main header').getByRole('button', { name: 'Show code' }).click()
-  await expect(page.locator('main .cm-content').first()).toBeVisible()
-  await replaceSnippet(page, page.locator('main'), snippet)
-  await expect(page.locator(`[data-showcase-demo] ${selector}`)).toHaveCount(count, { timeout: 20000 })
-  await expect(page.locator('main').getByRole('alert')).toHaveCount(0)
+  await showCodeToggle(page).click()
+  await expect(snippetEditor(page)).toBeVisible()
+  await replaceSnippet(page, snippet)
+  await expect(showcaseDemo(page).locator(selector)).toHaveCount(count, { timeout: 20000 })
+  await expect(snippetError(page)).toHaveCount(0)
 }
 
 interface Metrics {
@@ -35,7 +35,7 @@ interface Metrics {
 }
 
 function measure(page: Page, selector: string): Promise<Metrics[]> {
-  return page.locator(`[data-showcase-demo] ${selector}`).evaluateAll(nodes =>
+  return showcaseDemo(page).locator(selector).evaluateAll(nodes =>
     nodes.map(el => {
       const cs = getComputedStyle(el)
       return {
@@ -99,8 +99,8 @@ test('numeric size scales the SearchInput box and icon by a constant ratio', asy
   await applySnippet(page, '/components/search-input', snippet, SIZES.length, 'input')
 
   const rows = await measure(page, 'input')
-  const icons = await page
-    .locator('[data-showcase-demo] svg')
+  const icons = await showcaseDemo(page)
+    .locator('svg')
     .evaluateAll(nodes => nodes.map(node => parseFloat(node.getAttribute('width') ?? '0')))
   rows.forEach((row, i) => {
     const size = SIZES[i]!
@@ -145,8 +145,8 @@ test('numeric size scales the Buttons gap by a constant ratio', async ({ page })
   // The row carries `shrink-0`; nothing else in the demo does.
   await applySnippet(page, '/components/buttons', snippet, SIZES.length, 'div.shrink-0')
 
-  const gaps = await page
-    .locator('[data-showcase-demo] div.shrink-0')
+  const gaps = await showcaseDemo(page)
+    .locator('div.shrink-0')
     .evaluateAll(nodes => nodes.map(node => parseFloat(getComputedStyle(node).rowGap)))
   expect(gaps).toHaveLength(SIZES.length)
   gaps.forEach((gap, i) => {

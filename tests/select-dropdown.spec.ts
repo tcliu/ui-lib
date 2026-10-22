@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { replaceSnippet } from './helpers'
+import { replaceSnippet, showCodeToggle, showcaseDemo, snippetEditor, snippetError } from './helpers'
 
 // SelectDropdown is the one showcase page whose layout is driven by the shared
 // `ShowcasePage` header (code toggle beside the title) and a borderless section
@@ -10,8 +10,8 @@ test('showcase: SelectDropdown hosts its code toggle in the title row beside a r
   // Hydration binds the toggle and compile handlers; wait before interacting.
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
-  const toggle = page.locator('main header').getByRole('button', { name: 'Show code' })
+  const demo = showcaseDemo(page)
+  const toggle = showCodeToggle(page)
 
   await expect(page.getByRole('heading', { level: 1, name: 'SelectDropdown' })).toBeVisible()
   await expect(toggle).toHaveCount(1)
@@ -26,18 +26,18 @@ test('showcase: SelectDropdown hosts its code toggle in the title row beside a r
   // Opening Show code compiles the stage snippet, which reproduces the demo.
   const before = (await demo.innerText()).replace(/\s+/g, ' ').trim()
   await toggle.click()
-  await expect(page.locator('main .cm-content').first()).toBeVisible()
+  await expect(snippetEditor(page)).toBeVisible()
   await expect.poll(async () => (await demo.innerText()).replace(/\s+/g, ' ').trim(), { timeout: 15000 }).toBe(before)
-  await expect(page.locator('main').getByRole('alert')).toHaveCount(0)
+  await expect(snippetError(page)).toHaveCount(0)
 })
 
 test('showcase: the SelectDropdown live demo follows value edits behind the open editor', async ({ page }) => {
   await page.goto('/components/select-dropdown')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
-  await page.locator('main header').getByRole('button', { name: 'Show code' }).click()
-  await expect(page.locator('main .cm-content').first()).toBeVisible()
+  const demo = showcaseDemo(page)
+  await showCodeToggle(page).click()
+  await expect(snippetEditor(page)).toBeVisible()
   // Wait out the initial compile so the live instance is mounted.
   await expect
     .poll(async () => (await demo.innerText()).replace(/\s+/g, ' ').trim(), { timeout: 15000 })
@@ -51,8 +51,8 @@ test('showcase: the SelectDropdown live demo follows value edits behind the open
     .toBe('Three value: three')
   // The committed value is seeded as script-local state, so the editor text
   // tracks the edit too.
-  await expect(page.locator('main .cm-content').first()).toContainText('let value = $state("three")')
-  await expect(page.locator('main').getByRole('alert')).toHaveCount(0)
+  await expect(snippetEditor(page)).toContainText('let value = $state("three")')
+  await expect(snippetError(page)).toHaveCount(0)
 })
 
 test('showcase: SelectDropdown snippet edits flow back into the Value column', async ({ page, context }) => {
@@ -60,11 +60,11 @@ test('showcase: SelectDropdown snippet edits flow back into the Value column', a
   await page.goto('/components/select-dropdown')
   await page.waitForLoadState('networkidle')
 
-  await page.locator('main header').getByRole('button', { name: 'Show code' }).click()
-  const editor = page.locator('main .cm-content').first()
+  await showCodeToggle(page).click()
+  const editor = snippetEditor(page)
   await expect(editor).toBeVisible()
   // Wait out the initial compile so the live instance is mounted.
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   await expect
     .poll(async () => (await demo.innerText()).replace(/\s+/g, ' ').trim(), { timeout: 15000 })
     .toBe('Two value: two')
@@ -73,7 +73,6 @@ test('showcase: SelectDropdown snippet edits flow back into the Value column', a
   // state: the Value cells follow while the editor keeps the typed text.
   await replaceSnippet(
     page,
-    page.locator('main'),
     [
       '<script>',
       'let value = $state("two")',
@@ -90,14 +89,14 @@ test('showcase: SelectDropdown snippet edits flow back into the Value column', a
   )
   await expect(page.getByRole('textbox', { name: 'ariaLabel value' })).toHaveValue('mini')
   await expect(page.getByRole('checkbox', { name: 'filterable value' })).toBeChecked()
-  await expect(page.locator('main').getByRole('alert')).toHaveCount(0)
+  await expect(snippetError(page)).toHaveCount(0)
 })
 
 test('showcase: the SelectDropdown Value column edits the live demo', async ({ page }) => {
   await page.goto('/components/select-dropdown')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   // The default demo is a non-filterable trigger (a button combobox).
   await expect(demo.locator('button[role="combobox"]')).toHaveCount(1)
 
@@ -112,7 +111,7 @@ test('showcase: the SelectDropdown options and activeValue cells edit the live d
   await page.goto('/components/select-dropdown')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   // The activeValue cell edits the committed value as plain text.
   await page.getByRole('textbox', { name: 'activeValue value' }).fill('four')
@@ -128,12 +127,12 @@ test('showcase: the SelectDropdown options and activeValue cells edit the live d
   await expect(ok).toBeVisible()
 
   // Invalid JSON blocks OK behind an inline error.
-  await replaceSnippet(page, dialog, 'nope')
+  await replaceSnippet(page, 'nope', dialog)
   await expect(dialog.getByRole('alert')).toBeVisible()
   await expect(ok).toBeDisabled()
 
   // Valid JSON applies on OK and the demo follows the new options.
-  await replaceSnippet(page, dialog, '["eins", {"value": "zwei", "label": "Zwei"}]')
+  await replaceSnippet(page, '["eins", {"value": "zwei", "label": "Zwei"}]', dialog)
   await expect(dialog.getByRole('alert')).toHaveCount(0)
   await ok.click()
   await expect(dialog).toHaveCount(0)
@@ -146,13 +145,13 @@ test('showcase: the SelectDropdown options eye resets to the defaults', async ({
   await page.goto('/components/select-dropdown')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   // Commit custom options through the dialog.
   await page.getByRole('button', { name: 'Edit options' }).click()
   const dialog = page.getByRole('dialog', { name: 'Edit options' })
   await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, dialog, '["eins", {"value": "zwei", "label": "Zwei"}]')
+  await replaceSnippet(page, '["eins", {"value": "zwei", "label": "Zwei"}]', dialog)
   await dialog.getByRole('button', { name: 'OK', exact: true }).click()
   // `two` matches nothing now, so the trigger falls back to the raw value.
   await expect(demo).toContainText('two value: two')
@@ -164,7 +163,7 @@ test('showcase: the SelectDropdown options eye resets to the defaults', async ({
   // Committing re-applies the eye.
   await page.getByRole('button', { name: 'Edit options' }).click()
   await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, dialog, '["eins"]')
+  await replaceSnippet(page, '["eins"]', dialog)
   await dialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(demo).toContainText('two value: two')
 })
@@ -173,7 +172,7 @@ test('showcase: double-clicking the filterable SelectDropdown selects the whole 
   await page.goto('/components/select-dropdown')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   // Ticking filterable swaps the trigger button for the combobox input.
   await page.getByRole('checkbox', { name: 'filterable value' }).check({ force: true })
   const input = demo.locator('input[role="combobox"]')

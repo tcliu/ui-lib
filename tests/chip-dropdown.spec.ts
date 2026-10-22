@@ -1,13 +1,13 @@
 import { expect, test } from '@playwright/test'
-import { replaceSnippet } from './helpers'
+import { replaceSnippet, showCodeToggle, showcaseDemo, snippetEditor, snippetError } from './helpers'
 
 test('showcase: ChipDropdown hosts its code toggle in the title row beside a resizable demo', async ({ page }) => {
   await page.goto('/components/chip-dropdown')
   // Hydration binds the toggle and compile handlers; wait before interacting.
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
-  const toggle = page.locator('main header').getByRole('button', { name: 'Show code' })
+  const demo = showcaseDemo(page)
+  const toggle = showCodeToggle(page)
 
   await expect(page.getByRole('heading', { level: 1, name: 'ChipDropdown' })).toBeVisible()
   await expect(toggle).toHaveCount(1)
@@ -22,9 +22,9 @@ test('showcase: ChipDropdown hosts its code toggle in the title row beside a res
   // Opening Show code compiles the stage snippet, which reproduces the demo.
   const before = (await demo.innerText()).replace(/\s+/g, ' ').trim()
   await toggle.click()
-  await expect(page.locator('main .cm-content').first()).toBeVisible()
+  await expect(snippetEditor(page)).toBeVisible()
   await expect.poll(async () => (await demo.innerText()).replace(/\s+/g, ' ').trim(), { timeout: 15000 }).toBe(before)
-  await expect(page.locator('main').getByRole('alert')).toHaveCount(0)
+  await expect(snippetError(page)).toHaveCount(0)
 })
 
 test('showcase: ChipDropdown search selects its text with Shift+Home', async ({ page }) => {
@@ -65,7 +65,7 @@ test('showcase: the ChipDropdown options cell edits JSON through a dialog', asyn
   await page.goto('/components/chip-dropdown')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   await page.getByRole('button', { name: 'Edit options' }).click()
   const dialog = page.getByRole('dialog', { name: 'Edit options' })
@@ -75,12 +75,12 @@ test('showcase: the ChipDropdown options cell edits JSON through a dialog', asyn
   await expect(dialog.getByRole('button', { name: 'Reset', exact: true })).toBeVisible()
 
   // Invalid JSON blocks OK behind an inline error.
-  await replaceSnippet(page, dialog, 'nope')
+  await replaceSnippet(page, 'nope', dialog)
   await expect(dialog.getByRole('alert')).toBeVisible()
   await expect(ok).toBeDisabled()
 
   // Valid JSON applies on OK and the demo follows the new options.
-  await replaceSnippet(page, dialog, '[{"value": "on", "label": "On"}, {"value": "off"}]')
+  await replaceSnippet(page, '[{"value": "on", "label": "On"}, {"value": "off"}]', dialog)
   await expect(dialog.getByRole('alert')).toHaveCount(0)
   await ok.click()
   await expect(dialog).toHaveCount(0)
@@ -92,7 +92,7 @@ test('showcase: the ChipDropdown keeps its size when cleared', async ({ page }) 
   await page.goto('/components/chip-dropdown')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   const chip = demo.locator('div.relative.inline-flex').first()
   const trigger = page.getByRole('combobox', { name: 'Set status' })
 
@@ -126,13 +126,13 @@ test('showcase: the ChipDropdown options eye resets to the defaults', async ({ p
   await page.goto('/components/chip-dropdown')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   // Commit custom options through the dialog.
   await page.getByRole('button', { name: 'Edit options' }).click()
   const dialog = page.getByRole('dialog', { name: 'Edit options' })
   await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, dialog, '[{"value": "on", "label": "On"}, {"value": "off"}]')
+  await replaceSnippet(page, '[{"value": "on", "label": "On"}, {"value": "off"}]', dialog)
   await dialog.getByRole('button', { name: 'OK', exact: true }).click()
   // `active` matches nothing now, so the chip falls back to the raw value.
   await expect(demo).toContainText('active')

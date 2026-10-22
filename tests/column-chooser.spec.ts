@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { replaceSnippet } from './helpers'
+import { replaceSnippet, showCodeToggle, showcaseDemo, snippetEditor, snippetError } from './helpers'
 
 // ColumnChooser follows the converted showcase layout: the code toggle sits
 // beside the component title, the demo sits in a borderless resizable frame,
@@ -9,8 +9,8 @@ test('showcase: ColumnChooser hosts its code toggle in the title row beside a re
   // Hydration binds the toggle and compile handlers; wait before interacting.
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
-  const toggle = page.locator('main header').getByRole('button', { name: 'Show code' })
+  const demo = showcaseDemo(page)
+  const toggle = showCodeToggle(page)
 
   await expect(page.getByRole('heading', { level: 1, name: 'ColumnChooser' })).toBeVisible()
   await expect(toggle).toHaveCount(1)
@@ -25,9 +25,9 @@ test('showcase: ColumnChooser hosts its code toggle in the title row beside a re
   // Opening Show code compiles the stage snippet, which reproduces the demo.
   const before = (await demo.innerText()).replace(/\s+/g, ' ').trim()
   await toggle.click()
-  await expect(page.locator('main .cm-content').first()).toBeVisible()
+  await expect(snippetEditor(page)).toBeVisible()
   await expect.poll(async () => (await demo.innerText()).replace(/\s+/g, ' ').trim(), { timeout: 15000 }).toBe(before)
-  await expect(page.locator('main').getByRole('alert')).toHaveCount(0)
+  await expect(snippetError(page)).toHaveCount(0)
 })
 
 test('showcase: the ColumnChooser columns cell edits JSON through a dialog', async ({ page, context }) => {
@@ -35,7 +35,7 @@ test('showcase: the ColumnChooser columns cell edits JSON through a dialog', asy
   await page.goto('/components/column-chooser')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   await expect(demo).toContainText('hidden: 0')
 
   await page.getByRole('button', { name: 'Edit columns' }).click()
@@ -46,16 +46,12 @@ test('showcase: the ColumnChooser columns cell edits JSON through a dialog', asy
   await expect(dialog.getByRole('button', { name: 'Reset', exact: true })).toBeVisible()
 
   // Invalid JSON blocks OK behind an inline error.
-  await replaceSnippet(page, dialog, 'nope')
+  await replaceSnippet(page, 'nope', dialog)
   await expect(dialog.getByRole('alert')).toBeVisible()
   await expect(ok).toBeDisabled()
 
   // Unchecking an entry applies on OK and the hidden count follows.
-  await replaceSnippet(
-    page,
-    dialog,
-    '[{"key": "id", "header": "ID"}, {"key": "name", "header": "Name", "checked": false}]',
-  )
+  await replaceSnippet(page, '[{"key": "id", "header": "ID"}, {"key": "name", "header": "Name", "checked": false}]', dialog)
   await expect(dialog.getByRole('alert')).toHaveCount(0)
   await ok.click()
   await expect(dialog).toHaveCount(0)
@@ -67,11 +63,11 @@ test('showcase: ColumnChooser snippet edits flow back into the Value column', as
   await page.goto('/components/column-chooser')
   await page.waitForLoadState('networkidle')
 
-  await page.locator('main header').getByRole('button', { name: 'Show code' }).click()
-  const editor = page.locator('main .cm-content').first()
+  await showCodeToggle(page).click()
+  const editor = snippetEditor(page)
   await expect(editor).toBeVisible()
   // Wait out the initial compile so the live instance is mounted.
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   await expect
     .poll(async () => (await demo.innerText()).replace(/\s+/g, ' ').trim(), { timeout: 15000 })
     .toBe('hidden: 0')
@@ -80,7 +76,6 @@ test('showcase: ColumnChooser snippet edits flow back into the Value column', as
   // the label cell and the demo follow while the editor keeps the typed text.
   await replaceSnippet(
     page,
-    page.locator('main'),
     [
       '<script>',
       '  let columns = $state([',
@@ -101,7 +96,7 @@ test('showcase: ColumnChooser snippet edits flow back into the Value column', as
   await expect
     .poll(async () => (await demo.innerText()).replace(/\s+/g, ' ').trim(), { timeout: 15000 })
     .toBe('hidden: 1')
-  await expect(page.locator('main').getByRole('alert')).toHaveCount(0)
+  await expect(snippetError(page)).toHaveCount(0)
 })
 
 test('showcase: the ColumnChooser columns eye resets to the seeds', async ({ page, context }) => {
@@ -109,17 +104,13 @@ test('showcase: the ColumnChooser columns eye resets to the seeds', async ({ pag
   await page.goto('/components/column-chooser')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   // Commit an unchecked entry through the dialog.
   await page.getByRole('button', { name: 'Edit columns' }).click()
   const dialog = page.getByRole('dialog', { name: 'Edit columns' })
   await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(
-    page,
-    dialog,
-    '[{"key": "id", "header": "ID"}, {"key": "name", "header": "Name", "checked": false}]',
-  )
+  await replaceSnippet(page, '[{"key": "id", "header": "ID"}, {"key": "name", "header": "Name", "checked": false}]', dialog)
   await dialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(demo).toContainText('hidden: 1')
 

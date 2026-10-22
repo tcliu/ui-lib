@@ -1,10 +1,11 @@
 import { expect, test } from '@playwright/test'
+import { showcaseDemo } from './helpers'
 
 test('showcase: the Chip disabled Value cell disables the remove button', async ({ page }) => {
   await page.goto('/components/chip')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   // Switch to removable mode through the `removable` Value cell.
   const removableBox = page.getByRole('checkbox', { name: 'removable value', exact: true })
@@ -25,7 +26,7 @@ test('showcase: the Chip tooltip Value cell wraps the pill', async ({ page }) =>
   await page.goto('/components/chip')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   await page.getByRole('textbox', { name: 'tooltip value', exact: true }).fill('Pill tip')
   await demo.getByText('Default', { exact: true }).hover()
   // The tooltip box portals to document.body, so anchor on the page.
@@ -36,7 +37,7 @@ test('showcase: the Chip size Value cell scales the pill', async ({ page }) => {
   await page.goto('/components/chip')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   await page.getByRole('combobox', { name: 'size value' }).click()
   await page.getByRole('option', { name: 'lg' }).click()
 

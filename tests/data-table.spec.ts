@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test'
-import { editorContains, replaceSnippet } from './helpers'
+import { editorContains, hideCodeToggle, replaceSnippet, showCodeToggle, showcaseDemo, snippetEditor } from './helpers'
 
 test('showcase: DataTable toolbar hosts search plus column selector and reset', async ({ page }) => {
   await page.goto('/components/data-table')
   await page.waitForLoadState('networkidle')
-  const section = page.locator('[data-showcase-demo]').first()
+  const section = showcaseDemo(page)
 
   // The search box precedes the column selector and reset icons in DOM order.
   const search = section.getByRole('searchbox', { name: 'Search' })
@@ -44,7 +44,7 @@ test('showcase: DataTable toolbar hosts search plus column selector and reset', 
   await expect(section.getByRole('button', { name: /^Resize / })).toHaveCount(0)
 
   // The row total rides at the pagination row's right edge.
-  await expect(section.locator('nav').getByText('30 rows')).toBeVisible()
+  await expect(section.getByRole('navigation').getByText('30 rows')).toBeVisible()
 })
 
 test('showcase: DataTable Value cells drive the demo table', async ({ page }) => {
@@ -52,7 +52,7 @@ test('showcase: DataTable Value cells drive the demo table', async ({ page }) =>
   await page.waitForLoadState('networkidle')
   // The converted page drives every override through the props table's Value
   // cells; the demo lives in the `[data-showcase-demo]` hook.
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   // Pristine: search visible, no selection column.
   await expect(demo.getByRole('searchbox', { name: 'Search' })).toBeVisible()
@@ -76,10 +76,10 @@ test('showcase: DataTable Value cells drive the demo table', async ({ page }) =>
     'placeholder',
     'Find rows',
   )
-  await page.locator('main header').getByRole('button', { name: 'Show code' }).click()
-  await expect(page.locator('main .cm-content').first()).toBeVisible()
-  expect(await editorContains(page, page.locator('main'), 'searchPlaceholder="Find rows"')).toBe(true)
-  await page.locator('main header').getByRole('button', { name: 'Hide code' }).click()
+  await showCodeToggle(page).click()
+  await expect(snippetEditor(page)).toBeVisible()
+  expect(await editorContains(page, 'searchPlaceholder="Find rows"')).toBe(true)
+  await hideCodeToggle(page).click()
 
   // Reset returns every field to unset.
   await page.getByRole('button', { name: 'Reset', exact: true }).click()
@@ -89,7 +89,7 @@ test('showcase: DataTable Value cells drive the demo table', async ({ page }) =>
 test('showcase: the data-table demo stage has no resize handle', async ({ page }) => {
   await page.goto('/components/data-table')
   await page.waitForLoadState('networkidle')
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   await expect(demo).toBeVisible()
   await expect(demo.locator('[role="separator"]')).toHaveCount(0)
 })
@@ -97,8 +97,7 @@ test('showcase: the data-table demo stage has no resize handle', async ({ page }
 test('showcase: the DataTable searchAriaLabel Value cell renames the search field', async ({ page }) => {
   await page.goto('/components/data-table')
   await page.waitForLoadState('networkidle')
-  const demo = page.locator('[data-showcase-demo]').first()
-  const main = page.locator('main')
+  const demo = showcaseDemo(page)
 
   // Unset renders the component default label.
   await expect(demo.getByRole('searchbox', { name: 'Search' })).toBeVisible()
@@ -107,8 +106,8 @@ test('showcase: the DataTable searchAriaLabel Value cell renames the search fiel
 
   // The regenerated snippet carries the literal.
   await page.getByRole('button', { name: 'Show code', exact: true }).click()
-  await expect(main.locator('.cm-content').first()).toBeVisible()
-  expect(await editorContains(page, main, 'searchAriaLabel="Find rows"')).toBe(true)
+  await expect(snippetEditor(page)).toBeVisible()
+  expect(await editorContains(page, 'searchAriaLabel="Find rows"')).toBe(true)
   await page.getByRole('button', { name: 'Hide code', exact: true }).click()
 
   // Reset restores the component default label.
@@ -120,22 +119,20 @@ test('showcase: the DataTable searchKeys dialog feeds the snippet', async ({ pag
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.goto('/components/data-table')
   await page.waitForLoadState('networkidle')
-  const main = page.locator('main')
-  const header = main.locator('header')
 
   // The searchKeys dialog seeds a script-local list behind the snippet.
   await page.getByRole('button', { name: 'Edit searchKeys' }).click()
   const dialog = page.getByRole('dialog', { name: 'Edit searchKeys' })
   await expect(dialog).toBeVisible()
   await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, dialog, '[\n  "name"\n]')
+  await replaceSnippet(page, '[\n  "name"\n]', dialog)
   await dialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(dialog).toHaveCount(0)
-  await header.getByRole('button', { name: 'Show code' }).click()
-  await expect(main.locator('.cm-content').first()).toBeVisible()
-  expect(await editorContains(page, main, 'searchKeys={searchKeys}')).toBe(true)
-  expect(await editorContains(page, main, 'let searchKeys = $state(["name"]);')).toBe(true)
-  await header.getByRole('button', { name: 'Hide code' }).click()
+  await showCodeToggle(page).click()
+  await expect(snippetEditor(page)).toBeVisible()
+  expect(await editorContains(page, 'searchKeys={searchKeys}')).toBe(true)
+  expect(await editorContains(page, 'let searchKeys = $state(["name"]);')).toBe(true)
+  await hideCodeToggle(page).click()
   await page.getByRole('button', { name: 'Reset', exact: true }).click()
 })
 
@@ -143,7 +140,7 @@ test('showcase: the DataTable rows cell edits demo data through a dialog', async
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.goto('/components/data-table')
   await page.waitForLoadState('networkidle')
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   await expect(demo.locator('tbody tr').first()).toContainText('Catalog')
 
@@ -153,12 +150,12 @@ test('showcase: the DataTable rows cell edits demo data through a dialog', async
   await expect(dialog).toBeVisible()
   await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
   const ok = dialog.getByRole('button', { name: 'OK', exact: true })
-  await replaceSnippet(page, dialog, 'nope')
+  await replaceSnippet(page, 'nope', dialog)
   await expect(dialog.getByRole('alert')).toBeVisible()
   await expect(ok).toBeDisabled()
 
   // A valid list applies on OK and the demo follows it.
-  await replaceSnippet(page, dialog, '[{"id": "t1", "name": "Test row", "status": "Active"}]')
+  await replaceSnippet(page, '[{"id": "t1", "name": "Test row", "status": "Active"}]', dialog)
   await expect(dialog.getByRole('alert')).toHaveCount(0)
   await ok.click()
   await expect(dialog).toHaveCount(0)
@@ -177,7 +174,7 @@ test('showcase: the DataTable chooserColumns dialog drives column visibility', a
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.goto('/components/data-table')
   await page.waitForLoadState('networkidle')
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   await page.getByRole('button', { name: 'Edit chooserColumns' }).click()
   const dialog = page.getByRole('dialog', { name: 'Edit chooserColumns' })
@@ -186,34 +183,26 @@ test('showcase: the DataTable chooserColumns dialog drives column visibility', a
   const ok = dialog.getByRole('button', { name: 'OK', exact: true })
 
   // Invalid JSON blocks OK behind an inline error.
-  await replaceSnippet(page, dialog, 'nope')
+  await replaceSnippet(page, 'nope', dialog)
   await expect(dialog.getByRole('alert')).toBeVisible()
   await expect(ok).toBeDisabled()
 
   // Renamed headers cannot round-trip (headers derive from the column defs),
   // so OK stays blocked.
-  await replaceSnippet(
-    page,
-    dialog,
-    '[{"key": "id", "header": "ID", "checked": true}, {"key": "name", "header": "Name", "checked": true}, {"key": "status", "header": "Renamed", "checked": true}]',
-  )
+  await replaceSnippet(page, '[{"key": "id", "header": "ID", "checked": true}, {"key": "name", "header": "Name", "checked": true}, {"key": "status", "header": "Renamed", "checked": true}]', dialog)
   await expect(dialog.getByRole('alert')).toBeVisible()
   await expect(ok).toBeDisabled()
 
   // Unchecking Status hides its column in the demo.
-  await replaceSnippet(
-    page,
-    dialog,
-    '[{"key": "id", "header": "ID", "checked": true}, {"key": "name", "header": "Name", "checked": true}, {"key": "status", "header": "Status", "checked": false}]',
-  )
+  await replaceSnippet(page, '[{"key": "id", "header": "ID", "checked": true}, {"key": "name", "header": "Name", "checked": true}, {"key": "status", "header": "Status", "checked": false}]', dialog)
   await expect(dialog.getByRole('alert')).toHaveCount(0)
   await ok.click()
   await expect(dialog).toHaveCount(0)
-  await expect(demo.locator('thead th', { hasText: 'Status' })).toHaveCount(0)
+  await expect(demo.getByRole('columnheader', { name: 'Status' })).toHaveCount(0)
 
   // The demo's own reset restores the hidden column.
   await demo.getByRole('button', { name: 'Reset columns' }).click()
-  await expect(demo.locator('thead th', { hasText: 'Status' })).toBeVisible()
+  await expect(demo.getByRole('columnheader', { name: 'Status' })).toBeVisible()
 })
 
 test('showcase: the DataTable sortKey and sortDirection Value cells drive sorting', async ({
@@ -221,7 +210,7 @@ test('showcase: the DataTable sortKey and sortDirection Value cells drive sortin
 }) => {
   await page.goto('/components/data-table')
   await page.waitForLoadState('networkidle')
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   // Unset renders insertion order (Catalog first).
   await expect(demo.locator('tbody tr').first()).toContainText('Catalog')
@@ -243,13 +232,13 @@ test('showcase: the DataTable rows eye resets and the searchKeys eye omits', asy
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.goto('/components/data-table')
   await page.waitForLoadState('networkidle')
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   // Commit a custom row through the dialog.
   await page.getByRole('button', { name: 'Edit rows' }).click()
   const rowsDialog = page.getByRole('dialog', { name: 'Edit rows' })
   await expect(rowsDialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, rowsDialog, '[{"id": "t1", "name": "Test row", "status": "Active"}]')
+  await replaceSnippet(page, '[{"id": "t1", "name": "Test row", "status": "Active"}]', rowsDialog)
   await rowsDialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(demo.locator('tbody tr').first()).toContainText('Test row')
 
@@ -263,8 +252,51 @@ test('showcase: the DataTable rows eye resets and the searchKeys eye omits', asy
     .getByRole('dialog')
     .filter({ has: page.getByRole('heading', { name: 'Edit searchKeys' }) })
   await expect(keysDialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, keysDialog, '["name"]')
+  await replaceSnippet(page, '["name"]', keysDialog)
   await keysDialog.getByRole('button', { name: 'OK', exact: true }).click()
   await page.getByRole('button', { name: 'Unapply searchKeys' }).click()
   await expect(page.getByRole('button', { name: 'Apply searchKeys' })).toBeVisible()
 })
+
+// The resizable prop turns each header into a column splitter: dragging one
+// re-partitions the managed pixel widths rendered through the `<colgroup>`.
+test('showcase: a DataTable column resize handle widens its column', async ({ page }) => {
+  await page.goto('/components/data-table')
+  await page.waitForLoadState('networkidle')
+  const demo = showcaseDemo(page)
+
+  // Resizable is off by default; the settings-panel checkbox (its input is
+  // screen-reader-only, so toggle from the keyboard) enables the splitters.
+  const resizableBox = page.getByRole('checkbox', { name: 'resizable value' })
+  await resizableBox.focus()
+  await page.keyboard.press('Space')
+  const handles = demo.getByRole('button', { name: /^Resize / })
+  await expect(handles).toHaveCount(3)
+
+  // The demo declares no storageKey, so the widths stay session-only.
+  const handle = handles.first()
+  const box = (await handle.boundingBox())!
+  // A splitter straddles its column's edge (translated by half its width), so
+  // its outer half overlaps the next header: grab the inner half.
+  const grabX = box.x + 1
+  const grabY = box.y + box.height / 2
+  await page.mouse.move(grabX, grabY)
+  await page.mouse.down()
+
+  // The drag captures every column into the managed pixel layout, which
+  // renders a `<col>` per data column.
+  const firstColumn = demo.locator('col').first()
+  await expect.poll(async () => firstColumn.evaluate(el => el.style.width)).toMatch(/^\d+px$/)
+  const startWidth = Number.parseFloat(await firstColumn.evaluate(el => el.style.width))
+
+  await page.mouse.move(grabX + 40, grabY)
+  await expect
+    .poll(async () => Number.parseFloat(await firstColumn.evaluate(el => el.style.width)))
+    .toBeGreaterThan(startWidth)
+  await page.mouse.up()
+
+  // The widened column keeps its width after the drag settles.
+  const settled = Number.parseFloat(await firstColumn.evaluate(el => el.style.width))
+  expect(settled).toBeGreaterThanOrEqual(startWidth + 30)
+})
+

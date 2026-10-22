@@ -1,12 +1,12 @@
 import { expect, test } from '@playwright/test'
-import { replaceSnippet } from './helpers'
+import { replaceSnippet, showcaseDemo } from './helpers'
 
 // `openChart` returns the demo hook plus the chart image, so each test anchors
 // on the same accessible name instead of repeating the navigation.
 async function openChart(page: import('@playwright/test').Page) {
   await page.goto('/components/bar-chart')
   await page.waitForLoadState('networkidle')
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   const plot = demo.getByRole('img', { name: 'Daily activity' })
   await expect(plot).toBeVisible()
   return { demo, plot }
@@ -64,12 +64,12 @@ test('showcase: the columns Value cell edits JSON through a dialog', async ({ pa
 
   // An unknown tone has no palette class, so the draft is rejected behind an
   // inline error instead of rendering a segment with no fill.
-  await replaceSnippet(page, dialog, '[{"label": "Solo", "segments": [{"value": 1, "tone": "pink"}]}]')
+  await replaceSnippet(page, '[{"label": "Solo", "segments": [{"value": 1, "tone": "pink"}]}]', dialog)
   await expect(dialog.getByRole('alert')).toBeVisible()
   await expect(ok).toBeDisabled()
 
   // A valid edit applies on OK and drives the axis and legend.
-  await replaceSnippet(page, dialog, '[{"label": "Solo", "segments": [{"value": 7, "label": "Pings"}]}]')
+  await replaceSnippet(page, '[{"label": "Solo", "segments": [{"value": 7, "label": "Pings"}]}]', dialog)
   await expect(dialog.getByRole('alert')).toHaveCount(0)
   await ok.click()
   await expect(dialog).toHaveCount(0)

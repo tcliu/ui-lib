@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { replaceSnippet } from './helpers'
+import { replaceSnippet, showcaseDemo } from './helpers'
 
 // TextInput follows the converted showcase layout: the code toggle sits beside
 // the component title, the props table appends an editable Value column, and a
@@ -9,7 +9,7 @@ test('showcase: the TextInput clearable cell adds a clear cross that empties the
   // Hydration binds the toggle and compile handlers; wait before interacting.
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   const field = demo.getByRole('textbox', { name: 'Apply' })
   const clear = demo.getByRole('button', { name: 'Clear' })
 
@@ -52,14 +52,14 @@ test('showcase: the TextInput trailer cell adds content outside the field', asyn
   await page.goto('/components/text-input')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   // A trailer cell adds content outside the field area.
   await page.getByRole('button', { name: 'Edit trailer' }).click()
   const dialog = page.getByRole('dialog', { name: 'Edit trailer' })
   await expect(dialog).toBeVisible()
   await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, dialog, 'USD')
+  await replaceSnippet(page, 'USD', dialog)
   await dialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(dialog).toHaveCount(0)
   await expect(demo.getByText('USD')).toBeVisible()

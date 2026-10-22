@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { replaceSnippet } from './helpers'
+import { replaceSnippet, showcaseDemo } from './helpers'
 
 // The Resizable demo renders a controlled container with invisible resize
 // zones on its right edge, bottom edge, and corner: hovering shows only the
@@ -8,7 +8,7 @@ test('showcase: the resizable demo resizes from its cursor-only edges', async ({
   await page.setViewportSize({ width: 1400, height: 1000 })
   await page.goto('/components/resizable')
   await page.waitForLoadState('networkidle')
-  const section = page.locator('[data-showcase-demo]').first()
+  const section = showcaseDemo(page)
   const widthHandle = section.getByRole('separator', { name: 'Resize width', exact: true })
   const bothHandle = section.getByRole('separator', { name: 'Resize width and height', exact: true })
   const container = widthHandle.locator('..')
@@ -81,7 +81,7 @@ test('showcase: the Resizable children cell edits the content class through a di
   await page.goto('/components/resizable')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   await page.getByRole('button', { name: 'Edit children' }).click()
   const dialog = page
@@ -92,12 +92,12 @@ test('showcase: the Resizable children cell edits the content class through a di
   const ok = dialog.getByRole('button', { name: 'OK', exact: true })
 
   // Anything but the canonical size-label div blocks OK behind an error.
-  await replaceSnippet(page, dialog, 'nope')
+  await replaceSnippet(page, 'nope', dialog)
   await expect(dialog.getByRole('alert')).toBeVisible()
   await expect(ok).toBeDisabled()
 
   // A valid class applies on OK and the demo content follows it.
-  await replaceSnippet(page, dialog, '<div class="content-x">{contentLabel}</div>')
+  await replaceSnippet(page, '<div class="content-x">{contentLabel}</div>', dialog)
   await expect(dialog.getByRole('alert')).toHaveCount(0)
   await ok.click()
   await expect(dialog).toHaveCount(0)
@@ -108,7 +108,7 @@ test('showcase: the Resizable width Value cell resizes the container', async ({ 
   await page.goto('/components/resizable')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   await expect(demo).toContainText('320 × 240')
 
   await page.getByRole('textbox', { name: 'width value', exact: true }).fill('400')
@@ -120,7 +120,7 @@ test('showcase: the Resizable children eye resets to the default class', async (
   await page.goto('/components/resizable')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   // Commit a custom content class through the dialog.
   await page.getByRole('button', { name: 'Edit children' }).click()
@@ -128,7 +128,7 @@ test('showcase: the Resizable children eye resets to the default class', async (
     .getByRole('dialog')
     .filter({ has: page.getByRole('heading', { name: 'Edit children' }) })
   await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, dialog, '<div class="content-x">{contentLabel}</div>')
+  await replaceSnippet(page, '<div class="content-x">{contentLabel}</div>', dialog)
   await dialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(demo.locator('.content-x')).toBeVisible()
 

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { showcaseDemo } from './helpers'
 
 // The DataGrid demo fills a bounded pane and is intentionally not
 // width-resizable: its stage renders without a drag handle, so the grid keeps
@@ -12,7 +13,7 @@ test('showcase: the data-grid demo stage has no resize handle', async ({ page })
   // Anchor on the shell's demo hook, not DOM nesting, and prove the demo
   // rendered before asserting the absence so a missing demo cannot pass
   // vacuously.
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   await expect(demo).toBeVisible()
   await expect(demo.locator('[role="separator"]')).toHaveCount(0)
 })
@@ -26,7 +27,7 @@ test('showcase: the stage frame clips with a margin around a flush demo', async 
   await page.goto('/components/menu')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   const widthHandle = demo.getByRole('separator', { name: 'Resize width', exact: true })
   // The frame is the handle's parent; the host that clips the frame is its.
   const host = widthHandle.locator('../..')
@@ -60,7 +61,7 @@ test('showcase: the stage keeps its resize handles out of the tab order', async 
   await page.goto('/components/menu')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   const trigger = demo.getByRole('button', { name: 'More actions' })
   await expect(demo.getByRole('separator', { name: 'Resize width', exact: true })).toHaveAttribute(
     'tabindex',

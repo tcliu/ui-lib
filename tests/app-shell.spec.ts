@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { editorContains, normalizeDemoText, replaceSnippet } from './helpers'
+import { editorContains, normalizeDemoText, replaceSnippet, showCodeToggle, showcaseDemo, snippetEditor, snippetError } from './helpers'
 
 // AppShell hosts its code toggle in the title row beside a resizable demo. The
 // scalar props edit through the props table's Value column; the class-name
@@ -9,30 +9,30 @@ test('showcase: AppShell hosts its code toggle in the title row beside a Value c
   await page.goto('/components/app-shell')
   await page.waitForLoadState('networkidle')
 
-  const toggle = page.locator('main header').getByRole('button', { name: 'Show code' })
+  const toggle = showCodeToggle(page)
 
   await expect(page.getByRole('heading', { level: 1, name: 'AppShell' })).toBeVisible()
   await expect(toggle).toHaveCount(1)
   await expect(page.getByRole('region', { name: 'Props' }).getByRole('columnheader', { name: 'Value' })).toBeVisible()
 
   // Opening Show code compiles the stage snippet, which reproduces the demo.
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   const before = normalizeDemoText(await demo.textContent())
   const handle = await demo.elementHandle()
   await toggle.click()
-  await expect(page.locator('main .cm-content').first()).toBeVisible()
+  await expect(snippetEditor(page)).toBeVisible()
   // Wait until the compile swaps the static demo node for the live instance, so
   // assertions below run after `onCompiled` fired (not merely at open time).
   await expect
     .poll(
       async () =>
-        (await page.locator('main').getByRole('alert').count()) > 0 ||
+        (await snippetError(page).count()) > 0 ||
         (handle ? await handle.evaluate(element => !element.isConnected) : false),
       { timeout: 15000 },
     )
     .toBe(true)
-  await expect(page.locator('main').getByRole('alert')).toHaveCount(0)
-  expect(normalizeDemoText(await page.locator('[data-showcase-demo]').first().textContent())).toBe(before)
+  await expect(snippetError(page)).toHaveCount(0)
+  expect(normalizeDemoText(await showcaseDemo(page).textContent())).toBe(before)
 
   // Opening the editor must not write the emitted default class back into the
   // Value column: the form stays pristine (unset renders the stage default).
@@ -43,7 +43,7 @@ test('showcase: the AppShell demo opens a floating right drawer', async ({ page,
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.goto('/components/app-shell')
   await page.waitForLoadState('networkidle')
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   await expect(demo.getByText('Components', { exact: true })).toBeVisible()
   const rightPane = () => demo.getByRole('complementary', { name: 'Right pane' })
 
@@ -53,7 +53,7 @@ test('showcase: the AppShell demo opens a floating right drawer', async ({ page,
   await props.getByRole('button', { name: 'Edit right', exact: true }).click()
   const rightDialog = page.getByRole('dialog', { name: 'Edit right', exact: true })
   await expect(rightDialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, rightDialog, '{\n  "open": true\n}')
+  await replaceSnippet(page, '{\n  "open": true\n}', rightDialog)
   await rightDialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(rightPane()).toBeVisible()
   await expect(demo.locator('[data-drawer-presentation="docked"]')).toHaveCount(2)
@@ -146,7 +146,7 @@ test('showcase: the AppShell Value column edits the live demo', async ({ page, c
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.goto('/components/app-shell')
   await page.waitForLoadState('networkidle')
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   // The eye toggle applies the footer snippet, which renders the footer row;
   // toggling it off removes the row again.
@@ -164,7 +164,7 @@ test('showcase: the AppShell Value column edits the live demo', async ({ page, c
   await props.getByRole('button', { name: 'Edit left', exact: true }).click()
   const leftDialog = page.getByRole('dialog', { name: 'Edit left', exact: true })
   await expect(leftDialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, leftDialog, '{\n  "open": false\n}')
+  await replaceSnippet(page, '{\n  "open": false\n}', leftDialog)
   await leftDialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(demo.getByRole('complementary', { name: 'Left pane' })).toBeHidden()
 })
@@ -173,14 +173,14 @@ test('showcase: the AppShell content-snippet Value cells edit the demo', async (
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.goto('/components/app-shell')
   await page.waitForLoadState('networkidle')
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   // The children block edits through its markup dialog; the left and right
   // pane texts edit through their own markup dialogs.
   await page.getByRole('region', { name: 'Props' }).getByRole('button', { name: 'Edit children' }).click()
   const dialog = page.getByRole('dialog', { name: 'Edit children' })
   await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, dialog, '<p class="p-4 text-sm text-slate-300">Main copy</p>')
+  await replaceSnippet(page, '<p class="p-4 text-sm text-slate-300">Main copy</p>', dialog)
   await dialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(demo.getByText('Main copy', { exact: true })).toBeVisible()
 
@@ -191,13 +191,13 @@ test('showcase: the AppShell content-snippet Value cells edit the demo', async (
   await expect(leftDialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
   await replaceSnippet(
     page,
-    leftDialog,
     [
       '<span class="flex items-center gap-2 px-3 py-2 text-sm text-slate-300">',
       '  <MenuIcon className="shrink-0" />',
       '  <span class="min-w-0 truncate @max-[8rem]:hidden">Nav</span>',
       '</span>',
     ].join('\n'),
+    leftDialog,
   )
   await leftDialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(demo.getByText('Nav', { exact: true })).toBeVisible()
@@ -210,7 +210,7 @@ test('showcase: the AppShell content-snippet Value cells edit the demo', async (
     .getByRole('dialog')
     .filter({ has: page.getByRole('heading', { name: 'Edit right', exact: true }) })
   await expect(rightOpenDialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, rightOpenDialog, '{\n  "open": true\n}')
+  await replaceSnippet(page, '{\n  "open": true\n}', rightOpenDialog)
   await rightOpenDialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(demo.getByRole('complementary', { name: 'Right pane' })).toBeVisible()
   await props.getByRole('button', { name: 'Edit rightPane' }).click()
@@ -218,7 +218,7 @@ test('showcase: the AppShell content-snippet Value cells edit the demo', async (
     .getByRole('dialog')
     .filter({ has: page.getByRole('heading', { name: 'Edit rightPane' }) })
   await expect(rightDialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, rightDialog, '<p class="px-3 py-2 text-sm text-slate-300">Aside copy</p>')
+  await replaceSnippet(page, '<p class="px-3 py-2 text-sm text-slate-300">Aside copy</p>', rightDialog)
   await rightDialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(demo.getByText('Aside copy', { exact: true })).toBeVisible()
 })
@@ -226,7 +226,7 @@ test('showcase: the AppShell content-snippet Value cells edit the demo', async (
 test('showcase: the AppShell header eye omits and restores the header', async ({ page }) => {
   await page.goto('/components/app-shell')
   await page.waitForLoadState('networkidle')
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   // The fixed header shape documents itself through the edit dialog.
   await page.getByRole('region', { name: 'Props' }).getByRole('button', { name: 'Edit header' }).click()
@@ -253,14 +253,14 @@ test('showcase: the AppShell rail pane shows a compact rail variant', async ({ p
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.goto('/components/app-shell')
   await page.waitForLoadState('networkidle')
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   // Rail collapse with a closed pane narrows the drawer to the rail strip:
   // the left config edits as JSON through its Value-cell dialog.
   await page.getByRole('region', { name: 'Props' }).getByRole('button', { name: 'Edit left', exact: true }).click()
   const leftDialog = page.getByRole('dialog', { name: 'Edit left', exact: true })
   await expect(leftDialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, leftDialog, '{\n  "collapseMode": "rail",\n  "open": false\n}')
+  await replaceSnippet(page, '{\n  "collapseMode": "rail",\n  "open": false\n}', leftDialog)
   await leftDialog.getByRole('button', { name: 'OK', exact: true }).click()
 
   // The closed rail keeps its strip width instead of shrinking to the content.
@@ -296,26 +296,26 @@ test('showcase: the AppShell left editor updates the demo and snippet', async ({
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.goto('/components/app-shell')
   await page.waitForLoadState('networkidle')
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   const editLeft = page.getByRole('region', { name: 'Props' }).getByRole('button', { name: 'Edit left', exact: true })
 
   // Dialog -> demo + snippet: a size override lands verbatim in the editor.
   await editLeft.click()
   const dialog = page.getByRole('dialog', { name: 'Edit left', exact: true })
   await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, dialog, '{\n  "size": 320\n}')
+  await replaceSnippet(page, '{\n  "size": 320\n}', dialog)
   await expect(dialog.locator('.cm-content')).toContainText('320')
   await dialog.getByRole('button', { name: 'OK', exact: true }).click()
-  await page.locator('main header').getByRole('button', { name: 'Show code' }).click()
-  await expect(page.locator('main .cm-content').first()).toBeVisible()
-  expect(await editorContains(page, page.locator('main'), 'size: 320')).toBe(true)
-  expect(await editorContains(page, page.locator('main'), 'left={{')).toBe(true)
+  await showCodeToggle(page).click()
+  await expect(snippetEditor(page)).toBeVisible()
+  expect(await editorContains(page, 'size: 320')).toBe(true)
+  expect(await editorContains(page, 'left={{')).toBe(true)
 
   // A function entry never survives the JSON editor: OK disables with
   // guidance, and Reset restores the committable draft.
   await editLeft.click()
   await expect(dialog.locator('.cm-content')).toBeVisible()
-  await replaceSnippet(page, dialog, '{\n  "open": true,\n  "onOpenChange": true\n}')
+  await replaceSnippet(page, '{\n  "open": true,\n  "onOpenChange": true\n}', dialog)
   await expect(dialog.getByRole('button', { name: 'OK', exact: true })).toBeDisabled()
   await expect(dialog.getByRole('alert')).toBeVisible()
   await dialog.getByRole('button', { name: 'Reset', exact: true }).click()
@@ -336,14 +336,14 @@ test('showcase: the AppShell pane eyes apply and unapply the configs', async ({
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.goto('/components/app-shell')
   await page.waitForLoadState('networkidle')
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   const props = page.getByRole('region', { name: 'Props' })
 
   // Open the right pane through its JSON dialog, then unapply the config.
   await props.getByRole('button', { name: 'Edit right', exact: true }).click()
   const rightDialog = page.getByRole('dialog', { name: 'Edit right', exact: true })
   await expect(rightDialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, rightDialog, '{\n  "open": true,\n  "size": 320\n}')
+  await replaceSnippet(page, '{\n  "open": true,\n  "size": 320\n}', rightDialog)
   await rightDialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(demo.getByRole('complementary', { name: 'Right pane' })).toBeVisible()
 
@@ -355,10 +355,10 @@ test('showcase: the AppShell pane eyes apply and unapply the configs', async ({
   // Unapplying the left config drops the prop from the seed while the right
   // config (and its size entry) stays.
   await props.getByRole('button', { name: 'Unapply left', exact: true }).click()
-  await page.locator('main header').getByRole('button', { name: 'Show code' }).click()
-  await expect(page.locator('main .cm-content').first()).toBeVisible()
-  expect(await editorContains(page, page.locator('main'), 'left={{')).toBe(false)
-  expect(await editorContains(page, page.locator('main'), 'size: 320')).toBe(true)
+  await showCodeToggle(page).click()
+  await expect(snippetEditor(page)).toBeVisible()
+  expect(await editorContains(page, 'left={{')).toBe(false)
+  expect(await editorContains(page, 'size: 320')).toBe(true)
 
   // The class-names map edits the same way: committing an override lands it
   // in the demo and the seed, and the eye drops the prop while keeping the
@@ -368,15 +368,15 @@ test('showcase: the AppShell pane eyes apply and unapply the configs', async ({
     .getByRole('dialog')
     .filter({ has: page.getByRole('heading', { name: 'Edit classNames', exact: true }) })
   await expect(namesDialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, namesDialog, '{\n  "main": "custom-main"\n}')
+  await replaceSnippet(page, '{\n  "main": "custom-main"\n}', namesDialog)
   await namesDialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(demo.locator('main.custom-main')).toBeVisible()
-  expect(await editorContains(page, page.locator('main'), 'main: "custom-main"')).toBe(true)
+  expect(await editorContains(page, 'main: "custom-main"')).toBe(true)
   await props.getByRole('button', { name: 'Unapply classNames', exact: true }).click()
   await expect(demo.locator('main.custom-main')).toHaveCount(0)
   await props.getByRole('button', { name: 'Apply classNames', exact: true }).click()
   await expect(demo.locator('main.custom-main')).toBeVisible()
-  expect(await editorContains(page, page.locator('main'), 'main: "custom-main"')).toBe(true)
+  expect(await editorContains(page, 'main: "custom-main"')).toBe(true)
 })
 
 // The left-pane content eye omits the pane while keeping the label text: the
@@ -384,7 +384,7 @@ test('showcase: the AppShell pane eyes apply and unapply the configs', async ({
 test('showcase: the AppShell leftPane eye omits and restores the pane', async ({ page }) => {
   await page.goto('/components/app-shell')
   await page.waitForLoadState('networkidle')
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   const props = page.getByRole('region', { name: 'Props' })
 
   await expect(demo.getByText('Components', { exact: true })).toBeVisible()
@@ -402,7 +402,7 @@ test('showcase: the AppShell rightPane eye empties and restores the drawer', asy
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.goto('/components/app-shell')
   await page.waitForLoadState('networkidle')
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   const props = page.getByRole('region', { name: 'Props' })
 
   // Open the right drawer through its JSON dialog.
@@ -411,7 +411,7 @@ test('showcase: the AppShell rightPane eye empties and restores the drawer', asy
     .getByRole('dialog')
     .filter({ has: page.getByRole('heading', { name: 'Edit right', exact: true }) })
   await expect(rightDialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, rightDialog, '{\n  "open": true\n}')
+  await replaceSnippet(page, '{\n  "open": true\n}', rightDialog)
   await rightDialog.getByRole('button', { name: 'OK', exact: true }).click()
   const rightPane = demo.getByRole('complementary', { name: 'Right pane' })
   await expect(rightPane).toBeVisible()
@@ -435,7 +435,7 @@ test('showcase: the AppShell children and footer dialogs round-trip markup', asy
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.goto('/components/app-shell')
   await page.waitForLoadState('networkidle')
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   const props = page.getByRole('region', { name: 'Props' })
 
   // Footer: the eye toggle applies the seeded markup; committing edited labels
@@ -454,7 +454,7 @@ test('showcase: the AppShell children and footer dialogs round-trip markup', asy
   await editFooter.click()
   const footerDialog = page.getByRole('dialog', { name: 'Edit footer' })
   await expect(footerDialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, footerDialog, footerMarkup('Nav X', 'Title Y'))
+  await replaceSnippet(page, footerMarkup('Nav X', 'Title Y'), footerDialog)
   await footerDialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(footer.getByText('Nav X', { exact: true })).toBeVisible()
   await expect(footer.getByText('Title Y', { exact: true })).toBeVisible()
@@ -463,7 +463,7 @@ test('showcase: the AppShell children and footer dialogs round-trip markup', asy
   // the alert shows; Reset restores the seed, and the dialog detaches on Close.
   await editFooter.click()
   await expect(footerDialog.locator('.cm-content')).toBeVisible()
-  await replaceSnippet(page, footerDialog, `${footerMarkup('Nav X', 'Title Y')}\n<div>EXTRA</div>`)
+  await replaceSnippet(page, `${footerMarkup('Nav X', 'Title Y')}\n<div>EXTRA</div>`, footerDialog)
   await expect(footerDialog.getByRole('alert')).toBeVisible()
   await expect(footerDialog.getByRole('button', { name: 'OK', exact: true })).toBeDisabled()
   await footerDialog.getByRole('button', { name: 'Reset', exact: true }).click()
@@ -477,27 +477,23 @@ test('showcase: the AppShell children and footer dialogs round-trip markup', asy
   const childrenDialog = page.getByRole('dialog')
   await expect(childrenDialog.getByRole('heading', { name: 'Edit children' })).toBeVisible()
   await expect(childrenDialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, childrenDialog, '<div><p>Nope</p>')
+  await replaceSnippet(page, '<div><p>Nope</p>', childrenDialog)
   await expect(childrenDialog.getByRole('alert')).toBeVisible()
   await expect(childrenDialog.getByRole('button', { name: 'OK', exact: true })).toBeDisabled()
-  await replaceSnippet(
-    page,
-    childrenDialog,
-    '<div class="grid gap-2"><p class="p-4 text-sm text-slate-300">Round trip</p><p class="p-4 text-sm text-slate-300">Second copy</p></div>',
-  )
+  await replaceSnippet(page, '<div class="grid gap-2"><p class="p-4 text-sm text-slate-300">Round trip</p><p class="p-4 text-sm text-slate-300">Second copy</p></div>', childrenDialog)
   await expect(childrenDialog.getByRole('alert')).toHaveCount(0)
   await childrenDialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(demo.getByText('Round trip', { exact: true })).toBeVisible()
   await expect(demo.getByText('Second copy', { exact: true })).toBeVisible()
 
   // The committed footer labels land in the Show-code seed.
-  await page.locator('main header').getByRole('button', { name: 'Show code' }).click()
-  await expect(page.locator('main .cm-content').first()).toBeVisible()
-  expect(await editorContains(page, page.locator('main'), '{#snippet footer()}')).toBe(true)
-  expect(await editorContains(page, page.locator('main'), 'Nav X')).toBe(true)
-  expect(await editorContains(page, page.locator('main'), 'Title Y')).toBe(true)
+  await showCodeToggle(page).click()
+  await expect(snippetEditor(page)).toBeVisible()
+  expect(await editorContains(page, '{#snippet footer()}')).toBe(true)
+  expect(await editorContains(page, 'Nav X')).toBe(true)
+  expect(await editorContains(page, 'Title Y')).toBe(true)
   // The committed children markup lands in the Show-code seed too.
-  expect(await editorContains(page, page.locator('main'), 'Second copy')).toBe(true)
+  expect(await editorContains(page, 'Second copy')).toBe(true)
 })
 
 // The className row is a long text value, so it edits through a textarea

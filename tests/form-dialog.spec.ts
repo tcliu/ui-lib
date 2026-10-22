@@ -18,7 +18,7 @@ test('showcase: the FormDialog children cell edits the body input through a dial
   const ok = dialog.getByRole('button', { name: 'OK', exact: true })
 
   // Anything but TextInput lines and well-formed HTML blocks OK behind an error.
-  await replaceSnippet(page, dialog, 'nope < {oops}')
+  await replaceSnippet(page, 'nope < {oops}', dialog)
   await expect(dialog.getByRole('alert')).toBeVisible()
   await expect(ok).toBeDisabled()
 
@@ -26,8 +26,8 @@ test('showcase: the FormDialog children cell edits the body input through a dial
   // the verbatim note.
   await replaceSnippet(
     page,
-    dialog,
     ['<TextInput bind:value={draft} type="number" ariaLabel="Count" />', '<span>note-123</span>'].join('\n'),
+    dialog,
   )
   await expect(dialog.getByRole('alert')).toHaveCount(0)
   await ok.click()
@@ -72,12 +72,12 @@ test('showcase: the FormDialog actions cell edits footer buttons through a dialo
   const ok = dialog.getByRole('button', { name: 'OK', exact: true })
 
   // Anything but the single outline Button line blocks OK behind an error.
-  await replaceSnippet(page, dialog, 'nope')
+  await replaceSnippet(page, 'nope', dialog)
   await expect(dialog.getByRole('alert')).toBeVisible()
   await expect(ok).toBeDisabled()
 
   // A valid edit applies on OK; the opened dialog shows the custom button.
-  await replaceSnippet(page, dialog, '<Button variant="outline" type="button">Tidy</Button>')
+  await replaceSnippet(page, '<Button variant="outline" type="button">Tidy</Button>', dialog)
   await expect(dialog.getByRole('alert')).toHaveCount(0)
   await ok.click()
   await expect(dialog).toHaveCount(0)
@@ -110,12 +110,12 @@ test('showcase: the FormDialog header cell edits the Copyable title through a di
   const ok = dialog.getByRole('button', { name: 'OK', exact: true })
 
   // Anything but the single Copyable line blocks OK behind an error.
-  await replaceSnippet(page, dialog, 'nope')
+  await replaceSnippet(page, 'nope', dialog)
   await expect(dialog.getByRole('alert')).toBeVisible()
   await expect(ok).toBeDisabled()
 
   // A valid edit applies on OK; the opened dialog shows the Copyable title.
-  await replaceSnippet(page, dialog, '<Copyable text="$.user"><span>$.user</span></Copyable>')
+  await replaceSnippet(page, '<Copyable text="$.user"><span>$.user</span></Copyable>', dialog)
   await expect(dialog.getByRole('alert')).toHaveCount(0)
   await ok.click()
   await expect(dialog).toHaveCount(0)

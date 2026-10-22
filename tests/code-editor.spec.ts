@@ -1,11 +1,11 @@
 import { expect, test } from '@playwright/test'
-import { replaceSnippet } from './helpers'
+import { replaceSnippet, showcaseDemo } from './helpers'
 
 test('showcase: the CodeEditor containerClass Value cell styles the demo wrapper', async ({ page }) => {
   await page.goto('/components/code-editor')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   const marker = demo.locator('.demo-class-marker')
   await expect(marker).toHaveCount(0)
 
@@ -20,7 +20,7 @@ test('showcase: the LazyCodeEditor containerClass Value cell styles the demo wra
   await page.goto('/components/lazy-code-editor')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   const marker = demo.locator('.demo-class-marker')
   await expect(marker).toHaveCount(0)
 
@@ -38,7 +38,7 @@ test('showcase: the CodeEditor content cell edits the document through an HTML d
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.goto('/components/code-editor')
   await page.waitForLoadState('networkidle')
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   await page.getByRole('button', { name: 'Edit content' }).click()
   const dialog = page.getByRole('dialog', { name: 'Edit content' })
@@ -47,7 +47,7 @@ test('showcase: the CodeEditor content cell edits the document through an HTML d
 
   // Free-form text commits as-is (no JSON-validity gate): the demo editor
   // below shows the committed document.
-  await replaceSnippet(page, dialog, '{\n  "hello": "world-123"\n}')
+  await replaceSnippet(page, '{\n  "hello": "world-123"\n}', dialog)
   await expect(dialog.locator('.cm-content')).toContainText('world-123')
   await dialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(dialog).toHaveCount(0)
@@ -58,13 +58,13 @@ test('showcase: the CodeEditor content eye resets to the default document', asyn
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.goto('/components/code-editor')
   await page.waitForLoadState('networkidle')
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   // Commit a custom document through the dialog.
   await page.getByRole('button', { name: 'Edit content' }).click()
   const dialog = page.getByRole('dialog', { name: 'Edit content' })
   await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, dialog, '{\n  "hello": "world-123"\n}')
+  await replaceSnippet(page, '{\n  "hello": "world-123"\n}', dialog)
   await dialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(demo.locator('.cm-content')).toContainText('world-123')
 
@@ -78,13 +78,13 @@ test('showcase: the LazyCodeEditor content eye resets to the default document', 
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.goto('/components/lazy-code-editor')
   await page.waitForLoadState('networkidle')
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   // Commit a custom document through the dialog.
   await page.getByRole('button', { name: 'Edit content' }).click()
   const dialog = page.getByRole('dialog', { name: 'Edit content' })
   await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, dialog, '# custom-123')
+  await replaceSnippet(page, '# custom-123', dialog)
   await dialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(demo.locator('.cm-content')).toContainText('custom-123')
 

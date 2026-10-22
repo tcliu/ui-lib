@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { replaceSnippet } from './helpers'
+import { replaceSnippet, showcaseDemo } from './helpers'
 
 test('showcase: the Tooltip children cell edits text through a dialog with a reset eye', async ({
   page,
@@ -9,7 +9,7 @@ test('showcase: the Tooltip children cell edits text through a dialog with a res
   await page.goto('/components/tooltip')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   // The required children carry a reset eye beside the edit icon.
   await expect(page.getByRole('button', { name: 'Unapply children' })).toBeVisible()
@@ -21,7 +21,7 @@ test('showcase: the Tooltip children cell edits text through a dialog with a res
     .filter({ has: page.getByRole('heading', { name: 'Edit children' }) })
   await expect(dialog).toBeVisible()
   await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, dialog, 'Custom tip')
+  await replaceSnippet(page, 'Custom tip', dialog)
   await dialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(dialog).toHaveCount(0)
   await expect(demo.getByRole('button', { name: 'Custom tip' })).toBeVisible()

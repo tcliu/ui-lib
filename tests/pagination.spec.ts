@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { editorContains, replaceSnippet } from './helpers'
+import { editorContains, replaceSnippet, showCodeToggle, showcaseDemo, snippetEditor } from './helpers'
 
 test('showcase: the Pagination trailing cell edits text through a dialog applied by the eye', async ({
   page,
@@ -9,14 +9,14 @@ test('showcase: the Pagination trailing cell edits text through a dialog applied
   await page.goto('/components/pagination')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   // The dialog commits text but the eye stays off, so the demo is unchanged.
   await page.getByRole('button', { name: 'Edit trailing' }).click()
   const dialog = page.getByRole('dialog', { name: 'Edit trailing' })
   await expect(dialog).toBeVisible()
   await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
-  await replaceSnippet(page, dialog, '1–200 of 200')
+  await replaceSnippet(page, '1–200 of 200', dialog)
   await dialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(dialog).toHaveCount(0)
   await expect(demo).not.toContainText('1–200 of 200')
@@ -34,7 +34,7 @@ test('showcase: the Pagination total Value cell edits the page count', async ({ 
   await page.goto('/components/pagination')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   await expect(demo.getByRole('button', { name: '20', exact: true })).toBeVisible()
   await page.getByRole('textbox', { name: 'total value', exact: true }).fill('35')
@@ -46,7 +46,7 @@ test('showcase: the Pagination currentPage Value cell jumps the demo', async ({ 
   await page.goto('/components/pagination')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   const jump = demo.getByRole('textbox')
 
   await expect(jump).toHaveValue('3')
@@ -60,7 +60,7 @@ test('showcase: the Pagination pageSize Value cell resizes the demo pages', asyn
   await page.goto('/components/pagination')
   await page.waitForLoadState('networkidle')
 
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   await expect(demo.getByRole('button', { name: '20', exact: true })).toBeVisible()
   const pageSizeCell = page.getByRole('textbox', { name: 'pageSize value', exact: true })
@@ -80,7 +80,7 @@ test('showcase: the Pagination labels editor updates the demo and snippet', asyn
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.goto('/components/pagination')
   await page.waitForLoadState('networkidle')
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
   const editLabels = page.getByRole('button', { name: 'Edit labels' })
 
   // Dialog -> demo + snippet: a previous-label override renames the button
@@ -88,19 +88,19 @@ test('showcase: the Pagination labels editor updates the demo and snippet', asyn
   await editLabels.click()
   const dialog = page.getByRole('dialog')
   await expect(dialog.locator('.cm-content')).toBeVisible()
-  await replaceSnippet(page, dialog, '{\n  "previous": "Back-123"\n}')
+  await replaceSnippet(page, '{\n  "previous": "Back-123"\n}', dialog)
   await expect(dialog.locator('.cm-content')).toContainText('Back-123')
   await dialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(demo.getByRole('button', { name: 'Back-123' })).toBeVisible()
-  await page.locator('main header').getByRole('button', { name: 'Show code' }).click()
-  await expect(page.locator('main .cm-content').first()).toBeVisible()
-  expect(await editorContains(page, page.locator('main'), 'previous: "Back-123"')).toBe(true)
+  await showCodeToggle(page).click()
+  await expect(snippetEditor(page)).toBeVisible()
+  expect(await editorContains(page, 'previous: "Back-123"')).toBe(true)
 
   // Malformed JSON rejects the commit: OK disables with guidance, and Reset
   // restores the committable draft.
   await editLabels.click()
   await expect(dialog.locator('.cm-content')).toBeVisible()
-  await replaceSnippet(page, dialog, 'not json')
+  await replaceSnippet(page, 'not json', dialog)
   await expect(dialog.getByRole('button', { name: 'OK', exact: true })).toBeDisabled()
   await expect(dialog.getByRole('alert')).toBeVisible()
   await dialog.getByRole('button', { name: 'Reset', exact: true }).click()
@@ -113,13 +113,13 @@ test('showcase: the Pagination labels eye applies and unapplies the map', async 
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.goto('/components/pagination')
   await page.waitForLoadState('networkidle')
-  const demo = page.locator('[data-showcase-demo]').first()
+  const demo = showcaseDemo(page)
 
   // Commit a previous-label override through the dialog.
   await page.getByRole('button', { name: 'Edit labels' }).click()
   const dialog = page.getByRole('dialog')
   await expect(dialog.locator('.cm-content')).toBeVisible()
-  await replaceSnippet(page, dialog, '{\n  "previous": "Back-123"\n}')
+  await replaceSnippet(page, '{\n  "previous": "Back-123"\n}', dialog)
   await dialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(demo.getByRole('button', { name: 'Back-123' })).toBeVisible()
 

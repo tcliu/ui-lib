@@ -66,7 +66,7 @@ export default defineConfig(async ({ command, mode }) => {
       globals: true,
       // A unit test sits beside the module it exercises, so the suite is
       // collected by name wherever it lives; `tests/` belongs to Playwright.
-      include: ['src/**/*.test.{js,ts}', 'scripts/**/*.test.{js,ts,mjs}'],
+      include: ['src/**/*.test.{js,ts,mjs}', 'scripts/**/*.test.{js,ts,mjs}'],
     },
   }
 })
