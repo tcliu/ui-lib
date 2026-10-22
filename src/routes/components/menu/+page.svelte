@@ -46,7 +46,7 @@
     items: seedMenuItems() as MenuDemoItem[],
     itemsEnabled: true,
     autoPlace: 'yes' as TriState,
-    autoPlaceOn: true,
+    autoPlaceOn: false,
     triggerClass: '',
     triggerClassOn: false,
     panelClass: 'w-44',

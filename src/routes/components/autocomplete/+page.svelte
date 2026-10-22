@@ -69,7 +69,7 @@
     align: 'left',
     alignOn: false,
     autoPlace: 'yes' as TriState,
-    autoPlaceOn: true,
+    autoPlaceOn: false,
     panelClass: '',
     panelClassOn: false,
     stageWidth: AUTOCOMPLETE_STAGE_DEFAULT_WIDTH,

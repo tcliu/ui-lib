@@ -54,7 +54,7 @@
     type: 'button',
     typeOn: false,
     focusRing: 'yes' as TriState,
-    focusRingOn: true,
+    focusRingOn: false,
     preventFocusSteal: 'no' as TriState,
     preventFocusStealOn: false,
   }

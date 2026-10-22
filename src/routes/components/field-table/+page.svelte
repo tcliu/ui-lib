@@ -3,10 +3,10 @@
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import { parseSizeValue } from '$lib/showcase/size-input'
-  import { jsonField, resetToggle, snippetToggle } from '$lib/showcase/snippet-field'
+  import { jsonField, resetToggle, sizeField, snippetToggle } from '$lib/showcase/snippet-field'
   import { syncFieldsOf, type SyncField, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
   import type { SnippetAttribute } from '$lib/showcase/snippet-attributes'
-  import { buildFieldTableSnippet, parseHeadersJson, type TriState } from './demo-snippet'
+  import { buildFieldTableSnippet, FIELD_TABLE_DEMO_ROWS, parseHeadersJson, type TriState } from './demo-snippet'
 
   const i18n = getI18nContext()
 
@@ -35,12 +35,6 @@
   let pg = $state(structuredClone(INITIAL))
   // The header overrides and the sample notes apply only while their eye
   // toggle is on (both on, so the cleared form renders the current demo).
-
-  const roleOptions = [
-    { value: 'admin', label: 'admin' },
-    { value: 'editor', label: 'editor' },
-    { value: 'viewer', label: 'viewer' },
-  ]
 
   const demoPropHeader = $derived(pg.propHeader || i18n.t('showcase.prop'))
   const demoTypeHeader = $derived(pg.typeHeader || i18n.t('showcase.type'))
@@ -132,22 +126,66 @@
   }
 
   // The demo documents FieldTable with itself: five editable sample fields
-  // plus a read-only function row. Mirrors the builder's inline fields.
-  const demoFields: FieldConfig[] = $derived([
-    { name: 'name', type: 'string', defaultValue: "''", editorDefaultValue: '', note: 'Display name.', editor: 'text', clearable: true, value: pg.name, onChange: value => (pg.name = value) },
-    { name: 'role', type: "'admin' | 'editor' | 'viewer'", defaultValue: "'viewer'", note: 'Access level.', editor: 'enum', options: roleOptions, value: pg.role, onChange: value => (pg.role = value), placeholder: 'viewer', clearLabel: 'Clear role' },
-    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number", defaultValue: "'md'", note: 'Control scale.', editor: 'size', allowCustomValue: true, value: pg.size, onChange: value => (pg.size = value), placeholder: 'md', clearLabel: 'Clear size' },
-    { name: 'active', type: 'boolean', defaultValue: 'false', note: 'Whether the account is active.', editor: 'boolean', value: pg.active, onChange: value => (pg.active = value as TriState) },
-    { name: 'notes', type: 'string', defaultValue: "''", note: 'Long text edited in a code dialog; the eye resets the text.', editor: 'snippet', value: pg.notes, onChange: value => {
-      pg.notes = value
-      pg.notesEnabled = true
-    }, toggle: resetToggle(
-      pg.notesEnabled,
-      enabled => (pg.notesEnabled = enabled),
-      () => (pg.notes = ''),
-    ) },
-    { name: 'onSave', type: '() => void', defaultValue: '—', note: 'Save handler.' },
-  ])
+  // plus a read-only function row. The data-only facets come from the builder's
+  // shared row list, so the static demo and Show-code cannot drift; this page
+  // adds only its live state behind each row.
+  function demoFieldValue(name: string): string | undefined {
+    switch (name) {
+      case 'name':
+        return pg.name
+      case 'role':
+        return pg.role
+      case 'size':
+        return pg.size
+      case 'active':
+        return pg.active
+      case 'notes':
+        return pg.notes
+      default:
+        return undefined
+    }
+  }
+
+  function demoFieldChange(name: string): ((value: string) => void) | undefined {
+    switch (name) {
+      case 'name':
+        return value => (pg.name = value)
+      case 'role':
+        return value => (pg.role = value)
+      case 'size':
+        return value => (pg.size = value)
+      case 'active':
+        return value => (pg.active = value as TriState)
+      case 'notes':
+        return value => {
+          pg.notes = value
+          pg.notesEnabled = true
+        }
+      default:
+        return undefined
+    }
+  }
+
+  const demoFields: FieldConfig[] = $derived(
+    FIELD_TABLE_DEMO_ROWS.map(({ toggle, ...row }) => {
+      const value = demoFieldValue(row.name)
+      const onChange = demoFieldChange(row.name)
+      return {
+        ...row,
+        ...(value !== undefined ? { value } : {}),
+        ...(onChange ? { onChange } : {}),
+        ...(toggle
+          ? {
+              toggle: resetToggle(
+                pg.notesEnabled,
+                enabled => (pg.notesEnabled = enabled),
+                () => (pg.notes = ''),
+              ),
+            }
+          : {}),
+      }
+    }),
+  )
 
   function clearPlayground() {
     pg = structuredClone(INITIAL)
@@ -182,7 +220,7 @@
   const fields: SyncableFieldConfig[] = $derived([
     jsonField({
       name: 'headers',
-      type: 'FieldTableHeaders',
+      type: 'FieldTableHeaders?',
       note: 'Column labels; omitted keys keep the English defaults. The eye applies the overrides.',
       value: headersDraft,
       onChange: commitHeadersDraft,
@@ -190,7 +228,7 @@
       toggle: snippetToggle(pg.headersEnabled, enabled => (pg.headersEnabled = enabled)),
       sync: { kind: 'custom', read: readHeadersAttribute, set: commitHeadersWriteBack },
     }),
-    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number", defaultValue: "'md'", note: 'Editor and action scale; numbers are icon-scale pixels interpolated between the steps.', editor: 'size', allowCustomValue: true, value: pg.tableSize, onChange: value => { pg.tableSize = value; pg.tableSizeOn = true; }, placeholder: 'md', clearLabel: 'Clear size', toggle: snippetToggle(pg.tableSizeOn, enabled => (pg.tableSizeOn = enabled)), sync: { kind: 'custom', read: attrs => { const attr = attrs?.get('size'); if (!attr) return 'md'; if (attr.kind === 'string') return attr.value; if (attr.kind === 'expression' && /^\d+(\.\d+)?$/.test(attr.value)) return attr.value; return undefined } } },
+    sizeField({ note: 'Editor and action scale; numbers are icon-scale pixels interpolated between the steps.', value: pg.tableSize, onChange: v => (pg.tableSize = v), enabled: pg.tableSizeOn, setEnabled: v => (pg.tableSizeOn = v) }),
     { name: 'fields', type: 'FieldConfig[]', defaultValue: '—', note: 'Field defs in display order; editors render from editor/value/onChange.' },
     { name: 'value', type: 'Snippet<[FieldConfig]>', defaultValue: '—', note: 'Per-row Value cell override; wins over the built-in editors.' },
   ])

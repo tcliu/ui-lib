@@ -7,7 +7,7 @@
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import { parseSizeValue } from '$lib/showcase/size-input'
   import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { enumField, textField, boolField, snippetToggle, resetToggle } from '$lib/showcase/snippet-field'
+  import { enumField, textField, boolField, sizeField, snippetToggle, resetToggle } from '$lib/showcase/snippet-field'
   import { STEPLESS_CLASS, buildNumberInputSnippet, type TriState } from './demo-snippet'
 
   const i18n = getI18nContext()
@@ -44,7 +44,7 @@
     defaultValue: '',
     defaultValueOn: false,
     showControls: 'yes' as TriState,
-    showControlsOn: true,
+    showControlsOn: false,
     decrementLabel: '',
     decrementLabelOn: false,
     incrementLabel: '',
@@ -90,6 +90,14 @@
   const demoClassName = $derived(pg.classNameOn && pg.className ? pg.className : undefined)
 
   const steppersOptions = [{ value: 'yes', label: 'Hide steppers' }]
+
+  const sizeOptions = [
+    { value: 'xs', label: 'xs' },
+    { value: 'sm', label: 'sm' },
+    { value: 'md', label: 'md' },
+    { value: 'lg', label: 'lg' },
+    { value: 'xl', label: 'xl' },
+  ]
 
   function clearPlayground() {
     pg = structuredClone(INITIAL)
@@ -154,7 +162,7 @@
     { name: 'min', type: 'number?', defaultValue: '—', note: 'Lower clamp on blur and step (and on typing when a longer entry could not fit).', editor: 'number', clearable: true, value: pg.min, onChange: value => { pg.min = value; pg.minOn = true; }, toggle: snippetToggle(pg.minOn, enabled => (pg.minOn = enabled)), sync: { kind: 'number' } },
     textField({ name: 'placeholder', type: 'string?', defaultValue: '—', note: 'Native placeholder.', value: pg.placeholder, onChange: v => (pg.placeholder = v), clearable: true, enabled: pg.placeholderOn, setEnabled: v => (pg.placeholderOn = v) }),
     boolField({ name: 'showControls', defaultValue: 'true', note: 'Renders the stepper buttons; hiding them puts the field in the embedded mode, where the caller owns the whole visual (no border, no background).', value: pg.showControls, onChange: v => (pg.showControls = v as TriState), enabled: pg.showControlsOn, setEnabled: v => (pg.showControlsOn = v) }),
-    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number", defaultValue: "'md'", note: 'Control scale; numbers are icon-scale pixels scaled by fixed ratios.', editor: 'size', allowCustomValue: true, value: pg.size, onChange: value => { pg.size = value; pg.sizeOn = true; }, clearLabel: 'Clear size', placeholder: 'md', toggle: snippetToggle(pg.sizeOn, enabled => (pg.sizeOn = enabled)), sync: { kind: 'text' } },
+    sizeField({ note: 'Control scale; numbers are icon-scale pixels scaled by fixed ratios.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
     { name: 'step', type: 'number?', defaultValue: '1', editorDefaultValue: '1', note: 'Arrow/wheel step; decimals preserved.', editor: 'number', clearable: true, value: pg.step, onChange: value => { pg.step = value; pg.stepOn = true; }, placeholder: '1', toggle: snippetToggle(pg.stepOn, enabled => (pg.stepOn = enabled)), sync: { kind: 'number' } },
     { name: 'value', type: 'string', defaultValue: '—', note: 'Bindable field value; the eye resets it to 5.', editor: 'text', clearable: true, value: pg.value, onChange: value => { pg.value = value; pg.valueOn = true; }, toggle: resetToggle(pg.valueOn, enabled => (pg.valueOn = enabled), () => (pg.value = '5')), sync: { kind: 'script' } },
     { name: 'onClear', type: '() => void', defaultValue: 'clears value', note: 'Clear handler; falls back to clearing the bound value when omitted.' },
@@ -191,6 +199,24 @@
           pg.showControlsOn = false
           pg.className = ''
           pg.classNameOn = false
+        }} />
+    </FormField>
+    <FormField label="Size">
+      <SelectDropdown
+        activeValue={pg.size}
+        ariaLabel="Size"
+        options={sizeOptions}
+        filterable
+        allowCustomValue
+        onSelect={value => {
+          pg.size = value
+          pg.sizeOn = true
+        }}
+        clearable
+        clearLabel="Clear size"
+        onClear={() => {
+          pg.size = 'md'
+          pg.sizeOn = false
         }} />
     </FormField>
   </div>

@@ -104,6 +104,9 @@
   // editor text (e.g. on locale change).
   </script>
 
+<!-- Whitespace-sensitive: segments join with explicit single spaces to match the seed's line breaks; keep this snippet on one line. -->
+{#snippet buttonsChildren()}{#each demoButtons as child, index}{#if index > 0}{' '}{/if}{#if child.kind === 'button'}<Button variant={child.variant} size={demoButtonSize}>{child.label}</Button>{:else if child.kind === 'html'}{#if child.tag === 'div'}<div>{child.text}</div>{:else if child.tag === 'span'}<span>{child.text}</span>{:else}<p>{child.text}</p>{/if}{:else}{child.text}{/if}{/each}{/snippet}
+
 {#snippet settingsPanel()}
   <!-- The size preset drives two things at once — the row's gap (the `size`
     prop) and the size of every button in it — so it stays here; the props
@@ -143,6 +146,5 @@
     sync={{ tag: 'Buttons' }}
     scopeRefresh={() => [okLabel, cancelLabel]}
   >
-    <!-- Whitespace-sensitive: segments join with explicit single spaces to match the seed's line breaks; keep this block on one line. -->
-    <Buttons align={demoClassName ? undefined : demoAlign} size={demoClassName ? undefined : demoSize} className={demoClassName}>{#if pg.childrenEnabled}{#each demoButtons as child, index}{#if index > 0}{' '}{/if}{#if child.kind === 'button'}<Button variant={child.variant} size={demoButtonSize}>{child.label}</Button>{:else if child.kind === 'html'}{#if child.tag === 'div'}<div>{child.text}</div>{:else if child.tag === 'span'}<span>{child.text}</span>{:else}<p>{child.text}</p>{/if}{:else}{child.text}{/if}{/each}{/if}</Buttons>
+    <Buttons align={demoClassName ? undefined : demoAlign} size={demoClassName ? undefined : demoSize} className={demoClassName} children={pg.childrenEnabled ? buttonsChildren : undefined} />
   </ShowcasePage>

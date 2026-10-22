@@ -120,6 +120,16 @@
   // without touching the editor text. Customized labels ride the seed instead.
   </script>
 
+{#snippet fieldChildren()}
+  {#each demoChildren as segment}
+    {#if segment.kind === 'textinput'}
+      <TextInput bind:value={pg.value} id={segment.id || undefined} />
+    {:else}
+      {@html segment.html}
+    {/if}
+  {/each}
+{/snippet}
+
 <ShowcasePage
     {fields}
     title="FormField"
@@ -131,15 +141,11 @@
     scopeRefresh={() => [demoLabel]}
     scopeRefreshWhen={() => !(pg.labelOn && pg.label)}
   >
-    <FormField label={demoLabel} htmlFor={demoHtmlFor} className={demoClassName} layout={demoLayout} size={demoSize}>
-      {#if pg.childrenOn}
-        {#each demoChildren as segment}
-          {#if segment.kind === 'textinput'}
-            <TextInput bind:value={pg.value} id={segment.id || undefined} />
-          {:else}
-            {@html segment.html}
-          {/if}
-        {/each}
-      {/if}
-    </FormField>
+    <FormField
+      label={demoLabel}
+      htmlFor={demoHtmlFor}
+      className={demoClassName}
+      layout={demoLayout}
+      size={demoSize}
+      children={pg.childrenOn ? fieldChildren : undefined} />
   </ShowcasePage>

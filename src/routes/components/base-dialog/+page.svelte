@@ -206,7 +206,7 @@
     }),
     enumField({ name: 'heightVariant', type: "'auto' | 'xs' | … | '7xl'", defaultValue: "'auto'", note: 'Panel height step; auto hugs the content.', options: heightVariantOptions, value: pg.heightVariant, onChange: v => (pg.heightVariant = v), placeholder: 'auto', clearLabel: 'Clear height', enabled: pg.heightVariantOn, setEnabled: v => (pg.heightVariantOn = v) }),
     enumField({ name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | '7xl'", defaultValue: '—', note: 'Shorthand setting both width and height; an explicit variant wins.', options: sizeOptions, value: pg.size, onChange: v => (pg.size = v), clearLabel: 'Clear size', enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
-    { name: 'title', type: 'string?', defaultValue: '—', note: 'Dialog heading.', editor: 'text', clearable: true, value: pg.title || i18n.t('showcase.dialogTitle'), onChange: value => { pg.title = value === i18n.t('showcase.dialogTitle') ? '' : value; pg.titleOn = true; }, toggle: snippetToggle(pg.titleOn, enabled => (pg.titleOn = enabled)), sync: { kind: 'text' } },
+    textField({ name: 'title', type: 'string?', defaultValue: '—', note: 'Dialog heading.', value: pg.title || i18n.t('showcase.dialogTitle'), onChange: value => { pg.title = value === i18n.t('showcase.dialogTitle') ? '' : value; }, clearable: true, enabled: pg.titleOn, setEnabled: enabled => (pg.titleOn = enabled) }),
     enumField({ name: 'widthVariant', type: "'xs' | … | '7xl' | 'fit' | 'wide'", defaultValue: "'md'", note: 'Panel width variant.', options: widthVariantOptions, value: pg.widthVariant, onChange: v => (pg.widthVariant = v), placeholder: 'md', clearLabel: 'Clear width', enabled: pg.widthVariantOn, setEnabled: v => (pg.widthVariantOn = v) }),
     { name: 'onCancel', type: '() => void', defaultValue: '—', note: 'Called by every dismissal affordance.' },
   ])
@@ -215,6 +215,17 @@
 
 {#snippet dialogHeader()}
   <Copyable text={headerContent.text}><span>{headerContent.inner}</span></Copyable>
+{/snippet}
+
+{#snippet dialogChildren()}
+  <p>{demoChildren.body}</p>
+  <Buttons align="right">
+    {#each demoChildren.buttons as button}
+      <Button variant={button.variant} onClick={() => handleDemoButtonClick(button.onClick)}>
+        {button.label}
+      </Button>
+    {/each}
+  </Buttons>
 {/snippet}
 
 <ShowcasePage
@@ -242,17 +253,8 @@
         widthVariant={demoWidthVariant}
         heightVariant={demoHeightVariant}
         size={demoSize}
-        onCancel={() => (pg.open = false)}>
-        {#if pg.childrenOn}
-          <p>{demoChildren.body}</p>
-          <Buttons align="right">
-            {#each demoChildren.buttons as button}
-              <Button variant={button.variant} onClick={() => handleDemoButtonClick(button.onClick)}>
-                {button.label}
-              </Button>
-            {/each}
-          </Buttons>
-        {/if}
+        onCancel={() => (pg.open = false)}
+        children={pg.childrenOn ? dialogChildren : undefined}>
       </BaseDialog>
     {/if}
   </ShowcasePage>

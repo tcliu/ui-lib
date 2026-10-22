@@ -4,7 +4,7 @@
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { textField, boolField, resetToggle, snippetToggle } from '$lib/showcase/snippet-field'
+  import { textField, boolField, snippetField, resetToggle, snippetToggle } from '$lib/showcase/snippet-field'
   import {
     DEFAULT_CONTENT,
     DEFAULT_DOC_TYPE,
@@ -28,7 +28,7 @@
     docType: 'text',
     docTypeOn: true,
     editable: 'yes' as TriState,
-    editableOn: true,
+    editableOn: false,
     containerClass: '',
     containerClassOn: false,
     editorClass: '',
@@ -79,20 +79,28 @@
   // editor; `docType` is always emitted (falling back to Markdown), so the
   // Markdown literal maps back to unset.
   const fields: SyncableFieldConfig[] = $derived([
+    boolField({ name: 'autoFocus', defaultValue: 'false', note: 'Focuses the editor once it mounts.', value: pg.autoFocus, onChange: v => (pg.autoFocus = v as TriState), enabled: pg.autoFocusOn, setEnabled: v => (pg.autoFocusOn = v) }),
     textField({ name: 'containerClass', type: 'string?', defaultValue: "''", note: 'Classes for the outer wrapper; give it a bounded height.', value: pg.containerClass, onChange: v => (pg.containerClass = v), editorDefaultValue: '', clearable: true, enabled: pg.containerClassOn, setEnabled: v => (pg.containerClassOn = v) }),
-    { name: 'content', type: 'string', defaultValue: '—', note: 'Bindable editor document. The eye resets to the default content.', editor: 'snippet', value: pg.content, onChange: value => {
-      pg.content = value
-      pg.contentEnabled = true
-    }, dialog: { docType: 'html', title: 'Edit content' }, toggle: resetToggle(
-      pg.contentEnabled,
-      enabled => (pg.contentEnabled = enabled),
-      () => (pg.content = DEFAULT_CONTENT),
-    ) },
+    snippetField({
+      name: 'content',
+      type: 'string',
+      note: 'Bindable editor document. The eye resets to the default content.',
+      value: pg.content,
+      onChange: value => {
+        pg.content = value
+        pg.contentEnabled = true
+      },
+      dialog: { docType: 'html', title: 'Edit content' },
+      toggle: resetToggle(
+        pg.contentEnabled,
+        enabled => (pg.contentEnabled = enabled),
+        () => (pg.content = DEFAULT_CONTENT),
+      ),
+    }),
     { name: 'docType', type: 'string', defaultValue: "'text'", note: "Language pack key: json, javascript, html, markdown, yaml, or xml (loaded on demand). 'text' loads none.", editor: 'enum', options: DOC_TYPE_OPTIONS, value: pg.docType, onChange: value => { pg.docType = value; pg.docTypeOn = true; }, placeholder: 'text', clearLabel: 'Clear document type', toggle: snippetToggle(pg.docTypeOn, enabled => (pg.docTypeOn = enabled)), sync: { kind: 'text', unsetValues: ['markdown'] } },
     boolField({ name: 'editable', defaultValue: 'true', note: 'Enables typing; false renders read-only.', value: pg.editable, onChange: v => (pg.editable = v as TriState), enabled: pg.editableOn, setEnabled: v => (pg.editableOn = v) }),
     textField({ name: 'editorClass', type: 'string?', defaultValue: "''", note: 'Classes for the CodeMirror host; use h-full inside a sized wrapper.', value: pg.editorClass, onChange: v => (pg.editorClass = v), editorDefaultValue: '', clearable: true, enabled: pg.editorClassOn, setEnabled: v => (pg.editorClassOn = v) }),
     { name: 'maxContentLength', type: 'number?', defaultValue: '0', editorDefaultValue: '0', note: 'Caps the document length; 0 disables the cap.', editor: 'number', clearable: true, value: pg.maxContentLength, onChange: value => { pg.maxContentLength = value; pg.maxContentLengthOn = true; }, placeholder: '0', toggle: snippetToggle(pg.maxContentLengthOn, enabled => (pg.maxContentLengthOn = enabled)), sync: { kind: 'number', pattern: /^\d+$/ } },
-    boolField({ name: 'autoFocus', defaultValue: 'false', note: 'Focuses the editor once it mounts.', value: pg.autoFocus, onChange: v => (pg.autoFocus = v as TriState), enabled: pg.autoFocusOn, setEnabled: v => (pg.autoFocusOn = v) }),
     textField({ name: 'editorAriaLabel', type: 'string?', defaultValue: 'editor.content', note: 'Accessible name for the editor textbox; unset, the localized editor.content key renders.', value: pg.editorAriaLabel, onChange: v => (pg.editorAriaLabel = v), clearable: true, enabled: pg.editorAriaLabelOn, setEnabled: v => (pg.editorAriaLabelOn = v) }),
     textField({ name: 'recreateKey', type: 'string?', defaultValue: "''", note: 'Changing it destroys and rebuilds the editor.', value: pg.recreateKey, onChange: v => (pg.recreateKey = v), editorDefaultValue: '', clearable: true, enabled: pg.recreateKeyOn, setEnabled: v => (pg.recreateKeyOn = v) }),
     { name: 'onAutoFocused', type: '() => void', defaultValue: '—', note: 'Called after an autofocus.' },

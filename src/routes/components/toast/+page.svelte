@@ -1,6 +1,7 @@
 <script lang="ts">
   import Button from '$lib/components/Button.svelte'
   import FormField from '$lib/components/FormField.svelte'
+  import SelectDropdown from '$lib/components/SelectDropdown.svelte'
   import TextInput from '$lib/components/TextInput.svelte'
   import Toast from '$lib/components/Toast.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
@@ -35,6 +36,13 @@
   let pg = $state(structuredClone(INITIAL))
 
   const typeOptions = ['success', 'info', 'warning', 'error'].map(value => ({ value, label: value }))
+  const sizeOptions = [
+    { value: 'xs', label: 'xs' },
+    { value: 'sm', label: 'sm' },
+    { value: 'md', label: 'md' },
+    { value: 'lg', label: 'lg' },
+    { value: 'xl', label: 'xl' },
+  ]
   const positionOptions = ['top-right', 'top-center', 'bottom-right', 'bottom-center'].map(value => ({
     value,
     label: value,
@@ -80,7 +88,7 @@
     enumField({ name: 'position', type: "'top-right' | 'top-center' | 'bottom-right' | 'bottom-center'", defaultValue: "'bottom-right'", note: 'Viewport edge the toast docks to.', options: positionOptions, value: pg.position, onChange: v => (pg.position = v), placeholder: 'bottom-right', clearLabel: 'Clear position', enabled: pg.positionOn, setEnabled: v => (pg.positionOn = v) }),
     sizeField({ note: 'Text scale; every metric is a fixed ratio of the size.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
     enumField({ name: 'type', type: "'success' | 'info' | 'warning' | 'error'", defaultValue: "'info'", note: 'Accent treatment.', options: typeOptions, value: pg.type, onChange: v => (pg.type = v), placeholder: 'info', clearLabel: 'Clear type', enabled: pg.typeOn, setEnabled: v => (pg.typeOn = v) }),
-    { name: 'action', type: '{ label: string; onClick: () => void }', defaultValue: '—', note: 'Action button; renders only when set.' },
+    { name: 'action', type: '{ label: string; onClick: () => void }?', defaultValue: '—', note: 'Action button; renders only when set.' },
     { name: 'onClose', type: '() => void', defaultValue: '—', note: 'Dismiss handler (button and Escape).' },
   ])
 
@@ -96,6 +104,24 @@
   <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
     <FormField label="Action">
       <TextInput bind:value={pg.action} ariaLabel="Action" />
+    </FormField>
+    <FormField label="Size">
+      <SelectDropdown
+        activeValue={pg.size}
+        ariaLabel="Size"
+        options={sizeOptions}
+        filterable
+        allowCustomValue
+        onSelect={value => {
+          pg.size = value
+          pg.sizeOn = true
+        }}
+        clearable
+        clearLabel="Clear size"
+        onClear={() => {
+          pg.size = 'md'
+          pg.sizeOn = false
+        }} />
     </FormField>
   </div>
 {/snippet}

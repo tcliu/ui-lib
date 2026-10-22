@@ -7,7 +7,7 @@
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import { parseSizeValue } from '$lib/showcase/size-input'
   import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { enumField, textField, boolField, snippetToggle, resetToggle } from '$lib/showcase/snippet-field'
+  import { enumField, textField, boolField, sizeField, snippetToggle, resetToggle } from '$lib/showcase/snippet-field'
   import { buildPasswordInputSnippet, type TriState } from './demo-snippet'
 
   const i18n = getI18nContext()
@@ -129,7 +129,7 @@
     textField({ name: 'placeholder', type: 'string?', defaultValue: '—', note: 'Placeholder text.', value: pg.placeholder, onChange: v => (pg.placeholder = v), clearable: true, enabled: pg.placeholderOn, setEnabled: v => (pg.placeholderOn = v) }),
     boolField({ name: 'required', defaultValue: 'false', note: 'Native required flag.', value: pg.required, onChange: v => (pg.required = v as TriState), enabled: pg.requiredOn, setEnabled: v => (pg.requiredOn = v) }),
     textField({ name: 'showLabel', type: 'string?', defaultValue: '—', note: 'Toggle label when hidden; falls back to the locale.', value: pg.showLabel, onChange: v => (pg.showLabel = v), clearable: true, enabled: pg.showLabelOn, setEnabled: v => (pg.showLabelOn = v) }),
-    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number", defaultValue: "'md'", note: 'Control scale; numbers are icon-scale pixels scaled by fixed ratios.', editor: 'size', allowCustomValue: true, value: pg.size, onChange: value => { pg.size = value; pg.sizeOn = true; }, clearLabel: 'Clear size', placeholder: 'md', toggle: snippetToggle(pg.sizeOn, enabled => (pg.sizeOn = enabled)), sync: { kind: 'text' } },
+    sizeField({ note: 'Control scale; numbers are icon-scale pixels scaled by fixed ratios.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
     { name: 'value', type: 'string', defaultValue: "''", editorDefaultValue: '', note: 'Bindable field value; the eye resets it to empty.', editor: 'text', clearable: true, value: pg.value, onChange: value => { pg.value = value; pg.valueOn = true; }, toggle: resetToggle(pg.valueOn, enabled => (pg.valueOn = enabled), () => (pg.value = '')), sync: { kind: 'script' } },
     { name: 'onClear', type: '() => void', defaultValue: 'clears value', note: 'Clear handler; falls back to clearing the bound value when omitted.' },
     { name: 'oninput', type: '(event: Event) => void', defaultValue: '—', note: 'Native input handler.' }

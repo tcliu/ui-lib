@@ -5,7 +5,7 @@
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import ShowcaseStage from '$lib/showcase/ShowcaseStage.svelte'
   import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { textField, boolField, snippetToggle } from '$lib/showcase/snippet-field'
+  import { textField, boolField, enumField, snippetToggle } from '$lib/showcase/snippet-field'
   import {
     SPLITTER_MAIN,
     SPLITTER_PANE,
@@ -144,8 +144,8 @@
     textField({ name: 'lineClass', type: 'string?', defaultValue: "''", note: 'Extra classes for the visible divider line.', value: pgLineClass, onChange: v => (pgLineClass = v), editorDefaultValue: '', clearable: true, enabled: pgLineClassOn, setEnabled: v => (pgLineClassOn = v) }),
     { name: 'max', type: 'number?', defaultValue: '—', note: 'Upper clamp for the divider position; unset follows the orientation/unit preset.', editor: 'number', clearable: true, value: pgMax, onChange: value => { pgMax = value; pgMaxOn = true; }, toggle: snippetToggle(pgMaxOn, enabled => (pgMaxOn = enabled)), sync: { kind: 'number' } },
     { name: 'min', type: 'number?', defaultValue: '—', note: 'Lower clamp for the divider position; unset follows the orientation/unit preset.', editor: 'number', clearable: true, value: pgMin, onChange: value => { pgMin = value; pgMinOn = true; }, toggle: snippetToggle(pgMinOn, enabled => (pgMinOn = enabled)), sync: { kind: 'number' } },
-    { name: 'orientation', type: "'vertical' | 'horizontal'", defaultValue: "'vertical'", note: 'Vertical splits left/right; horizontal splits top/bottom.', editor: 'enum', options: orientationOptions, value: pgOrientation, onChange: applyOrientation, placeholder: 'vertical', clearLabel: 'Clear orientation', toggle: snippetToggle(pgOrientationOn, enabled => (pgOrientationOn = enabled)), sync: { kind: 'text' } },
-    { name: 'unit', type: "'px' | '%'", defaultValue: "'px'", note: 'Unit for the value, drag delta, and arrow-key step.', editor: 'enum', options: unitOptions, value: pgUnit, onChange: applyUnit, placeholder: 'px', clearLabel: 'Clear unit', toggle: snippetToggle(pgUnitOn, enabled => (pgUnitOn = enabled)), sync: { kind: 'text' } },
+    enumField({ name: 'orientation', type: "'vertical' | 'horizontal'", defaultValue: "'vertical'", note: 'Vertical splits left/right; horizontal splits top/bottom.', options: orientationOptions, value: pgOrientation, onChange: applyOrientation, placeholder: 'vertical', clearLabel: 'Clear orientation', enabled: pgOrientationOn, setEnabled: v => (pgOrientationOn = v) }),
+    enumField({ name: 'unit', type: "'px' | '%'", defaultValue: "'px'", note: 'Unit for the value, drag delta, and arrow-key step.', options: unitOptions, value: pgUnit, onChange: applyUnit, placeholder: 'px', clearLabel: 'Clear unit', enabled: pgUnitOn, setEnabled: v => (pgUnitOn = v) }),
     { name: 'value', type: 'number', defaultValue: '—', note: 'Divider position in pixels or percent; drive it from onChange (the seed reads it from scope).', editor: 'number', value: String(pgSplit), onChange: applySplit },
     { name: 'onChange', type: '(value: number) => void', defaultValue: '—', note: 'Fires while dragging and on arrow-key nudges.' },
     { name: 'onDragEnd', type: '() => void', defaultValue: '—', note: 'Fires after a drag or keyboard nudge completes.' },

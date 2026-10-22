@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest'
 import { extractScriptValue } from '$lib/showcase/snippet-attributes'
 import { createSnippetComponent } from '$lib/showcase/snippet-playground'
 import { splitLeadingScript } from '$lib/showcase/snippet-source'
-import { buildFieldTableSnippet, parseHeadersJson, parseHeadersValue, type FieldTableSnippetState } from './demo-snippet'
+import {
+  buildFieldTableSnippet,
+  FIELD_TABLE_DEMO_ROWS,
+  parseHeadersJson,
+  parseHeadersValue,
+  type FieldTableSnippetState,
+} from './demo-snippet'
 
 function state(overrides: Partial<FieldTableSnippetState> = {}): FieldTableSnippetState {
   return {
@@ -48,6 +54,22 @@ describe('buildFieldTableSnippet', () => {
     expect(source).toContain('editor: \'snippet\'')
     expect(extractScriptValue(splitLeadingScript(source).declarations, 'name')).toBe('')
     expect(extractScriptValue(splitLeadingScript(source).declarations, 'notes')).toBe('')
+  })
+
+  it('emits the shared demo row facets the static demo renders', () => {
+    const source = buildFieldTableSnippet(state())
+    expect(source).not.toContain('(empty)')
+    expect(source).toContain("editorDefaultValue: '',")
+    expect(source).toContain('clearable: true')
+    expect(source).toContain("placeholder: 'viewer'")
+    expect(source).toContain("placeholder: 'md'")
+    expect(source).toContain('toggle: { enabled: notesEnabled,')
+    expect(source).toContain('let notesEnabled = $state(true)')
+    for (const row of FIELD_TABLE_DEMO_ROWS) {
+      expect(source).toContain(`name: '${row.name}'`)
+      expect(source).toContain(`note: '${row.note}'`)
+    }
+    expect(FIELD_TABLE_DEMO_ROWS.find(row => row.name === 'notes')?.toggle).toBe(true)
   })
 
   it('emits customized header keys as literals and seeds demo values', () => {

@@ -103,6 +103,24 @@
         clearLabel="Clear tint"
         onClear={() => (pg.tint = '')} />
     </FormField>
+    <FormField label="Size">
+      <SelectDropdown
+        activeValue={pg.size}
+        ariaLabel="Size"
+        options={sizeOptions}
+        filterable
+        allowCustomValue
+        onSelect={value => {
+          pg.size = value
+          pg.sizeOn = true
+        }}
+        clearable
+        clearLabel="Clear size"
+        onClear={() => {
+          pg.size = 'md'
+          pg.sizeOn = false
+        }} />
+    </FormField>
   </div>
 {/snippet}
 

@@ -110,13 +110,20 @@ export function extractScriptValue(declarations: string, name = 'value'): string
   }
 }
 
-// Read a script-local `let <name> = $state([...])` array back out of snippet
-// declarations (the shape demo builders emit for seeded collections). Returns
-// the parsed JSON (validate its shape at the call site), or null when absent,
+// Read a script-local `let <name> = $state(<const>)` JSON literal back out of
+// snippet declarations (the shape demo builders emit for seeded collections and
+// objects). `open` selects the literal's opening delimiter, so an array seed and
+// an object seed share one quote/escape-aware balanced-bracket scan. Returns the
+// parsed JSON (validate its shape at the call site), or null when absent,
 // unbalanced, or unparseable, so hand-written state the page did not author
 // never syncs.
-export function extractScriptJsonConst(declarations: string, name: string): unknown | null {
-  const head = new RegExp(`let\\s+${name}\\s*=\\s*\\$state\\(\\s*\\[`).exec(declarations)
+export function extractScriptConst(
+  declarations: string,
+  name: string,
+  open: '[' | '{' = '[',
+): unknown | null {
+  const close = open === '[' ? ']' : '}'
+  const head = new RegExp(`let\\s+${name}\\s*=\\s*\\$state\\(\\s*\\${open}`).exec(declarations)
   if (!head) {
     return null
   }
@@ -135,9 +142,9 @@ export function extractScriptJsonConst(declarations: string, name: string): unkn
       }
     } else if (ch === '"' || ch === "'") {
       openQuote = ch
-    } else if (ch === '[') {
+    } else if (ch === open) {
       depth += 1
-    } else if (ch === ']') {
+    } else if (ch === close) {
       depth -= 1
       if (depth === 0) {
         break
@@ -153,4 +160,9 @@ export function extractScriptJsonConst(declarations: string, name: string): unkn
   } catch {
     return null
   }
+}
+
+// An array seed: `let <name> = $state([...])`.
+export function extractScriptJsonConst(declarations: string, name: string): unknown | null {
+  return extractScriptConst(declarations, name, '[')
 }

@@ -7,7 +7,7 @@
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import { parseSizeValue } from '$lib/showcase/size-input'
-  import { enumField, textField, boolField, snippetToggle, resetToggle } from '$lib/showcase/snippet-field'
+  import { enumField, textField, boolField, sizeField, snippetToggle, resetToggle } from '$lib/showcase/snippet-field'
   import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
   import { STYLED_INPUT, STYLED_WRAPPER, buildSearchInputSnippet, type TriState } from './demo-snippet'
 
@@ -49,6 +49,14 @@
   })
 
   const styledOptions = [{ value: 'yes', label: 'Styled' }]
+
+  const sizeOptions = [
+    { value: 'xs', label: 'xs' },
+    { value: 'sm', label: 'sm' },
+    { value: 'md', label: 'md' },
+    { value: 'lg', label: 'lg' },
+    { value: 'xl', label: 'xl' },
+  ]
 
   const clearPlacementOptions = [
     { value: 'auto', label: 'auto' },
@@ -117,7 +125,7 @@
     textField({ name: 'inputClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the default input classes.', value: pg.inputClass, onChange: v => (pg.inputClass = v), clearable: true, enabled: pg.inputClassOn, setEnabled: v => (pg.inputClassOn = v) }),
     { name: 'inputRef', type: 'HTMLInputElement | null', defaultValue: 'null', note: 'Bindable native input.' },
     textField({ name: 'placeholder', type: 'string?', defaultValue: "'Search...'", note: 'Native placeholder.', value: pg.placeholder, onChange: v => (pg.placeholder = v), editorDefaultValue: 'Search...', clearable: true, placeholder: 'Search...', enabled: pg.placeholderOn, setEnabled: v => (pg.placeholderOn = v) }),
-    { name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number", defaultValue: "'md'", note: 'Box, text, and icon scale together; numbers are icon-scale pixels interpolated between the steps.', editor: 'size', allowCustomValue: true, value: pg.size, onChange: value => { pg.size = value; pg.sizeOn = true; }, clearLabel: 'Clear size', placeholder: 'md', toggle: snippetToggle(pg.sizeOn, enabled => (pg.sizeOn = enabled)), sync: { kind: 'text' } },
+    sizeField({ note: 'Box, text, and icon scale together; numbers are icon-scale pixels interpolated between the steps.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
     { name: 'value', type: 'string', defaultValue: '—', note: 'Bindable search text; the eye resets it to empty.', editor: 'text', clearable: true, value: pg.query, onChange: value => { pg.query = value; pg.queryOn = true; }, toggle: resetToggle(pg.queryOn, enabled => (pg.queryOn = enabled), () => (pg.query = '')), sync: { kind: 'script', attr: 'query' } },
     textField({ name: 'wrapperClass', type: 'string?', defaultValue: "''", note: 'Extra classes for the outer wrapper.', value: pg.wrapperClass, onChange: v => (pg.wrapperClass = v), editorDefaultValue: '', clearable: true, enabled: pg.wrapperClassOn, setEnabled: v => (pg.wrapperClassOn = v) }),
     { name: 'onClear', type: '() => void', defaultValue: 'clears value', note: 'Clear handler; falls back to clearing the bound value when omitted.' },
@@ -155,6 +163,24 @@
           pg.wrapperClassOn = false
           pg.inputClass = ''
           pg.inputClassOn = false
+        }} />
+    </FormField>
+    <FormField label="Size">
+      <SelectDropdown
+        activeValue={pg.size}
+        ariaLabel="Size"
+        options={sizeOptions}
+        filterable
+        allowCustomValue
+        onSelect={value => {
+          pg.size = value
+          pg.sizeOn = true
+        }}
+        clearable
+        clearLabel="Clear size"
+        onClear={() => {
+          pg.size = 'md'
+          pg.sizeOn = false
         }} />
     </FormField>
   </div>

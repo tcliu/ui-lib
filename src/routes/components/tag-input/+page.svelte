@@ -145,7 +145,7 @@
     boolField({ name: 'clearable', defaultValue: 'false', note: 'Appends a cross button that resets the tags to the default value.', value: pg.clearable, onChange: v => (pg.clearable = v as TriState), enabled: pg.clearableOn, setEnabled: v => (pg.clearableOn = v) }),
     jsonField({
       name: 'defaultValue',
-      type: 'string[]',
+      type: 'string[]?',
       note: 'Baseline the clear button compares against; the cross hides while the tags match it; the eye applies the list.',
       value: JSON.stringify(pg.defaultValue, null, 2),
       onChange: (draft: string) => {
@@ -171,7 +171,7 @@
     }),
     jsonField({
       name: 'options',
-      type: 'string[]',
+      type: 'string[]?',
       note: 'Suggestions offered while typing; the eye applies the list.',
       value: JSON.stringify(pg.options, null, 2),
       onChange: (draft: string) => {
@@ -187,14 +187,14 @@
     }),
     {
       name: 'palette',
-      type: 'readonly string[]',
+      type: 'readonly string[]?',
       defaultValue: 'built-in',
       note: 'Per-tag colour classes; replaces the built-in palette.', editor: 'enum', options: paletteOptions, value: pg.palette, onChange: value => { pg.palette = value; pg.paletteOn = true; }, clearLabel: 'Clear palette', toggle: snippetToggle(pg.paletteOn, enabled => (pg.paletteOn = enabled)), sync: { kind: 'scopeReset', scopeRef: 'altPalette' } },
     textField({ name: 'placeholder', type: 'string?', defaultValue: '—', note: 'Placeholder text.', value: pg.placeholder, onChange: v => (pg.placeholder = v), clearable: true, enabled: pg.placeholderOn, setEnabled: v => (pg.placeholderOn = v) }),
     sizeField({ note: 'Control scale; numbers are icon-scale pixels interpolated between the steps.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
     jsonField({
       name: 'value',
-      type: 'string[]',
+      type: 'string[]?',
       note: 'Selected tags; the eye applies the list (hiding the readout while off).',
       value: JSON.stringify(pg.value, null, 2),
       onChange: (draft: string) => {

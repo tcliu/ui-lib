@@ -26,9 +26,9 @@
     value: freshValue() as string[][],
     valueEnabled: true,
     editable: 'yes' as TriState,
-    editableOn: true,
+    editableOn: false,
     showHeaders: 'yes' as TriState,
-    showHeadersOn: true,
+    showHeadersOn: false,
     hideHeaderToggle: 'no' as TriState,
     hideHeaderToggleOn: false,
     columnLabels: [] as string[],
@@ -99,7 +99,7 @@
   const fields: SyncableFieldConfig[] = $derived([
     jsonField({
       name: 'columnLabels',
-      type: 'string[]',
+      type: 'string[]?',
       note: 'Replaces column letters with display labels; the eye applies the list.',
       value: JSON.stringify(pg.columnLabels, null, 2),
       onChange: (draft: string) => {
@@ -117,7 +117,7 @@
     boolField({ name: 'hideHeaderToggle', defaultValue: 'false', note: 'Hides the toolbar header toggle.', value: pg.hideHeaderToggle, onChange: v => (pg.hideHeaderToggle = v as TriState), enabled: pg.hideHeaderToggleOn, setEnabled: v => (pg.hideHeaderToggleOn = v) }),
     jsonField({
       name: 'initialColumnWidths',
-      type: 'string[]',
+      type: 'string[]?',
       note: 'Initial widths as px numbers or percent strings; the eye applies the list.',
       value: JSON.stringify(pg.initialColumnWidths, null, 2),
       onChange: (draft: string) => {
@@ -137,7 +137,7 @@
     textField({ name: 'storageKey', type: 'string?', defaultValue: '—', note: 'Persists resized widths under this localStorage key.', value: pg.storageKey, onChange: v => (pg.storageKey = v), clearable: true, enabled: pg.storageKeyOn, setEnabled: v => (pg.storageKeyOn = v) }),
     jsonField({
       name: 'value',
-      type: 'string[][]',
+      type: 'string[][]?',
       note: 'Cells as rows of strings; the first row is the header when showHeaders is on. The eye applies the data (the grid renders empty while off).',
       value: JSON.stringify(pg.value, null, 2),
       onChange: (draft: string) => {

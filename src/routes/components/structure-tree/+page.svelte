@@ -32,7 +32,7 @@
     value: freshValue() as unknown,
     valueEnabled: true,
     editable: 'yes' as TriState,
-    editableOn: true,
+    editableOn: false,
     containerRowClass: '',
     containerRowClassOn: false,
     leafRowClass: '',

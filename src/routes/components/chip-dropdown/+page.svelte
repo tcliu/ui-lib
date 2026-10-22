@@ -60,7 +60,7 @@
     clearLabel: 'Clear selection',
     clearLabelOn: false,
     autoPlace: 'yes' as TriState,
-    autoPlaceOn: true,
+    autoPlaceOn: false,
     panelClass: '',
     panelClassOn: false,
     size: 'md',

@@ -316,23 +316,13 @@
   // Value-column coupling lives in the appliers above.
   const fields: SyncableFieldConfig[] = $derived([
     boolField({ name: 'allSelected', defaultValue: '—', note: 'Header checkbox checked state. Interaction override; unset follows the selection.', value: pg.allSelected, onChange: v => (pg.allSelected = v as TriState), enabled: pg.allSelectedOn, setEnabled: v => (pg.allSelectedOn = v) }),
-    {
-      name: 'bodyScroll',
-      type: 'boolean',
-      defaultValue: 'false',
-      note: 'Fixed header band with a body-only scrollport (needs fillHeight).',
-      editor: 'boolean',
-      value: pg.bodyScroll,
-      onChange: applyBodyScroll,
-      toggle: snippetToggle(pg.bodyScrollOn, enabled => (pg.bodyScrollOn = enabled)),
-      sync: { kind: 'tri' },
-    },
+    boolField({ name: 'bodyScroll', type: 'boolean?', defaultValue: 'false', note: 'Fixed header band with a body-only scrollport (needs fillHeight).', value: pg.bodyScroll, onChange: applyBodyScroll, enabled: pg.bodyScrollOn, setEnabled: v => (pg.bodyScrollOn = v) }),
     // Eye-free by design: the entries derive from the live hidden-column set
     // (interaction state outside the curated form), so there is no staged
     // eye to apply — the dialog edits the checked set directly.
     jsonField({
       name: 'chooserColumns',
-      type: 'ChooserColumn[]',
+      type: 'ChooserColumn[]?',
       note: 'Column selector entries; checked writes the hidden-column set.',
       value: JSON.stringify(chooserEntries, null, 2),
       onChange: (draft: string) => {
@@ -349,17 +339,7 @@
     textField({ name: 'containerClassName', type: 'string?', defaultValue: "''", note: 'Extra classes for the outer container; built-in scroll/border chrome when unset.', value: pg.containerClassName, onChange: v => (pg.containerClassName = v), editorDefaultValue: '', clearable: true, enabled: pg.containerClassNameOn, setEnabled: v => (pg.containerClassNameOn = v) }),
     boolField({ name: 'dense', defaultValue: 'false', note: 'Compact padding for panel tables.', value: pg.dense, onChange: v => (pg.dense = v as TriState), enabled: pg.denseOn, setEnabled: v => (pg.denseOn = v) }),
     textField({ name: 'emptyMessage', type: 'string?', defaultValue: "'No rows'", note: 'Shown when rows is empty.', value: pg.emptyMessage, onChange: v => (pg.emptyMessage = v), editorDefaultValue: 'No rows', clearable: true, placeholder: 'No rows', enabled: pg.emptyMessageOn, setEnabled: v => (pg.emptyMessageOn = v) }),
-    {
-      name: 'fillHeight',
-      type: 'boolean',
-      defaultValue: 'false',
-      note: 'Fills the parent; table body scrolls.',
-      editor: 'boolean',
-      value: pg.fillHeight,
-      onChange: applyFillHeight,
-      toggle: snippetToggle(pg.fillHeightOn, enabled => (pg.fillHeightOn = enabled)),
-      sync: { kind: 'tri' },
-    },
+    boolField({ name: 'fillHeight', type: 'boolean?', defaultValue: 'false', note: 'Fills the parent; table body scrolls.', value: pg.fillHeight, onChange: applyFillHeight, enabled: pg.fillHeightOn, setEnabled: v => (pg.fillHeightOn = v) }),
     boolField({ name: 'loading', defaultValue: 'false', note: 'Shows the spinner when there are no rows yet.', value: pg.loading, onChange: v => (pg.loading = v as TriState), enabled: pg.loadingOn, setEnabled: v => (pg.loadingOn = v) }),
     boolField({ name: 'resizable', defaultValue: 'false', note: 'Draggable column resize handles.', value: pg.resizable, onChange: v => (pg.resizable = v as TriState), enabled: pg.resizableOn, setEnabled: v => (pg.resizableOn = v) }),
     {
@@ -405,7 +385,7 @@
     textField({ name: 'searchAriaLabel', type: 'string?', defaultValue: "'Search'", note: 'Accessible name for the search field.', value: pg.searchAriaLabel, onChange: v => (pg.searchAriaLabel = v), editorDefaultValue: 'Search', clearable: true, placeholder: 'Search', enabled: pg.searchAriaLabelOn, setEnabled: v => (pg.searchAriaLabelOn = v) }),
     jsonField({
       name: 'searchKeys',
-      type: 'string[]',
+      type: 'string[]?',
       note: 'Bindable searchable column keys; derived from searchable columns when unset. The eye applies the list.',
       value: JSON.stringify(pg.searchKeys ?? ['name', 'status'], null, 2),
       onChange: (draft: string) => {
@@ -502,9 +482,9 @@
       defaultValue: '—',
       note: 'Column defs with optional cell renderers.',
     },
-    { name: 'pagination', type: 'DataTablePagination', defaultValue: '—', note: 'Footer config: total/pageSize/currentPage plus onPageChange gate the footer; onPageSizeChange adds the page-size selector; pageSizeOptions customizes its choices; labels overrides the aria labels; trailing is a snippet pinned to the row’s right edge.' },
+    { name: 'pagination', type: 'DataTablePagination?', defaultValue: '—', note: 'Footer config: total/pageSize/currentPage plus onPageChange gate the footer; onPageSizeChange adds the page-size selector; pageSizeOptions customizes its choices; labels overrides the aria labels; trailing is a snippet pinned to the row’s right edge.' },
     { name: 'rowId', type: '(row: T) => string', defaultValue: '—', note: 'Stable key per row.' },
-    { name: 'selectedIds', type: 'Set<string>', defaultValue: '—', note: 'Selected row ids; managed by the caller.' },
+    { name: 'selectedIds', type: 'Set<string>?', defaultValue: '—', note: 'Selected row ids; managed by the caller.' },
     {
       name: 'variant',
       type: "'data' | 'docs'",

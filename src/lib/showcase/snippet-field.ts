@@ -131,6 +131,32 @@ export function jsonField({
   }
 }
 
+interface EyeOptions {
+  enabled: boolean
+  setEnabled: (enabled: boolean) => void
+  // A bound-state row resets the bound state on eye-off (resetToggle).
+  reset?: () => void
+}
+
+// Apply a staged-eye toggle to a row: committing re-applies the eye, and an
+// eye-off resets the bound state when `reset` is given or keeps the committed
+// data otherwise. `commit` is the page's own setter, so it never depends on
+// the row's preliminary `onChange`.
+function withEye(
+  row: SyncableFieldConfig,
+  commit: (value: string) => void,
+  { enabled, setEnabled, reset }: EyeOptions,
+): SyncableFieldConfig {
+  return {
+    ...row,
+    onChange: next => {
+      commit(next)
+      setEnabled(true)
+    },
+    toggle: reset ? resetToggle(enabled, setEnabled, reset) : snippetToggle(enabled, setEnabled),
+  }
+}
+
 export interface SizeFieldOptions {
   note: string
   // Curated size text (a step name, a pixel number, or unset).
@@ -145,13 +171,15 @@ export interface SizeFieldOptions {
   clearLabel?: string
   // Optional narrowing of the named steps (e.g. the icon gallery's list).
   options?: FieldOption[]
+  // Replaces the default size write-back (e.g. a `scopeText` size).
+  sync?: FieldSyncMeta
 }
 
 // A `size`-editor prop row: the shared type/default/allowCustom/placeholder
-// boilerplate plus the eye toggle and the size write-back (absent restores the
-// `md` default, a step name or pixel number sets, anything else is custom code
-// the playground leaves alone). Only the row's note and its state pair stay
-// page-specific.
+// boilerplate plus the eye toggle and the size write-back (an absent attribute
+// writes the current value back, a step name or pixel number sets, anything
+// else is custom code the playground leaves alone). Only the row's note and its
+// state pair stay page-specific.
 export function sizeField({
   note,
   value,
@@ -161,40 +189,44 @@ export function sizeField({
   name = 'size',
   clearLabel = 'Clear size',
   options,
+  sync,
 }: SizeFieldOptions): SyncableFieldConfig {
-  return {
-    name,
-    type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number",
-    defaultValue: "'md'",
-    note,
-    editor: 'size',
-    allowCustomValue: true,
-    ...(options ? { options } : {}),
-    value,
-    onChange: next => {
-      onChange(next)
-      setEnabled(true)
-    },
-    placeholder: 'md',
-    clearLabel,
-    toggle: snippetToggle(enabled, setEnabled),
-    sync: {
-      kind: 'custom',
-      read: attrs => {
-        const attr = attrs?.get(name)
-        // Absent writes the current value back (never a reset), so compiling a
-        // snippet that omits the prop cannot wipe committed custom data.
-        if (!attr) return value
-        if (attr.kind === 'string') return attr.value
-        if (attr.kind === 'expression' && /^\d+(\.\d+)?$/.test(attr.value)) return attr.value
-        return undefined
+  return withEye(
+    {
+      name,
+      type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number",
+      defaultValue: "'md'",
+      note,
+      editor: 'size',
+      allowCustomValue: true,
+      ...(options ? { options } : {}),
+      value,
+      onChange,
+      placeholder: 'md',
+      clearLabel,
+      sync: sync ?? {
+        kind: 'custom',
+        read: attrs => {
+          const attr = attrs?.get(name)
+          // Absent writes the current value back (never a reset), so compiling a
+          // snippet that omits the prop cannot wipe committed custom data.
+          if (!attr) return value
+          if (attr.kind === 'string') return attr.value
+          if (attr.kind === 'expression' && /^\d+(\.\d+)?$/.test(attr.value)) return attr.value
+          return undefined
+        },
       },
     },
-  }
+    onChange,
+    { enabled, setEnabled },
+  )
 }
 
 export interface BoolFieldOptions {
   name: string
+  // The row's Type cell (default `boolean`; use `boolean?` for an optional
+  // prop).
+  type?: string
   defaultValue: string
   note: string
   // The demo's tri-state (`''`/`yes`/`no`) for the prop.
@@ -205,30 +237,27 @@ export interface BoolFieldOptions {
   setEnabled?: (enabled: boolean) => void
   // A bound-state row resets the bound state on eye-off (resetToggle).
   reset?: () => void
+  // Replaces the default `{ kind: 'tri' }` write-back.
+  sync?: FieldSyncMeta
 }
 
 // A `boolean`-editor prop row: the shared type/editor/tri-sync boilerplate plus,
 // when `enabled`/`setEnabled` are given, the staged-eye toggle (a `reset` makes
 // eye-off restore the bound state). Only the row's note and its state pair stay
 // page-specific.
-export function boolField({ name, defaultValue, note, value, onChange, enabled, setEnabled, reset }: BoolFieldOptions): SyncableFieldConfig {
+export function boolField({ name, type = 'boolean', defaultValue, note, value, onChange, enabled, setEnabled, reset, sync }: BoolFieldOptions): SyncableFieldConfig {
   const row: SyncableFieldConfig = {
     name,
-    type: 'boolean',
+    type,
     defaultValue,
     note,
     editor: 'boolean',
     value,
     onChange,
-    sync: { kind: 'tri' },
+    sync: sync ?? { kind: 'tri' },
   }
   if (enabled !== undefined && setEnabled !== undefined) {
-    const set = setEnabled
-    row.onChange = next => {
-      onChange(next)
-      set(true)
-    }
-    row.toggle = reset ? resetToggle(enabled, set, reset) : snippetToggle(enabled, set)
+    return withEye(row, onChange, { enabled, setEnabled, reset })
   }
   return row
 }
@@ -247,6 +276,8 @@ export interface TextFieldOptions {
   enabled?: boolean
   setEnabled?: (enabled: boolean) => void
   reset?: () => void
+  // Replaces the default `{ kind: 'text' }` write-back.
+  sync?: FieldSyncMeta
 }
 
 // A `text`-editor prop row: the shared type/default/note/editor boilerplate
@@ -266,6 +297,7 @@ export function textField({
   enabled,
   setEnabled,
   reset,
+  sync,
 }: TextFieldOptions): SyncableFieldConfig {
   const row: SyncableFieldConfig = {
     name,
@@ -279,15 +311,10 @@ export function textField({
     onChange,
     ...(placeholder ? { placeholder } : {}),
     ...(clearLabel ? { clearLabel } : {}),
-    sync: { kind: 'text' },
+    sync: sync ?? { kind: 'text' },
   }
   if (enabled !== undefined && setEnabled !== undefined) {
-    const set = setEnabled
-    row.onChange = next => {
-      onChange(next)
-      set(true)
-    }
-    row.toggle = reset ? resetToggle(enabled, set, reset) : snippetToggle(enabled, set)
+    return withEye(row, onChange, { enabled, setEnabled, reset })
   }
   return row
 }
@@ -305,6 +332,8 @@ export interface EnumFieldOptions {
   enabled?: boolean
   setEnabled?: (enabled: boolean) => void
   reset?: () => void
+  // Replaces the default `{ kind: 'text' }` write-back.
+  sync?: FieldSyncMeta
 }
 
 // An `enum`-editor prop row: the shared type/default/note/options boilerplate
@@ -323,6 +352,7 @@ export function enumField({
   enabled,
   setEnabled,
   reset,
+  sync,
 }: EnumFieldOptions): SyncableFieldConfig {
   const row: SyncableFieldConfig = {
     name,
@@ -335,15 +365,10 @@ export function enumField({
     onChange,
     ...(placeholder ? { placeholder } : {}),
     ...(clearLabel ? { clearLabel } : {}),
-    sync: { kind: 'text' },
+    sync: sync ?? { kind: 'text' },
   }
   if (enabled !== undefined && setEnabled !== undefined) {
-    const set = setEnabled
-    row.onChange = next => {
-      onChange(next)
-      set(true)
-    }
-    row.toggle = reset ? resetToggle(enabled, set, reset) : snippetToggle(enabled, set)
+    return withEye(row, onChange, { enabled, setEnabled, reset })
   }
   return row
 }

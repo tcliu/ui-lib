@@ -44,6 +44,14 @@
 
   const customOptions = [{ value: 'yes', label: 'Custom' }]
 
+  const sizeOptions = [
+    { value: 'xs', label: 'xs' },
+    { value: 'sm', label: 'sm' },
+    { value: 'md', label: 'md' },
+    { value: 'lg', label: 'lg' },
+    { value: 'xl', label: 'xl' },
+  ]
+
   const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
   const demoClassName = $derived(pg.classNameOn && pg.className ? pg.className : undefined)
   const hasCustomLabels = $derived(LABEL_FIELDS.some(field => pg.labels[field]))
@@ -159,7 +167,7 @@
     { name: 'currentPage', type: 'number', defaultValue: '—', note: 'Active page (1-based).', editor: 'number', value: String(pg.currentPage), onChange: applyCurrentPageValue }, // No eye: required live pagination state; omission would break the demo.
     jsonField({
       name: 'labels',
-      type: 'PaginationLabels',
+      type: 'PaginationLabels?',
       note: 'Per-field label overrides; each omitted field falls back to its i18n key. The eye applies the map.',
       value: JSON.stringify(pg.labels, null, 2),
       onChange: commitLabelsDraft,
@@ -170,7 +178,7 @@
     { name: 'pageSize', type: 'number', defaultValue: '—', note: 'Items per page.', editor: 'number', value: String(pg.pageSize), onChange: applyPageSizeValue }, // No eye: required live pagination state; omission would break the demo.
     jsonField({
       name: 'pageSizeOptions',
-      type: 'number[]',
+      type: 'number[]?',
       note: 'Page-size choices offered by the dropdown. The eye resets to the defaults.',
       value: JSON.stringify(pg.pageSizeOptions, null, 2),
       onChange: (draft: string) => {
@@ -223,6 +231,24 @@
         clearLabel="Clear labels"
         onClear={() => {
           pg.labels = {}
+        }} />
+    </FormField>
+    <FormField label="Size">
+      <SelectDropdown
+        activeValue={pg.size}
+        ariaLabel="Size"
+        options={sizeOptions}
+        filterable
+        allowCustomValue
+        onSelect={value => {
+          pg.size = value
+          pg.sizeOn = true
+        }}
+        clearable
+        clearLabel="Clear size"
+        onClear={() => {
+          pg.size = 'md'
+          pg.sizeOn = false
         }} />
     </FormField>
   </div>

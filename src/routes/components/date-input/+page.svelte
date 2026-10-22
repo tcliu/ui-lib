@@ -81,7 +81,7 @@
     textField({ name: 'format', type: 'string?', defaultValue: "'YYYY-MM-DD'", note: 'Field pattern, dayjs tokens (YYYY, MM, DD, HH, mm, …); typed text is parsed against it and [bracketed] text is literal. Defaults to YYYY-MM-DD, or YYYY-MM-DD HH:mm:ss while `time` is on.', value: pg.format, onChange: v => (pg.format = v), editorDefaultValue: DEFAULT_DATE_FORMAT, clearable: true, placeholder: DEFAULT_DATE_FORMAT, enabled: pg.formatOn, setEnabled: v => (pg.formatOn = v) }),
     {
       name: 'from',
-      type: 'string',
+      type: 'string?',
       defaultValue: "''",
       editorDefaultValue: '',
       note: 'Range start as YYYY-MM-DD (a date-time while `time` is on); an invalid date reads as unset. Applies while `range` is on; the eye resets to the default.',
@@ -106,7 +106,7 @@
     boolField({ name: 'time', defaultValue: 'false', note: 'Edit a date-time: every panel gains an hour/minute/second row, and a range pairs two date-time fields. A segment stepped past its range carries into the next unit (23:59:59 + 1s rolls the date).', value: pg.time, onChange: v => (pg.time = v as TriState), enabled: pg.timeOn, setEnabled: v => (pg.timeOn = v) }),
     {
       name: 'to',
-      type: 'string',
+      type: 'string?',
       defaultValue: "''",
       editorDefaultValue: '',
       note: 'Range end as YYYY-MM-DD (a date-time while `time` is on); an invalid date reads as unset. Applies while `range` is on; the eye resets to the default.',
@@ -126,7 +126,7 @@
     },
     {
       name: 'value',
-      type: 'string',
+      type: 'string?',
       defaultValue: "''",
       editorDefaultValue: '',
       note: 'Selected date as YYYY-MM-DD (a date-time while `time` is on); an invalid date reads as unset. Applies while `range` is off. Typing is validated on commit (a valid date writes back, anything else reverts); the eye resets to the default.',
@@ -146,7 +146,7 @@
     },
     {
       name: 'theme',
-      type: 'DateInputTheme',
+      type: 'DateInputTheme?',
       defaultValue: '—',
       note: 'Optional per-part color overrides; omitted keys keep the app palette.',
     },

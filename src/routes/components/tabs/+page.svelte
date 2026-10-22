@@ -40,6 +40,14 @@
 
   const modeOptions = [{ value: 'yes', label: 'Route mode' }]
 
+  const sizeOptions = [
+    { value: 'xs', label: 'xs' },
+    { value: 'sm', label: 'sm' },
+    { value: 'md', label: 'md' },
+    { value: 'lg', label: 'lg' },
+    { value: 'xl', label: 'xl' },
+  ]
+
   const overviewPath = $derived(pg.routeMode ? '#overview' : 'overview')
   const detailsPath = $derived(pg.routeMode ? '#details' : 'details')
   const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
@@ -102,6 +110,24 @@
         clearable
         clearLabel="Clear mode"
         onClear={() => (pg.routeMode = '')} />
+    </FormField>
+    <FormField label="Size">
+      <SelectDropdown
+        activeValue={pg.size}
+        ariaLabel="Size"
+        options={sizeOptions}
+        filterable
+        allowCustomValue
+        onSelect={value => {
+          pg.size = value
+          pg.sizeOn = true
+        }}
+        clearable
+        clearLabel="Clear size"
+        onClear={() => {
+          pg.size = 'md'
+          pg.sizeOn = false
+        }} />
     </FormField>
   </div>
 {/snippet}

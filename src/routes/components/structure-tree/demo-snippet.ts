@@ -5,6 +5,7 @@
 // round-trip through the shared structure-value helpers, which the playground
 // resolves from its module registry.
 
+import { extractScriptConst } from '$lib/showcase/snippet-attributes'
 import { escapeAttr } from '$lib/showcase/snippet-build'
 import { sizeAttributeLine } from '$lib/showcase/size-input'
 
@@ -62,49 +63,12 @@ export function parseTreeValueJson(text: string): unknown {
 }
 
 // Read the script-local `let value = $state({...})` seed back into a JSON
-// draft for the Value column. The shared extractor only matches array seeds,
-// so object seeds need their own balanced scan here; returns null when the
-// seed is absent or unparseable, so hand-written state the page did not author
-// never syncs.
+// draft for the Value column, reusing the shared object-seed scan; returns
+// null when the seed is absent or unparseable, so hand-written state the page
+// did not author never syncs.
 export function readTreeValueSeed(declarations: string): string | null {
-  const head = /let\s+value\s*=\s*\$state\(\s*\{/.exec(declarations)
-  if (!head || head.index === undefined) {
-    return null
-  }
-  let depth = 0
-  let openQuote: string | null = null
-  let k = head.index + head[0].length - 1
-  while (k < declarations.length) {
-    const ch = declarations[k]!
-    if (openQuote) {
-      if (ch === '\\') {
-        k += 2
-        continue
-      }
-      if (ch === openQuote) {
-        openQuote = null
-      }
-    } else if (ch === '"' || ch === "'") {
-      openQuote = ch
-    } else if (ch === '{') {
-      depth += 1
-    } else if (ch === '}') {
-      depth -= 1
-      if (depth === 0) {
-        break
-      }
-    }
-    k += 1
-  }
-  if (depth !== 0) {
-    return null
-  }
-  const text = declarations.slice(head.index + head[0].length - 1, k + 1)
-  try {
-    return JSON.stringify(JSON.parse(text))
-  } catch {
-    return null
-  }
+  const value = extractScriptConst(declarations, 'value', '{')
+  return value === null ? null : JSON.stringify(value)
 }
 
 export function buildStructureTreeSnippet({

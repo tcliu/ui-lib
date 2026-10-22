@@ -447,6 +447,10 @@
   </div>
 {/snippet}
 
+{#snippet shellChildren()}
+  {@html demoChildrenMarkup}
+{/snippet}
+
 <ShowcasePage
   {fields}
   title="AppShell"
@@ -488,8 +492,7 @@
       leftPane={pgLeftPaneEnabled ? leftPaneContent : undefined}
       rightPane={pgRightEnabled && pgRightPaneEnabled && demoRightOpen ? rightPaneContent : undefined}
       footer={pgFooterEnabled ? footerContent : undefined}
-      header={pgHeaderEnabled ? headerContent : undefined}>
-      {#if pgChildrenEnabled}{@html demoChildrenMarkup}{/if}
-    </AppShell>
+      header={pgHeaderEnabled ? headerContent : undefined}
+      children={pgChildrenEnabled ? shellChildren : undefined} />
   </Resizable>
 </ShowcasePage>

@@ -4,7 +4,7 @@
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
   import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { textField, boolField, resetToggle, snippetToggle } from '$lib/showcase/snippet-field'
+  import { textField, boolField, enumField, snippetField, resetToggle, snippetToggle } from '$lib/showcase/snippet-field'
   import {
     DEFAULT_CONTENT,
     DEFAULT_DOC_TYPE,
@@ -28,7 +28,7 @@
     docType: 'text',
     docTypeOn: true,
     editable: 'yes' as TriState,
-    editableOn: true,
+    editableOn: false,
     theme: 'dark',
     themeOn: false,
     containerClass: 'h-full overflow-hidden rounded-lg border border-slate-700 bg-slate-950',
@@ -92,22 +92,30 @@
   const fields: SyncableFieldConfig[] = $derived([
     boolField({ name: 'autoFocus', defaultValue: 'false', note: 'Focuses the editor once it mounts.', value: pg.autoFocus, onChange: v => (pg.autoFocus = v as TriState), enabled: pg.autoFocusOn, setEnabled: v => (pg.autoFocusOn = v) }),
     textField({ name: 'containerClass', type: 'string?', defaultValue: "'h-full overflow-hidden rounded-lg border border-slate-700 bg-slate-950'", note: 'Classes for the outer wrapper; the default renders the framed editor box (override for a light theme).', value: pg.containerClass, onChange: v => (pg.containerClass = v), editorDefaultValue: 'h-full overflow-hidden rounded-lg border border-slate-700 bg-slate-950', clearable: true, placeholder: 'h-full overflow-hidden rounded-lg border border-slate-700 bg-slate-950', enabled: pg.containerClassOn, setEnabled: v => (pg.containerClassOn = v) }),
-    { name: 'content', type: 'string', defaultValue: '—', note: 'Bindable editor document. The eye resets to the default content.', editor: 'snippet', value: pg.content, onChange: value => {
-      pg.content = value
-      pg.contentEnabled = true
-    }, dialog: { docType: 'html', title: 'Edit content' }, toggle: resetToggle(
-      pg.contentEnabled,
-      enabled => (pg.contentEnabled = enabled),
-      () => (pg.content = DEFAULT_CONTENT),
-    ) },
-    { name: 'docType', type: 'string', defaultValue: "'text'", note: "Language pack key: json, javascript, html, markdown, yaml, or xml (loaded on demand). 'text' loads none.", editor: 'enum', options: DOC_TYPE_OPTIONS, value: pg.docType, onChange: value => { pg.docType = value; pg.docTypeOn = true; }, placeholder: 'text', clearLabel: 'Clear document type', toggle: snippetToggle(pg.docTypeOn, enabled => (pg.docTypeOn = enabled)), sync: { kind: 'text', unsetValues: ['json'] } },
+    snippetField({
+      name: 'content',
+      type: 'string',
+      note: 'Bindable editor document. The eye resets to the default content.',
+      value: pg.content,
+      onChange: value => {
+        pg.content = value
+        pg.contentEnabled = true
+      },
+      dialog: { docType: 'html', title: 'Edit content' },
+      toggle: resetToggle(
+        pg.contentEnabled,
+        enabled => (pg.contentEnabled = enabled),
+        () => (pg.content = DEFAULT_CONTENT),
+      ),
+    }),
+    { name: 'docType', type: 'string?', defaultValue: "'text'", note: "Language pack key: json, javascript, html, markdown, yaml, or xml (loaded on demand). 'text' loads none.", editor: 'enum', options: DOC_TYPE_OPTIONS, value: pg.docType, onChange: value => { pg.docType = value; pg.docTypeOn = true; }, placeholder: 'text', clearLabel: 'Clear document type', toggle: snippetToggle(pg.docTypeOn, enabled => (pg.docTypeOn = enabled)), sync: { kind: 'text', unsetValues: ['json'] } },
     boolField({ name: 'editable', defaultValue: 'true', note: 'Enables typing; false renders read-only.', value: pg.editable, onChange: v => (pg.editable = v as TriState), enabled: pg.editableOn, setEnabled: v => (pg.editableOn = v) }),
     textField({ name: 'editorAriaLabel', type: 'string?', defaultValue: "'Content'", note: 'Accessible name for the editor textbox.', value: pg.editorAriaLabel, onChange: v => (pg.editorAriaLabel = v), clearable: true, placeholder: 'Content', enabled: pg.editorAriaLabelOn, setEnabled: v => (pg.editorAriaLabelOn = v) }),
     textField({ name: 'editorClass', type: 'string?', defaultValue: "'h-full'", note: 'Classes for the CodeMirror host; it fills the wrapper by default.', value: pg.editorClass, onChange: v => (pg.editorClass = v), editorDefaultValue: 'h-full', clearable: true, placeholder: 'h-full', enabled: pg.editorClassOn, setEnabled: v => (pg.editorClassOn = v) }),
     { name: 'maxContentLength', type: 'number?', defaultValue: '0', editorDefaultValue: '0', note: 'Caps the document length; 0 disables the cap.', editor: 'number', clearable: true, value: pg.maxContentLength, onChange: value => { pg.maxContentLength = value; pg.maxContentLengthOn = true; }, placeholder: '0', toggle: snippetToggle(pg.maxContentLengthOn, enabled => (pg.maxContentLengthOn = enabled)), sync: { kind: 'number', pattern: /^\d+$/ } },
     textField({ name: 'recreateKey', type: 'string?', defaultValue: "''", note: 'Changing it destroys and rebuilds the editor.', value: pg.recreateKey, onChange: v => (pg.recreateKey = v), editorDefaultValue: '', clearable: true, enabled: pg.recreateKeyOn, setEnabled: v => (pg.recreateKeyOn = v) }),
     boolField({ name: 'selectionEnabled', defaultValue: 'true', note: 'Allows text selection and copy.', value: pg.selectionEnabled, onChange: v => (pg.selectionEnabled = v as TriState), enabled: pg.selectionEnabledOn, setEnabled: v => (pg.selectionEnabledOn = v) }),
-    { name: 'theme', type: 'string', defaultValue: "'dark'", note: "'dark' uses githubDark, any other value githubLight.", editor: 'enum', options: themeOptions, value: pg.theme, onChange: value => { pg.theme = value; pg.themeOn = true; }, placeholder: 'dark', clearLabel: 'Clear theme', toggle: snippetToggle(pg.themeOn, enabled => (pg.themeOn = enabled)), sync: { kind: 'text' } },
+    enumField({ name: 'theme', type: 'string?', defaultValue: "'dark'", note: "'dark' uses githubDark, any other value githubLight.", options: themeOptions, value: pg.theme, onChange: v => (pg.theme = v), placeholder: 'dark', clearLabel: 'Clear theme', enabled: pg.themeOn, setEnabled: v => (pg.themeOn = v) }),
     { name: 'onAutoFocused', type: '() => void', defaultValue: '—', note: 'Called after an autofocus.' },
     { name: 'onContentChange', type: '(content: string) => void', defaultValue: '—', note: 'Called with the document after every edit.' },
     { name: 'onReady', type: '() => void', defaultValue: '—', note: 'Called once the EditorView exists.' },

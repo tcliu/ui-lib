@@ -308,6 +308,23 @@
   <Button variant="primary" type="submit">{demoFooterLabel}</Button>
 {/snippet}
 
+{#snippet dialogChildren()}
+  {#each demoBodyChildren as segment}
+    {#if segment.kind === 'textinput'}
+      <TextInput
+        bind:value={pg.draft}
+        type={segment.type || undefined}
+        ariaLabel={segment.ariaLabel === null
+          ? undefined
+          : segment.ariaLabel.kind === 'scope'
+            ? demoBodyLabel
+            : segment.ariaLabel.value} />
+    {:else}
+      {@html segment.html}
+    {/if}
+  {/each}
+{/snippet}
+
 {#snippet dialogHeader()}
   <Copyable text={headerContent.text}><span>{headerContent.inner}</span></Copyable>
 {/snippet}
@@ -355,23 +372,8 @@
         footer={pg.footerOn ? demoFooter : undefined}
         onSave={handleSave}
         onReset={() => (pg.draft = pg.saved)}
-        onClose={() => (pg.open = false)}>
-        {#if pg.childrenOn}
-          {#each demoBodyChildren as segment}
-            {#if segment.kind === 'textinput'}
-              <TextInput
-                bind:value={pg.draft}
-                type={segment.type || undefined}
-                ariaLabel={segment.ariaLabel === null
-                  ? undefined
-                  : segment.ariaLabel.kind === 'scope'
-                    ? demoBodyLabel
-                    : segment.ariaLabel.value} />
-            {:else}
-              {@html segment.html}
-            {/if}
-          {/each}
-        {/if}
+        onClose={() => (pg.open = false)}
+        children={pg.childrenOn ? dialogChildren : undefined}>
       </FormDialog>
     {/if}
   </ShowcasePage>

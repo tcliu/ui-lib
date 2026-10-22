@@ -7,9 +7,82 @@
 // header key reads its localized label from scope (like the demo); a
 // customized key renders as a literal.
 
+import type { FieldEditor, FieldOption } from '$lib/components/FieldTable.svelte'
 import { sizeAttributeLine } from '$lib/showcase/size-input'
 
 export type TriState = '' | 'yes' | 'no'
+
+// One sample field's data-only facets, shared by the static demo and the
+// Show-code builder so the two can never drift. Each consumer supplies only
+// its own live `value`/`onChange` pair (and the page its eye type).
+export interface FieldTableDemoRow {
+  name: string
+  type: string
+  defaultValue: string
+  editorDefaultValue?: string
+  note: string
+  editor?: FieldEditor
+  clearable?: boolean
+  placeholder?: string
+  clearLabel?: string
+  options?: FieldOption[]
+  allowCustomValue?: boolean
+  // The row renders a reset eye (the notes sample); the two consumers bind it
+  // to their own state.
+  toggle?: boolean
+}
+
+export const FIELD_TABLE_DEMO_ROWS: FieldTableDemoRow[] = [
+  {
+    name: 'name',
+    type: 'string',
+    defaultValue: "''",
+    editorDefaultValue: '',
+    note: 'Display name.',
+    editor: 'text',
+    clearable: true,
+  },
+  {
+    name: 'role',
+    type: "'admin' | 'editor' | 'viewer'",
+    defaultValue: "'viewer'",
+    note: 'Access level.',
+    editor: 'enum',
+    options: [
+      { value: 'admin', label: 'admin' },
+      { value: 'editor', label: 'editor' },
+      { value: 'viewer', label: 'viewer' },
+    ],
+    placeholder: 'viewer',
+    clearLabel: 'Clear role',
+  },
+  {
+    name: 'size',
+    type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | number",
+    defaultValue: "'md'",
+    note: 'Control scale.',
+    editor: 'size',
+    allowCustomValue: true,
+    placeholder: 'md',
+    clearLabel: 'Clear size',
+  },
+  {
+    name: 'active',
+    type: 'boolean',
+    defaultValue: 'false',
+    note: 'Whether the account is active.',
+    editor: 'boolean',
+  },
+  {
+    name: 'notes',
+    type: 'string',
+    defaultValue: "''",
+    note: 'Long text edited in a code dialog; the eye resets the text.',
+    editor: 'snippet',
+    toggle: true,
+  },
+  { name: 'onSave', type: '() => void', defaultValue: '—', note: 'Save handler.' },
+]
 
 // Column labels edited through the `headers` JSON dialog: plain data only
 // (no functions). Empty strings never survive the dialog (the builder would
@@ -92,6 +165,55 @@ function headerEntry(key: string, value: string, scopeRef: string): string {
   return value ? `    ${key}: ${JSON.stringify(value)},` : `    ${key}: ${scopeRef},`
 }
 
+interface RowBinding {
+  value: string
+  onChange: string
+}
+
+// The live state behind each sample row's Value cell, as snippet expressions.
+const ROW_BINDINGS: Record<string, RowBinding> = {
+  name: { value: 'name', onChange: 'value => (name = value)' },
+  role: { value: 'role', onChange: 'value => (role = value)' },
+  size: { value: 'size', onChange: 'value => (size = value)' },
+  active: { value: 'active', onChange: 'value => (active = value)' },
+  notes: { value: 'notes', onChange: 'value => { notes = value; notesEnabled = true }' },
+}
+
+// A source-level string literal: single-quoted unless the text itself carries
+// a quote (a union type like `'admin' | 'editor'`), which JSON quotes instead.
+function quote(text: string): string {
+  return text.includes("'") ? JSON.stringify(text) : `'${text.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`
+}
+
+function optionsSource(options: FieldOption[]): string {
+  const entries = options.map(option => `{ value: ${quote(option.value)}, label: ${quote(option.label)} }`)
+  return `[${entries.join(', ')}]`
+}
+
+// One inline `FieldConfig` literal from a shared row description: the static
+// facets plus the row's own state binding.
+function rowSource(row: FieldTableDemoRow): string {
+  const binding = ROW_BINDINGS[row.name]
+  const facets = [
+    `name: ${quote(row.name)}`,
+    `type: ${quote(row.type)}`,
+    `defaultValue: ${quote(row.defaultValue)}`,
+    ...(row.editorDefaultValue !== undefined ? [`editorDefaultValue: ${quote(row.editorDefaultValue)}`] : []),
+    `note: ${quote(row.note)}`,
+    ...(row.editor ? [`editor: ${quote(row.editor)}`] : []),
+    ...(row.clearable ? ['clearable: true'] : []),
+    ...(row.placeholder ? [`placeholder: ${quote(row.placeholder)}`] : []),
+    ...(row.clearLabel ? [`clearLabel: ${quote(row.clearLabel)}`] : []),
+    ...(row.options ? [`options: ${optionsSource(row.options)}`] : []),
+    ...(row.allowCustomValue ? ['allowCustomValue: true'] : []),
+    ...(binding ? [`value: ${binding.value}`, `onChange: ${binding.onChange}`] : []),
+    ...(row.toggle
+      ? [`toggle: { enabled: notesEnabled, onToggle: enabled => { notesEnabled = enabled; if (!enabled) notes = '' } }`]
+      : []),
+  ]
+  return `    { ${facets.join(', ')} },`
+}
+
 export function buildFieldTableSnippet({
   name,
   role,
@@ -114,15 +236,11 @@ export function buildFieldTableSnippet({
     `  let size = $state(${JSON.stringify(size)})`,
     `  let active = $state(${JSON.stringify(active)})`,
     `  let notes = $state(${JSON.stringify(notes)})`,
+    '  let notesEnabled = $state(true)',
     '</script>',
     '<FieldTable',
     '  fields={[',
-    "    { name: 'name', type: 'string', defaultValue: \"''\", note: 'Display name.', editor: 'text', value: name, onChange: value => (name = value), placeholder: '(empty)' },",
-    "    { name: 'role', type: \"'admin' | 'editor' | 'viewer'\", defaultValue: \"'viewer'\", note: 'Access level.', editor: 'enum', options: [{ value: 'admin', label: 'admin' }, { value: 'editor', label: 'editor' }, { value: 'viewer', label: 'viewer' }], value: role, onChange: value => (role = value), clearLabel: 'Clear role' },",
-    "    { name: 'size', type: \"'xs' | 'sm' | 'md' | 'lg' | 'xl' | number\", defaultValue: \"'md'\", note: 'Control scale.', editor: 'size', allowCustomValue: true, value: size, onChange: value => (size = value), clearLabel: 'Clear size' },",
-    "    { name: 'active', type: 'boolean', defaultValue: 'false', note: 'Whether the account is active.', editor: 'boolean', value: active, onChange: value => (active = value) },",
-    "    { name: 'notes', type: 'string', defaultValue: \"''\", note: 'Long text edited in a code dialog.', editor: 'snippet', value: notes, onChange: value => (notes = value) },",
-    "    { name: 'onSave', type: '() => void', defaultValue: '\u2014', note: 'Save handler.' },",
+    ...FIELD_TABLE_DEMO_ROWS.map(rowSource),
     '  ]}',
     // The table size prefills its component default in the Value column; the
     // builder omits the default so Show-code stays minimal.
