@@ -251,7 +251,7 @@
 
   const dialogContent = $derived(dialogField ? resolveContent(dialogField) : '')
   const dialogDirty = $derived(draft !== dialogContent)
-  const dialogTitle = $derived(dialogField?.dialog?.title ?? `Edit ${dialogField?.name ?? ''}`)
+  const dialogTitle = $derived(dialogField?.dialog?.title ?? i18n.t('table.edit', { name: dialogField?.name ?? '' }))
   const dialogWidthVariant = $derived(dialogField?.dialog?.widthVariant ?? '3xl')
   const dialogDocType = $derived(
     dialogField?.dialog?.docType ?? (dialogField?.editor === 'options-json' ? 'json' : 'html'),
@@ -294,7 +294,7 @@
     ariaLabel={`${field.name} value`}
     placeholder={field.placeholder}
     clearable={field.clearable ?? false}
-    clearLabel={field.clearLabel ?? `Clear ${field.name}`}
+    clearLabel={field.clearLabel ?? i18n.t('table.clear', { name: field.name })}
     defaultValue={literalDefault(field)}
     onClear={() => clearValue(field)}
     oninput={event => field.onChange?.((event.target as HTMLInputElement).value)} />
@@ -326,7 +326,7 @@
     ariaLabel={`${field.name} value`}
     placeholder={field.placeholder}
     clearable={field.clearable ?? false}
-    clearLabel={field.clearLabel ?? `Clear ${field.name}`}
+    clearLabel={field.clearLabel ?? i18n.t('table.clear', { name: field.name })}
     defaultValue={literalDefault(field)}
     onClear={() => clearValue(field)}
     oninput={event => field.onChange?.((event.target as HTMLInputElement).value)} />
@@ -344,7 +344,7 @@
     allowCustomValue={field.editor === 'size' && field.allowCustomValue ? true : undefined}
     onSelect={next => field.onChange?.(next)}
     clearable
-    clearLabel={field.clearLabel ?? `Clear ${field.name}`}
+    clearLabel={field.clearLabel ?? i18n.t('table.clear', { name: field.name })}
     onClear={() => clearValue(field)} />
 {/snippet}
 
@@ -441,8 +441,8 @@
         variant="ghost"
         size={size}
         icon={editIcon}
-        ariaLabel={`Edit ${field.name}`}
-        tooltip={`Edit ${field.name}`}
+        ariaLabel={i18n.t('table.edit', { name: field.name })}
+        tooltip={i18n.t('table.edit', { name: field.name })}
         onClick={() => openDialog(field)} />
       {@render applyEye(field)}
     </div>
@@ -477,7 +477,7 @@
     closeLabel={i18n.t('common.close')}
     onCancel={closeDialog}>
     <div class="flex min-h-0 flex-1 flex-col">
-      <div class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
+      <div tabindex="-1" class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
         <LazyCodeEditor
           bind:content={draft}
           docType={dialogDocType}

@@ -335,7 +335,8 @@
             }}
             onkeydown={handleOwnNameKeydown} />
         {:else if onRenameKey && editable && path.length > 0 && !parentIsArray}
-          <span
+          <button
+            type="button"
             class="cursor-pointer rounded text-slate-300 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-cyan-500"
             ondblclick={e => {
               e.stopPropagation()
@@ -347,9 +348,7 @@
                 e.stopPropagation()
                 startEditOwnName()
               }
-            }}
-            role="button"
-            tabindex="0">{label}<Tooltip>{i18n.t('structure.renameHint')}</Tooltip></span>
+            }}>{label}<Tooltip>{i18n.t('structure.renameHint')}</Tooltip></button>
         {:else}
           <span class="text-slate-300">{label}</span>
         {/if}
@@ -437,7 +436,8 @@
           <div class={`${STRUCTURE_ROW_BASE_CLASS} ${leafRowClass || DEFAULT_LEAF_ROW_CLASS}`}>
             <span class="w-[var(--tree-gutter)] shrink-0 max-phone:w-12"></span>
             {#if onRenameKey && editable}
-              <span
+              <button
+                type="button"
                 class="shrink-0 cursor-pointer rounded text-slate-300 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-cyan-500"
                 ondblclick={e => {
                   e.stopPropagation()
@@ -449,9 +449,7 @@
                     e.stopPropagation()
                     startEditName(entry)
                   }
-                }}
-                role="button"
-                tabindex="0">{entry.key}<Tooltip>{i18n.t('structure.renameHint')}</Tooltip></span>
+                }}>{entry.key}<Tooltip>{i18n.t('structure.renameHint')}</Tooltip></button>
             {:else}
               <span class="shrink-0 text-slate-300">{entry.key}</span>
             {/if}

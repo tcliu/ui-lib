@@ -13,6 +13,7 @@
   import { createTableScrollSync } from './use-table-scroll-sync.svelte'
   import { resolveColumnWidths } from '$lib/data-table/column-helpers'
   import Tooltip from './Tooltip.svelte'
+  import { getI18nContext } from '$lib/i18n.svelte'
 
   export type SortDirection = 'asc' | 'desc'
 
@@ -188,6 +189,8 @@
     resetWidthsSignal = 0,
     size = 'md',
   }: Props<T> = $props()
+
+  const i18n = getI18nContext()
 
   const resolvedEmptyMessage = $derived(emptyMessage ?? 'No rows')
   const resolvedSearchPlaceholder = $derived(searchPlaceholder ?? 'Search')
@@ -501,7 +504,7 @@
                   class="flex leading-none transition-colors outline-none {isAsc
                     ? 'text-cyan-400'
                     : 'hover:text-cyan-300 focus:text-cyan-300'}"
-                  aria-label={sortAriaLabel?.(column, 'asc') ?? `Sort ${column.header} ascending`}
+                  aria-label={sortAriaLabel?.(column, 'asc') ?? i18n.t('table.sortAsc', { column: column.header })}
                   onclick={() => handleSortClick(column, 'asc')}>
                   <!-- The caret is cropped tight to the triangle, so `size` is the
                        width it renders at (0.8125 × 10) rather than a square box. -->
@@ -512,7 +515,7 @@
                   class="flex leading-none transition-colors outline-none {isDesc
                     ? 'text-cyan-400'
                     : 'hover:text-cyan-300 focus:text-cyan-300'}"
-                  aria-label={sortAriaLabel?.(column, 'desc') ?? `Sort ${column.header} descending`}
+                  aria-label={sortAriaLabel?.(column, 'desc') ?? i18n.t('table.sortDesc', { column: column.header })}
                   onclick={() => handleSortClick(column, 'desc')}>
                   <CaretDownIcon size={10} />
                 </button>
@@ -528,7 +531,7 @@
               columns.length - 1
                 ? 'translate-x-1/2'
                 : ''}"
-              aria-label={resizeAriaLabel?.(column) ?? `Resize ${column.header}`}
+              aria-label={resizeAriaLabel?.(column) ?? i18n.t('table.resizeColumn', { column: column.header })}
               onmousedown={event => tableColumns.resize.startColumnResize(event, i)}
               onkeydown={event => tableColumns.resize.handleResizeKeydown(event, i)}></button>
           {/if}

@@ -1,11 +1,12 @@
 <script lang="ts">
   import { flushSync, tick } from 'svelte'
   import { useListbox } from '$lib/actions/use-listbox.svelte'
-  import { createOptionIndex, matchesOption, matchLabelParts } from '$lib/actions/option-index'
   import { isModifiedNavKey } from '$lib/actions/listbox-keynav'
   import Button from '$lib/components/Button.svelte'
   import ListboxPanel from '$lib/components/ListboxPanel.svelte'
   import TextInput from '$lib/components/TextInput.svelte'
+  import { useCaretAtEnd } from './use-caret-at-end.svelte'
+  import { useSelectFilter } from './use-select-filter.svelte'
   import ChevronDownIcon from '$lib/icons/ChevronDownIcon.svelte'
   import CloseIcon from '$lib/icons/CloseIcon.svelte'
   import type { DropdownPanelProps } from '$lib/dropdown-chrome'
@@ -180,53 +181,19 @@
   let activeQuery = $state('')
   let suppressOpenOnFocus = false
 
-  // Lowercased once per options array (shared helper) so filtering does not
-  // re-lowercase every label/value on every keystroke.
-  const optionIndex = $derived(createOptionIndex(normalizedOptions))
-
-  // The lowercased filter needle, empty when filtering is off or the text is
-  // just the echoed value. The option list and the match highlight read the
-  // same value so they can never disagree.
-  const filterQuery = $derived.by(() => {
-    if (!filterable || !filterDirty) {
-      return ''
-    }
-    // Strip the prefilled label only when text was appended to it; a query
-    // that merely equals the label is filtered as-is so an exact match
-    // narrows instead of showing everything.
-    const query =
-      filterText.length > resolvedButtonLabel.length && filterText.startsWith(resolvedButtonLabel)
-        ? filterText.slice(resolvedButtonLabel.length)
-        : filterText
-    return query.trim().toLowerCase()
+  // Filtering and match highlighting read one shared state, so the option list
+  // and the emphasized span can never disagree.
+  const filter = useSelectFilter({
+    options: () => normalizedOptions,
+    filterable: () => filterable,
+    dirty: () => filterDirty,
+    text: () => filterText,
+    echoedLabel: () => resolvedButtonLabel,
   })
+  const filteredOptions = $derived(filter.filteredOptions)
 
-  const filteredOptions = $derived.by(() => {
-    // An empty query shows every option; any other query narrows the list to
-    // the options whose label or value contains it, including an exact match.
-    // A query that matches nothing falls back to the full list so the panel
-    // never goes empty while typing.
-    if (filterQuery === '') {
-      return normalizedOptions
-    }
-    const matched: NormalizedOption[] = []
-    for (const entry of optionIndex) {
-      if (matchesOption(entry, filterQuery)) {
-        matched.push(entry.option)
-      }
-    }
-    return matched.length > 0 ? matched : normalizedOptions
-  })
-
-  // Emphasize the typed part of each label only while the query is ambiguous:
-  // with two or more matches the user needs to see which part matched, while a
-  // lone match is already the only row and needs no extra emphasis.
-  const highlightMatches = $derived(filterQuery !== '' && filteredOptions.length > 1)
-
-  // Split a label around its matched span (shared helper), or return null when
-  // highlighting is off for an unambiguous single match.
   function labelParts(label: string) {
-    return highlightMatches ? matchLabelParts(label, filterQuery) : null
+    return filter.labelParts(label)
   }
 
   $effect(() => {
@@ -301,32 +268,14 @@
   // selection changed between scheduling and the frame (the user pressed
   // Shift+Home / Ctrl+A in the meantime), the deferred fix backs off rather
   // than collapsing the selection the user just made.
-  let caretRafId: number | null = null
-  function placeCaretAtEnd() {
-    if (!inputRef) {
-      return
-    }
-    if (caretRafId !== null) cancelAnimationFrame(caretRafId)
-    const scheduledStart = inputRef.selectionStart
-    const scheduledEnd = inputRef.selectionEnd
-    caretRafId = requestAnimationFrame(() => {
-      caretRafId = null
-      const input = inputRef
-      if (!input || !inputFocused) return
-      const { selectionStart, selectionEnd, value } = input
-      if (value.length === 0) return
-      if (selectionStart !== scheduledStart || selectionEnd !== scheduledEnd) return
-      const collapsed = selectionStart === selectionEnd
-      const wholeValue = selectionStart === 0 && selectionEnd === value.length
-      if (!collapsed && !wholeValue) return
-      const end = value.length
-      input.setSelectionRange(end, end)
-    })
-  }
+  const caret = useCaretAtEnd({
+    element: () => inputRef,
+    focused: () => inputFocused,
+  })
 
   function handleControlFocus() {
     inputFocused = true
-    placeCaretAtEnd()
+    caret.placeCaretAtEnd()
     if (suppressOpenOnFocus) {
       suppressOpenOnFocus = false
       return
@@ -341,7 +290,7 @@
     if (event.detail !== 1) {
       return
     }
-    placeCaretAtEnd()
+    caret.placeCaretAtEnd()
   }
 
   // Double-clicking the input selects the whole value, so the next keystroke
@@ -352,10 +301,7 @@
     if (!inputRef) {
       return
     }
-    if (caretRafId !== null) {
-      cancelAnimationFrame(caretRafId)
-      caretRafId = null
-    }
+    caret.cancel()
     inputRef.setSelectionRange(0, inputRef.value.length)
   }
 
@@ -442,36 +388,18 @@
     await closeAndRestoreFocus()
   }
 
+  // One keydown entry, dispatched by concern: type-ahead, range selection,
+  // modified-key passthrough, listbox navigation, Escape, then Enter/commit.
   function handleControlKeydown(event: KeyboardEvent) {
-    // The non-filterable trigger has no text field: a printable key runs
-    // type-ahead (commit the first label match) and consuming it here keeps
-    // the rest of the navigation below untouched.
-    if (!filterable && listbox.handleTypeahead(event)) {
-      event.preventDefault()
+    if (handleTypeahead(event)) {
       return
     }
     // A text-editing combo is starting: drop any pending caret fix so it
     // cannot collapse the selection the user is about to make.
     if (event.shiftKey || event.ctrlKey || event.metaKey || event.altKey) {
-      if (caretRafId !== null) {
-        cancelAnimationFrame(caretRafId)
-        caretRafId = null
-      }
+      caret.cancel()
     }
-    // Shift+Home / Shift+End select text. Drive the range explicitly rather
-    // than relying on the browser default: a browser that select-alls on focus
-    // leaves the anchor at the start, so a native Shift+Home would collapse the
-    // selection instead of extending it. The control keeps the caret at the
-    // end, so Shift+Home selects the whole value and Shift+End collapses it.
-    if (inputRef && event.shiftKey && event.key === 'Home') {
-      event.preventDefault()
-      inputRef.setSelectionRange(0, inputRef.value.length, 'backward')
-      return
-    }
-    if (inputRef && event.shiftKey && event.key === 'End') {
-      event.preventDefault()
-      const end = inputRef.value.length
-      inputRef.setSelectionRange(end, end)
+    if (handleRangeSelection(event)) {
       return
     }
     // Other modified navigation keys (Shift+Arrow, Ctrl/Meta+Arrow/Home/End)
@@ -480,66 +408,119 @@
     if (isModifiedNavKey(event)) {
       return
     }
+    if (handleListboxNavigation(event)) {
+      return
+    }
+    if (event.key === 'Escape') {
+      // A focused but closed control owns no window-level Escape listener
+      // (`useDropdown` only listens while open), so drop focus here directly.
+      // In a dialog the dialog's own capture handler runs first and still
+      // cancels, exactly as before.
+      blurControl()
+      return
+    }
+    if (event.key === 'Enter') {
+      handleEnter(event)
+    }
+  }
+
+  // The non-filterable trigger has no text field: a printable key runs
+  // type-ahead (commit the first label match) and consuming it here keeps the
+  // rest of the navigation untouched.
+  function handleTypeahead(event: KeyboardEvent): boolean {
+    if (filterable || !listbox.handleTypeahead(event)) {
+      return false
+    }
+    event.preventDefault()
+    return true
+  }
+
+  // Shift+Home / Shift+End select text. Drive the range explicitly rather than
+  // relying on the browser default: a browser that select-alls on focus leaves
+  // the anchor at the start, so a native Shift+Home would collapse the
+  // selection instead of extending it. The control keeps the caret at the end,
+  // so Shift+Home selects the whole value and Shift+End collapses it.
+  function handleRangeSelection(event: KeyboardEvent): boolean {
+    if (!inputRef || !event.shiftKey) {
+      return false
+    }
+    if (event.key === 'Home') {
+      event.preventDefault()
+      inputRef.setSelectionRange(0, inputRef.value.length, 'backward')
+      return true
+    }
+    if (event.key === 'End') {
+      event.preventDefault()
+      const end = inputRef.value.length
+      inputRef.setSelectionRange(end, end)
+      return true
+    }
+    return false
+  }
+
+  function handleListboxNavigation(event: KeyboardEvent): boolean {
     if (event.key === 'ArrowDown') {
       event.preventDefault()
       if (!open) {
         flushSync(() => {
           openPanel()
         })
-        return
+        return true
       }
       listbox.moveHighlight('down')
-    } else if (event.key === 'ArrowUp') {
+      return true
+    }
+    if (event.key === 'ArrowUp') {
       event.preventDefault()
       if (!open) {
         flushSync(() => {
           openPanel()
           listbox.selection.move('last', filteredOptions.length)
         })
-        return
+        return true
       }
       listbox.moveHighlight('up')
-    } else if (event.key === 'Home' || event.key === 'End') {
+      return true
+    }
+    if (event.key === 'Home' || event.key === 'End') {
       if (open && filteredOptions.length > 0) {
         event.preventDefault()
         listbox.moveHighlight(event.key === 'Home' ? 'first' : 'last')
       }
-    } else if (event.key === 'Escape') {
-      // A focused but closed control owns no window-level Escape listener
-      // (`useDropdown` only listens while open), so drop focus here directly.
-      // In a dialog the dialog's own capture handler runs first and still
-      // cancels, exactly as before.
-      blurControl()
-    } else if (event.key === 'Enter') {
-      if (!open) {
-        // Enter on the closed control reopens the panel, so a value that was
-        // just confirmed can be changed again without reaching for the mouse.
-        event.preventDefault()
-        flushSync(() => {
-          openPanel()
-        })
-        return
-      }
+      return true
+    }
+    return false
+  }
+
+  function handleEnter(event: KeyboardEvent) {
+    if (!open) {
+      // Enter on the closed control reopens the panel, so a value that was just
+      // confirmed can be changed again without reaching for the mouse.
       event.preventDefault()
-      // Free entry: typed text that matches no option commits as a custom
-      // value instead of falling back to the highlighted row. The match is
-      // case-insensitive like filtering, so `TWO` still selects `Two`
-      // instead of committing a duplicate. Pristine text (the echoed value,
-      // never edited) never commits — without this, Enter on a freshly
-      // opened panel would commit the current label as new.
-      const customText = filterText.trim()
-      const customLower = customText.toLowerCase()
-      const exactMatch = normalizedOptions.some(
-        option => option.label.toLowerCase() === customLower || option.value.toLowerCase() === customLower,
-      )
-      if (allowCustomValue && filterable && filterDirty && customText !== '' && !exactMatch) {
-        void commitCustomValue(customText)
-        return
-      }
-      const option = filteredOptions[listbox.selection.index] ?? filteredOptions[0]
-      if (option) {
-        void select(option.value)
-      }
+      flushSync(() => {
+        openPanel()
+      })
+      return
+    }
+    event.preventDefault()
+    // Free entry: typed text that matches no option commits as a custom value
+    // instead of falling back to the highlighted row. The match is
+    // case-insensitive like filtering, so `TWO` still selects `Two` instead of
+    // committing a duplicate. Pristine text (the echoed value, never edited)
+    // never commits — without this, Enter on a freshly opened panel would
+    // commit the current label as new.
+    const customText = filterText.trim()
+    const customLower = customText.toLowerCase()
+    const exactMatch = normalizedOptions.some(
+      option => option.label.toLowerCase() === customLower || option.value.toLowerCase() === customLower,
+    )
+    if (allowCustomValue && filterable && filterDirty && customText !== '' && !exactMatch) {
+      void commitCustomValue(customText)
+      return
+    }
+    const option = filteredOptions[listbox.selection.index] ?? filteredOptions[0]
+    if (option) {
+      void select(option.value)
     }
   }
   const listbox = useListbox({

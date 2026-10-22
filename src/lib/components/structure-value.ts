@@ -7,18 +7,27 @@ export function isContainer(value: unknown): value is object {
   return value !== null && typeof value === 'object'
 }
 
+// A non-array object: the shape whose own keys and entries the tree reads. The
+// guard keeps every structural read honest instead of asserting the shape.
+export function isRecord(value: unknown): value is Record<string, unknown> {
+  return isContainer(value) && !Array.isArray(value)
+}
+
 export function childEntries(value: unknown): StructureEntry[] {
   if (Array.isArray(value)) {
     return value.map((item, index) => ({ key: String(index), value: item }))
   }
-  return Object.entries(value as Record<string, unknown>).map(([key, value]) => ({ key, value }))
+  if (!isRecord(value)) {
+    return []
+  }
+  return Object.entries(value).map(([key, value]) => ({ key, value }))
 }
 
 export function containerSummary(value: unknown): string {
   if (Array.isArray(value)) {
     return `array[${value.length}]`
   }
-  const count = Object.keys(value as Record<string, unknown>).length
+  const count = isRecord(value) ? Object.keys(value).length : 0
   return `object{${count}}`
 }
 
@@ -82,7 +91,8 @@ export function setAtPath(root: unknown, path: string[], value: unknown): unknow
     next[index] = setAtPath(root[index], rest, value)
     return next
   }
-  return { ...(root as Record<string, unknown>), [key]: setAtPath((root as Record<string, unknown>)[key], rest, value) }
+  const record = isRecord(root) ? root : {}
+  return { ...record, [key]: setAtPath(record[key], rest, value) }
 }
 
 // The format a plain-text document reads as: XML when it opens with a tag,
@@ -100,14 +110,18 @@ export function detectFormat(text: string): 'json' | 'yaml' | 'xml' {
 export function renameKeyAtPath(root: unknown, path: string[], oldKey: string, newKey: string): unknown {
   if (oldKey === newKey) return root
   if (path.length === 0) {
-    const obj = root as Record<string, unknown>
-    if (!(oldKey in obj)) return root
+    if (!isRecord(root)) {
+      return root
+    }
+    if (!(oldKey in root)) {
+      return root
+    }
     const rebuilt: Record<string, unknown> = {}
-    for (const key of Object.keys(obj)) {
+    for (const key of Object.keys(root)) {
       if (key === oldKey) {
-        rebuilt[newKey] = obj[key]
+        rebuilt[newKey] = root[key]
       } else {
-        rebuilt[key] = obj[key]
+        rebuilt[key] = root[key]
       }
     }
     return rebuilt
@@ -119,8 +133,11 @@ export function renameKeyAtPath(root: unknown, path: string[], oldKey: string, n
     next[index] = renameKeyAtPath(root[index], rest, oldKey, newKey)
     return next
   }
+  if (!isRecord(root)) {
+    return root
+  }
   return {
-    ...(root as Record<string, unknown>),
-    [head]: renameKeyAtPath((root as Record<string, unknown>)[head], rest, oldKey, newKey),
+    ...root,
+    [head]: renameKeyAtPath(root[head], rest, oldKey, newKey),
   }
 }

@@ -49,7 +49,7 @@
   <!-- The action row is part of the content: the message scrolls in its own
        area, so the row stays pinned below it. -->
   <div class="flex min-h-0 flex-1 flex-col">
-    <div class="min-h-0 flex-1 overflow-y-auto">
+    <div tabindex="-1" class="min-h-0 flex-1 overflow-y-auto">
       <p class="text-sm leading-6 text-slate-400">{message}</p>
     </div>
     <div class="flex-none">

@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { onDestroy, tick } from 'svelte'
+  import { onDestroy, tick, untrack } from 'svelte'
   import Button from './Button.svelte'
+  import Tooltip from './Tooltip.svelte'
   import CopyIcon from '$lib/icons/CopyIcon.svelte'
   import EditIcon from '$lib/icons/EditIcon.svelte'
   import type { SizeInput } from '$lib/size-scale'
@@ -47,6 +48,7 @@
   let input = $state<HTMLInputElement | null>(null)
   let displayBtn = $state<HTMLButtonElement | null>(null)
   let editBtn = $state<HTMLElement | null>(null)
+  let rootRef = $state<HTMLElement | null>(null)
   let inputWidth = $state<number | null>(null)
   let computedMaxWidth = $state<number | null>(null)
   let clickTimer: ReturnType<typeof setTimeout> | null = null
@@ -77,16 +79,22 @@
         inputWidth = null
       }
       // Compute the remaining horizontal width so the editable input's max
-      // width is the lesser of the `maxWidth` prop and available space.
-      // Measured from the viewport's right edge (the header row spans the
-      // full width), so no ancestor walk is needed.
+      // width is the lesser of the `maxWidth` prop and available space. The
+      // component's own row supplies that space: measure from the label's left
+      // edge to the row's right edge, so a narrow container narrows the field
+      // exactly as a narrow viewport does. The row is the node this component
+      // owns through `bind:this`; no ancestor walk is involved.
       try {
         if (labelRect) {
           // Reserve room for sibling action buttons (e.g. delete) + padding.
           const reserved = 48
-          const viewportRight = document.documentElement.clientWidth
-          const remaining = Math.max(0, Math.floor(viewportRight - labelRect.left - reserved))
-          computedMaxWidth = Math.min(maxWidth, remaining)
+          const hostRect = rootRef?.getBoundingClientRect()
+          if (!hostRect || hostRect.width === 0) {
+            computedMaxWidth = maxWidth
+          } else {
+            const remaining = Math.max(0, Math.floor(hostRect.right - labelRect.left - reserved))
+            computedMaxWidth = Math.min(maxWidth, remaining)
+          }
         } else {
           computedMaxWidth = maxWidth
         }
@@ -136,27 +144,36 @@
 
   // Auto-resize the input to fit its content while editing, but don't shrink
   // below the initially measured label+icon width and cap at a sensible max.
+  // The probe width rides `$state`, so collapsing applies on the next flush and
+  // the measurement waits for `tick()` before reading the laid-out width.
+  async function measureInputWidth(field: HTMLInputElement, base: number, max: number): Promise<void> {
+    // Account for the size-scaled horizontal padding (both sides); read before
+    // the flush so a size change still re-runs this effect.
+    const paddingExtra = metrics.padX * 2
+    try {
+      // Collapse the declarative width so scrollWidth reflects the content.
+      inputWidth = 0
+      await tick()
+      if (!editing || input !== field) {
+        return
+      }
+      const contentWidth = field.scrollWidth
+      inputWidth = Math.min(max, Math.max(base, contentWidth + paddingExtra))
+    } catch (e) {
+      console.error('EditableText: width measurement failed', e)
+    }
+  }
+
   $effect(() => {
     if (!editing || !input) return
     // Depend on value so this effect runs as the user types.
     void value
-    try {
-      // Temporarily collapse width to let scrollWidth reflect content width.
-      input.style.width = '0px'
-      const contentWidth = input.scrollWidth
-      // Account for the size-scaled horizontal padding (both sides).
-      const paddingExtra = metrics.padX * 2
-      const base = inputWidth ?? 0
-      const max = computedMaxWidth ?? maxWidth
-      const next = Math.min(max, Math.max(base, contentWidth + paddingExtra))
-      input.style.width = `${next}px`
-      inputWidth = next
-    } catch (e) {
-      // Measurement failure leaves the input at its zero probe width; restore a
-      // sane width and surface the failure rather than swallowing it.
-      if (input) input.style.width = inputWidth ? `${inputWidth}px` : ''
-      console.error('EditableText: width measurement failed', e)
-    }
+    const field = input
+    // The measured label+icon width is the floor; read it untracked so the
+    // effect's own writes never reschedule it.
+    const base = untrack(() => inputWidth) ?? 0
+    const max = computedMaxWidth ?? maxWidth
+    void measureInputWidth(field, base, max)
   })
 
   onDestroy(() => {
@@ -171,7 +188,7 @@
   const metricClass = INPUT_METRIC_CLASS
   // The edit field rides TextInput, which emits the same `--input-*` vars for
   // the shared size, so the field needs only its measured width on top.
-  const widthStyle = $derived(inputWidth ? `width: ${inputWidth}px; min-width: 0` : 'min-width: 0')
+  const widthStyle = $derived(inputWidth === null ? 'min-width: 0' : `width: ${inputWidth}px; min-width: 0`)
 </script>
 
 {#if editing}
@@ -206,7 +223,6 @@
       type="button"
       class={`${metricClass} min-w-0 truncate bg-transparent text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 motion-reduce:transition-none ${className}`}
       style={sizeStyle}
-      title={i18n.t('edit.doubleClickToEdit')}
       onclick={e => {
         e.stopPropagation()
         scheduleActivate()
@@ -215,7 +231,7 @@
         if (e.key === 'Enter' || e.key === ' ') e.stopPropagation()
       }}
       ondblclick={handleTextDoubleClick}>
-      {text}
+      {text}<Tooltip>{i18n.t('edit.doubleClickToEdit')}</Tooltip>
     </button>
     <span
       bind:this={editBtn}
@@ -244,7 +260,7 @@
        pushed to the right. Keep min-w-0 so truncation still works.
        `items-center` centers the icon wrappers (edit + copy) on the text field's
        own vertical middle, so no nudge is needed to align them with the text. -->
-  <div class="group flex min-w-0 items-center gap-2">
+  <div bind:this={rootRef} class="group flex min-w-0 items-center gap-2">
     {@render displayContent()}
     {#if copyable && text.trim() !== ''}
       <span class="shrink-0 transition group-hover:opacity-100 focus-within:opacity-100 [@media(hover:hover)]:opacity-0">

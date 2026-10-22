@@ -87,9 +87,9 @@ describe('StructureTree', () => {
     const onRenameKey = vi.fn()
     const root = render({ oldKey: 42 }, { onRenameKey })
 
-    const keySpan = [...root.querySelectorAll('span')].find(span => span.textContent === 'oldKey')
-    if (!keySpan) throw new Error('key span not found')
-    keySpan.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+    const keyButton = [...root.querySelectorAll('button')].find(button => button.textContent === 'oldKey')
+    if (!keyButton) throw new Error('key rename button not found')
+    keyButton.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
     flushSync()
     const input = root.querySelector('input') as HTMLInputElement
     setInputValue(input, 'newKey')
@@ -235,11 +235,9 @@ describe('StructureTree', () => {
     const onRenameKey = vi.fn()
     const root = render({ nested: { a: 1 } }, { onRenameKey })
 
-    const keySpan = [...root.querySelectorAll('span[role="button"]')].find(
-      span => span.textContent === 'nested',
-    )
-    if (!keySpan) throw new Error('nested key span not found')
-    keySpan.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+    const keyButton = [...root.querySelectorAll('button')].find(button => button.textContent === 'nested')
+    if (!keyButton) throw new Error('nested key rename button not found')
+    keyButton.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
     flushSync()
     const input = root.querySelector('input') as HTMLInputElement
     setInputValue(input, 'renamed')
@@ -252,9 +250,7 @@ describe('StructureTree', () => {
     const root = render({ teams: [{ x: 1 }] }, { onRenameKey: vi.fn() })
     buttonByName(root, /expand teams/i).click()
     flushSync()
-    const keyNames = [...root.querySelectorAll('span[role="button"]')].map(
-      span => span.textContent,
-    )
+    const keyNames = [...root.querySelectorAll('button')].map(button => button.textContent)
     expect(keyNames).toContain('teams')
     expect(keyNames).not.toContain('0')
     expect(keyNames.find(name => name?.startsWith('object'))).toBeUndefined()

@@ -52,7 +52,11 @@ function open(props: Record<string, unknown> = {}) {
 describe('BaseDialog accessible name', () => {
   it('labels the dialog from its title', () => {
     const dialog = open({ title: 'Edit item' })
-    expect(dialog.getAttribute('aria-labelledby')).toBeTruthy()
+    const labelledBy = dialog.getAttribute('aria-labelledby')
+    expect(labelledBy).toBeTruthy()
+    // The id must resolve to the heading that carries the title text: a
+    // non-empty attribute pointing at nothing still names no dialog.
+    expect(dialog.ownerDocument.getElementById(labelledBy ?? '')?.textContent?.trim()).toBe('Edit item')
     expect(dialog.hasAttribute('aria-label')).toBe(false)
   })
 

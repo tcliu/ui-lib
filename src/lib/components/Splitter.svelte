@@ -19,6 +19,10 @@
     // setting this flips pointer, arrow-key, and Home/End deltas to keep it
     // under the cursor. Off for the default near-side (left/top) pane.
     invert?: boolean
+    // The flex container that establishes the px-to-% basis in `%` mode. An
+    // explicit getter keeps the component off its ancestor walk; unset, the
+    // wrapper's parent (the container the handle sits in) is measured.
+    getContainer?: () => HTMLElement | null
   }
 
   let {
@@ -33,7 +37,10 @@
     unit = 'px',
     orientation = 'vertical',
     invert: invertPane = false,
+    getContainer,
   }: Props = $props()
+
+  let wrapperRef = $state<HTMLElement | null>(null)
 
   const resolvedAriaLabel = $derived(ariaLabel ?? i18n.t('splitter.resize'))
   // An unbounded edge has no maximum to announce, so it is omitted.
@@ -70,12 +77,13 @@
       return invertPane
     },
     toDelta,
-    measure(handle) {
+    measure() {
       startValue = value
-      // The handle is absolutely centered inside a zero-width wrapper, so the
-      // flex container that establishes the px-to-% basis is one level up.
-      const parent = handle.parentElement?.parentElement ?? handle.parentElement
-      containerSize = orientation === 'vertical' ? (parent?.clientWidth ?? 0) : (parent?.clientHeight ?? 0)
+      // The px-to-% basis is the flex container the zero-width wrapper sits in;
+      // a caller can name that container explicitly instead of relying on the
+      // wrapper's parent.
+      const container = getContainer?.() ?? wrapperRef?.parentElement ?? null
+      containerSize = orientation === 'vertical' ? (container?.clientWidth ?? 0) : (container?.clientHeight ?? 0)
     },
     onMove(deltaX, deltaY, phase) {
       const next = (phase === 'drag' ? startValue : value) + deltaX + deltaY
@@ -95,7 +103,7 @@
 <!-- The in-flow wrapper is zero-sized so the seam adds no layout width; the
      handle is absolutely centered on it, keeping the 12px target and its focus
      ring while the panes stay flush. -->
-<div class={`relative shrink-0 ${orientation === 'vertical' ? 'w-0' : 'h-0'}`}>
+<div bind:this={wrapperRef} class={`relative shrink-0 ${orientation === 'vertical' ? 'w-0' : 'h-0'}`}>
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
   <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
   <div

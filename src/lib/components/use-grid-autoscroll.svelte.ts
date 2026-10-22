@@ -48,8 +48,8 @@ export function createAutoScroll(hooks: AutoScrollHooks) {
       container.scrollLeft += dx
       container.scrollTop += dy
       if (typeof document.elementFromPoint === 'function') {
-        const el = document.elementFromPoint(pointer.x, pointer.y) as HTMLElement | null
-        if (el) {
+        const el = document.elementFromPoint(pointer.x, pointer.y)
+        if (el instanceof HTMLElement) {
           const cell = el.closest<HTMLElement>('[data-row][data-col]')
           if (cell) {
             hooks.onCellHover(Number(cell.dataset.row), Number(cell.dataset.col))

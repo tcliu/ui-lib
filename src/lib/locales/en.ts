@@ -107,6 +107,13 @@ export const en = {
     resizeColumn: 'Resize column {index}',
     rowColCount: '{rows} rows · {columns} columns',
   },
+  table: {
+    sortAsc: 'Sort {column} ascending',
+    sortDesc: 'Sort {column} descending',
+    resizeColumn: 'Resize {column}',
+    edit: 'Edit {name}',
+    clear: 'Clear {name}',
+  },
   edit: {
     editText: 'Edit text',
     doubleClickToEdit: 'Double-click to edit',

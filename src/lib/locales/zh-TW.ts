@@ -107,6 +107,13 @@ export const zhTW = {
     resizeColumn: '調整第 {index} 欄大小',
     rowColCount: '{rows} 列 · {columns} 欄',
   },
+  table: {
+    sortAsc: '依 {column} 升冪排序',
+    sortDesc: '依 {column} 降冪排序',
+    resizeColumn: '調整 {column} 欄大小',
+    edit: '編輯 {name}',
+    clear: '清除 {name}',
+  },
   edit: {
     editText: '編輯文字',
     doubleClickToEdit: '按兩下編輯',

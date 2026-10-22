@@ -487,7 +487,7 @@
             style={panelStyle}
             class="w-full rounded-md border border-slate-700 bg-slate-950 px-[var(--chip-panel-search-pad-x)] py-[var(--chip-panel-search-pad-y)] text-[length:var(--chip-panel-font)] leading-[var(--chip-panel-line)] text-slate-100 outline-none placeholder:text-slate-500 focus-visible:border-sky-500" />
         </div>
-        <div id={panelId} role="listbox" aria-label={ariaLabel} class="min-h-0 flex-1 overflow-y-auto p-1">
+        <div id={panelId} role="listbox" aria-label={ariaLabel} tabindex="-1" class="min-h-0 flex-1 overflow-y-auto p-1">
           {@render optionList()}
         </div>
       </div>

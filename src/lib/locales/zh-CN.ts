@@ -107,6 +107,13 @@ export const zhCN = {
     resizeColumn: '调整第 {index} 列大小',
     rowColCount: '{rows} 行 · {columns} 列',
   },
+  table: {
+    sortAsc: '按 {column} 升序排序',
+    sortDesc: '按 {column} 降序排序',
+    resizeColumn: '调整 {column} 列大小',
+    edit: '编辑 {name}',
+    clear: '清除 {name}',
+  },
   edit: {
     editText: '编辑文本',
     doubleClickToEdit: '双击编辑',

@@ -125,7 +125,7 @@
   <!-- The action row is part of the content: the form body scrolls in its own
        area, so the row stays pinned below it. -->
   <form id={formId} class="flex min-h-0 min-w-0 flex-1 flex-col" onsubmit={handleSubmit}>
-    <div class="min-h-0 flex-1 overflow-y-auto">
+    <div tabindex="-1" class="min-h-0 flex-1 overflow-y-auto">
       {@render children?.()}
     </div>
     <div class="flex-none">
