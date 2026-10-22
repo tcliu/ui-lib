@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { existsSync, readFileSync, readdirSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { createRequire } from 'node:module'
 import { join, posix } from 'node:path'
@@ -53,6 +53,7 @@ const SHARED_FILES = [
 // directory named `server` marks its content server-only in SvelteKit, so the
 // app cannot pull these into a client bundle.
 const SHARED_SERVER_FILES = [
+  'src/lib/server/card.ts',
   'src/lib/server/cron-expression.ts',
   'src/lib/server/d1-binding.mjs',
   'src/lib/server/log-format.mjs',
@@ -177,7 +178,14 @@ function projectPaths() {
 // Non-SvelteKit siblings carry no shared UI surface.
 const isExceptedName = name => name === 'ai'
 
-const hash = p => createHash('md5').update(readFileSync(p)).digest('hex')
+// Content plus the executable bit: a sibling that loses `chmod +x` on a shared
+// script still byte-matches, so the shebang stops being honoured there and the
+// gate would report parity it does not have.
+const hash = p =>
+  createHash('md5')
+    .update(readFileSync(p))
+    .update(statSync(p).mode & 0o111 ? '\0executable' : '\0plain')
+    .digest('hex')
 
 // --- Usage analysis ---------------------------------------------------------
 // Map the shared surface a sibling actually uses, so the gate can tell a file
@@ -309,7 +317,15 @@ function liveShared({ sharedEdges, nonShared, externalCorpus }) {
 
 const apps = projectPaths()
 if (apps.length === 0) {
-  console.log('shared-parity: no registered sibling projects found; nothing to compare')
+  const message = 'shared-parity: no registered sibling projects found; nothing to compare'
+  // `--strict` is the gate CI and `npm run check` run: with no registry it can
+  // only pass vacuously, so fail instead of reporting parity it never checked.
+  if (process.argv.includes('--strict')) {
+    console.error(message)
+    console.error('shared-parity: --strict cannot verify parity without the project registry (~/.agents/.metadata/projects.yml)')
+    process.exit(1)
+  }
+  console.log(message)
   process.exit(0)
 }
 if (!existsSync(join(ROOT, 'src', 'lib'))) {
