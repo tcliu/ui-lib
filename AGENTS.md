@@ -34,6 +34,7 @@ Project-specific development conventions for the UI Library web app.
 - Shared components never traverse or manipulate the DOM; sanctioned exceptions and the permitted `svelte-ignore` suppressions are in `ARCHITECTURE.md`. Never suppress another `a11y_*` warning or `state_referenced_locally`.
 - Plain-text hints use the `tooltip` prop with the shared `Tooltip` component; a disabled `Button`'s tooltip rides its non-disabled wrapper (disabled triggers fire no events).
 - `npm run check` enforces shared parity; a change is complete only once siblings are re-ported or the divergence is a documented exception. Mechanism in `ARCHITECTURE.md`.
+- A module only the server runtime and the scripts use lives under `src/lib/server/`, which SvelteKit keeps out of the client bundle; the scripts import the same file, so the two runtimes cannot drift. Mechanism in `ARCHITECTURE.md`.
 - Keep shared scripts byte-identical: read per-app values from ungated app files, never hardcode an app name or path; project-owned data stays out of gated directories.
 - Tag editing stays one shared control (`TagInput`); map an app's richer tag
   object to `string[]` at the call site instead of forking a second control.
@@ -91,7 +92,8 @@ Project-specific development conventions for the UI Library web app.
 - `Chip` owns its size-scaled spacing (padding, font, line, gap) on the shared axis; `chipClass` supplies color and the static pill's shape (radius), so a caller passes `size` instead of baking padding/font into the class.
 - `FormField` and `Tabs` scale their own chrome on the shared axis — `FormField`: label, gaps, and inline label column; `Tabs`: nav/tab text, padding, and radius; the controls slotted into a `FormField` stay the caller's to size.
 - The date input is one control: a single `DateField` owns the shared `TextInput` field and the calendar, and `DateInput` composes one field or a `range` pair with a separator — each field behaving as the single field, so a range and a time coexist — so the calendar, the `size` axis, the dayjs `format` pattern, and the `theme` live in the one field.
-- A date field edits its value as text: filter keystrokes to the characters the `format` pattern can contain, parse strictly and locale-aware on commit, and revert to the committed text on anything else (a rollover like Feb 31 is rejected, never normalized) — no error state; a calendar pick writes back through the picker's own value format, so a value that carries a time keeps it when only the date changes. Mechanism in `ARCHITECTURE.md`.
+- A range pair hands the focus to the empty end when the other one is filled and keeps its two instants in order (a commit on the wrong side exchanges the ends); mechanism in `ARCHITECTURE.md`.
+- A date field edits its value as text: filter to the pattern's characters, parse strictly on commit, revert anything else; a field whose pattern carries clock tokens also takes it in part, defaulting the missing units. Mechanism in `ARCHITECTURE.md`.
 - A date field's width hugs the `format` pattern's own text in `ch` (no prompt floor, no growth), so the value sits close to its calendar affordance and no slack opens between them.
 - A `time` field's segments carry instead of clamping: a segment stepped or typed past its own range advances the next unit, and 23:59:59 + 1s rolls the date to the next day's 00:00:00. Mechanism in `ARCHITECTURE.md`.
 - Icon glyphs share one square viewBox (`0 0 20 20`) and author their artwork
@@ -198,7 +200,7 @@ Project-specific development conventions for the UI Library web app.
 ## References
 
 - Follow `~/.agents/references/svelte.md` for Svelte 5 runes and effect rules.
-- Follow `~/.agents/references/js-ts.md` for module design with one-way dependency flow.
+- Follow `~/.agents/references/js-ts.md` for module design (coherent responsibility, one-way dependency flow, domain helpers split from presentation).
 - Follow `~/.agents/references/tailwind.md` for literal utility classes and attribute-driven palette remapping.
 - Follow `~/.agents/references/accessibility.md` for focus management, keyboard access, labels, and reduced motion.
 - Follow `~/.agents/references/responsive-design.md` for breakpoints, touch targets, and overlay drawers.
@@ -238,6 +240,7 @@ npm test
 ```
 
 - Measure unit coverage with `npm run test:coverage` (vitest v8 provider); use the summary as evidence for test-coverage findings, never as a percentage target.
-- e2e specs live one-per-component/concern under `e2e/`, with shared helpers not one growing spec; anchor locators on roles, accessible names, or `data-*` hooks, never DOM nesting.
+- Browser (e2e) specs live one-per-component/concern under `tests/`, with shared helpers not one growing spec; anchor locators on roles, accessible names, or `data-*` hooks, never DOM nesting.
+- A unit test lives beside its module (`foo.test.ts`, fixture `*.harness.svelte`); browser specs stay in root `tests/`, with no test-only directory in `src/` or `scripts/`. `npm run check` enforces it (`scripts/check-test-layout.mjs`); shared parity exempts tests and harnesses. Mechanism in `ARCHITECTURE.md`.
 - Portaled overlays render under `document.body`, not the demo hook, so anchor those assertions page-wide; match exactly when one accessible name prefixes another (`~/.agents/references/testing.md`).
 - TypeScript rides dual installs: keep `typescript@~6` main (`svelte-check` peers only on 5/6) and `@typescript/native` checking via `--tsgo`; promoting to 7 breaks the gate.

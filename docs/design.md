@@ -75,6 +75,26 @@ suggestion's label into the field, and a query that matches nothing hides the
 panel instead of falling back to the full list. `Escape` dismisses the
 suggestions while keeping focus and the typed text.
 
+A date field edits its value as text: typing keeps only the characters the
+display format can hold, and a commit that is not a valid date for that format
+(a rollover such as Feb 31) is rejected, so the field returns to its last good
+value with no error state. A field whose pattern carries a clock also accepts
+the pattern in part: the entry may carry the clock in part and the rest
+defaults, so "2026-01-12 03" commits "2026-01-12T03:00:00" and the date alone
+commits at midnight. A 12-hour clock, or one carrying a meridiem, stays whole —
+a clock without its meridiem would be ambiguous. The
+calendar affordance beside the field opens the calendar, and picking a day
+writes it back while keeping any time the value already carried; with a time
+format the calendar carries an hour/minute/second row whose segments carry into
+the next unit instead of clamping.
+
+A range is two such fields around a separator, each behaving as the single
+field. Committing one end while the other is still empty moves the focus — and
+the open calendar — to the empty end. The two ends stay in order: a commit that
+lands on the wrong side of the other end exchanges the two values, so the range
+never inverts. With `highlightRange`, the days between the two ends are tinted
+and dotted in each end's calendar.
+
 A bar chart renders one bar per column, stacking a column's segments; each bar's
 height is its total against the tallest column (with a small floor so a zero
 column stays visible), and a wide series thins the axis labels so they still

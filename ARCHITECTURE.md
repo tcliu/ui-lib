@@ -34,13 +34,18 @@ ui-lib/
 │       ├── icons/                # Shared icon glyphs
 │       ├── locales/              # i18n dictionaries (en, zh-CN, zh-TW)
 │       ├── showcase/             # Showcase shell (ShowcasePage/ShowcaseStage, snippet playground, RelatedNav)
-│       ├── server/
-│       │   ├── card.ts   # Shared card contract (normalize + resolve)
-│       │   └── logging.ts # Server-side structured event logging
+│       ├── server/               # Server-only: SvelteKit keeps this out of the client bundle
+│       │   ├── card.ts           # Shared card contract (normalize + resolve)
+│       │   ├── logging.ts        # Server-side structured event logging
+│       │   ├── log-format.mjs    # Shared log-line formatter (server runtime + scripts)
+│       │   ├── sql-rewrite.mjs   # Postgres→SQLite token rewrite (app runtime + scripts)
+│       │   └── d1-binding.mjs    # D1 binding name (deploy flow + runtime selector)
 │       ├── app-shell.ts          # AppShell geometry + drawer-mode ruler (768px container breakpoint)
 │       ├── theme.svelte.ts       # Theme state (THEMES, dark default) over web-settings storage
 │       ├── i18n.svelte.ts        # App i18n store + context
 │       └── showcase-components.ts # Showcase index (SHOWCASE_COMPONENTS) + browsing groups
+├── static/
+│   └── favicon.svg               # Served as-is (browser tab mark)
 ├── scripts/
 │   ├── deploy.mjs                # Deploy entry (availability/preflight -> interview -> plugin pipeline)
 │   ├── deploy.config.mjs         # Loads the repo-root deploy.config.json (project-owned selection)
@@ -65,6 +70,7 @@ ui-lib/
 │   └── run-e2e.mjs               # E2E entry point (resolve or start a server)
 ├── sql/
 │   └── schema.sql                # Schema source of truth (applied via npm run schema:apply)
+├── tests/                        # Playwright browser specs (*.spec.ts)
 ├── docs/
 │   ├── design.md                 # User-facing behavior
 │   └── spec.md                   # Behavioral contracts, API specs, constraints
@@ -108,6 +114,20 @@ Server endpoint (api/info/+server.ts via src/lib/server/card.ts)
   traverse or manipulate the DOM outside the sanctioned infrastructure helpers.
 - **Server endpoints** handle HTTP concerns (validation, caching headers); the
   only route is `GET /api/info`.
+
+## Server-only modules
+
+SvelteKit treats a directory named `server` as server-only: an import of
+`src/lib/server/**` from client code is a build error, so a module in that
+directory can never reach a client bundle. Every module that only the server
+runtime and the Node scripts use therefore lives there — the card contract, the
+event logger, the log-line format, the Postgres→SQLite rewrite, and the D1
+binding name.
+
+The scripts import the same files by relative path (`scripts/db-config.mjs` →
+`../src/lib/server/sql-rewrite.mjs`), so the app runtime and the tooling share
+one implementation instead of drifting. The shared ones are carried
+byte-identically by the consuming apps through the parity gate's server list.
 
 ## Key patterns
 
@@ -294,7 +314,7 @@ of building a parallel control.
   color and the static pill's shape. `FormField` scales its label, gaps, and
   inline label column; `Tabs` scales the nav and tab text, padding, and radius.
   `Buttons` scales the gap between the buttons from the dimension.
-  The date input shares one `PICKER_RATIOS` set (`date-input-core.ts`) covering
+  The date input shares one `PICKER_RATIOS` set (`date-input-metrics.ts`) covering
   the field's calendar gutter and the panel (width/padding, nav buttons, day
   cells, weekday and meta text); each field's own chrome is the input family's
   (`--input-*` from `TextInput`), so a date field sits level with a text field.
@@ -361,7 +381,13 @@ of building a parallel control.
   portalled panel, over `use-calendar-grid.svelte.ts` for the visible month,
   roving focus, and day nodes, `use-date-text-field.svelte.ts` for the draft and
   strict commit, and `use-time-segments.svelte.ts` for the hour/minute/second
-  row), with a `time`/`range` pair of options, a `format` prop (a dayjs
+  row). Its two shared modules split by concern: `date-input-core.ts` holds the
+  date/time domain (the date math, the display pattern, the typed-entry
+  conversion) and carries no presentation, while `date-input-metrics.ts` holds
+  the presentation (the `PICKER_RATIOS` that scale the field and its calendar,
+  and the `DateInputTheme` per-part colors), so the dependency flow stays
+  one-way. The control takes a `time`/`range` pair of options, a `format` prop
+  (a dayjs
   display pattern for the field *and* the pattern the typed text is parsed
   against, strictly and locale-aware), and a `theme` prop of per-part color
   classes (structural classes stay fixed). `time` makes every field a date-time
@@ -369,11 +395,46 @@ of building a parallel control.
   `YYYY-MM-DDTHH:mm:ss`); `range` renders two independent fields (`from`/`to`,
   each with its own calendar and panel) around a separator, each behaving exactly
   as the single field, so both options coexist — a date-time range is two
-  date-time fields. The field is the shared `TextInput`: the calendar icon sits
+  date-time fields. A range pair hands the focus on: committing one end (a
+  typed entry, or a pick that closes the calendar) while the other is still
+  empty moves the focus to the empty end and opens its calendar there (the
+  filled end's panel closes with it, so one calendar is open at a time). Each
+  end reaches the other through the pair's `sibling` handle (`DateFieldSibling`
+  — the other end's committed day plus the action that takes the focus), which
+  `DateInput` wires from the two fields' exported `focusAndOpen`; the day the
+  filled end hands over anchors the new panel, so the calendar opens on the
+  month the range already sits in. A pick that keeps its panel open (the time
+  row) does not hand the focus over, and the pair's time segments never do.
+  The pair always holds its two instants in order: a commit that lands on the
+  wrong side of the other end exchanges the two values, so the range never
+  inverts — the same swap the old single-panel picker did, so a day picked
+  before the start becomes the start, and a clock stepped past the other end
+  hands the ends over. The comparison is on the instants (`compareValues`),
+  not on the days, so a date-time range's clocks count too; the values travel
+  whole, so each end keeps a value its own format can read (a bare day would
+  read as unset and clear the field). The swap is the pair's business, so it
+  lives in `DateInput` (which owns both ends' writes), not in the field, and
+  the other end is read before the first write (a prop read after it would
+  already carry the value the commit writes). The `highlightRange` prop paints
+  the days between the two ends in each end's calendar: the ends read as the
+  selected days and the days between them carry the `theme.rangeSpan` tint plus
+  a dotted underline (the tint alone would be the only cue), and every day of
+  the span is an `aria-selected` cell in a grid marked `aria-multiselectable`
+  while it shows one.
+  The field is the shared `TextInput`: the calendar icon sits
   in its `trailing` slot and opens the panel, typing is filtered to characters
   the pattern can contain, and each commit parses strictly — a valid entry writes
   back through the internal value format, anything else (including a rollover
-  such as Feb 31) reverts to the committed text, with no error state. The grid
+  such as Feb 31) reverts to the committed text, with no error state. A field
+  whose pattern carries clock tokens also accepts it in part: the entry may
+  carry the clock in part and the rest defaults ("2026-01-12 03" in a
+  "YYYY-MM-DD HH:mm:ss" field commits "2026-01-12T03:00:00", the date alone
+  commits at midnight). The forms come from `entryPatterns` (the pattern up to
+  each of its clock tokens, then its date part), and the conversion from
+  `toValue` (the typed text to the value it becomes, `''` when it matches
+  none) — the shared util an app can use for the same conversion. A 12-hour
+  clock or a meridiem keeps its clock whole, since a clock without its
+  meridiem would be ambiguous. The grid
   re-anchors its visible month on the value: every change while the panel is
   closed, a value updated from outside while it is open (a typed commit, a
   parent write, restored data), and a complete, valid entry previewed as it is
@@ -398,7 +459,7 @@ of building a parallel control.
   formatting, and the width estimate ride on `dayjs` (a new runtime dependency
   for any app that vendors the input), with the `customParseFormat` plugin
   extended once in `date-input-core.ts`. `DateInput` scales every field and its
-  calendar from one `size` (`PICKER_RATIOS` in `date-input-core.ts`): its root
+  calendar from one `size` (`PICKER_RATIOS` in `date-input-metrics.ts`): its root
   carries the `--pick-*` set, and each portalled panel gets the same set through
   `sizeVarAction` — it is detached from the root, and a `style` binding would
   replace the inline styles the positioner owns.
@@ -465,7 +526,9 @@ of building a parallel control.
   the word; once the field is open a double-click selects its text normally);
   its object-edit dialog (open flag,
   seed/draft pair, save/format/reset/close) lives in
-  `use-structure-object-editor.svelte.ts`. The value helpers (`isContainer`,
+  `use-structure-object-editor.svelte.ts`; the dialog's discard confirm performs
+  the discard on dismissal (`confirmOnDismiss`), so Escape, the overlay, and the
+  close control drop the draft instead of returning to the form with it intact. The value helpers (`isContainer`,
   `childEntries`, `jsonPath`, `setAtPath`, `renameKeyAtPath`, …) live in
   `structure-value.ts`. Both components take `size`; `structureStyle` emits the
   node's `--tree-*` metrics from `STRUCTURE_RATIOS` (calibrated so `md`
@@ -626,10 +689,10 @@ live demo.
 3. Add the colocated `demo-snippet.ts` builder and its `.test.ts`.
 4. Follow the page shape above and add its editable Value rows (row rules in
    `AGENTS.md`).
-5. Add the slug to `CONVERTED_PAGE_SLUGS` in `e2e/snippets.spec.ts`; the
+5. Add the slug to `CONVERTED_PAGE_SLUGS` in `tests/snippets.spec.ts`; the
    `components.spec.ts` loop and the `snippets.spec.ts` reproduce loop already
    cover every registered slug.
-6. Add a behavior spec under `e2e/` for what the generic loops do not cover.
+6. Add a behavior spec under `tests/` for what the generic loops do not cover.
 
 **Resizable stages.** An overlay or placement demo renders inside `ShowcaseStage`
 — a pane sized by an inline `flex-basis` percentage plus a `Splitter unit="%"`
@@ -714,9 +777,28 @@ snippet may declare local values (data arrays, column defs) in a single leading
 compiled preamble's instance script; the block must come first and must not use
 module context, and local names override same-named `scope` keys.
 
+## Test layout
+
+A unit test lives beside the module it exercises: `button-size.test.ts` sits next
+to `Button.svelte` in `src/lib/components/`, and the fixture it drives is
+`button-size.harness.svelte` in the same directory. There is no test-only
+directory inside `src/` or `scripts/` — a `__tests__/` folder splits a module
+from its spec and makes the shared surface carry files no sibling needs.
+
+The two kinds of test are kept apart by what they exercise: a unit test drives
+a module, a browser flow drives a served app, so the browser specs keep the
+root `tests/` directory (`*.spec.ts`) — the name the SvelteKit scaffold gives
+that directory. The suite is still called end-to-end in the tooling (`npm run
+e2e`, `scripts/run-e2e.mjs`); only its directory follows the scaffold.
+
+`npm run check` runs `scripts/check-test-layout.mjs`: it fails on a test-only
+directory, a unit test outside `src/` or `scripts/`, a unit test whose
+directory holds no module, a unit test that imports no module from its own
+directory, and a spec filed on the wrong side of the split.
+
 ## End-to-end tests
 
-`e2e/helpers.ts` holds the shared snippet helpers; `components.spec.ts` and
+`tests/helpers.ts` holds the shared snippet helpers; `components.spec.ts` and
 `snippets.spec.ts` hold the generic showcase loops, never one growing spec.
 Locator hooks include `data-showcase-demo`; a portaled overlay renders under
 `document.body`, not the demo hook, so its assertions are page-wide.

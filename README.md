@@ -10,6 +10,14 @@ contracts see `docs/spec.md`, for code organization see `ARCHITECTURE.md`.
 - Build the browser app at the project root; the web UI stack and component patterns stay in this repo.
 - `npm run check`, `npm run build`, `npm test` are the verification gates (see `AGENTS.md`).
 
+```bash
+npm install
+npm run dev        # dev server (Vite, host-exposed)
+```
+
+- `npm run e2e` runs the Playwright specs against a running or freshly started
+  server; `npm run test:coverage` measures unit coverage.
+
 ## Environment variables
 
 `.env.example` is the single example file documenting all knobs; it is never
