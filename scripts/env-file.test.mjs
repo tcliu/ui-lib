@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-import { readJsonFile } from './env-file.mjs'
+import { readJsonFile, parseEnvFile } from './env-file.mjs'
 
 function scratchFile(name, contents) {
   const dir = mkdtempSync(join(tmpdir(), 'env-file-'))
@@ -26,5 +26,31 @@ describe('readJsonFile', () => {
     const path = scratchFile('broken.json', '{"name":')
     expect(() => readJsonFile(path)).toThrow(/Invalid JSON in /)
     expect(() => readJsonFile(path)).toThrow(path)
+  })
+})
+
+describe('parseEnvFile', () => {
+  it('reads plain, quoted, and commented entries', () => {
+    const path = scratchFile(
+      '.env',
+      ['# comment', '', 'PLAIN=value', 'DQUOTED="two words"', "SQUOTED='single'", 'EMPTY='].join('\n'),
+    )
+    expect(parseEnvFile(path)).toEqual({
+      PLAIN: 'value',
+      DQUOTED: 'two words',
+      SQUOTED: 'single',
+      EMPTY: '',
+    })
+  })
+
+  it('drops the shell-style export prefix from the key', () => {
+    // `export FOO=bar` is valid dotenv syntax; keeping the prefix would sync a
+    // variable named "export FOO" that no runtime reads.
+    expect(parseEnvFile(scratchFile('.env', 'export TOKEN=abc\n'))).toEqual({ TOKEN: 'abc' })
+  })
+
+  it('ignores lines that carry no assignment and returns empty for a missing file', () => {
+    expect(parseEnvFile(scratchFile('.env', 'not-an-assignment\n=orphan\n'))).toEqual({})
+    expect(parseEnvFile(join(tmpdir(), 'definitely-absent.env'))).toEqual({})
   })
 })
