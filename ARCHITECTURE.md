@@ -33,7 +33,8 @@ ui-lib/
 │       ├── data-table/           # DataTable helpers
 │       ├── icons/                # Shared icon glyphs
 │       ├── locales/              # i18n dictionaries (en, zh-CN, zh-TW)
-│       ├── showcase/             # Showcase shell (ShowcasePage/ShowcaseStage, snippet playground, RelatedNav)
+│       ├── app/                  # App-only chrome (theme state, web-settings storage); never published
+│       ├── showcase/             # Showcase shell (ShowcasePage/ShowcaseStage, snippet playground, RelatedNav, component index)
 │       ├── server/               # Server-only: SvelteKit keeps this out of the client bundle
 │       │   ├── card.ts           # Shared card contract (normalize + resolve)
 │       │   ├── cron-expression.ts # Shared cron parser (scheduler apps)
@@ -42,9 +43,7 @@ ui-lib/
 │       │   ├── sql-rewrite.mjs   # Postgres→SQLite token rewrite (app runtime + scripts)
 │       │   └── d1-binding.mjs    # D1 binding name (deploy flow + runtime selector)
 │       ├── app-shell.ts          # AppShell geometry + drawer-mode ruler (768px container breakpoint)
-│       ├── theme.svelte.ts       # Theme state (THEMES, dark default) over web-settings storage
-│       ├── i18n.svelte.ts        # App i18n store + context
-│       └── showcase-components.ts # Showcase index (SHOWCASE_COMPONENTS) + browsing groups
+│       └── i18n.svelte.ts        # App i18n store + context
 ├── static/
 │   └── favicon.svg               # Served as-is (browser tab mark)
 ├── scripts/
@@ -75,6 +74,9 @@ ui-lib/
 ├── docs/
 │   ├── design.md                 # User-facing behavior
 │   └── spec.md                   # Behavioral contracts, API specs, constraints
+├── package/                      # The publishable package (build only, not the source)
+│   ├── build.mjs                 # Copies, prunes and rewrites the surface into dist/
+│   └── check.mjs                 # Verifies the built package and the scratch consumer
 └── .worktrees/                   # Git worktrees (gitignored)
 ```
 
@@ -84,7 +86,7 @@ ui-lib/
    Read this first to see the top bar (picker toggle, title, theme/language
    menus), the searchable component list, and the AppShell that separates them.
 
-2. **`src/lib/showcase-components.ts`** — the showcase index (`SHOWCASE_COMPONENTS`)
+2. **`src/lib/showcase/showcase-components.ts`** — the showcase index (`SHOWCASE_COMPONENTS`)
    and browsing groups (`SHOWCASE_COMPONENT_GROUPS`); `/` redirects to
    `/components/base-dialog`. Helpers in `src/lib/showcase/` (`ShowcasePage`,
    `SnippetPreview` +
@@ -202,6 +204,58 @@ present-but-unreferenced port is flagged as dead. It fails on a divergence or a
 dead port; a deliberate divergence is recorded in the script's documented
 exception list with a reason.
 
+## The publishable package
+
+`src/lib` is the canonical shared surface, and it stays there: the parity gate and
+every consuming app address it by that path. The npm package is a **generated
+artifact**, not a second source of truth — `npm run package:build` compiles the
+surface into `dist/`, which carries the manifest npm publishes.
+
+```
+src/lib/**                       canonical, unchanged, siblings unaffected
+  └─ package/build.mjs
+       .package-build/staging/    copy → prune tests → rewrite specifiers
+         $lib/x        → ../x     (relative, per file)
+         $app/environment → esm-env
+       dist/                      svelte-package output + the publish manifest
+```
+
+- **The surface** — everything under `src/lib` except the app's own modules:
+  `server/` (SvelteKit's server-only directory), `showcase/` (the demo shell) and
+  `app/` (theme state and web-settings storage), with tests pruned. A new shared
+  module therefore ships without a list edit, and a specifier that points at a
+  private or unresolved file fails the build: the package must be self-contained.
+- **The dependencies** — read from the bare specifiers the staged sources import
+  and pinned to the app's own versions, so the published manifest cannot drift
+  from what the app builds against. `@babel/runtime` is implicit (the CodeMirror
+  theme package imports it at runtime), `esm-env` comes from the installed copy,
+  and `svelte` stays a peer.
+- **The rewrite** — `$lib/x` resolves against the consumer's own `src/lib`, so a
+  published package must not keep it; every relative specifier is normalized to
+  the file the compiler emits (`x.svelte.ts` → `x.svelte.js`, `x.ts` → `x.js`),
+  because `svelte-package` adds no extension.
+- **`$app/environment`** — the framework's module does not ship with the
+  package; the browser flag comes from `esm-env`, whose flags are named in upper
+  case (`BROWSER as browser`).
+- **The exports map** — one entry per shipped file, because a wildcard cannot
+  serve it: a rune module compiles to `x.svelte.js`, so `"./*.svelte"` and
+  `"./*"` claim the same specifier. A consumer keeps the source path it knows
+  (`components/Button.svelte`, `size-scale`, `i18n.svelte`).
+- **The stylesheet** — `dist/styles.css` carries the tokens and the palettes,
+  plus the `@source` globs that point the consumer's Tailwind at the package
+  (Tailwind does not scan `node_modules`).
+- **`npm run publish:check`** — builds the package, asserts that no test and no
+  app-only specifier ships, that every import resolves, that every export
+  target exists, packs the tarball, and builds a scratch consumer against it.
+
+The i18n store is the one module the package owns and the app also uses: the
+context key comes from the global symbol registry (`Symbol.for('ui-lib:i18n')`),
+so the app's copy and the package's copy name the same context. A consuming app
+merges its own dictionary over the shared one and sets the store through
+`setI18nContext`; for a component rendered outside the provider tree (a test, an
+island) it registers its store factory with `setDefaultI18nStore`, so the
+fallback reads the app's labels rather than the shared dictionary alone.
+
 ## Shared UI primitives
 
 `src/lib/components/` holds the reusable controls; keep the source here
@@ -226,7 +280,10 @@ of building a parallel control.
   the focus ring and the field adds only the text rules it owns. `EditableText`
   rides `TextInput` the same way and keeps its own skin — an outline ring
   standing in for the text — through that override, since it paints its own
-  surface rather than sitting inside another one. An adornment over
+  surface rather than sitting inside another one. Its editing field caps at
+  the viewport's right edge and at its `maxWidth` prop; a host narrower than the
+  viewport (a pane, a splitter, a table cell) passes the width it can afford, so
+  the field never outgrows the host. An adornment over
   the field's border (the number steppers) paints no border of its own: it reserves
   the ring with a transparent border so the base border, focus, and disabled
   colors stay in lockstep. `SelectDropdown`'s box shares the same line/padY ratios
@@ -301,7 +358,14 @@ of building a parallel control.
   leading search icon `0.9×`, and all still scale with the control.
   `Pagination`'s page blocks reuse the select trigger's line and vertical
   padding (plus its 1px border), so the numbered blocks, the jump input, and the
-  page-size dropdown land on one height. `ChipDropdown`'s `CHIP_RATIOS` make
+  page-size dropdown land on one height. Each block is content-sized — its own
+  label plus its horizontal padding and border — and floored by that height, so
+  a one-digit cell is square and a wider number widens only its own cell, in
+  CSS alone; the jump input tracks its value with `field-sizing: content`
+  (falling back to the fixed square where unsupported), so the active cell
+  matches a page button holding the same text, and `caretAtEnd` places its
+  caret after the value on focus and click so typing replaces the page number.
+  `ChipDropdown`'s `CHIP_RATIOS` make
   every metric — the label font and line, padding, the label→chevron and
   chip→clear-slot gaps, the chevron slot, the clear cross, and the label height
   floor — a fixed ratio of the dimension, calibrated so the default `md`
@@ -348,9 +412,13 @@ of building a parallel control.
   heavier stroke still fills the box without clipping — with the stroke weight,
   caps, and joins (`bold` is flat-ended and mitred, for a chunky sharp mark)
   coming from the one shared `chevron-stroke.ts` map, so the treatment stays
-  uniform across the eight glyphs. Every glyph carries the same
-  `size`/`className` props, plus the chevron `variant`, and appears on the Icons
-  showcase page, which is the
+  uniform across the eight glyphs. The same registry gives `Delete` its filled
+  `regular` can plus the outlined `rows` and `columns` band markers, and `Table`
+  its `regular` frame plus the four `insertRowAbove`, `insertRowBelow`,
+  `insertColumnBefore`, and `insertColumnAfter` renderings, so a related mark
+  extends its glyph rather than shipping a second component. Every glyph
+  carries the same `size`/`className` props, plus its registered `variant`
+  renderings, and appears on the Icons showcase page, which is the
   set's index: `demo-snippet.ts` keeps one entry per glyph in name order and a
   directory-parity spec fails when a file under `src/lib/icons` has no entry.
 - **Listbox surfaces** — `SelectDropdown`, `ChipDropdown`, `TagInput`,
@@ -620,7 +688,7 @@ of building a parallel control.
   `MessageKey`; non-default locales are typed `LocaleMessages<typeof en>` so a
   missing key fails the build). A consuming app's dictionaries define `common.*`,
   `number.*`, `dropdown.*`, `pagination.*`, `tabs.label`, `chart.label`,
-  `search.placeholder`, `splitter.*`, `password.*`, `chip.remove`, `tagInput.*`,
+  `search.*`, `splitter.*`, `password.*`, `chip.remove`, `tagInput.*`,
   `copy.*`, `edit.*`, `editor.*`, `structure.*`, `range.*`, `date.*`,
   `time.*`, `grid.*`, `table.*`, `resizable.*`, and `appShell.*`.
 - **CodeEditor / LazyCodeEditor** — load language packs on demand through a
@@ -637,8 +705,12 @@ exceptions, and the pattern must not be copied into feature code:
 `use-dropdown.svelte.ts`, `click-outside.ts`, `use-focusout-close.ts`,
 `focus-within.ts`, `drag-close-down.ts`, `Tooltip.svelte`, `AppShell.svelte`,
 `use-grid-autoscroll.svelte.ts`, `grid-cell-refs.ts`,
-`use-table-scroll-sync.svelte.ts`, `theme.svelte.ts`, and
-`i18n.svelte.ts`.
+`use-table-scroll-sync.svelte.ts`, `app/theme.svelte.ts`, and `i18n.svelte.ts`.
+
+One component carries a single, named exception rather than a general licence:
+`StructureNode.svelte`'s inline-edit text measurement writes and clears a hidden
+span's content in one tick, because the field width is needed synchronously
+before the first paint.
 
 The only sanctioned `svelte-ignore a11y_*` suppressions are the two documented
 false positives scoped to the resize-handle (`a11y_no_noninteractive_*`) and
@@ -648,7 +720,7 @@ DataGrid (`a11y_no_static_element_interactions`) subtrees; never suppress anothe
 ## Showcase component pages
 
 Each component has one route, `src/routes/components/<slug>/+page.svelte`,
-registered in `src/lib/showcase-components.ts`: `SHOWCASE_COMPONENTS`
+registered in `src/lib/showcase/showcase-components.ts`: `SHOWCASE_COMPONENTS`
 (`{ slug, name }[]`) is the index and route source (`/` redirects to
 `/components/base-dialog`), and `SHOWCASE_COMPONENT_GROUPS` (`Record<group, slug[]>`) declares the
 relatedness behind each page's `RelatedNav` chips — two components are related
@@ -826,5 +898,6 @@ directory, and a spec filed on the wrong side of the split.
 
 `tests/helpers.ts` holds the shared snippet helpers; `components.spec.ts` and
 `snippets.spec.ts` hold the generic showcase loops, never one growing spec.
-Locator hooks include `data-showcase-demo`; a portaled overlay renders under
+Locator hooks include `data-showcase-demo` (and `data-showcase-live` once the
+snippet's live compile has mounted); a portaled overlay renders under
 `document.body`, not the demo hook, so its assertions are page-wide.

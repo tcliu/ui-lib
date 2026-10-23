@@ -29,8 +29,16 @@ Project-specific development conventions for the UI Library web app.
 ## Architecture
 
 - The project root hosts the browser app.
+- The shared surface stays at `src/lib`; the npm package is a generated artifact
+  (`npm run package:build` writes `dist/`), never a second source of truth.
+- A shared component originates here: a sibling that needs one adds it to this
+  repo, republishes the package, then consumes it from the package.
+- A consuming app imports the package by name (`@codepg/ui-lib/...`); the
+  package's own i18n store and the app's share one context key, so the app
+  merges its dictionary over the shared one.
 - This project is the canonical source for the shared UI surface; fix a shared component here first, then port it, never fork without syncing back.
 - Reuse the existing shared control for a concern instead of building a parallel one; keep app-private UI out of the shared directories (inventory in `ARCHITECTURE.md`).
+- Everything under `src/lib` is published except `server/`, `showcase/` and `app/`, so an app-only module belongs in one of those three; the package build derives its file list and runtime dependencies from what is left.
 - Shared components never traverse or manipulate the DOM; sanctioned exceptions and the permitted `svelte-ignore` suppressions are in `ARCHITECTURE.md`. Never suppress another `a11y_*` warning or `state_referenced_locally`.
 - Plain-text hints use the `tooltip` prop with the shared `Tooltip` component; a disabled `Button`'s tooltip rides its non-disabled wrapper (disabled triggers fire no events).
 - `npm run check` enforces shared parity; a change is complete only once siblings are re-ported or the divergence is a documented exception. Mechanism in `ARCHITECTURE.md`.
@@ -83,7 +91,7 @@ Project-specific development conventions for the UI Library web app.
 - Component attributes stay camelCase.
 - A sized component exposes one numeric size dimension (`xs`–`xl` aliases of the `SIZE_PX` axis) and scales every metric by a fixed ratio; an interrelated metric derives from its base rather than being tuned beside it (the trigger gutter is a fixed share of the horizontal padding), per `~/.agents/references/tailwind.md` (Derived custom properties); details in `ARCHITECTURE.md`.
 - A composite embedding sized controls exposes `size?: SizeInput` and forwards it to every inner sized control, defaulting to the shared `md` step so both agree.
-- `Pagination`'s page blocks match the page-size dropdown trigger's height (same select line, vertical padding, and 1px border), so the row's controls sit level rather than from a hand-tuned block ratio.
+- `Pagination`'s page blocks match the page-size dropdown trigger's height (same select line, vertical padding, and 1px border), so the row's controls sit level rather than from a hand-tuned block ratio; a page cell sizes in CSS alone — square at rest, widened only by its own label — and the active cell (the jump field) shares the page buttons' box for the same text and puts the caret at the end on focus/click (`caretAtEnd`).
 - A dialog panel's footprint is `BaseDialog`'s `widthVariant`/`heightVariant` (or the `size` shorthand setting both; explicit variant wins), not a `SizeInput` metric scale. Mechanism in `ARCHITECTURE.md`.
 - Size svg primitives (icons, spinner) take `size` attributes, never classes.
 - A sized control's icon slot is the size dimension itself (`icon` ratio `1`), while the glyph renders at the shared `ICON_RATIO` (`0.8125`), so an icon matches its label and keeps the optical size the filled-viewBox glyphs were normalized from.
@@ -104,10 +112,10 @@ Project-specific development conventions for the UI Library web app.
   another project is re-normalized on the way in: its artwork reaches at least
   two edges of the box (the space is clipped, not padded around), so it reads
   at the set's weight. Mechanism in `ARCHITECTURE.md`.
-- A glyph that renders a concept the set already has takes that glyph's
-  `variant` rather than a second file; its variants and stroke treatments live
-  in the shared variant registry, which the icon viewport spec reads. Mechanism
-  in `ARCHITECTURE.md`.
+- A glyph whose concept the set already carries, or a related mark adding a
+  band, edge, or fill, is that glyph's `variant`, never a second file; register
+  each rendering's stroke treatment in the shared registry. Mechanism in
+  `ARCHITECTURE.md`.
 - Reuse this project's existing UI primitives; every button is the shared
   `Button` (icon-only through its `icon` snippet) per
   `~/.agents/references/ui-patterns.md`, never a raw `<button>`.
@@ -141,10 +149,10 @@ Project-specific development conventions for the UI Library web app.
 - Never assign a constructed collection (`new Set()`/`new Map()`) to snippet state; the compiler emits a legacy `init()` that throws at root mount.
 - The playground executes arbitrary JavaScript in the page and is not a sandbox:
   never hand it app secrets, stores, or fetch wrappers.
-- Register every page in `src/lib/showcase-components.ts` and start a new page
+- Register every page in `src/lib/showcase/showcase-components.ts` and start a new page
   from a close existing one; the add-a-page checklist is in `ARCHITECTURE.md`
   (Showcase component pages).
-- The Icons page indexes the whole set: every glyph under `src/lib/icons` gets an entry, in name order, so a directory-parity spec fails when one is missing.
+- The Icons page indexes the whole set: every glyph under `src/lib/icons` gets an entry, in name order, and the snippet playground's preamble imports every glyph, so a directory-parity spec fails when either list misses one.
 - The variant playground control offers every registered variant; a glyph takes the chosen one only when it carries it, and the rest keep their default.
 - Every page uses the converted shell so the props table drives the live demo, and is listed in `CONVERTED_PAGE_SLUGS`; shape in `ARCHITECTURE.md`.
 - Converted-page props table: list editable props first (primitives, data, snippets, A–Z), then function props (A–Z); a function prop or object carrying functions stays read-only.
@@ -152,7 +160,8 @@ Project-specific development conventions for the UI Library web app.
 - Every dialog-backed prop row renders an eye toggle beside the edit icon; a toggle-configured primitive row renders it trailing the input.
 - Apply an applied prop as `prop={on ? value : undefined}` per `~/.agents/references/svelte.md` (Components), never `{#if}`-gated element children.
 - A row's eye off omits an optional prop from the demo and Show-code, keeping committed data for re-applying; a required prop resets to its default.
-- Committing re-applies the eye, and Reset restores data plus eyes.
+- Committing a changed value re-applies the eye (an unchanged commit leaves it
+  as it is), and Reset restores data plus eyes.
 - Start a new eye on when its curated value is non-default; only default-valued rows start off, so the cleared form reproduces the curated demo and seed exactly.
 - The only eye-free dialog row is data applied elsewhere with nothing of its own to preserve (data-table `chooserColumns`); record the reason in a code comment.
 - Build a required dialog row's eye with `resetToggle` (off resets committed data to the row default); an optional row's uses `snippetToggle`. A row whose demo binds the state also uses `resetToggle` (off resets the bound state to its default; the binding stays). Mechanism in `ARCHITECTURE.md`.
@@ -200,6 +209,7 @@ Project-specific development conventions for the UI Library web app.
 ## References
 
 - Follow `~/.agents/references/svelte.md` for Svelte 5 runes and effect rules.
+- Follow `~/.agents/references/packaging.md` for the package delivery model (generated artifact, specifier rewrite, exports map, republish flow).
 - Follow `~/.agents/references/js-ts.md` for module design (coherent responsibility, one-way dependency flow, domain helpers split from presentation).
 - Follow `~/.agents/references/tailwind.md` for literal utility classes and attribute-driven palette remapping.
 - Follow `~/.agents/references/accessibility.md` for focus management, keyboard access, labels, and reduced motion.

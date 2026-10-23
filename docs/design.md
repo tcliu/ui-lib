@@ -10,7 +10,7 @@ UI Library is a component showcase: a responsive Svelte 5 / SvelteKit /
 Tailwind CSS v4 app cataloguing the shared primitives in
 `src/lib/components/` — one route per component
 (`src/routes/components/<slug>/+page.svelte`, indexed by
-`SHOWCASE_COMPONENTS` in `src/lib/showcase-components.ts`) with a live
+`SHOWCASE_COMPONENTS` in `src/lib/showcase/showcase-components.ts`) with a live
 Show-code playground on every page. It supports multiple themes.
 
 ## Layout
@@ -74,6 +74,10 @@ typed text as its value: free text is accepted, picking a suggestion writes that
 suggestion's label into the field, and a query that matches nothing hides the
 panel instead of falling back to the full list. `Escape` dismisses the
 suggestions while keeping focus and the typed text.
+
+A password field's eye toggle switches between masked and plain text without
+moving the caret or changing the selection; when the field had focus before the
+click, focus returns to it, so the user keeps their place.
 
 A date field edits its value as text: typing keeps only the characters the
 display format can hold, and a commit that is not a valid date for that format
