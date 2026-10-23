@@ -24,8 +24,12 @@ export interface NumberInputSnippetState {
   placeholderOn: boolean
   size?: string
   sizeOn: boolean
+  variant?: string
+  variantOn: boolean
   disabled: TriState
   disabledOn: boolean
+  hideOutline: TriState
+  hideOutlineOn: boolean
   showControls: TriState
   showControlsOn: boolean
   clearable: TriState
@@ -47,8 +51,6 @@ export interface NumberInputSnippetState {
   className: string
   classNameOn: boolean
 }
-
-export const STEPLESS_CLASS = 'w-24 px-3 py-2 text-sm'
 
 function asNumber(value: string): number | null {
   if (value.trim() === '') {
@@ -92,8 +94,12 @@ export function buildNumberInputSnippet({
   placeholderOn,
   size = '',
   sizeOn,
+  variant,
+  variantOn,
   disabled,
   disabledOn,
+  hideOutline,
+  hideOutlineOn,
   showControls,
   showControlsOn,
   clearable,
@@ -138,7 +144,9 @@ export function buildNumberInputSnippet({
     ...(inputStyleOn && inputStyle ? [`  inputStyle="${escapeAttr(inputStyle)}"`] : []),
     ...(placeholderOn && placeholder ? [`  placeholder="${escapeAttr(placeholder)}"`] : []),
     ...(sizeOn && size !== undefined && size !== '' && size !== 'md' ? sizeAttributeLine(size, '  ') : []),
+    ...(variantOn && variant !== undefined && variant !== '' && variant !== 'bordered' ? textLine('variant', variant) : []),
     ...(disabledOn ? flagLine('disabled', disabled, 'no') : []),
+    ...(hideOutlineOn ? flagLine('hideOutline', hideOutline, 'no') : []),
     ...(showControlsOn ? flagLine('showControls', showControls, 'yes') : []),
     ...(classNameOn && className ? [`  className="${escapeAttr(className)}"`] : []),
     ...(clearableOn ? flagLine('clearable', clearable, 'no') : []),

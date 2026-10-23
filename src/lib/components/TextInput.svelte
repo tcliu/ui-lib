@@ -6,7 +6,7 @@
   import CloseIcon from '$lib/icons/CloseIcon.svelte'
   import Button from './Button.svelte'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
-  import { INPUT_CHROME, INPUT_EMBEDDED, INPUT_METRIC_CLASS, INPUT_RATIOS } from './input-chrome'
+  import { INPUT_CHROME, INPUT_CHROME_NO_OUTLINE, INPUT_EMBEDDED, INPUT_METRIC_CLASS, INPUT_RATIOS } from './input-chrome'
   import type { ClearableProps } from './clearable-props'
 
   const i18n = getI18nContext()
@@ -36,6 +36,10 @@
     // owns the border, the background, and the focus ring), for a field that
     // supplies its own text rules.
     variant?: 'bordered' | 'embedded'
+    // Drop the bordered chrome's outline — its border and focus border — while
+    // keeping the surface, metrics, and text rules, for a field that sits in a
+    // caller-owned row without drawing a second box.
+    hideOutline?: boolean
     // Extra classes appended after the base (or the inputClass override): gutter
     // offsets such as clearing a leading icon or a trailing adornment, and — for
     // an embedded field — the text rules and metrics it owns.
@@ -64,6 +68,7 @@
     inputStyle,
     inputClass,
     variant = 'bordered',
+    hideOutline = false,
     className = '',
     leading,
     trailing,
@@ -129,10 +134,15 @@
     ].filter(Boolean).join(';'),
   )
 
-  // The base chrome: the shared bordered chrome, or the chrome-less base for
-  // a field embedded in another surface. An `inputClass` override replaces it
-  // entirely (the override owns the metrics).
-  const baseClass = $derived(variant === 'embedded' ? INPUT_EMBEDDED : `${INPUT_CHROME} ${INPUT_METRIC_CLASS}`)
+  // The base chrome: the shared bordered chrome (with or without its outline,
+  // which the caller may drop for a field inside a caller-owned row), or the
+  // chrome-less base for a field embedded in another surface. An `inputClass`
+  // override replaces it entirely (the override owns the metrics).
+  const baseClass = $derived(
+    variant === 'embedded'
+      ? INPUT_EMBEDDED
+      : `${hideOutline ? INPUT_CHROME_NO_OUTLINE : INPUT_CHROME} ${INPUT_METRIC_CLASS}`,
+  )
 
   const resolvedClass = $derived(
     `${inputClass ?? baseClass}${className ? ` ${className}` : ''}`,

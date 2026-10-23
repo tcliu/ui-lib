@@ -265,11 +265,14 @@ of building a parallel control.
 - **Input family** — `TextInput` is the canonical field: it renders the
   `<input>` and owns the base chrome, which lives in `input-chrome.ts`
   (`INPUT_CHROME` surface/border/focus/disabled/read-only/motion,
+  `INPUT_CHROME_NO_OUTLINE` the same surface without the border/focus border,
   `INPUT_EMBEDDED` the chrome-less base for a field inside another surface,
   `INPUT_METRIC_CLASS` the `--input-*` metric classes, `INPUT_RATIOS` the
   metric ratios). `PasswordInput`, `SearchInput`, and `NumberInput` compose
   `TextInput`, passing their adornment (eye toggle, search icon, steppers)
-  through its `leading`/`trailing` snippets; `TextArea` is a `<textarea>`, so it
+  through its `leading`/`trailing` snippets; every input-family control forwards
+  `hideOutline`, which drops the bordered outline while keeping the surface,
+  padding, and text metrics. `TextArea` is a `<textarea>`, so it
   cannot compose an `<input>` and imports the same base directly, adding
   `h-full` so it fills its container height by default. A wrapper sets
   its adornment metrics on the frame with `wrapperStyle` and clears the adornment
@@ -277,7 +280,11 @@ of building a parallel control.
   replaces the base with `inputClass`, while a field rendered inside another
   surface (a tag row, a select trigger, a stepper-less numeric field) takes
   `variant="embedded"`, where the container owns the border, the background, and
-  the focus ring and the field adds only the text rules it owns. `EditableText`
+  the focus ring and the field adds only the text rules it owns. `NumberInput`
+  chooses that box with its own `variant` and toggles the stepper overlay with
+  `showControls` independently, so hiding the steppers leaves the bordered box
+  intact (the stepless demo is `showControls={false}` plus `hideOutline`).
+  `EditableText`
   rides `TextInput` the same way and keeps its own skin — an outline ring
   standing in for the text — through that override, since it paints its own
   surface rather than sitting inside another one. Its editing field caps at

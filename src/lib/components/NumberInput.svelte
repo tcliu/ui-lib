@@ -19,7 +19,18 @@
     placeholder?: string
     disabled?: boolean
     className?: string
+    // Renders the stepper buttons. Hiding them leaves the box untouched — the
+    // bordered field keeps its chrome and metrics — so a stepless field is
+    // `showControls={false}` plus whatever outline the caller wants.
     showControls?: boolean
+    // Who owns the field's box: `bordered` (default) keeps the shared chrome
+    // and metrics regardless of the steppers; `embedded` drops the chrome so
+    // the caller's `className` owns the border, background, padding, and text
+    // rules (Pagination's page cell).
+    variant?: 'bordered' | 'embedded'
+    // Forwarded to TextInput: drop the bordered field's border and focus border
+    // while keeping its surface, metrics, and text rules.
+    hideOutline?: boolean
     // Caret placement on focus and click: the default keeps the browser's caret
     // at the clicked position; this puts it after the last character, for a
     // field whose whole value is replaced by typing (a page jump). A drag-select
@@ -51,6 +62,8 @@
     disabled = false,
     className = '',
     showControls = true,
+    variant = 'bordered',
+    hideOutline = false,
     caretAtEnd = false,
     inputStyle,
     id,
@@ -82,10 +95,13 @@
   // following interpolation it was never emitted, and the digits rendered
   // under the steppers.
   const STEPPER_GUTTER_CLASS = 'pr-[var(--num-pad-right)]'
-  const framedClass = $derived([STEPPER_GUTTER_CLASS, className].filter(Boolean).join(' '))
-  // Steppers hidden: the caller owns the whole visual (Pagination sizes it), so
-  // the field is embedded in it — no chrome of its own, only the input
-  // plumbing and the text rules it owns.
+  const embedded = $derived(variant === 'embedded')
+  const framedClass = $derived(
+    [showControls ? STEPPER_GUTTER_CLASS : '', className].filter(Boolean).join(' '),
+  )
+  // Embedded: the caller owns the whole visual (Pagination sizes it), so the
+  // field is embedded in it — no chrome of its own, only the input plumbing and
+  // the text rules it owns.
   const bareClass = $derived(
     `flex-1 text-slate-100 transition disabled:opacity-40 motion-reduce:transition-none${className ? ` ${className}` : ''}`,
   )
@@ -325,7 +341,7 @@
   </div>
 {/snippet}
 
-<div onwheel={handleWheel} class={showControls ? '' : 'flex flex-none items-stretch'} style={numStyle}>
+<div onwheel={handleWheel} class={embedded ? 'flex flex-none items-stretch' : ''} style={numStyle}>
   <TextInput
     bind:inputRef={inputEl}
     {id}
@@ -336,10 +352,11 @@
     {ariaLabel}
     {size}
     {inputStyle}
+    {hideOutline}
     bind:value
     {defaultValue}
-    variant={showControls ? 'bordered' : 'embedded'}
-    className={showControls ? framedClass : bareClass}
+    {variant}
+    className={embedded ? bareClass : framedClass}
     trailing={showControls ? steppers : undefined}
     {clearable}
     {clearLabel}

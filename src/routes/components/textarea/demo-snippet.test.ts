@@ -17,6 +17,8 @@ function state(overrides: Partial<TextAreaSnippetState> = {}): TextAreaSnippetSt
     sizeOn: false,
     disabled: '',
     disabledOn: true,
+    hideOutline: '',
+    hideOutlineOn: true,
     readonly: '',
     readonlyOn: true,
     id: '',
@@ -35,28 +37,31 @@ describe('buildTextAreaSnippet', () => {
     expect(source).not.toContain('placeholder=')
     expect(source).not.toContain('rows=')
     expect(source).not.toContain('disabled')
+    expect(source).not.toContain('hideOutline')
     expect(source).not.toContain('id=')
   })
 
   it('emits placeholder, rows, size, flags, id, and inputClass', () => {
     const source = buildTextAreaSnippet(
-      state({ ariaLabel: 'Notes', ariaLabelOn: true, placeholder: 'Write…', placeholderOn: true, rows: '5', rowsOn: true, size: 'lg', sizeOn: true, disabled: 'yes', disabledOn: true, readonly: 'yes', readonlyOn: true, id: 'notes', idOn: true, inputClass: 'ml-2', inputClassOn: true }),
+      state({ ariaLabel: 'Notes', ariaLabelOn: true, placeholder: 'Write…', placeholderOn: true, rows: '5', rowsOn: true, size: 'lg', sizeOn: true, disabled: 'yes', disabledOn: true, hideOutline: 'yes', hideOutlineOn: true, readonly: 'yes', readonlyOn: true, id: 'notes', idOn: true, inputClass: 'ml-2', inputClassOn: true }),
     )
     expect(source).toContain('ariaLabel="Notes"')
     expect(source).toContain('placeholder="Write…"')
     expect(source).toContain('rows={5}')
     expect(source).toContain('size="lg"')
     expect(source).toContain('  disabled\n')
+    expect(source).toContain('  hideOutline\n')
     expect(source).toContain('  readonly\n')
     expect(source).toContain('id="notes"')
     expect(source).toContain('inputClass="ml-2"')
   })
 
   it('omits component defaults (the Value column prefills them)', () => {
-    const source = buildTextAreaSnippet(state({ rows: '3', rowsOn: true, size: 'md', sizeOn: true, disabled: 'no', disabledOn: true, readonly: 'no', readonlyOn: true }))
+    const source = buildTextAreaSnippet(state({ rows: '3', rowsOn: true, size: 'md', sizeOn: true, disabled: 'no', disabledOn: true, hideOutline: 'no', hideOutlineOn: true, readonly: 'no', readonlyOn: true }))
     expect(source).not.toContain('rows=')
     expect(source).not.toMatch(/^\s*size=/m)
     expect(source).not.toContain('disabled')
+    expect(source).not.toContain('hideOutline')
     expect(source).not.toContain('readonly')
   })
 

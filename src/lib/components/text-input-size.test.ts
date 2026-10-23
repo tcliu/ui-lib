@@ -79,6 +79,19 @@ describe('TextInput chrome variants', () => {
     expect(className).not.toContain('var(--input-font)')
   })
 
+  it('drops only the outline while keeping the surface and metrics', async () => {
+    instance = mount(TextInput, {
+      target,
+      props: { value: '', ariaLabel: 'Name', size: 14, hideOutline: true },
+    })
+    flushSync()
+    const className = target.querySelector('input')?.className ?? ''
+    expect(className).not.toContain('border-slate-700')
+    expect(className).not.toContain('focus:border-cyan-500')
+    expect(className).toContain('bg-slate-950')
+    expect(className).toContain('var(--input-font)')
+  })
+
   it('appends the caller classes to the embedded base', async () => {
     instance = mount(TextInput, {
       target,

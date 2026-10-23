@@ -15,6 +15,8 @@ function state(overrides: Partial<PasswordInputSnippetState> = {}): PasswordInpu
     sizeOn: true,
     disabled: '',
     disabledOn: true,
+    hideOutline: '',
+    hideOutlineOn: true,
     required: '',
     requiredOn: true,
     clearable: '',
@@ -45,6 +47,7 @@ describe('buildPasswordInputSnippet', () => {
     expect(source).not.toContain('showLabel=')
     expect(source).not.toContain('size=')
     expect(source).not.toContain('disabled')
+    expect(source).not.toContain('hideOutline')
     expect(source).not.toContain('className=')
     expect(source).not.toContain('autocomplete=')
     expect(source).not.toContain('id=')
@@ -61,6 +64,7 @@ describe('buildPasswordInputSnippet', () => {
         hideLabel: 'Hide secret',
         hideLabelOn: true,
         disabled: 'yes',
+        hideOutline: 'yes',
         required: 'yes',
         className: 'w-64',
         classNameOn: true,
@@ -76,6 +80,7 @@ describe('buildPasswordInputSnippet', () => {
     expect(source).toContain('showLabel="Show secret"')
     expect(source).toContain('hideLabel="Hide secret"')
     expect(source).toContain('  disabled\n')
+    expect(source).toContain('  hideOutline\n')
     expect(source).toContain('  required\n')
     expect(source).toContain('className="w-64"')
     expect(source).toContain('autocomplete="new-password"')
@@ -103,10 +108,11 @@ describe('buildPasswordInputSnippet', () => {
 
   it('omits component defaults (the Value column prefills them)', () => {
     const source = buildPasswordInputSnippet(
-      state({ size: 'md', disabled: 'no', required: 'no', clearable: 'no', clearPlacement: 'auto' }),
+      state({ size: 'md', disabled: 'no', hideOutline: 'no', required: 'no', clearable: 'no', clearPlacement: 'auto' }),
     )
     expect(source).not.toContain('size=')
     expect(source).not.toContain('disabled')
+    expect(source).not.toContain('hideOutline')
     expect(source).not.toContain('required')
     expect(source).not.toContain('clearable')
     expect(source).not.toContain('clearPlacement=')
@@ -114,9 +120,10 @@ describe('buildPasswordInputSnippet', () => {
 
   it('omits eye-gated booleans while their toggles are off', () => {
     const off = buildPasswordInputSnippet(
-      state({ disabled: 'yes', disabledOn: false, required: 'yes', requiredOn: false, clearable: 'yes', clearableOn: false }),
+      state({ disabled: 'yes', disabledOn: false, hideOutline: 'yes', hideOutlineOn: false, required: 'yes', requiredOn: false, clearable: 'yes', clearableOn: false }),
     )
     expect(off).not.toContain('disabled')
+    expect(off).not.toContain('hideOutline')
     expect(off).not.toContain('required')
     expect(off).not.toContain('clearable')
   })
@@ -153,6 +160,8 @@ describe('buildPasswordInputSnippet', () => {
       hideLabelOn: false,
       disabled,
       disabledOn: true,
+      hideOutline: '',
+      hideOutlineOn: false,
       required,
       requiredOn: true,
       clearable,

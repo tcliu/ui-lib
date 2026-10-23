@@ -40,6 +40,8 @@
     clearPlacementOn: false,
     defaultValue: '',
     defaultValueOn: false,
+    hideOutline: 'no' as TriState,
+    hideOutlineOn: false,
   }
   let pg = $state(structuredClone(INITIAL))
   let demoInputRef = $state<HTMLInputElement | null>(null)
@@ -73,6 +75,7 @@
       : undefined,
   )
   const demoDefaultValue = $derived(pg.defaultValueOn && pg.defaultValue ? pg.defaultValue : undefined)
+  const hideOutline = $derived(pg.hideOutlineOn ? flagOn(pg.hideOutline) : undefined)
   const demoPlaceholder = $derived(pg.placeholderOn && pg.placeholder ? pg.placeholder : undefined)
   const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
   const demoWrapperClass = $derived(pg.wrapperClassOn && pg.wrapperClass ? pg.wrapperClass : undefined)
@@ -109,6 +112,8 @@
       clearPlacementOn: pg.clearPlacementOn,
       defaultValue: pg.defaultValue,
       defaultValueOn: pg.defaultValueOn,
+      hideOutline: pg.hideOutline,
+      hideOutlineOn: pg.hideOutlineOn,
     }),
   )
 
@@ -122,6 +127,7 @@
     enumField({ name: 'clearPlacement', type: "'auto' | 'inside' | 'outside'", defaultValue: "'auto'", note: 'Inside overlays the field edge; outside sits after it; auto stays inside (no trailing adornment).', options: clearPlacementOptions, value: pg.clearPlacement, onChange: v => (pg.clearPlacement = v), placeholder: 'auto', clearLabel: 'Clear placement', enabled: pg.clearPlacementOn, setEnabled: v => (pg.clearPlacementOn = v) }),
     boolField({ name: 'clearable', defaultValue: 'false', note: 'Appends a cross button that clears the value.', value: pg.clearable, onChange: v => (pg.clearable = v as TriState), enabled: pg.clearableOn, setEnabled: v => (pg.clearableOn = v) }),
     textField({ name: 'defaultValue', type: 'string?', defaultValue: "''", note: 'Baseline the clear button compares against; the cross hides while the value matches it.', value: pg.defaultValue, onChange: v => (pg.defaultValue = v), editorDefaultValue: '', clearable: true, enabled: pg.defaultValueOn, setEnabled: v => (pg.defaultValueOn = v) }),
+    boolField({ name: 'hideOutline', defaultValue: 'false', note: 'Drops the field’s border and focus border while keeping its surface, padding, and text metrics.', value: pg.hideOutline, onChange: v => (pg.hideOutline = v as TriState), enabled: pg.hideOutlineOn, setEnabled: v => (pg.hideOutlineOn = v) }),
     textField({ name: 'inputClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the default input classes.', value: pg.inputClass, onChange: v => (pg.inputClass = v), clearable: true, enabled: pg.inputClassOn, setEnabled: v => (pg.inputClassOn = v) }),
     { name: 'inputRef', type: 'HTMLInputElement | null', defaultValue: 'null', note: 'Bindable native input.' },
     textField({ name: 'placeholder', type: 'string?', defaultValue: "'Search...'", note: 'Native placeholder.', value: pg.placeholder, onChange: v => (pg.placeholder = v), editorDefaultValue: 'Search...', clearable: true, placeholder: 'Search...', enabled: pg.placeholderOn, setEnabled: v => (pg.placeholderOn = v) }),
@@ -206,6 +212,7 @@
         size={demoSize}
         wrapperClass={demoWrapperClass}
         inputClass={demoInputClass}
+        hideOutline={hideOutline}
         {clearable}
         clearLabel={demoClearLabel}
         clearPlacement={demoClearPlacement}

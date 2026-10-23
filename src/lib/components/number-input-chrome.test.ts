@@ -37,6 +37,34 @@ async function remount(component: unknown, props: Record<string, unknown>) {
   flushSync()
 }
 
+describe('NumberInput stepper visibility', () => {
+  it('hides the steppers without changing the box', async () => {
+    await remount(NumberInput, { value: '5', ariaLabel: 'x', showControls: false })
+    expect(target.querySelectorAll('button')).toHaveLength(0)
+    const input = target.querySelector('input')!
+    // The bordered box and its metrics stay; only the stepper overlay goes.
+    expect(input.className).toContain('border-slate-700')
+    expect(input.className).toContain('var(--input-font)')
+    expect(input.className).not.toContain('pr-[var(--num-pad-right)]')
+  })
+
+  it('hands the box to the caller in the embedded variant', async () => {
+    await remount(NumberInput, { value: '5', ariaLabel: 'x', variant: 'embedded', showControls: false })
+    const input = target.querySelector('input')!
+    expect(input.className).toContain('bg-transparent')
+    expect(input.className).not.toContain('border-slate-700')
+    expect(input.className).not.toContain('var(--input-font)')
+  })
+
+  it('forwards hideOutline to the bordered field', async () => {
+    await remount(NumberInput, { value: '5', ariaLabel: 'x', hideOutline: true })
+    const input = target.querySelector('input')!
+    expect(input.className).not.toContain('border-slate-700')
+    expect(input.className).toContain('bg-slate-950')
+    expect(target.querySelectorAll('button')).toHaveLength(2)
+  })
+})
+
 describe('NumberInput stepper frame chrome', () => {
   it('defers its border to the input so focus and disabled styling stay in lockstep', async () => {
     await remount(NumberInput, { value: '5', ariaLabel: 'x' })

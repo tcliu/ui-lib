@@ -23,6 +23,8 @@ function state(overrides: Partial<SearchInputSnippetState> = {}): SearchInputSni
     clearPlacementOn: true,
     defaultValue: '',
     defaultValueOn: true,
+    hideOutline: '',
+    hideOutlineOn: true,
     ...overrides,
   }
 }
@@ -36,6 +38,7 @@ describe('buildSearchInputSnippet', () => {
     expect(source).not.toMatch(/^\s*size=/m)
     expect(source).not.toContain('wrapperClass=')
     expect(source).not.toContain('inputClass=')
+    expect(source).not.toContain('hideOutline')
   })
 
   it('emits a custom ariaLabel literal and text overrides while set', () => {
@@ -107,6 +110,14 @@ describe('buildSearchInputSnippet', () => {
     expect(off).toContain('ariaLabel={applyLabel}')
     expect(off).not.toContain('ariaLabel="Site search"')
     expect(off).not.toContain('clearable')
+  })
+
+  it('emits hideOutline only while set', () => {
+    expect(buildSearchInputSnippet(state({ hideOutline: 'yes' }))).toContain('    hideOutline\n')
+    expect(buildSearchInputSnippet(state({ hideOutline: 'no' }))).not.toContain('hideOutline')
+    expect(buildSearchInputSnippet(state({ hideOutline: 'yes', hideOutlineOn: false }))).not.toContain(
+      'hideOutline',
+    )
   })
 
   it('seeds the bound query as script-local state', () => {

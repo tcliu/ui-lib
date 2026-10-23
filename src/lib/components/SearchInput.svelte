@@ -18,6 +18,9 @@
     size?: SizeInput
     wrapperClass?: string
     inputClass?: string
+    // Forwarded to TextInput: drop the field's border and focus border while
+    // keeping its surface, metrics, and text rules.
+    hideOutline?: boolean
     inputRef?: HTMLInputElement | null
     // SearchInput owns no trailing adornment, so `clearPlacement` `auto` stays
     // inside.
@@ -35,6 +38,7 @@
     size = 'md',
     wrapperClass = '',
     inputClass,
+    hideOutline = false,
     inputRef = $bindable(null),
     clearable = false,
     clearLabel,
@@ -75,6 +79,7 @@
     placeholder={resolvedPlaceholder}
     {size}
     {inputClass}
+    {hideOutline}
     className="pl-[var(--search-pad-left)]"
     wrapperStyle={style}
     {defaultValue}

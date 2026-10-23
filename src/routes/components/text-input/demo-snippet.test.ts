@@ -13,6 +13,8 @@ function state(overrides: Partial<TextInputSnippetState> = {}): TextInputSnippet
     sizeOn: false,
     disabled: '',
     disabledOn: true,
+    hideOutline: '',
+    hideOutlineOn: true,
     readonly: '',
     readonlyOn: true,
     required: '',
@@ -61,6 +63,7 @@ describe('buildTextInputSnippet', () => {
     // `size={` only appears when a size is set.
     expect(source).not.toMatch(/^\s*size=/m)
     expect(source).not.toContain('disabled')
+    expect(source).not.toContain('hideOutline')
     expect(source).not.toContain('readonly')
     expect(source).not.toContain('required')
     expect(source).not.toContain('id=')
@@ -90,6 +93,8 @@ describe('buildTextInputSnippet', () => {
         sizeOn: true,
         disabled: 'yes',
         disabledOn: true,
+        hideOutline: 'yes',
+        hideOutlineOn: true,
         readonly: 'yes',
         readonlyOn: true,
         required: 'yes',
@@ -125,6 +130,7 @@ describe('buildTextInputSnippet', () => {
     expect(source).toContain('placeholder="Jane"')
     expect(source).toContain('size="lg"')
     expect(source).toContain('    disabled\n')
+    expect(source).toContain('    hideOutline\n')
     expect(source).toContain('    readonly\n')
     expect(source).toContain('    required\n')
     expect(source).toContain('inputClass="italic"')
@@ -162,6 +168,7 @@ describe('buildTextInputSnippet', () => {
     )
     expect(source).not.toMatch(/^\s*size=/m)
     expect(source).not.toContain('disabled')
+    expect(source).not.toContain('hideOutline')
     expect(source).not.toContain('readonly')
     expect(source).not.toContain('required')
     expect(source).not.toContain('clearable')

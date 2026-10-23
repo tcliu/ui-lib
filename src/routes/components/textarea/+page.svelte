@@ -27,6 +27,8 @@
     sizeOn: false,
     disabled: 'no' as TriState,
     disabledOn: false,
+    hideOutline: 'no' as TriState,
+    hideOutlineOn: false,
     readonly: 'no' as TriState,
     readonlyOn: false,
     id: '',
@@ -48,6 +50,7 @@
   const demoRows = $derived(pg.rowsOn ? asRows(pg.rows) : undefined)
   const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
   const disabled = $derived(pg.disabledOn ? flagOn(pg.disabled) : undefined)
+  const hideOutline = $derived(pg.hideOutlineOn ? flagOn(pg.hideOutline) : undefined)
   const readonly = $derived(pg.readonlyOn ? flagOn(pg.readonly) : undefined)
 
   function clearPlayground() {
@@ -67,6 +70,8 @@
       sizeOn: pg.sizeOn,
       disabled: pg.disabled,
       disabledOn: pg.disabledOn,
+      hideOutline: pg.hideOutline,
+      hideOutlineOn: pg.hideOutlineOn,
       readonly: pg.readonly,
       readonlyOn: pg.readonlyOn,
       id: pg.id,
@@ -83,6 +88,7 @@
   const fields: SyncableFieldConfig[] = $derived([
     { name: 'ariaLabel', type: 'string', defaultValue: '—', note: 'Required accessible name.', editor: 'text', clearable: true, value: pg.ariaLabel, onChange: value => { pg.ariaLabel = value; pg.ariaLabelOn = true; }, toggle: snippetToggle(pg.ariaLabelOn, enabled => (pg.ariaLabelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'applyLabel' } },
     boolField({ name: 'disabled', defaultValue: 'false', note: 'Disables the field.', value: pg.disabled, onChange: v => (pg.disabled = v as TriState), enabled: pg.disabledOn, setEnabled: v => (pg.disabledOn = v) }),
+    boolField({ name: 'hideOutline', defaultValue: 'false', note: 'Drops the field’s border and focus border while keeping its surface, padding, and text metrics.', value: pg.hideOutline, onChange: v => (pg.hideOutline = v as TriState), enabled: pg.hideOutlineOn, setEnabled: v => (pg.hideOutlineOn = v) }),
     textField({ name: 'id', type: 'string?', defaultValue: '—', note: 'Native textarea id.', value: pg.id, onChange: v => (pg.id = v), clearable: true, enabled: pg.idOn, setEnabled: v => (pg.idOn = v) }),
     textField({ name: 'inputClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the default textarea classes.', value: pg.inputClass, onChange: v => (pg.inputClass = v), clearable: true, enabled: pg.inputClassOn, setEnabled: v => (pg.inputClassOn = v) }),
     { name: 'inputRef', type: 'HTMLTextAreaElement | null', defaultValue: 'null', note: 'Bindable native textarea.' },
@@ -117,6 +123,7 @@
         size={demoSize}
         {disabled}
         {readonly}
+        hideOutline={hideOutline}
         id={pg.idOn && pg.id ? pg.id : undefined}
         inputClass={pg.inputClassOn && pg.inputClass ? pg.inputClass : undefined} />
       <span class="text-sm text-slate-400">value: {pg.value || '—'}</span>

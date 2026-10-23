@@ -225,6 +225,7 @@
         onkeydown={handlePageInputKeydown}
         ariaLabel={resolvedCurrentPageLabel}
         showControls={false}
+        variant="embedded"
         caretAtEnd
         className={jumpInputClass} />
     {:else}

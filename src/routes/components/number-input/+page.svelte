@@ -8,7 +8,7 @@
   import { parseSizeValue } from '$lib/showcase/size-input'
   import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
   import { enumField, textField, boolField, sizeField, snippetToggle, resetToggle } from '$lib/showcase/snippet-field'
-  import { STEPLESS_CLASS, buildNumberInputSnippet, type TriState } from './demo-snippet'
+  import { buildNumberInputSnippet, type TriState } from './demo-snippet'
 
   const i18n = getI18nContext()
 
@@ -16,7 +16,7 @@
   // component default (the Value column shows it), so the cleared form
   // applies no overrides and Show-code omits the defaults. Clearing a Value
   // unsets it; Reset restores the defaults below.
-  // Steppers is a preset that fills the controls + className fields below.
+  // Steppers is a preset that overrides the stepper and outline props below.
   const INITIAL = {
     value: '5',
     valueOn: true,
@@ -34,8 +34,12 @@
     placeholderOn: false,
     size: 'md',
     sizeOn: false,
+    variant: 'bordered',
+    variantOn: false,
     disabled: 'no' as TriState,
     disabledOn: false,
+    hideOutline: 'no' as TriState,
+    hideOutlineOn: false,
     stepless: '',
     clearable: 'no' as TriState,
     clearableOn: false,
@@ -76,10 +80,18 @@
     { value: 'inside', label: 'inside' },
     { value: 'outside', label: 'outside' },
   ]
+  const variantOptions = [
+    { value: 'bordered', label: 'bordered' },
+    { value: 'embedded', label: 'embedded' },
+  ]
 
   const disabled = $derived(pg.disabledOn ? flagOn(pg.disabled) : undefined)
   const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
   const showControls = $derived(pg.showControlsOn ? flagOn(pg.showControls) : undefined)
+  const hideOutline = $derived(pg.hideOutlineOn ? flagOn(pg.hideOutline) : undefined)
+  const demoVariant = $derived(
+    pg.variantOn ? ((pg.variant || undefined) as 'bordered' | 'embedded' | undefined) : undefined,
+  )
   const clearable = $derived(pg.clearableOn ? flagOn(pg.clearable) : undefined)
   const demoAriaLabel = $derived(pg.ariaLabelOn && pg.ariaLabel ? pg.ariaLabel : i18n.t('common.apply'))
   const demoClearLabel = $derived(pg.clearLabelOn && pg.clearLabel ? pg.clearLabel : undefined)
@@ -122,8 +134,12 @@
       placeholderOn: pg.placeholderOn,
       size: pg.size,
       sizeOn: pg.sizeOn,
+      variant: pg.variant,
+      variantOn: pg.variantOn,
       disabled: pg.disabled,
       disabledOn: pg.disabledOn,
+      hideOutline: pg.hideOutline,
+      hideOutlineOn: pg.hideOutlineOn,
       showControls: pg.showControls,
       showControlsOn: pg.showControlsOn,
       clearable: pg.clearable,
@@ -160,16 +176,18 @@
     textField({ name: 'decrementLabel', type: 'string?', defaultValue: 'locale', note: 'Accessible name for the down button.', value: pg.decrementLabel, onChange: v => (pg.decrementLabel = v), clearable: true, enabled: pg.decrementLabelOn, setEnabled: v => (pg.decrementLabelOn = v) }),
     textField({ name: 'defaultValue', type: 'string?', defaultValue: "''", note: 'Baseline the clear button compares against; the cross hides while the value matches it.', value: pg.defaultValue, onChange: v => (pg.defaultValue = v), editorDefaultValue: '', clearable: true, enabled: pg.defaultValueOn, setEnabled: v => (pg.defaultValueOn = v) }),
     boolField({ name: 'disabled', defaultValue: 'false', note: 'Disables the input and steppers.', value: pg.disabled, onChange: v => (pg.disabled = v as TriState), enabled: pg.disabledOn, setEnabled: v => (pg.disabledOn = v) }),
+    boolField({ name: 'hideOutline', defaultValue: 'false', note: 'Drops the bordered field’s border and focus border while keeping its surface, padding, and text metrics.', value: pg.hideOutline, onChange: v => (pg.hideOutline = v as TriState), enabled: pg.hideOutlineOn, setEnabled: v => (pg.hideOutlineOn = v) }),
     textField({ name: 'id', type: 'string?', defaultValue: '—', note: 'Native input id.', value: pg.id, onChange: v => (pg.id = v), clearable: true, enabled: pg.idOn, setEnabled: v => (pg.idOn = v) }),
     textField({ name: 'incrementLabel', type: 'string?', defaultValue: 'locale', note: 'Accessible name for the up button.', value: pg.incrementLabel, onChange: v => (pg.incrementLabel = v), clearable: true, enabled: pg.incrementLabelOn, setEnabled: v => (pg.incrementLabelOn = v) }),
     textField({ name: 'inputStyle', type: 'string?', defaultValue: '—', note: 'Inline style for the input; widths the field when steppers are hidden.', value: pg.inputStyle, onChange: v => (pg.inputStyle = v), clearable: true, enabled: pg.inputStyleOn, setEnabled: v => (pg.inputStyleOn = v) }),
     { name: 'max', type: 'number?', defaultValue: '—', note: 'Upper clamp on typing, blur, and step.', editor: 'number', clearable: true, value: pg.max, onChange: value => { pg.max = value; pg.maxOn = true; }, toggle: snippetToggle(pg.maxOn, enabled => (pg.maxOn = enabled)), sync: { kind: 'number' } },
     { name: 'min', type: 'number?', defaultValue: '—', note: 'Lower clamp on blur and step (and on typing when a longer entry could not fit).', editor: 'number', clearable: true, value: pg.min, onChange: value => { pg.min = value; pg.minOn = true; }, toggle: snippetToggle(pg.minOn, enabled => (pg.minOn = enabled)), sync: { kind: 'number' } },
     textField({ name: 'placeholder', type: 'string?', defaultValue: '—', note: 'Native placeholder.', value: pg.placeholder, onChange: v => (pg.placeholder = v), clearable: true, enabled: pg.placeholderOn, setEnabled: v => (pg.placeholderOn = v) }),
-    boolField({ name: 'showControls', defaultValue: 'true', note: 'Renders the stepper buttons; hiding them puts the field in the embedded mode, where the caller owns the whole visual (no border, no background).', value: pg.showControls, onChange: v => (pg.showControls = v as TriState), enabled: pg.showControlsOn, setEnabled: v => (pg.showControlsOn = v) }),
+    boolField({ name: 'showControls', defaultValue: 'true', note: 'Renders the stepper buttons; hiding them leaves the box and chrome untouched.', value: pg.showControls, onChange: v => (pg.showControls = v as TriState), enabled: pg.showControlsOn, setEnabled: v => (pg.showControlsOn = v) }),
     sizeField({ note: 'Control scale; numbers are icon-scale pixels scaled by fixed ratios.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
     { name: 'step', type: 'number?', defaultValue: '1', editorDefaultValue: '1', note: 'Arrow/wheel step; decimals preserved.', editor: 'number', clearable: true, value: pg.step, onChange: value => { pg.step = value; pg.stepOn = true; }, placeholder: '1', toggle: snippetToggle(pg.stepOn, enabled => (pg.stepOn = enabled)), sync: { kind: 'number' } },
     { name: 'value', type: 'string', defaultValue: '—', note: 'Bindable field value; the eye resets it to 5.', editor: 'text', clearable: true, value: pg.value, onChange: value => { pg.value = value; pg.valueOn = true; }, toggle: resetToggle(pg.valueOn, enabled => (pg.valueOn = enabled), () => (pg.value = '5')), sync: { kind: 'script' } },
+    enumField({ name: 'variant', type: "'bordered' | 'embedded'", defaultValue: "'bordered'", note: 'Bordered keeps the shared chrome and metrics whether or not the steppers render; embedded drops them so the caller’s class owns the box.', options: variantOptions, value: pg.variant, onChange: v => (pg.variant = v), placeholder: 'bordered', clearLabel: 'Clear variant', enabled: pg.variantOn, setEnabled: v => (pg.variantOn = v) }),
     { name: 'onClear', type: '() => void', defaultValue: 'clears value', note: 'Clear handler; falls back to clearing the bound value when omitted.' },
     { name: 'onblur', type: '(event: FocusEvent) => void', defaultValue: '—', note: 'Blur callback.' },
     { name: 'oninput', type: '(event: Event) => void', defaultValue: '—', note: 'Input callback.' },
@@ -193,8 +211,8 @@
           pg.stepless = value
           pg.showControls = 'no'
           pg.showControlsOn = true
-          pg.className = STEPLESS_CLASS
-          pg.classNameOn = true
+          pg.hideOutline = 'yes'
+          pg.hideOutlineOn = true
         }}
         clearable
         clearLabel="Clear steppers"
@@ -202,8 +220,8 @@
           pg.stepless = ''
           pg.showControls = 'yes'
           pg.showControlsOn = false
-          pg.className = ''
-          pg.classNameOn = false
+          pg.hideOutline = 'no'
+          pg.hideOutlineOn = false
         }} />
     </FormField>
     <FormField label="Size">
@@ -253,6 +271,8 @@
         size={demoSize}
         {disabled}
         {showControls}
+        variant={demoVariant}
+        hideOutline={hideOutline}
         {clearable}
         clearLabel={demoClearLabel}
         clearPlacement={demoClearPlacement}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createSnippetComponent } from '$lib/showcase/snippet-playground'
-import { STEPLESS_CLASS, buildNumberInputSnippet, type NumberInputSnippetState } from './demo-snippet'
+import { buildNumberInputSnippet, type NumberInputSnippetState } from './demo-snippet'
 
 function state(overrides: Partial<NumberInputSnippetState> = {}): NumberInputSnippetState {
   return {
@@ -19,8 +19,12 @@ function state(overrides: Partial<NumberInputSnippetState> = {}): NumberInputSni
     placeholderOn: true,
     size: '',
     sizeOn: true,
+    variant: '',
+    variantOn: true,
     disabled: '',
     disabledOn: true,
+    hideOutline: '',
+    hideOutlineOn: true,
     showControls: '',
     showControlsOn: true,
     clearable: '',
@@ -71,11 +75,12 @@ describe('buildNumberInputSnippet', () => {
         placeholder: '0',
         disabled: 'yes',
         showControls: 'no',
+        hideOutline: 'yes',
         decrementLabel: 'Down',
         incrementLabel: 'Up',
         id: 'qty',
         inputStyle: 'width:6rem',
-        className: STEPLESS_CLASS,
+        className: 'w-24',
       }),
     )
     expect(source).toContain('ariaLabel="Quantity"')
@@ -89,7 +94,8 @@ describe('buildNumberInputSnippet', () => {
     expect(source).toContain('placeholder="0"')
     expect(source).toContain('  disabled\n')
     expect(source).toContain('showControls={false}')
-    expect(source).toContain('className="w-24 px-3 py-2 text-sm"')
+    expect(source).toContain('  hideOutline\n')
+    expect(source).toContain('className="w-24"')
   })
 
   it('omits clearable lines while unset and emits them while set', () => {
@@ -153,12 +159,14 @@ describe('buildNumberInputSnippet', () => {
 
   it('omits component defaults (the Value column prefills them)', () => {
     const source = buildNumberInputSnippet(
-      state({ step: '1', size: 'md', disabled: 'no', showControls: 'yes', clearable: 'no', clearPlacement: 'auto' }),
+      state({ step: '1', size: 'md', disabled: 'no', showControls: 'yes', hideOutline: 'no', variant: 'bordered', clearable: 'no', clearPlacement: 'auto' }),
     )
     expect(source).not.toContain('step=')
     expect(source).not.toContain('size=')
     expect(source).not.toContain('disabled')
     expect(source).not.toContain('showControls')
+    expect(source).not.toContain('hideOutline')
+    expect(source).not.toContain('variant=')
     expect(source).not.toContain('clearable')
     expect(source).not.toContain('clearPlacement=')
   })
@@ -174,6 +182,21 @@ describe('buildNumberInputSnippet', () => {
     expect(buildNumberInputSnippet(state({ caretAtEnd: 'no' }))).not.toContain('caretAtEnd')
     expect(buildNumberInputSnippet(state({ caretAtEnd: 'yes', caretAtEndOn: false }))).not.toContain(
       'caretAtEnd',
+    )
+  })
+
+  it('emits hideOutline and a non-default variant only while set', () => {
+    expect(buildNumberInputSnippet(state())).not.toContain('hideOutline')
+    expect(buildNumberInputSnippet(state({ hideOutline: 'yes' }))).toContain('  hideOutline\n')
+    expect(buildNumberInputSnippet(state({ hideOutline: 'no' }))).not.toContain('hideOutline')
+    expect(buildNumberInputSnippet(state({ hideOutline: 'yes', hideOutlineOn: false }))).not.toContain(
+      'hideOutline',
+    )
+    expect(buildNumberInputSnippet(state())).not.toContain('variant=')
+    expect(buildNumberInputSnippet(state({ variant: 'embedded' }))).toContain('variant="embedded"')
+    expect(buildNumberInputSnippet(state({ variant: 'bordered' }))).not.toContain('variant=')
+    expect(buildNumberInputSnippet(state({ variant: 'embedded', variantOn: false }))).not.toContain(
+      'variant=',
     )
   })
 

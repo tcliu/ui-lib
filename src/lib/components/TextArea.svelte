@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { SizeInput } from '$lib/size-scale'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
-  import { INPUT_CHROME, INPUT_METRIC_CLASS, INPUT_RATIOS } from './input-chrome'
+  import { INPUT_CHROME, INPUT_CHROME_NO_OUTLINE, INPUT_METRIC_CLASS, INPUT_RATIOS } from './input-chrome'
 
   interface Props {
     value: string
@@ -15,6 +15,9 @@
     inputRef?: HTMLTextAreaElement | null
     // Replaces the whole textarea class string (the override owns the metrics).
     inputClass?: string
+    // Drop the bordered chrome's outline (border and focus border) while
+    // keeping its surface, metrics, and text rules.
+    hideOutline?: boolean
     oninput?: (event: Event) => void
     onkeydown?: (event: KeyboardEvent) => void
     onfocus?: (event: FocusEvent) => void
@@ -32,6 +35,7 @@
     rows = 3,
     inputRef = $bindable(null),
     inputClass,
+    hideOutline = false,
     oninput,
     onkeydown,
     onfocus,
@@ -47,7 +51,10 @@
 
   // Fills the container height by default (like the code editors); an
   // `inputClass` override owns the metrics and drops the fill.
-  const resolvedClass = $derived(inputClass ?? `${INPUT_CHROME} h-full resize-y ${INPUT_METRIC_CLASS}`)
+  const resolvedClass = $derived(
+    inputClass ??
+      `${hideOutline ? INPUT_CHROME_NO_OUTLINE : INPUT_CHROME} h-full resize-y ${INPUT_METRIC_CLASS}`,
+  )
 </script>
 
 <textarea

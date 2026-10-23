@@ -34,6 +34,8 @@
     sizeOn: false,
     disabled: 'no' as TriState,
     disabledOn: false,
+    hideOutline: 'no' as TriState,
+    hideOutlineOn: false,
     readonly: 'no' as TriState,
     readonlyOn: false,
     required: 'no' as TriState,
@@ -96,6 +98,7 @@
   const demoInputmode = $derived((pg.inputmodeOn && pg.inputmode ? pg.inputmode : undefined) as HTMLInputAttributes['inputmode'])
   const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
   const disabled = $derived(pg.disabledOn ? flagOn(pg.disabled) : undefined)
+  const hideOutline = $derived(pg.hideOutlineOn ? flagOn(pg.hideOutline) : undefined)
   const readonly = $derived(pg.readonlyOn ? flagOn(pg.readonly) : undefined)
   const required = $derived(pg.requiredOn ? flagOn(pg.required) : undefined)
   const clearable = $derived(pg.clearableOn ? flagOn(pg.clearable) : undefined)
@@ -129,6 +132,8 @@
       sizeOn: pg.sizeOn,
       disabled: pg.disabled,
       disabledOn: pg.disabledOn,
+      hideOutline: pg.hideOutline,
+      hideOutlineOn: pg.hideOutlineOn,
       readonly: pg.readonly,
       readonlyOn: pg.readonlyOn,
       required: pg.required,
@@ -195,6 +200,7 @@
     boolField({ name: 'clearable', defaultValue: 'false', note: 'Appends a cross button that clears the value.', value: pg.clearable, onChange: v => (pg.clearable = v as TriState), enabled: pg.clearableOn, setEnabled: v => (pg.clearableOn = v) }),
     textField({ name: 'defaultValue', type: 'string?', defaultValue: "''", note: 'Baseline the clear button compares against; the cross hides while the value matches it.', value: pg.defaultValue, onChange: v => (pg.defaultValue = v), editorDefaultValue: '', clearable: true, enabled: pg.defaultValueOn, setEnabled: v => (pg.defaultValueOn = v) }),
     boolField({ name: 'disabled', defaultValue: 'false', note: 'Disables the input.', value: pg.disabled, onChange: v => (pg.disabled = v as TriState), enabled: pg.disabledOn, setEnabled: v => (pg.disabledOn = v) }),
+    boolField({ name: 'hideOutline', defaultValue: 'false', note: 'Drops the bordered field’s border and focus border while keeping its surface, padding, and text metrics.', value: pg.hideOutline, onChange: v => (pg.hideOutline = v as TriState), enabled: pg.hideOutlineOn, setEnabled: v => (pg.hideOutlineOn = v) }),
     textField({ name: 'id', type: 'string?', defaultValue: '—', note: 'Native input id.', value: pg.id, onChange: v => (pg.id = v), clearable: true, enabled: pg.idOn, setEnabled: v => (pg.idOn = v) }),
     textField({ name: 'inputClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the default input classes.', value: pg.inputClass, onChange: v => (pg.inputClass = v), clearable: true, enabled: pg.inputClassOn, setEnabled: v => (pg.inputClassOn = v) }),
     textField({ name: 'inputStyle', type: 'string?', defaultValue: '—', note: 'Inline style appended after the size metrics; sizes the field at runtime.', value: pg.inputStyle, onChange: v => (pg.inputStyle = v), clearable: true, enabled: pg.inputStyleOn, setEnabled: v => (pg.inputStyleOn = v) }),
@@ -301,6 +307,7 @@
         {disabled}
         {readonly}
         {required}
+        hideOutline={hideOutline}
         id={pg.idOn && pg.id ? pg.id : undefined}
         type={pg.typeOn && pg.type ? pg.type : undefined}
         autocomplete={demoAutocomplete}

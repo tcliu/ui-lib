@@ -28,6 +28,8 @@ export interface SearchInputSnippetState {
   clearPlacementOn: boolean
   defaultValue: string
   defaultValueOn: boolean
+  hideOutline: TriState
+  hideOutlineOn: boolean
 }
 
 export const STYLED_WRAPPER = 'rounded-lg border border-cyan-500/40 p-2'
@@ -63,6 +65,8 @@ export function buildSearchInputSnippet({
   clearPlacementOn,
   defaultValue,
   defaultValueOn,
+  hideOutline,
+  hideOutlineOn,
 }: SearchInputSnippetState): string {
   const lines = [
     '<script>',
@@ -85,6 +89,7 @@ export function buildSearchInputSnippet({
     ...(clearLabelOn && clearLabel ? [`    clearLabel="${escapeAttr(clearLabel)}"`] : []),
     ...(clearPlacementOn && clearPlacement !== '' && clearPlacement !== 'auto' ? [`    clearPlacement="${escapeAttr(clearPlacement)}"`] : []),
     ...(defaultValueOn && defaultValue ? [`    defaultValue="${escapeAttr(defaultValue)}"`] : []),
+    ...(hideOutlineOn ? flagLine('hideOutline', hideOutline, 'no') : []),
     '  />',
     `  <span class="text-sm text-slate-400">value: {query || '—'}</span>`,
     '</div>',

@@ -29,6 +29,8 @@
     hideLabelOn: false,
     disabled: 'no' as TriState,
     disabledOn: false,
+    hideOutline: 'no' as TriState,
+    hideOutlineOn: false,
     required: 'no' as TriState,
     requiredOn: false,
     clearable: 'no' as TriState,
@@ -62,6 +64,7 @@
   ]
 
   const disabled = $derived(pg.disabledOn ? flagOn(pg.disabled) : undefined)
+  const hideOutline = $derived(pg.hideOutlineOn ? flagOn(pg.hideOutline) : undefined)
   const required = $derived(pg.requiredOn ? flagOn(pg.required) : undefined)
   const clearable = $derived(pg.clearableOn ? flagOn(pg.clearable) : undefined)
   const demoClearLabel = $derived(pg.clearLabelOn && pg.clearLabel ? pg.clearLabel : undefined)
@@ -91,6 +94,8 @@
       sizeOn: pg.sizeOn,
       disabled: pg.disabled,
       disabledOn: pg.disabledOn,
+      hideOutline: pg.hideOutline,
+      hideOutlineOn: pg.hideOutlineOn,
       required: pg.required,
       requiredOn: pg.requiredOn,
       clearable: pg.clearable,
@@ -124,6 +129,7 @@
     textField({ name: 'defaultValue', type: 'string?', defaultValue: "''", note: 'Baseline the clear button compares against; the cross hides while the value matches it.', value: pg.defaultValue, onChange: v => (pg.defaultValue = v), editorDefaultValue: '', clearable: true, enabled: pg.defaultValueOn, setEnabled: v => (pg.defaultValueOn = v) }),
     boolField({ name: 'disabled', defaultValue: 'false', note: 'Disables the field and the toggle.', value: pg.disabled, onChange: v => (pg.disabled = v as TriState), enabled: pg.disabledOn, setEnabled: v => (pg.disabledOn = v) }),
     textField({ name: 'hideLabel', type: 'string?', defaultValue: '—', note: 'Toggle label when visible; falls back to the locale.', value: pg.hideLabel, onChange: v => (pg.hideLabel = v), clearable: true, enabled: pg.hideLabelOn, setEnabled: v => (pg.hideLabelOn = v) }),
+    boolField({ name: 'hideOutline', defaultValue: 'false', note: 'Drops the field’s border and focus border while keeping its surface, padding, and text metrics.', value: pg.hideOutline, onChange: v => (pg.hideOutline = v as TriState), enabled: pg.hideOutlineOn, setEnabled: v => (pg.hideOutlineOn = v) }),
     textField({ name: 'id', type: 'string?', defaultValue: '—', note: 'Native input id.', value: pg.id, onChange: v => (pg.id = v), clearable: true, enabled: pg.idOn, setEnabled: v => (pg.idOn = v) }),
     textField({ name: 'name', type: 'string?', defaultValue: '—', note: 'Native input name.', value: pg.name, onChange: v => (pg.name = v), clearable: true, enabled: pg.nameOn, setEnabled: v => (pg.nameOn = v) }),
     textField({ name: 'placeholder', type: 'string?', defaultValue: '—', note: 'Placeholder text.', value: pg.placeholder, onChange: v => (pg.placeholder = v), clearable: true, enabled: pg.placeholderOn, setEnabled: v => (pg.placeholderOn = v) }),
@@ -155,6 +161,7 @@
       hideLabel={pg.hideLabelOn && pg.hideLabel ? pg.hideLabel : undefined}
       {disabled}
       {required}
+      hideOutline={hideOutline}
       autocomplete={demoAutocomplete}
       id={pg.idOn && pg.id ? pg.id : undefined}
       name={pg.nameOn && pg.name ? pg.name : undefined}

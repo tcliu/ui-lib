@@ -15,6 +15,11 @@ const INPUT_SURFACE =
 // The canonical bordered chrome.
 export const INPUT_CHROME = `${INPUT_BORDER} ${INPUT_SURFACE}`
 
+// The bordered chrome without its outline: the surface and text rules stay,
+// while the border and its focus color drop, for a field that sits inside a
+// caller-owned row without drawing a second box.
+export const INPUT_CHROME_NO_OUTLINE = INPUT_SURFACE
+
 // The chrome of a field embedded in another surface (a tag row, a select
 // trigger, a stepper-less numeric field): the container owns the border, the
 // background, and the focus ring, so the field drops all three and keeps only

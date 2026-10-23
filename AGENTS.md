@@ -68,7 +68,12 @@ Project-specific development conventions for the UI Library web app.
 - `FormField` carries a `layout` prop (`stacked` default, `inline` label column
   at >=sm) so a form row aligns its labels without forking the wrapper.
 - Text-like inputs share one base chrome from `input-chrome.ts`; a new text-like
-  field uses that base instead of re-declaring it.
+  field uses that base instead of re-declaring it. A field drops its outline with
+  `hideOutline` (the base's borderless surface, padding, and text metrics) rather
+  than a custom `inputClass`, and every input-family control forwards it.
+- `NumberInput`'s `showControls` hides only the stepper overlay; `variant="embedded"`
+  is what hands the box to the caller, so a stepper-less field keeps its bordered
+  box — pair it with `hideOutline` for a borderless one.
 - A clearable field extends the shared `ClearableProps` group, never re-declaring it or hand-rolling a cross; mechanism in `ARCHITECTURE.md` (Input family).
 - A `number` Value cell driving live interaction state (its setter ignores blank input) stays non-clearable.
 - A composite field uses `TextInput`'s `trailer` slot for content outside the

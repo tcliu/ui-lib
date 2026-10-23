@@ -20,6 +20,8 @@ export interface PasswordInputSnippetState {
   sizeOn: boolean
   disabled: TriState
   disabledOn: boolean
+  hideOutline: TriState
+  hideOutlineOn: boolean
   required: TriState
   requiredOn: boolean
   clearable: TriState
@@ -61,6 +63,8 @@ export function buildPasswordInputSnippet({
   sizeOn,
   disabled,
   disabledOn,
+  hideOutline,
+  hideOutlineOn,
   required,
   requiredOn,
   clearable,
@@ -95,6 +99,7 @@ export function buildPasswordInputSnippet({
     ...(hideLabelOn && hideLabel ? [`  hideLabel="${escapeAttr(hideLabel)}"`] : []),
     ...(sizeOn && size !== undefined && size !== '' && size !== 'md' ? sizeAttributeLine(size) : []),
     ...(disabledOn ? flagLine('disabled', disabled, 'no') : []),
+    ...(hideOutlineOn ? flagLine('hideOutline', hideOutline, 'no') : []),
     ...(requiredOn ? flagLine('required', required, 'no') : []),
     ...(classNameOn && className ? [`  className="${escapeAttr(className)}"`] : []),
     ...(clearableOn ? flagLine('clearable', clearable, 'no') : []),

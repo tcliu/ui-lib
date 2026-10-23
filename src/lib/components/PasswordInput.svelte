@@ -25,6 +25,9 @@
     hideLabel?: string
     size?: SizeInput
     className?: string
+    // Forwarded to TextInput: drop the field's border and focus border while
+    // keeping its surface, metrics, and text rules.
+    hideOutline?: boolean
     // The visibility toggle owns the field's right edge, so `clearPlacement`
     // `auto` renders the clear outside the input.
     oninput?: (event: Event) => void
@@ -43,6 +46,7 @@
     hideLabel,
     size = 'md',
     className = '',
+    hideOutline = false,
     clearable = false,
     clearLabel,
     clearPlacement = 'auto',
@@ -106,6 +110,7 @@
   {required}
   {size}
   type={visible ? 'text' : 'password'}
+  {hideOutline}
   {oninput}
   {defaultValue}
   {clearable}

@@ -18,6 +18,8 @@ export interface TextInputSnippetState {
   sizeOn: boolean
   disabled: TriState
   disabledOn: boolean
+  hideOutline: TriState
+  hideOutlineOn: boolean
   readonly: TriState
   readonlyOn: boolean
   required: TriState
@@ -96,6 +98,8 @@ export function buildTextInputSnippet({
   sizeOn,
   disabled,
   disabledOn,
+  hideOutline,
+  hideOutlineOn,
   readonly,
   readonlyOn,
   required,
@@ -151,6 +155,7 @@ export function buildTextInputSnippet({
     ...(placeholderOn && placeholder ? [`${attributeIndent}placeholder="${escapeAttr(placeholder)}"`] : []),
     ...(sizeOn && size !== '' && size !== 'md' ? sizeAttributeLine(size, attributeIndent) : []),
     ...(disabledOn ? flagLine('disabled', disabled, attributeIndent, 'no') : []),
+    ...(hideOutlineOn ? flagLine('hideOutline', hideOutline, attributeIndent, 'no') : []),
     ...(readonlyOn ? flagLine('readonly', readonly, attributeIndent, 'no') : []),
     ...(requiredOn ? flagLine('required', required, attributeIndent, 'no') : []),
     ...(idOn && id ? [`${attributeIndent}id="${escapeAttr(id)}"`] : []),
