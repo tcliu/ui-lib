@@ -36,6 +36,7 @@ export const zhTW = {
     label: '圖表',
   },
   search: {
+    label: '搜尋',
     placeholder: '搜尋...',
   },
   splitter: {
@@ -113,6 +114,15 @@ export const zhTW = {
     resizeColumn: '調整 {column} 欄大小',
     edit: '編輯 {name}',
     clear: '清除 {name}',
+    noRows: '沒有資料',
+    chooseColumns: '選擇欄位',
+    resetColumns: '重設欄位',
+    selectRow: '選擇列',
+    selectAll: '全選',
+    columnValue: '{name} 的值',
+    columnEditor: '{name} 編輯器',
+    apply: '套用 {name}',
+    unapply: '取消套用 {name}',
   },
   edit: {
     editText: '編輯文字',

@@ -36,6 +36,7 @@ export const en = {
     label: 'Chart',
   },
   search: {
+    label: 'Search',
     placeholder: 'Search...',
   },
   splitter: {
@@ -113,6 +114,15 @@ export const en = {
     resizeColumn: 'Resize {column}',
     edit: 'Edit {name}',
     clear: 'Clear {name}',
+    noRows: 'No rows',
+    chooseColumns: 'Choose columns',
+    resetColumns: 'Reset columns',
+    selectRow: 'Select row',
+    selectAll: 'Select all',
+    columnValue: '{name} value',
+    columnEditor: '{name} editor',
+    apply: 'Apply {name}',
+    unapply: 'Unapply {name}',
   },
   edit: {
     editText: 'Edit text',

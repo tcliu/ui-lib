@@ -36,6 +36,7 @@ export const zhCN = {
     label: '图表',
   },
   search: {
+    label: '搜索',
     placeholder: '搜索...',
   },
   splitter: {
@@ -113,6 +114,15 @@ export const zhCN = {
     resizeColumn: '调整 {column} 列大小',
     edit: '编辑 {name}',
     clear: '清除 {name}',
+    noRows: '无数据',
+    chooseColumns: '选择列',
+    resetColumns: '重置列',
+    selectRow: '选择行',
+    selectAll: '全选',
+    columnValue: '{name} 的值',
+    columnEditor: '{name} 编辑器',
+    apply: '应用 {name}',
+    unapply: '取消应用 {name}',
   },
   edit: {
     editText: '编辑文本',

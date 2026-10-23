@@ -40,8 +40,12 @@ const DICTIONARIES: Record<Locale, LocaleMessages<typeof en>> = {
   'zh-TW': zhTW,
 }
 
-// A Symbol context key can never collide with another module's context.
-const CONTEXT_KEY = Symbol('i18n')
+// A Symbol context key can never collide with another module's context. The
+// global registry is used instead of a plain symbol, because the published
+// package ships its own copy of this module: the app's copy and the package's
+// copy must name the same context, or a shared component would read a
+// different store than the app set.
+const CONTEXT_KEY = Symbol.for('ui-lib:i18n')
 
 export interface I18nStore<TKey extends string = MessageKey, TLocale extends string = Locale> {
   readonly locale: TLocale
@@ -129,18 +133,54 @@ export function createAppI18n(): I18nStore {
   return createI18nStore(DICTIONARIES, DEFAULT_LOCALE, STORAGE_KEY)
 }
 
-export function setI18nContext(store: I18nStore): I18nStore {
+export function setI18nContext<TKey extends string = MessageKey>(store: I18nStore<TKey>): I18nStore<TKey> {
   setContext(CONTEXT_KEY, store)
   return store
 }
 
 // Browser-only fallback cache: islands outside the layout tree share one store.
 // The server never reuses it, so concurrent SSR requests cannot share a locale.
-let defaultStore: I18nStore | null = null
+let defaultStore: I18nStore<string> | null = null
 
-export function getI18nContext(): I18nStore {
+// The fallback is registered through the global symbol registry: a bundler can
+// give the app's copy of this module and the package's copy separate
+// instances, and the registration must still reach both.
+const FALLBACK_KEY = Symbol.for('ui-lib:i18n-fallback')
+
+type StoreFactory = () => I18nStore<string>
+
+function registeredFactory(): StoreFactory | null {
+  const registered = (globalThis as unknown as Record<symbol, unknown>)[FALLBACK_KEY]
+  return typeof registered === 'function' ? (registered as StoreFactory) : null
+}
+
+/**
+ * Register the store a provider-less component reads.
+ *
+ * A consumer's own labels live in its dictionary, so the consumer registers a
+ * factory for a store built from it; without that, a component rendered
+ * outside the provider tree (a test, an island) falls back to the shared
+ * dictionary and shows the shared labels only. The factory keeps the server
+ * from sharing one store across requests.
+ */
+export function setDefaultI18nStore(factory: StoreFactory): void {
+  ;(globalThis as unknown as Record<symbol, unknown>)[FALLBACK_KEY] = factory
+  defaultStore = null
+}
+
+function fallbackStore(): I18nStore<string> {
+  const factory = registeredFactory() ?? createAppI18n
+  // The server builds a fresh store per call, so concurrent requests cannot
+  // share a locale; the browser reuses one.
+  if (!browser) return factory()
+  if (!defaultStore) {
+    defaultStore = factory()
+  }
+  return defaultStore
+}
+export function getI18nContext<TKey extends string = MessageKey>(): I18nStore<TKey> {
   if (hasContext(CONTEXT_KEY)) {
-    return getContext<I18nStore>(CONTEXT_KEY)
+    return getContext<I18nStore<TKey>>(CONTEXT_KEY)
   }
   // Islands mounted outside the layout tree have no provider; fall back to a
   // default English store so primitives still render. App code under the layout
@@ -149,11 +189,5 @@ export function getI18nContext(): I18nStore {
   if (import.meta.env.DEV) {
     console.warn('getI18nContext: no i18n provider above; using the default English store')
   }
-  if (!browser) {
-    return createAppI18n()
-  }
-  if (!defaultStore) {
-    defaultStore = createAppI18n()
-  }
-  return defaultStore
+  return fallbackStore()
 }
