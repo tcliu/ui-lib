@@ -10,7 +10,10 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { LOCAL_ONLY_ENV_KEYS } from '../env-file.mjs'
-import { secretKeys as configuredSecretKeys } from '../deploy.config.mjs'
+// Namespace import: `deploy.config.mjs` is app-owned, so an app whose copy
+// predates the `secretKeys` export must still load; the set below then carries
+// the shared defaults only.
+import * as deployConfig from '../deploy.config.mjs'
 import { logEvent } from '../log-event.mjs'
 import { echoCommand } from '../_run.mjs'
 import { loadTargetEnv } from './target-env.mjs'
@@ -251,7 +254,7 @@ export const CLOUDFLARE_SECRET_KEYS = new Set([
   'VERCEL_ACCOUNT_NAME',
   'VERCEL_TEAM_ID',
   'VERCEL_TEAM_SLUG',
-  ...(Array.isArray(configuredSecretKeys) ? configuredSecretKeys : []),
+  ...(Array.isArray(deployConfig.secretKeys) ? deployConfig.secretKeys : []),
 ])
 
 // Keys that must never exist on the Cloudflare Pages project, whatever the

@@ -77,6 +77,16 @@ describe('collectViolations', () => {
     expect(violations[0]).toMatch(/wrong kind src\/lib\/components\/button\.spec\.ts/)
   })
 
+  it('does not count a type declaration as the module a test sits beside', () => {
+    const root = scratch({
+      'src/lib/components/button.d.ts': 'export interface ButtonProps { label: string }\n',
+      'src/lib/components/button.test.ts': "import './button.d.ts'\n",
+    })
+    const violations = collectViolations(root)
+    expect(violations).toHaveLength(1)
+    expect(violations[0]).toMatch(/no module in src\/lib\/components/)
+  })
+
   it('accepts a $lib import that points back at the test directory', () => {
     const root = scratch({
       'src/lib/components/use-resize-drag.svelte.ts': 'export const drag = 1\n',

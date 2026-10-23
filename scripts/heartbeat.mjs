@@ -8,6 +8,7 @@
 // Missing and non-interactive: abort.
 import { applyHeartbeat, HEARTBEAT_CHOICES, HEARTBEAT_PROVIDERS } from './lib/heartbeat.mjs'
 import { resolveCloudflareAppUrl } from './lib/cloudflare.mjs'
+import { ROOT as ROOT_DIR } from './lib/root.mjs'
 import { loadTargetEnv, seedCloudflareCredentials } from './lib/target-env.mjs'
 import { c, parseCliArgsOrExit } from './_terminal.mjs'
 import { interactiveShell } from './_interactive-shell.mjs'
@@ -104,7 +105,7 @@ async function main() {
     // the operator token from .env.local first — shell values always win.
     let baseUrl
     if (target === 'cloudflare') {
-      const merged = loadTargetEnv('cloudflare', process.cwd())
+      const merged = loadTargetEnv('cloudflare', ROOT_DIR)
       seedCloudflareCredentials({ token: merged, accountId: merged })
       baseUrl = resolveCloudflareAppUrl()
     }

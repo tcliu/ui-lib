@@ -8,6 +8,7 @@ import {
   loadTargetEnvFiles,
   loadTargetFileEnv,
   loadTargetOperatorEnv,
+  missingTargetSources,
   targetOverlayFile,
   targetSourceFiles,
   targetSourceLabel,
@@ -90,5 +91,18 @@ describe('loadTargetEnv', () => {
     const operator = loadTargetOperatorEnv(dir)
     expect(operator.LOCAL_ONLY).toBe('t')
     expect(operator.SYNCED_ONLY).toBeUndefined()
+  })
+})
+
+describe('missingTargetSources', () => {
+  it('reports the push files a checkout does not carry', () => {
+    const dir = fixture({ '.env.prod': 'A=1\n' })
+    expect(missingTargetSources('vercel', dir)).toEqual(['.env.vercel'])
+    expect(missingTargetSources('cloudflare', dir)).toEqual(['.env.cloudflare'])
+  })
+
+  it('reports nothing when every push file exists, even if empty', () => {
+    const dir = fixture({ '.env.prod': '', '.env.cloudflare': '' })
+    expect(missingTargetSources('cloudflare', dir)).toEqual([])
   })
 })

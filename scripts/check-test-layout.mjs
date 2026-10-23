@@ -51,6 +51,7 @@ const SPECIFIER_RE = /(?:from|import)\s*\(?\s*['"]([^'"]+)['"]/g
 function isSourceFile(name) {
   if (!SOURCE_EXTENSIONS.some(ext => name.endsWith(ext))) return false
   if (UNIT_TEST_RE.test(name)) return false
+  if (name.endsWith('.spec.ts') || name.endsWith('.d.ts')) return false
   if (name.endsWith('.harness.svelte')) return false
   return true
 }
