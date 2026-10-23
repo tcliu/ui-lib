@@ -12,7 +12,7 @@ test('showcase: ColumnChooser hosts its code toggle in the title row beside a re
   const demo = showcaseDemo(page)
   const toggle = showCodeToggle(page)
 
-  await expect(page.getByRole('heading', { level: 1, name: 'ColumnChooser' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 2, name: 'ColumnChooser' })).toBeVisible()
   await expect(toggle).toHaveCount(1)
 
   // The demo sits in a resizable frame. Resizable renders its width, height,

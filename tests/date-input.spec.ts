@@ -9,7 +9,7 @@ test('showcase: DateInput reproduces its demo from Show code', async ({ page }) 
   await page.waitForLoadState('networkidle')
 
   const demo = showcaseDemo(page)
-  await expect(page.getByRole('heading', { level: 1, name: 'DateInput' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 2, name: 'DateInput' })).toBeVisible()
   // The demo sits in a resizable frame (Resizable renders width/height/corner).
   await expect(demo.locator('[role="separator"]')).toHaveCount(3)
 

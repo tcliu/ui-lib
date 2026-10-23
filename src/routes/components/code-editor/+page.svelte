@@ -38,7 +38,7 @@
     maxContentLength: '0',
     maxContentLengthOn: false,
     selectionEnabled: 'yes' as TriState,
-    selectionEnabledOn: true,
+    selectionEnabledOn: false,
     autoFocus: 'no' as TriState,
     autoFocusOn: false,
     editorAriaLabel: '',

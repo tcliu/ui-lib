@@ -9,7 +9,7 @@ test('showcase: ChipDropdown hosts its code toggle in the title row beside a res
   const demo = showcaseDemo(page)
   const toggle = showCodeToggle(page)
 
-  await expect(page.getByRole('heading', { level: 1, name: 'ChipDropdown' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 2, name: 'ChipDropdown' })).toBeVisible()
   await expect(toggle).toHaveCount(1)
 
   // The demo sits in a resizable frame. Resizable renders its width, height,
@@ -41,7 +41,7 @@ test('showcase: ChipDropdown search selects its text with Shift+Home', async ({ 
   // keyboard (pointer clicks hit the overlay).
   await page.getByRole('button', { name: 'Set status' }).focus()
   await page.keyboard.press('Enter')
-  const search = page.getByRole('combobox', { name: 'Search…' })
+  const search = page.getByRole('combobox', { name: 'Search' })
   await expect(search).toBeVisible()
 
   await search.fill('act')

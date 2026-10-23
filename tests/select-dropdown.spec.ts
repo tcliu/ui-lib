@@ -13,7 +13,7 @@ test('showcase: SelectDropdown hosts its code toggle in the title row beside a r
   const demo = showcaseDemo(page)
   const toggle = showCodeToggle(page)
 
-  await expect(page.getByRole('heading', { level: 1, name: 'SelectDropdown' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 2, name: 'SelectDropdown' })).toBeVisible()
   await expect(toggle).toHaveCount(1)
 
   // The demo sits in a resizable frame. Resizable renders its width, height,

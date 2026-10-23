@@ -63,7 +63,7 @@
                 event.preventDefault()
               }
             }}
-            class={`rounded-[var(--tabs-radius)] px-[var(--tabs-pad-x)] py-[var(--tabs-pad-y)] text-[length:var(--tabs-font)] font-medium transition outline-none motion-reduce:transition-none ${tab.path === pathname ? 'bg-cyan-500 text-onaccent' : 'text-slate-300 hover:text-cyan-300 focus:text-cyan-300'}`}>
+            class={`rounded-[var(--tabs-radius)] px-[var(--tabs-pad-x)] py-[var(--tabs-pad-y)] text-[length:var(--tabs-font)] font-medium transition outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 motion-reduce:transition-none ${tab.path === pathname ? 'bg-cyan-500 text-onaccent' : 'text-slate-300 hover:text-cyan-300 focus-visible:text-cyan-300'}`}>
             {tab.label}
           </a>
         {:else}
@@ -71,7 +71,7 @@
             type="button"
             aria-pressed={tab.path === activeTab?.path}
             onclick={() => (activePath = tab.path)}
-            class={`rounded-[var(--tabs-radius)] px-[var(--tabs-pad-x)] py-[var(--tabs-pad-y)] text-[length:var(--tabs-font)] font-medium transition outline-none motion-reduce:transition-none ${tab.path === activeTab?.path ? 'bg-cyan-500 text-onaccent' : 'text-slate-300 hover:text-cyan-300 focus:text-cyan-300'}`}>
+            class={`rounded-[var(--tabs-radius)] px-[var(--tabs-pad-x)] py-[var(--tabs-pad-y)] text-[length:var(--tabs-font)] font-medium transition outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 motion-reduce:transition-none ${tab.path === activeTab?.path ? 'bg-cyan-500 text-onaccent' : 'text-slate-300 hover:text-cyan-300 focus-visible:text-cyan-300'}`}>
             {tab.label}
           </button>
         {/if}

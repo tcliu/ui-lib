@@ -19,8 +19,9 @@ export function snippetToggle(enabled: boolean, setEnabled: (enabled: boolean) =
 
 // The eye toggle for required dialog content (no unset state to fall back
 // to): turning off resets the committed data via `onReset`, turning on only
-// flips the flag. A later commit re-applies like any other row (the page's
-// `onChange` sets its flag), so reset is the row default, not a dead end.
+// flips the flag. A later commit of a changed value re-applies the eye (the
+// field table's dialog commit does it, so a page's `onChange` only has to cover
+// inline editors), so reset is the row default, not a dead end.
 export function resetToggle(
   enabled: boolean,
   setEnabled: (enabled: boolean) => void,

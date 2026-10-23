@@ -165,7 +165,7 @@ test('showcase: the component pane floats above content on narrow viewports', as
   // Floating removes the pane from the flow: it overlaps the main column
   // instead of squeezing beside it.
   const paneBox = await search.boundingBox()
-  const headingBox = await page.getByRole('heading', { level: 1, name: 'BaseDialog' }).boundingBox()
+  const headingBox = await page.getByRole('heading', { level: 2, name: 'BaseDialog' }).boundingBox()
   expect(paneBox).not.toBeNull()
   expect(headingBox).not.toBeNull()
   expect(paneBox!.x + paneBox!.width).toBeGreaterThan(headingBox!.x)

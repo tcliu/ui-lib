@@ -80,4 +80,15 @@ describe('PasswordInput size', () => {
     await remount(PasswordInput, { value: '', size: Number.NaN })
     expect(target.querySelector('.relative')?.getAttribute('style')).toContain('--pwd-icon: 16px')
   })
+
+  it('keeps the reveal tooltip reachable while the field is disabled', async () => {
+    await remount(PasswordInput, { value: '', disabled: true })
+    const toggle = target.querySelector<HTMLButtonElement>('button[aria-label]')
+    expect(toggle?.disabled).toBe(true)
+    // The tip's trigger is the non-disabled wrapper: a disabled button fires no
+    // mouse events, so a tip bound to the button itself would never open.
+    const trigger = toggle?.parentElement
+    expect(trigger?.tagName).toBe('SPAN')
+    expect(trigger?.hasAttribute('disabled')).toBe(false)
+  })
 })

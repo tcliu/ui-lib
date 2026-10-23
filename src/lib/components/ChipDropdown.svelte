@@ -32,7 +32,7 @@
     gap: 0.25,
     slotGap: 0.25,
     icon: 0.625,
-    clear: 0.75,
+    clear: 0.625,
   }
 
   // Panel metrics scale with the same dimension so the floating list tracks the
@@ -70,6 +70,8 @@
     buttonClass?: string
     filterable?: boolean
     filterPlaceholder?: string
+    // Accessible name for the filter field; a placeholder is never a label.
+    filterLabel?: string
     emptyText?: string
     onSelect: (value: string) => void
     // No `clearPlacement`: the trigger is a chip, not a text field, so the
@@ -91,8 +93,9 @@
     panelClass = `${CHIP_MENU_PANEL_CLASS} overflow-y-auto p-1`,
     buttonClass,
     filterable = false,
-    filterPlaceholder = 'Search…',
-    emptyText = 'No results.',
+    filterPlaceholder,
+    filterLabel,
+    emptyText,
     onSelect,
     clearable = false,
     clearLabel,
@@ -101,6 +104,12 @@
 
   let id = $props.id()
   const panelId = `${id}-panel`
+
+  // Resolved at render time: a prop default would freeze the English string at
+  // module load and never follow `setLocale`.
+  const resolvedFilterPlaceholder = $derived(filterPlaceholder ?? i18n.t('search.placeholder'))
+  const resolvedFilterLabel = $derived(filterLabel ?? i18n.t('search.label'))
+  const resolvedEmptyText = $derived(emptyText ?? i18n.t('dropdown.noOptions'))
 
   // Normalize once per options array so every row below reads one shape: a
   // bare string is its own label and a missing label falls back to the value.
@@ -113,15 +122,15 @@
   )
 
   const VARIANT_CHIP: Record<string, string> = {
-    sky: 'border-sky-500/30 bg-sky-500/10 text-sky-200 hover:border-sky-400 hover:text-sky-100 focus-visible:border-sky-400 focus-visible:text-sky-100',
+    sky: 'border-sky-500/30 bg-sky-500/10 text-sky-200 hover:border-sky-400 hover:text-sky-100 focus-visible:border-sky-400 focus-visible:text-sky-100 focus-visible:ring-2 focus-visible:ring-sky-400',
     violet:
-      'border-violet-500/30 bg-violet-500/10 text-violet-200 hover:border-violet-400 hover:text-violet-100 focus-visible:border-violet-400 focus-visible:text-violet-100',
+      'border-violet-500/30 bg-violet-500/10 text-violet-200 hover:border-violet-400 hover:text-violet-100 focus-visible:border-violet-400 focus-visible:text-violet-100 focus-visible:ring-2 focus-visible:ring-violet-400',
     amber:
-      'border-amber-500/30 bg-amber-500/10 text-amber-200 hover:border-amber-400 hover:text-amber-100 focus-visible:border-amber-400 focus-visible:text-amber-100',
+      'border-amber-500/30 bg-amber-500/10 text-amber-200 hover:border-amber-400 hover:text-amber-100 focus-visible:border-amber-400 focus-visible:text-amber-100 focus-visible:ring-2 focus-visible:ring-amber-400',
     fuchsia:
-      'border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-200 hover:border-fuchsia-400 hover:text-fuchsia-100 focus-visible:border-fuchsia-400 focus-visible:text-fuchsia-100',
+      'border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-200 hover:border-fuchsia-400 hover:text-fuchsia-100 focus-visible:border-fuchsia-400 focus-visible:text-fuchsia-100 focus-visible:ring-2 focus-visible:ring-fuchsia-400',
     emerald:
-      'border-emerald-500/30 bg-emerald-500/10 text-emerald-200 hover:border-emerald-400 hover:text-emerald-100 focus-visible:border-emerald-400 focus-visible:text-emerald-100',
+      'border-emerald-500/30 bg-emerald-500/10 text-emerald-200 hover:border-emerald-400 hover:text-emerald-100 focus-visible:border-emerald-400 focus-visible:text-emerald-100 focus-visible:ring-2 focus-visible:ring-emerald-400',
   }
 
   // Every metric is a fixed ratio of the size dimension, emitted as `--chip-*`
@@ -401,7 +410,7 @@
       onmousemove={() => {
         if (listbox.selection.peek() !== index) listbox.selection.set(index)
       }}
-      class={`flex w-full min-w-[var(--chip-panel-min-w)] cursor-pointer items-center justify-between rounded-lg px-[var(--chip-panel-pad-x)] py-[var(--chip-panel-pad-y)] text-left text-[length:var(--chip-panel-font)] leading-[var(--chip-panel-line)] transition-none outline-none ${listbox.highlight.flags[index] ? 'bg-slate-800 text-slate-100' : 'text-slate-300'}`}
+      class={`flex w-full min-w-[var(--chip-panel-min-w)] cursor-pointer items-center justify-between rounded-lg px-[var(--chip-panel-pad-x)] py-[var(--chip-panel-pad-y)] text-left text-[length:var(--chip-panel-font)] leading-[var(--chip-panel-line)] transition-none outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-inset ${listbox.highlight.flags[index] ? 'bg-slate-800 text-slate-100' : 'text-slate-300'}`}
       style={panelStyle}>
       <span class="min-w-0 truncate">
         {#if parts}
@@ -412,7 +421,7 @@
       </span>
     </button>
   {:else}
-    <div role="presentation" class="min-w-[var(--chip-panel-min-w)] px-[var(--chip-panel-pad-x)] py-[var(--chip-panel-empty-pad-y)] text-center text-[length:var(--chip-panel-font)] text-slate-400" style={panelStyle}>{emptyText}</div>
+    <div role="presentation" class="min-w-[var(--chip-panel-min-w)] px-[var(--chip-panel-pad-x)] py-[var(--chip-panel-empty-pad-y)] text-center text-[length:var(--chip-panel-font)] text-slate-400" style={panelStyle}>{resolvedEmptyText}</div>
   {/each}
 {/snippet}
 
@@ -443,7 +452,7 @@
     </button>
   {/snippet}
   {#snippet closeIcon()}
-    <CloseIcon size={metrics.clear} />
+    <CloseIcon />
   {/snippet}
   {#if clearable}
     <span class="inline-flex items-center gap-[var(--chip-slot-gap)]">
@@ -474,8 +483,8 @@
             bind:this={inputRef}
             type="text"
             bind:value={filterText}
-            placeholder={filterPlaceholder}
-            aria-label={filterPlaceholder || ariaLabel}
+            placeholder={resolvedFilterPlaceholder}
+            aria-label={resolvedFilterLabel}
             role="combobox"
             aria-haspopup="listbox"
             aria-expanded={open}

@@ -24,8 +24,8 @@
     size?: SizeInput
     className?: string
     onActivate?: () => void
-    // maximum width (in px) the editable input may expand to; actual max
-    // will be clamped to the remaining horizontal space when editing.
+    // maximum width (in px) the editable input may expand to; the actual max
+    // also clamps to the space between the label and the viewport's right edge.
     maxWidth?: number
     // When true, the display mode is wrapped in a Copyable so the text can
     // also be copied to the clipboard on hover.
@@ -48,7 +48,6 @@
   let input = $state<HTMLInputElement | null>(null)
   let displayBtn = $state<HTMLButtonElement | null>(null)
   let editBtn = $state<HTMLElement | null>(null)
-  let rootRef = $state<HTMLElement | null>(null)
   let inputWidth = $state<number | null>(null)
   let computedMaxWidth = $state<number | null>(null)
   let clickTimer: ReturnType<typeof setTimeout> | null = null
@@ -79,22 +78,18 @@
         inputWidth = null
       }
       // Compute the remaining horizontal width so the editable input's max
-      // width is the lesser of the `maxWidth` prop and available space. The
-      // component's own row supplies that space: measure from the label's left
-      // edge to the row's right edge, so a narrow container narrows the field
-      // exactly as a narrow viewport does. The row is the node this component
-      // owns through `bind:this`; no ancestor walk is involved.
+      // width is the lesser of the `maxWidth` prop and the space to the right
+      // of the label. The display row hugs its content (siblings sit right
+      // after the label), so its own width says nothing about the space around
+      // it; measure from the viewport's right edge instead. A narrower host
+      // narrows the field through the `maxWidth` prop.
       try {
         if (labelRect) {
           // Reserve room for sibling action buttons (e.g. delete) + padding.
           const reserved = 48
-          const hostRect = rootRef?.getBoundingClientRect()
-          if (!hostRect || hostRect.width === 0) {
-            computedMaxWidth = maxWidth
-          } else {
-            const remaining = Math.max(0, Math.floor(hostRect.right - labelRect.left - reserved))
-            computedMaxWidth = Math.min(maxWidth, remaining)
-          }
+          const viewportRight = document.documentElement.clientWidth
+          const remaining = Math.max(0, Math.floor(viewportRight - labelRect.left - reserved))
+          computedMaxWidth = Math.min(maxWidth, remaining)
         } else {
           computedMaxWidth = maxWidth
         }
@@ -238,6 +233,7 @@
       class="transition group-hover:opacity-100 focus-within:opacity-100 motion-reduce:transition-none [@media(hover:hover)]:opacity-0">
       <Button
         variant="ghost"
+        {size}
         ariaLabel={i18n.t('edit.edit')}
         tooltip={i18n.t('edit.edit')}
         onClick={e => {
@@ -260,12 +256,13 @@
        pushed to the right. Keep min-w-0 so truncation still works.
        `items-center` centers the icon wrappers (edit + copy) on the text field's
        own vertical middle, so no nudge is needed to align them with the text. -->
-  <div bind:this={rootRef} class="group flex min-w-0 items-center gap-2">
+  <div class="group flex min-w-0 items-center gap-2">
     {@render displayContent()}
     {#if copyable && text.trim() !== ''}
       <span class="shrink-0 transition group-hover:opacity-100 focus-within:opacity-100 [@media(hover:hover)]:opacity-0">
         <Button
           variant="ghost"
+          {size}
           ariaLabel={i18n.t('common.copy')}
           tooltip={i18n.t('common.copy')}
           onClick={event => {

@@ -71,7 +71,9 @@ export function createGridModel(options: GridModelOptions) {
     if (matrixEqual(input, serialize.stripTrailingEmptyRows(lastValue))) return
     rows = input.map(r => ({ id: ++rowId, cells: r.map(v => newCell(v)) }))
     normalize()
-    lastValue = input
+    // Snapshot, not the caller's reference: a caller that mutates `value` in
+    // place must still be re-synced on the next read.
+    lastValue = input.map(row => [...row])
     history.reset()
   })
 

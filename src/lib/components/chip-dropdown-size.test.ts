@@ -64,8 +64,10 @@ describe('ChipDropdown size', () => {
     expect(rootStyle()).toContain('--chip-pad-x: 8px')
     expect(rootStyle()).toContain('--chip-gap: 4px')
     // Chevron rides SelectDropdown's 0.625 share: 0.625 * 16 = 10 → 10 *
-    // ICON_RATIO. The clear slot stays 0.75 * 16 = 12 → 12 * ICON_RATIO.
-    expect([...target.querySelectorAll('svg')].map(svg => svg.getAttribute('width'))).toEqual(['8.125', '9.75'])
+    // ICON_RATIO. The clear cross takes the same share, forwarded to the inner
+    // Button, whose own box sizes the glyph.
+    expect(target.querySelector('svg')?.getAttribute('width')).toBe('8.125')
+    expect(target.querySelector('button[aria-label="Clear"]')?.getAttribute('style')).toContain('--btn-icon: 10px')
     // The marker uses the select trigger's neutral treatment, not the chip's
     // variant-tinted inherited color.
     expect(target.querySelector('svg')?.getAttribute('class')).toBe('shrink-0 text-slate-400')
@@ -78,10 +80,9 @@ describe('ChipDropdown size', () => {
     expect(rootStyle()).toContain('--chip-gap: 5px')
     // Chevron 0.625 * 20 = 12.5 → 12.5 * ICON_RATIO.
     expect(target.querySelector('svg')?.getAttribute('width')).toBe('10.15625')
-    // The clear cross rides 0.75 * 20 = 15, forwarded to the inner Button, so
-    // its glyph keeps the original 15px slot rather than stacking a second trim.
-    expect(target.querySelector('button[aria-label="Clear"]')?.getAttribute('style')).toContain('--btn-icon: 15px')
-    expect(target.querySelectorAll('svg')[1]?.getAttribute('width')).toBe('12.1875')
+    // The clear cross takes the same 0.625 share, forwarded to the inner
+    // Button, which sizes the glyph from its own box.
+    expect(target.querySelector('button[aria-label="Clear"]')?.getAttribute('style')).toContain('--btn-icon: 12.5px')
   })
 
   it('accepts a named step', () => {

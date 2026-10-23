@@ -12,7 +12,7 @@ test('showcase: TagInput hosts its code toggle in the title row beside a resizab
   const demo = showcaseDemo(page)
   const toggle = showCodeToggle(page)
 
-  await expect(page.getByRole('heading', { level: 1, name: 'TagInput' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 2, name: 'TagInput' })).toBeVisible()
   await expect(toggle).toHaveCount(1)
 
   // The demo sits in a resizable frame. Resizable renders its width, height,
@@ -41,7 +41,7 @@ test('showcase: the TagInput chip and option cells edit prefix text applied by t
   const demo = showcaseDemo(page)
   await expect(demo).toContainText('tags: svelte, kit')
 
-  // The chip dialog commits prefix text but the eye stays off.
+  // The chip dialog commits prefix text and re-applies the eye.
   await page.getByRole('button', { name: 'Edit chip', exact: true }).click()
   const chipDialog = page.getByRole('dialog', { name: 'Edit chip', exact: true })
   await expect(chipDialog).toBeVisible()
@@ -49,10 +49,6 @@ test('showcase: the TagInput chip and option cells edit prefix text applied by t
   await replaceSnippet(page, '#', chipDialog)
   await chipDialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(chipDialog).toHaveCount(0)
-  await expect(demo).not.toContainText('#svelte')
-
-  // Applying the eye renders the custom chips with the prefix.
-  await page.getByRole('button', { name: 'Apply chip', exact: true }).click()
   await expect(demo).toContainText('#svelte')
 
   // The option dialog works the same way for suggestions. (Scoped by its
@@ -67,7 +63,6 @@ test('showcase: the TagInput chip and option cells edit prefix text applied by t
   await replaceSnippet(page, '»', optionDialog)
   await optionDialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(optionDialog).toHaveCount(0)
-  await page.getByRole('button', { name: 'Apply option', exact: true }).click()
   const input = demo.getByRole('combobox')
   await input.click()
   await input.pressSequentially('for')

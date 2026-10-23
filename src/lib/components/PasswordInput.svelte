@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { HTMLInputAttributes } from 'svelte/elements'
-  import Tooltip from './Tooltip.svelte'
+  import Button from './Button.svelte'
   import TextInput from './TextInput.svelte'
   import EyeIcon from '$lib/icons/EyeIcon.svelte'
   import EyeSlashIcon from '$lib/icons/EyeSlashIcon.svelte'
@@ -67,18 +67,33 @@
 
   let visible = $state(false)
   let input = $state<HTMLInputElement | null>(null)
-  let toggleBtn = $state<HTMLElement | null>(null)
   export function focus() {
     input?.focus()
   }
 
   function toggleVisibility() {
+    // Changing `type` makes the browser reset the selection, so capture the
+    // caret (or selected range) before the switch and put it back once the DOM
+    // has updated: revealing the value must not move the user's place. The
+    // toggle's `preventFocusSteal` keeps the field focused through the click.
+    const selectionStart = input?.selectionStart
+    const selectionEnd = input?.selectionEnd
+    const selectionDirection = input?.selectionDirection
     visible = !visible
     requestAnimationFrame(() => {
-      if (input) input.setSelectionRange(input.value.length, input.value.length)
+      if (!input || selectionStart == null || selectionEnd == null) return
+      input.setSelectionRange(selectionStart, selectionEnd, selectionDirection ?? undefined)
     })
   }
 </script>
+
+{#snippet toggleGlyph()}
+  {#if visible}
+    <EyeSlashIcon />
+  {:else}
+    <EyeIcon />
+  {/if}
+{/snippet}
 
 <TextInput
   bind:value
@@ -100,19 +115,20 @@
   className={[TOGGLE_GUTTER_CLASS, className].filter(Boolean).join(' ')}
   wrapperStyle={pwdStyle}>
   {#snippet trailing()}
-    <button
-      bind:this={toggleBtn}
-      onclick={toggleVisibility}
-      aria-label={visible ? resolvedHideLabel : resolvedShowLabel}
-      type="button"
-      {disabled}
-      class="absolute right-[var(--pwd-inset)] top-[var(--pwd-inset)] bottom-[var(--pwd-inset)] inline-flex w-[var(--pwd-box)] items-center justify-center text-slate-400 transition outline-none hover:text-cyan-300 focus:text-cyan-300 disabled:cursor-not-allowed disabled:opacity-40">
-      {#if visible}
-        <EyeSlashIcon size={pwdMetrics.icon} />
-      {:else}
-        <EyeIcon size={pwdMetrics.icon} />
-      {/if}
-      <Tooltip trigger={toggleBtn}>{visible ? resolvedHideLabel : resolvedShowLabel}</Tooltip>
-    </button>
+    <!-- The shared Button owns the glyph, the tooltip trigger (which also works
+         while disabled, through its wrapper), and the pointer-down focus guard:
+         clicking the eye keeps focus in the field when it was already there. -->
+    <span class="absolute inset-y-0 right-[var(--pwd-inset)] flex items-center">
+      <Button
+        variant="ghost"
+        size={pwdMetrics.icon}
+        icon={toggleGlyph}
+        ariaLabel={visible ? resolvedHideLabel : resolvedShowLabel}
+        tooltip={visible ? resolvedHideLabel : resolvedShowLabel}
+        {disabled}
+        preventFocusSteal
+        onClick={toggleVisibility}
+        className="w-[var(--pwd-box)]" />
+    </span>
   {/snippet}
 </TextInput>

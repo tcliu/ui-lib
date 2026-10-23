@@ -11,7 +11,7 @@ test('showcase: AppShell hosts its code toggle in the title row beside a Value c
 
   const toggle = showCodeToggle(page)
 
-  await expect(page.getByRole('heading', { level: 1, name: 'AppShell' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 2, name: 'AppShell' })).toBeVisible()
   await expect(toggle).toHaveCount(1)
   await expect(page.getByRole('region', { name: 'Props' }).getByRole('columnheader', { name: 'Value' })).toBeVisible()
 

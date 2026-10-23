@@ -146,7 +146,7 @@ export function buildTagInputSnippet({
           ...(chip
             ? [
                 `${indent}{#snippet chip(tag, remove)}`,
-                `${indent}  <span>${escapeText(chip)}{tag} <button type="button" onclick={remove}>×</button></span>`,
+                `${indent}  <span>${escapeText(chip)}{tag} <button type="button" onclick={remove} aria-label="Remove {tag}">×</button></span>`,
                 `${indent}{/snippet}`,
               ]
             : []),

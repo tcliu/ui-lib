@@ -24,6 +24,8 @@ function state(overrides: Partial<ChipDropdownSnippetState> = {}): ChipDropdownS
     alignOn: true,
     filterPlaceholder: '',
     filterPlaceholderOn: true,
+    filterLabel: '',
+    filterLabelOn: true,
     buttonClass: '',
     buttonClassOn: true,
     emptyText: '',
@@ -53,6 +55,7 @@ describe('buildChipDropdownSnippet', () => {
     expect(source).not.toContain('disabled')
     expect(source).not.toContain('align=')
     expect(source).not.toContain('filterPlaceholder')
+    expect(source).not.toContain('filterLabel')
   })
 
   it('emits a custom label literal and the curated overrides while set', () => {
@@ -67,6 +70,7 @@ describe('buildChipDropdownSnippet', () => {
         align: 'right',
         alignOn: true,
         filterPlaceholder: 'Find a status',
+        filterLabel: 'Find a status',
         buttonClass: 'w-40',
         emptyText: 'Nothing here',
         clearable: 'yes',
@@ -83,6 +87,7 @@ describe('buildChipDropdownSnippet', () => {
     expect(source).toContain('  disabled\n')
     expect(source).toContain('align="right"')
     expect(source).toContain('filterPlaceholder="Find a status"')
+    expect(source).toContain('filterLabel="Find a status"')
     expect(source).toContain('buttonClass="w-40"')
     expect(source).toContain('emptyText="Nothing here"')
     expect(source).toContain('  clearable\n')

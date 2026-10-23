@@ -304,7 +304,7 @@
           type="button"
           aria-label={i18n.t('date.prevMonth')}
           onclick={grid.prevMonth}
-          class={`flex h-[var(--pick-nav-size)] w-[var(--pick-nav-size)] items-center justify-center rounded-[var(--pick-radius)] transition outline-none motion-reduce:transition-none ${theme.navButton ?? 'text-slate-400 hover:bg-slate-800 hover:text-cyan-300'}`}>
+          class={`flex h-[var(--pick-nav-size)] w-[var(--pick-nav-size)] items-center justify-center rounded-[var(--pick-radius)] transition outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 motion-reduce:transition-none ${theme.navButton ?? 'text-slate-400 hover:bg-slate-800 hover:text-cyan-300'}`}>
           <CaretLeftIcon size={metrics.icon} />
         </button>
         <span class="text-[length:var(--pick-sm-font)] font-semibold text-slate-200">{grid.monthLabel}</span>
@@ -312,7 +312,7 @@
           type="button"
           aria-label={i18n.t('date.nextMonth')}
           onclick={grid.nextMonth}
-          class={`flex h-[var(--pick-nav-size)] w-[var(--pick-nav-size)] items-center justify-center rounded-[var(--pick-radius)] transition outline-none motion-reduce:transition-none ${theme.navButton ?? 'text-slate-400 hover:bg-slate-800 hover:text-cyan-300'}`}>
+          class={`flex h-[var(--pick-nav-size)] w-[var(--pick-nav-size)] items-center justify-center rounded-[var(--pick-radius)] transition outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 motion-reduce:transition-none ${theme.navButton ?? 'text-slate-400 hover:bg-slate-800 hover:text-cyan-300'}`}>
           <CaretRightIcon size={metrics.icon} />
         </button>
       </div>

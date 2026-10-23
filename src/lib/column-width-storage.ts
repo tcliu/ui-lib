@@ -13,6 +13,7 @@ function clampWidths(widths: number[]): number[] {
 
 export function loadColumnWidths(key: string): number[] | null {
   try {
+    if (typeof localStorage === 'undefined') return null
     const raw = localStorage.getItem(STORAGE_KEY_PREFIX + key)
     if (raw === null) return null
     const parsed: unknown = JSON.parse(raw)
@@ -26,6 +27,7 @@ export function loadColumnWidths(key: string): number[] | null {
 
 export function saveColumnWidths(key: string, widths: number[]) {
   try {
+    if (typeof localStorage === 'undefined') return
     localStorage.setItem(STORAGE_KEY_PREFIX + key, JSON.stringify(clampWidths(widths)))
   } catch (error) {
     console.error('Failed to save column widths to localStorage', { key, error })
@@ -34,6 +36,7 @@ export function saveColumnWidths(key: string, widths: number[]) {
 
 export function clearColumnWidths(key: string) {
   try {
+    if (typeof localStorage === 'undefined') return
     localStorage.removeItem(STORAGE_KEY_PREFIX + key)
   } catch (error) {
     console.error('Failed to clear column widths from localStorage', { key, error })

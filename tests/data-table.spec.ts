@@ -81,9 +81,12 @@ test('showcase: DataTable Value cells drive the demo table', async ({ page }) =>
   expect(await editorContains(page, 'searchPlaceholder="Find rows"')).toBe(true)
   await hideCodeToggle(page).click()
 
-  // Reset returns every field to unset.
+  // Reset returns every field to unset (the localized search placeholder).
   await page.getByRole('button', { name: 'Reset', exact: true }).click()
-  await expect(demo.getByRole('searchbox', { name: 'Search' })).toHaveAttribute('placeholder', 'Search')
+  await expect(demo.getByRole('searchbox', { name: 'Search' })).toHaveAttribute(
+    'placeholder',
+    'Search...',
+  )
 })
 
 test('showcase: the data-table demo stage has no resize handle', async ({ page }) => {

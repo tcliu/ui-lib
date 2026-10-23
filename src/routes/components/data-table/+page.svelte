@@ -51,7 +51,7 @@
     fillHeightOn: false,
     bodyScroll: 'no' as TriState,
     bodyScrollOn: false,
-    placeholder: 'Search',
+    placeholder: 'Search...',
     placeholderOn: false,
     emptyMessage: 'No rows',
     emptyMessageOn: false,
@@ -407,7 +407,7 @@
         setJson: value => (pg.searchKeys = value as string[]),
       },
     }),
-    textField({ name: 'searchPlaceholder', type: 'string?', defaultValue: "'Search'", note: 'Search placeholder.', value: pg.placeholder, onChange: v => (pg.placeholder = v), editorDefaultValue: 'Search', clearable: true, placeholder: 'Search', enabled: pg.placeholderOn, setEnabled: v => (pg.placeholderOn = v) }),
+    textField({ name: 'searchPlaceholder', type: 'string?', defaultValue: "'Search...'", note: 'Search placeholder.', value: pg.placeholder, onChange: v => (pg.placeholder = v), editorDefaultValue: 'Search...', clearable: true, placeholder: 'Search...', enabled: pg.placeholderOn, setEnabled: v => (pg.placeholderOn = v) }),
     {
       name: 'searchValue',
       type: 'string?',
@@ -583,7 +583,7 @@
     }}
 
     sync={{ tag: 'DataTable' }}
-    scopeRefresh={() => [pg.query, pg.page, pg.sortKey, pg.sortDirection, pg.selected, hidden]}
+    scopeRefresh={() => [pg.query, pg.page, pg.sortKey, pg.sortDirection, pg.selected, hidden, demoPageSize]}
   >
     <ShowcaseStage paneClass={stagePaneClass}>
       <DataTable

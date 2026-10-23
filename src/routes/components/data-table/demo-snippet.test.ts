@@ -85,7 +85,7 @@ describe('buildDataTableSnippet', () => {
     const source = buildDataTableSnippet(base)
     expect(source).toContain('pagination={{')
     expect(source).toContain('total: visibleTotal(rows, pgQuery),')
-    expect(source).toContain('pageSize: pgPageSize,')
+    expect(source).toContain('pageSize: demoPageSize,')
     expect(source).toContain('currentPage: pgPage,')
     expect(source).toContain('onPageChange: handlePageChange,')
     expect(source).toContain('onPageSizeChange: handlePageSizeChange,')

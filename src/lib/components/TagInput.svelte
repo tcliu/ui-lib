@@ -240,6 +240,9 @@
   // hides.
   const showClear = $derived(clearable && !tagsEqual(value ?? [], defaultValue ?? []) && !disabled)
   const resolvedClearLabel = $derived(clearLabel ?? i18n.t('common.clear'))
+  // Every combobox needs a name: the placeholder when the caller sets one,
+  // otherwise the localized suggestions label (never an empty string).
+  const resolvedAriaLabel = $derived(placeholder || i18n.t('tagInput.suggestions'))
   const placement = $derived(clearPlacement === 'auto' ? 'inside' : clearPlacement)
   // The container that hosts the clear button is chosen from `clearable`, not
   // from whether tags are present, so toggling the value never recreates the
@@ -403,7 +406,7 @@
         {placeholder}
         {disabled}
         role="combobox"
-        ariaLabel={placeholder}
+        ariaLabel={resolvedAriaLabel}
         aria-expanded={open}
         aria-controls={listboxId}
         aria-autocomplete="list"

@@ -49,11 +49,13 @@
     disabledOn: false,
     align: 'left',
     alignOn: false,
-    filterPlaceholder: 'Search…',
+    filterPlaceholder: 'Search...',
     filterPlaceholderOn: false,
+    filterLabel: 'Search',
+    filterLabelOn: false,
     buttonClass: '',
     buttonClassOn: false,
-    emptyText: 'No results.',
+    emptyText: 'No options',
     emptyTextOn: false,
     clearable: 'no' as TriState,
     clearableOn: false,
@@ -97,6 +99,7 @@
   const demoAlign = $derived(pg.alignOn ? ((pg.align || undefined) as 'left' | 'right' | undefined) : undefined)
   const demoButtonClass = $derived(pg.buttonClassOn && pg.buttonClass ? pg.buttonClass : undefined)
   const demoFilterPlaceholder = $derived(pg.filterPlaceholderOn && pg.filterPlaceholder ? pg.filterPlaceholder : undefined)
+  const demoFilterLabel = $derived(pg.filterLabelOn && pg.filterLabel ? pg.filterLabel : undefined)
   const demoEmptyText = $derived(pg.emptyTextOn && pg.emptyText ? pg.emptyText : undefined)
   const demoPanelClass = $derived(pg.panelClassOn && pg.panelClass ? pg.panelClass : undefined)
   const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
@@ -135,6 +138,8 @@
       alignOn: pg.alignOn,
       filterPlaceholder: pg.filterPlaceholder,
       filterPlaceholderOn: pg.filterPlaceholderOn,
+      filterLabel: pg.filterLabel,
+      filterLabelOn: pg.filterLabelOn,
       buttonClass: pg.buttonClass,
       buttonClassOn: pg.buttonClassOn,
       emptyText: pg.emptyText,
@@ -161,8 +166,9 @@
     boolField({ name: 'clearable', defaultValue: 'false', note: 'Appends a cross button that selects the default value.', value: pg.clearable, onChange: v => (pg.clearable = v as TriState), enabled: pg.clearableOn, setEnabled: v => (pg.clearableOn = v) }),
     textField({ name: 'defaultValue', type: 'string?', defaultValue: "''", note: 'Baseline the clear button compares against: the option value (not its label); the cross hides while the committed value matches it.', value: pg.defaultValue, onChange: v => (pg.defaultValue = v), editorDefaultValue: '', clearable: true, enabled: pg.defaultValueOn, setEnabled: v => (pg.defaultValueOn = v) }),
     boolField({ name: 'disabled', defaultValue: 'false', note: 'Disables the trigger.', value: pg.disabled, onChange: v => (pg.disabled = v as TriState), enabled: pg.disabledOn, setEnabled: v => (pg.disabledOn = v) }),
-    textField({ name: 'emptyText', type: 'string?', defaultValue: "'No results.'", note: 'Shown when the filtered panel is empty.', value: pg.emptyText, onChange: v => (pg.emptyText = v), editorDefaultValue: 'No results.', clearable: true, placeholder: 'No results.', enabled: pg.emptyTextOn, setEnabled: v => (pg.emptyTextOn = v) }),
-    textField({ name: 'filterPlaceholder', type: 'string?', defaultValue: "'Search…'", note: 'Search input placeholder.', value: pg.filterPlaceholder, onChange: v => (pg.filterPlaceholder = v), editorDefaultValue: 'Search…', clearable: true, placeholder: 'Search…', enabled: pg.filterPlaceholderOn, setEnabled: v => (pg.filterPlaceholderOn = v) }),
+    textField({ name: 'emptyText', type: 'string?', defaultValue: '—', note: 'Shown when the filtered panel is empty; falls back to the localized label.', value: pg.emptyText, onChange: v => (pg.emptyText = v), clearable: true, enabled: pg.emptyTextOn, setEnabled: v => (pg.emptyTextOn = v) }),
+    textField({ name: 'filterPlaceholder', type: 'string?', defaultValue: '—', note: 'Search input placeholder; falls back to the localized label.', value: pg.filterPlaceholder, onChange: v => (pg.filterPlaceholder = v), clearable: true, enabled: pg.filterPlaceholderOn, setEnabled: v => (pg.filterPlaceholderOn = v) }),
+    textField({ name: 'filterLabel', type: 'string?', defaultValue: '—', note: 'Accessible name for the search input; falls back to the shared Search label.', value: pg.filterLabel, onChange: v => (pg.filterLabel = v), clearable: true, enabled: pg.filterLabelOn, setEnabled: v => (pg.filterLabelOn = v) }),
     boolField({ name: 'filterable', defaultValue: 'false', note: 'Adds a search field to the panel.', value: pg.filterable, onChange: v => (pg.filterable = v as TriState), enabled: pg.filterableOn, setEnabled: v => (pg.filterableOn = v) }),
     textField({ name: 'label', type: 'string', defaultValue: '—', note: 'Trigger chip text; usually the selected label.', value: pg.label, onChange: v => (pg.label = v), clearable: true, enabled: pg.labelOn, setEnabled: v => (pg.labelOn = v) }),
     jsonField({
@@ -230,6 +236,7 @@
       align={demoAlign}
       buttonClass={demoButtonClass}
       filterPlaceholder={demoFilterPlaceholder}
+      filterLabel={demoFilterLabel}
       emptyText={demoEmptyText}
       {autoPlace}
       panelClass={demoPanelClass}

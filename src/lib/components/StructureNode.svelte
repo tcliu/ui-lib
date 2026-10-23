@@ -147,6 +147,10 @@
 
   function measureText(text: string): number {
     if (!measureEl) return 0
+    // Sanctioned measurement (ARCHITECTURE.md, Sanctioned DOM access): the
+    // inline edit needs the text's width synchronously, before the first
+    // paint, so a declarative render + flush would show the field at width 0
+    // for a frame. The span is invisible and cleared immediately.
     measureEl.textContent = text
     const width = measureEl.getBoundingClientRect().width
     // The span is visually hidden but still in the DOM text; clear it once

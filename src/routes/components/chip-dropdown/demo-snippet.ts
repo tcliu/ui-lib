@@ -40,6 +40,8 @@ export interface ChipDropdownSnippetState {
   alignOn: boolean
   filterPlaceholder: string
   filterPlaceholderOn: boolean
+  filterLabel: string
+  filterLabelOn: boolean
   buttonClass: string
   buttonClassOn: boolean
   emptyText: string
@@ -84,6 +86,8 @@ export function buildChipDropdownSnippet({
   alignOn,
   filterPlaceholder,
   filterPlaceholderOn,
+  filterLabel,
+  filterLabelOn,
   buttonClass,
   buttonClassOn,
   emptyText,
@@ -120,6 +124,7 @@ export function buildChipDropdownSnippet({
     ...(disabledOn ? flagLine('disabled', disabled, indent, 'no') : []),
     ...(alignOn && align && align !== 'left' ? [`${indent}align="${align}"`] : []),
     ...(filterPlaceholderOn && filterPlaceholder ? [`${indent}filterPlaceholder="${escapeAttr(filterPlaceholder)}"`] : []),
+    ...(filterLabelOn && filterLabel ? [`${indent}filterLabel="${escapeAttr(filterLabel)}"`] : []),
     ...(buttonClassOn && buttonClass ? [`${indent}buttonClass="${escapeAttr(buttonClass)}"`] : []),
     ...(emptyTextOn && emptyText ? [`${indent}emptyText="${escapeAttr(emptyText)}"`] : []),
     ...(clearableOn ? flagLine('clearable', clearable, indent, 'no') : []),

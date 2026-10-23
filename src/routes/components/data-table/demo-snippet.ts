@@ -302,7 +302,7 @@ export function buildDataTableSnippet({
       : []),
     ...stageStaticOpenLines('', paneClass),
     '    <DataTable',
-    '      rows={visibleRows(rows, pgQuery, pgSortKey, pgSortDirection, pgPage, pgPageSize)}',
+    '      rows={visibleRows(rows, pgQuery, pgSortKey, pgSortDirection, pgPage, demoPageSize)}',
     '      columns={columns.filter(column => !hidden.has(column.key))}',
     '      rowId={row => row.id}',
     ...(showSearchOn && showSearch === 'no'
@@ -326,7 +326,7 @@ export function buildDataTableSnippet({
     '      bind:sortDirection={pgSortDirection}',
     '      pagination={{',
     '        total: visibleTotal(rows, pgQuery),',
-    '        pageSize: pgPageSize,',
+    '        pageSize: demoPageSize,',
     '        currentPage: pgPage,',
     '        onPageChange: handlePageChange,',
     '        onPageSizeChange: handlePageSizeChange,',

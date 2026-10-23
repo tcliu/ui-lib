@@ -192,12 +192,12 @@
 
   const i18n = getI18nContext()
 
-  const resolvedEmptyMessage = $derived(emptyMessage ?? 'No rows')
-  const resolvedSearchPlaceholder = $derived(searchPlaceholder ?? 'Search')
-  const resolvedSearchAriaLabel = $derived(searchAriaLabel ?? 'Search')
-  const resolvedChooserLabel = $derived(chooserLabel ?? 'Choose columns')
-  const resolvedChooserResetLabel = $derived(chooserResetLabel ?? 'Reset columns')
-  const resolvedSelectAllAriaLabel = $derived(selectAllAriaLabel ?? 'Select all')
+  const resolvedEmptyMessage = $derived(emptyMessage ?? i18n.t('table.noRows'))
+  const resolvedSearchPlaceholder = $derived(searchPlaceholder ?? i18n.t('search.placeholder'))
+  const resolvedSearchAriaLabel = $derived(searchAriaLabel ?? i18n.t('search.label'))
+  const resolvedChooserLabel = $derived(chooserLabel ?? i18n.t('table.chooseColumns'))
+  const resolvedChooserResetLabel = $derived(chooserResetLabel ?? i18n.t('table.resetColumns'))
+  const resolvedSelectAllAriaLabel = $derived(selectAllAriaLabel ?? i18n.t('table.selectAll'))
 
   // Pagination is configured when the object supplies its data and the
   // page-change handler, so omitting any of them renders no footer. An explicit
@@ -421,7 +421,7 @@
               <Checkbox
                 checked={selectedIds?.has(rowId(row)) ?? false}
                 {size}
-                ariaLabel={rowSelectAriaLabel?.(row) ?? 'Select row'}
+                ariaLabel={rowSelectAriaLabel?.(row) ?? i18n.t('table.selectRow')}
                 onChange={checked => onToggleSelection?.(rowId(row), checked)} />
             </td>
           {/if}
@@ -501,9 +501,9 @@
                   : '[@media(hover:hover)]:opacity-0'} group-focus-within:opacity-100 group-hover:opacity-100">
                 <button
                   type="button"
-                  class="flex leading-none transition-colors outline-none {isAsc
+                  class="flex rounded-sm leading-none transition-colors outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 {isAsc
                     ? 'text-cyan-400'
-                    : 'hover:text-cyan-300 focus:text-cyan-300'}"
+                    : 'hover:text-cyan-300 focus-visible:text-cyan-300'}"
                   aria-label={sortAriaLabel?.(column, 'asc') ?? i18n.t('table.sortAsc', { column: column.header })}
                   onclick={() => handleSortClick(column, 'asc')}>
                   <!-- The caret is cropped tight to the triangle, so `size` is the
@@ -512,9 +512,9 @@
                 </button>
                 <button
                   type="button"
-                  class="flex leading-none transition-colors outline-none {isDesc
+                  class="flex rounded-sm leading-none transition-colors outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 {isDesc
                     ? 'text-cyan-400'
-                    : 'hover:text-cyan-300 focus:text-cyan-300'}"
+                    : 'hover:text-cyan-300 focus-visible:text-cyan-300'}"
                   aria-label={sortAriaLabel?.(column, 'desc') ?? i18n.t('table.sortDesc', { column: column.header })}
                   onclick={() => handleSortClick(column, 'desc')}>
                   <CaretDownIcon size={10} />

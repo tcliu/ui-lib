@@ -34,7 +34,7 @@
     name: '',
     nameOn: false,
     stopPropagation: 'yes' as TriState,
-    stopPropagationOn: true,
+    stopPropagationOn: false,
   }
   let pg = $state(structuredClone(INITIAL))
 

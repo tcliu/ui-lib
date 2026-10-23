@@ -114,11 +114,11 @@
 
   // Header labels: each falls back to its English default when unset.
   const labels = $derived({
-    prop: headers?.prop ?? 'Prop',
-    type: headers?.type ?? 'Type',
-    default: headers?.default ?? 'Default',
-    value: headers?.value ?? 'Value',
-    note: headers?.note ?? 'Notes',
+    prop: headers?.prop ?? i18n.t('showcase.prop'),
+    type: headers?.type ?? i18n.t('showcase.type'),
+    default: headers?.default ?? i18n.t('showcase.default'),
+    value: headers?.value ?? i18n.t('showcase.value'),
+    note: headers?.note ?? i18n.t('showcase.note'),
   })
 
   const hasValueColumn = $derived(value != null || fields.some(field => field.editor != null))
@@ -245,7 +245,16 @@
   }
 
   function saveDialog() {
-    dialogField?.onChange?.(draft)
+    const field = dialogField
+    if (!field) return
+    // A commit that changed the text re-applies the row's eye; this is the one
+    // place that knows a commit happened, so the rule does not depend on a
+    // page's `onChange` (or on its sync write-back). An unchanged commit leaves
+    // the eye alone: the button icon row commits a fixed glyph and keeps the
+    // eye as the row's only control.
+    const changed = dialogDirty
+    field.onChange?.(draft)
+    if (changed) field.toggle?.onToggle(true)
     dialogField = null
   }
 
@@ -291,7 +300,7 @@
   <TextInput
     value={field.value ?? ''}
     size={size}
-    ariaLabel={`${field.name} value`}
+    ariaLabel={i18n.t('table.columnValue', { name: field.name })}
     placeholder={field.placeholder}
     clearable={field.clearable ?? false}
     clearLabel={field.clearLabel ?? i18n.t('table.clear', { name: field.name })}
@@ -310,7 +319,7 @@
     <TextArea
       value={field.value ?? ''}
       size={size}
-      ariaLabel={`${field.name} value`}
+      ariaLabel={i18n.t('table.columnValue', { name: field.name })}
       placeholder={field.placeholder}
       rows={2}
       inputClass={AREA_FILL_CLASS}
@@ -323,7 +332,7 @@
   <NumberInput
     value={field.value ?? ''}
     size={size}
-    ariaLabel={`${field.name} value`}
+    ariaLabel={i18n.t('table.columnValue', { name: field.name })}
     placeholder={field.placeholder}
     clearable={field.clearable ?? false}
     clearLabel={field.clearLabel ?? i18n.t('table.clear', { name: field.name })}
@@ -338,7 +347,7 @@
     activeValue={field.value ?? ''}
     defaultValue={literalDefault(field)}
     size={size}
-    ariaLabel={`${field.name} value`}
+    ariaLabel={i18n.t('table.columnValue', { name: field.name })}
     options={field.options ?? (field.editor === 'size' ? SIZE_OPTIONS : [])}
     filterable={field.editor === 'size' ? true : undefined}
     allowCustomValue={field.editor === 'size' && field.allowCustomValue ? true : undefined}
@@ -352,18 +361,21 @@
   <Checkbox
     checked={field.value === 'yes'}
     size={size}
-    ariaLabel={`${field.name} value`}
+    ariaLabel={i18n.t('table.columnValue', { name: field.name })}
     onChange={checked => field.onChange?.(checked ? 'yes' : 'no')} />
 {/snippet}
 
 {#snippet applyEye(field: FieldConfig)}
   {#if field.toggle}
+    {@const toggleLabel = field.toggle.enabled
+      ? i18n.t('table.unapply', { name: field.name })
+      : i18n.t('table.apply', { name: field.name })}
     <Button
       variant="ghost"
       size={size}
       icon={field.toggle.enabled ? eyeIcon : eyeSlashIcon}
-      ariaLabel={field.toggle.enabled ? `Unapply ${field.name}` : `Apply ${field.name}`}
-      tooltip={field.toggle.enabled ? `Unapply ${field.name}` : `Apply ${field.name}`}
+      ariaLabel={toggleLabel}
+      tooltip={toggleLabel}
       onClick={() => field.toggle?.onToggle(!field.toggle.enabled)} />
   {/if}
 {/snippet}
@@ -462,6 +474,7 @@
   showSearch={false}
   tableClassName="min-w-[36rem]"
   bordered={false}
+  {size}
   bodyScroll
   fillHeight />
 
@@ -481,7 +494,7 @@
         <LazyCodeEditor
           bind:content={draft}
           docType={dialogDocType}
-          editorAriaLabel={`${dialogField.name} editor`}
+          editorAriaLabel={i18n.t('table.columnEditor', { name: dialogField.name })}
           containerClass={`${dialogHeightClass} overflow-hidden rounded-md border border-slate-700 bg-slate-950`}
           editorClass="h-full" />
         {#if !dialogValid && dialogInvalidMessage}

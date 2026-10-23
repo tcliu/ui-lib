@@ -117,7 +117,9 @@ describe('buildTagInputSnippet', () => {
     expect(set).toContain('chip={chip}')
     expect(set).toContain('option={option}')
     expect(set).toContain('{#snippet chip(tag, remove)}')
-    expect(set).toContain('<span>#{tag} <button type="button" onclick={remove}>×</button></span>')
+    expect(set).toContain(
+      '<span>#{tag} <button type="button" onclick={remove} aria-label="Remove {tag}">×</button></span>',
+    )
     expect(set).toContain('{#snippet option(tag)}')
     expect(set).toContain('<span>»{tag}</span>')
     expect(set).toContain('</TagInput>')

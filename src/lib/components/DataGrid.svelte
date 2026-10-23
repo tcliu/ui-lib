@@ -297,9 +297,9 @@
                         : '[@media(hover:hover)]:opacity-0'} group-hover:opacity-100 focus-within:opacity-100">
                       <button
                         type="button"
-                        class="flex leading-none transition-colors outline-none {isSortAsc
+                        class="flex rounded-sm leading-none transition-colors outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 {isSortAsc
                           ? 'text-cyan-400'
-                          : 'hover:text-cyan-300 focus:text-cyan-300'}"
+                          : 'hover:text-cyan-300 focus-visible:text-cyan-300'}"
                         aria-label={i18n.t('grid.sortAsc', { name: columnLabels?.[ci] ?? columnLetter(ci) })}
                         onmousedown={event => event.stopPropagation()}
                         onclick={() => editable && sort.handleSortClick(ci, 'asc')}
@@ -310,9 +310,9 @@
                       </button>
                       <button
                         type="button"
-                        class="flex leading-none transition-colors outline-none {isSortDesc
+                        class="flex rounded-sm leading-none transition-colors outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 {isSortDesc
                           ? 'text-cyan-400'
-                          : 'hover:text-cyan-300 focus:text-cyan-300'}"
+                          : 'hover:text-cyan-300 focus-visible:text-cyan-300'}"
                         aria-label={i18n.t('grid.sortDesc', { name: columnLabels?.[ci] ?? columnLetter(ci) })}
                         onmousedown={event => event.stopPropagation()}
                         onclick={() => editable && sort.handleSortClick(ci, 'desc')}
@@ -390,7 +390,7 @@
         {/if}
       </table>
     </div>
-    <div class="min-h-0 flex-1 overflow-auto" bind:this={gridContainer}>
+    <div tabindex="-1" class="min-h-0 flex-1 overflow-auto outline-none" bind:this={gridContainer}>
       <table
         role="grid"
         aria-label={i18n.t('grid.spreadsheet')}
