@@ -7,14 +7,14 @@
 // Mouse: left-click focuses a row, the [ ] box toggles selection, right-click
 // opens the menu, and the wheel scrolls the list, menus, and command output.
 // Keys n opens a branch-name prompt that creates a worktree (same setup as
-// scripts/create-worktree.mjs); d checks every row already merged into the
+// tools/create-worktree.mjs); d checks every row already merged into the
 // base branch with a clean working tree ([merged] badge) so Del reviews them
 // as one batch — a checkout holding uncommitted work is never offered, since
 // the delete path force-removes it.
 // The worktrees frame always uses
 // the whole console and reflows on resize. Worktree data comes from the shared
 // ./_worktrees.mjs library (no duplicated git logic); delete semantics mirror
-// scripts/delete-worktrees.mjs (remove worktree, then delete its branch), with
+// tools/delete-worktrees.mjs (remove worktree, then delete its branch), with
 // one safety divergence: unregistered dirs skip branch cleanup because their
 // branch name comes from a foreign .git and may collide with a real main-repo
 // branch. Rows and the detail line under the box report each checkout's
@@ -53,7 +53,7 @@ import path from 'node:path'
 import { stdin, stdout } from 'node:process'
 import { StringDecoder } from 'node:string_decoder'
 
-import { maskCommandLine } from './_run.mjs'
+import { maskCommandLine } from '../scripts/_run.mjs'
 
 import {
   DEFAULT_WORKTREES_DIR,
@@ -79,7 +79,7 @@ import {
   setWorktreesDir,
   setupWorktree,
   terminateProcessesInPath,
-} from './_worktrees.mjs'
+} from '../scripts/_worktrees.mjs'
 
 import {
   DIALOG_SIDE_PAD_COLS,
@@ -90,12 +90,12 @@ import {
   frameParts,
   padRight,
   truncate,
-} from './_tui.mjs'
-import { parseCliArgsOrExit } from './_terminal.mjs'
+} from '../scripts/_tui.mjs'
+import { parseCliArgsOrExit } from '../scripts/_terminal.mjs'
 
 // Pure layout/menu model lives in _worktree-tui/layout.mjs; the adapters below
 // bind terminal size and live state to it, so that module stays testable.
-import { createInputParser } from './_worktree-tui/input.mjs'
+import { createInputParser } from '../scripts/_worktree-tui/input.mjs'
 import {
   CHANGES_BODY_START,
   CHANGES_TAB_ROW,
@@ -129,7 +129,7 @@ import {
   renderRows,
   tabHitColumns,
   wrapPaneLine,
-} from './_worktree-tui/layout.mjs'
+} from '../scripts/_worktree-tui/layout.mjs'
 
 const DEFAULT_STATUS = `${c.green}Ready.${c.reset} u: changes · w: dir · Tab: menu · Space: select · Del: delete · c: cmd · s: shell · n: new · d: deprecated · r: refresh · q: quit.`
 
@@ -1220,7 +1220,7 @@ function cancelCreate() {
   redraw()
 }
 
-// Mirrors scripts/create-worktree.mjs: register, copy dev files, tag, carry
+// Mirrors tools/create-worktree.mjs: register, copy dev files, tag, carry
 // the main checkout's uncommitted changes. Validation failures keep the
 // dialog open with an error; setup failures clean up and report status. Only
 // `setupWorktree` failures roll back — the list refresh after a successful

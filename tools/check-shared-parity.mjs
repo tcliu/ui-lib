@@ -3,13 +3,13 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { createRequire } from 'node:module'
 import { join, posix } from 'node:path'
-import { ROOT } from './lib/root.mjs'
+import { ROOT } from '../scripts/lib/root.mjs'
 
 // Drift gate for the shared UI surface. `ui-lib` is the canonical source; a
 // sibling app must carry byte-identical copies of the shared directories and
 // files it actually uses, apart from the documented per-project exceptions.
 // Run from the `ui-lib` root:
-//   node scripts/check-shared-parity.mjs
+//   node tools/check-shared-parity.mjs
 // The gate resolves each sibling's own module references (imports plus literal
 // path references such as `node scripts/foo.mjs` in package.json), so it reasons
 // about usage, not mere presence:
@@ -60,11 +60,9 @@ const SHARED_SERVER_FILES = [
   'src/lib/server/sql-rewrite.mjs',
 ]
 
-// Never gated: a test file, the fixture a test drives, a test directory, and
-// the project's own gates (siblings do not carry them). The layout gate
-// (`check-test-layout.mjs`) keeps a test beside the module it exercises, so
-// these never reach the ported surface.
-const SKIP_BASENAMES = new Set(['check-shared-parity.mjs', 'check-test-layout.mjs'])
+// Never gated: a test file, the fixture a test drives, and a test directory.
+// The layout gate (`tools/check-test-layout.mjs`) keeps a test beside the
+// module it exercises, so these never reach the ported surface.
 const SKIP_FILE_RE = /(\.test\.[a-z]+|\.harness\.svelte)$/
 const SKIP_DIRS = new Set(['__tests__'])
 
@@ -75,7 +73,7 @@ function walk(dir) {
     const rel = `${dir}/${entry.name}`
     if (entry.isDirectory()) {
       if (!SKIP_DIRS.has(entry.name)) out.push(...walk(rel))
-    } else if (!SKIP_BASENAMES.has(entry.name) && !SKIP_FILE_RE.test(entry.name)) {
+    } else if (!SKIP_FILE_RE.test(entry.name)) {
       out.push(rel)
     }
   }

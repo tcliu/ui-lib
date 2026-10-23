@@ -20,8 +20,8 @@ import net from 'node:net'
 import { parseArgs as parseCliArgs } from 'node:util'
 import { pathToFileURL } from 'node:url'
 import { findRunningApps } from './find-running-apps.mjs'
-import { echoCommand } from './_run.mjs'
-import { readBranchFromGitDir } from './_worktrees.mjs'
+import { echoCommand } from '../scripts/_run.mjs'
+import { readBranchFromGitDir } from '../scripts/_worktrees.mjs'
 
 const START_TIMEOUT_MS = 120_000
 const POLL_MS = 500

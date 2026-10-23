@@ -10,7 +10,7 @@
 // than a module, so they keep their own root directory (`tests/`, `*.spec.ts`).
 //
 // Run from the project root:
-//   node scripts/check-test-layout.mjs
+//   node tools/check-test-layout.mjs
 // Exits non-zero and names every violation, so `npm run check` fails on a
 // test parked in the wrong place. The rule is what keeps the shared surface
 // honest: a sibling app ports `src/lib/components/` wholesale, so a test
@@ -27,13 +27,13 @@ const IGNORED_DIRS = new Set([
   '.netlify', '.output', '.pnpm-store',
 ])
 
-// A directory that holds only tests. Inside `src/` or `scripts/` it splits a
-// module from its spec; at the project root it splits the suite from the
-// code it covers.
+// A directory that holds only tests. Inside `src/`, `scripts/`, or `tools/` it
+// splits a module from its spec; at the project root it splits the suite from
+// the code it covers.
 const TEST_DIR_NAMES = new Set(['__tests__', '__test__', 'test', 'tests'])
 
 // Where each kind of test is allowed to live.
-const UNIT_TEST_ROOTS = ['src', 'scripts']
+const UNIT_TEST_ROOTS = ['src', 'scripts', 'tools']
 const BROWSER_TEST_ROOT = 'tests'
 
 const SOURCE_EXTENSIONS = ['.ts', '.js', '.mjs', '.cjs', '.svelte']

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-import { c } from './_terminal.mjs'
-import { interactiveShell } from './_interactive-shell.mjs'
-import { CHECKLIST_HINT, renderList } from './_pickers.mjs'
-import { errorMessage, logEvent } from './log-event.mjs'
-import { copyDevFiles, listCopyTargets, readDevTag, resolveWorktreesDir } from './_worktrees.mjs'
+import { c } from '../scripts/_terminal.mjs'
+import { interactiveShell } from '../scripts/_interactive-shell.mjs'
+import { CHECKLIST_HINT, renderList } from '../scripts/_pickers.mjs'
+import { errorMessage, logEvent } from '../scripts/log-event.mjs'
+import { copyDevFiles, listCopyTargets, readDevTag, resolveWorktreesDir } from '../scripts/_worktrees.mjs'
 
 export { copyDevFiles }
 

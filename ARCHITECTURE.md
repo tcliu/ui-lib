@@ -185,8 +185,8 @@ byte-identically by the consuming apps through the parity gate's server list.
 ## Worktrees
 
 Worktrees live under `.worktrees/` (created with
-`node scripts/create-worktree.mjs <branch>`). Deletion
-(`scripts/delete-worktrees.mjs`) refuses a target holding running processes — or
+`node tools/create-worktree.mjs <branch>`). Deletion
+(`tools/delete-worktrees.mjs`) refuses a target holding running processes — or
 whose process status is unreadable — and deletes it only with `--force` (which
 discards uncommitted work). `--kill`/`-k` instead offers to terminate the
 guarding processes first (SIGTERM then SIGKILL, default No), re-scans, and
@@ -195,7 +195,7 @@ deletes the now-unguarded targets; a non-interactive run needs both `--kill` and
 
 ## Shared parity gate
 
-`npm run check` runs `scripts/check-shared-parity.mjs` with `--strict`: it
+`npm run check` runs `tools/check-shared-parity.mjs` with `--strict`: it
 byte-compares the gated shared directories (`src/lib/components`,
 `src/lib/icons`, `src/lib/actions`, `src/lib/data-table`, `scripts`), the listed
 top-level `src/lib/*.{ts,mjs}` files, and the shared server utilities against
@@ -894,9 +894,9 @@ The two kinds of test are kept apart by what they exercise: a unit test drives
 a module, a browser flow drives a served app, so the browser specs keep the
 root `tests/` directory (`*.spec.ts`) — the name the SvelteKit scaffold gives
 that directory. The suite is still called end-to-end in the tooling (`npm run
-e2e`, `scripts/run-e2e.mjs`); only its directory follows the scaffold.
+e2e`, `tools/run-e2e.mjs`); only its directory follows the scaffold.
 
-`npm run check` runs `scripts/check-test-layout.mjs`: it fails on a test-only
+`npm run check` runs `tools/check-test-layout.mjs`: it fails on a test-only
 directory, a unit test outside `src/` or `scripts/`, a unit test whose
 directory holds no module, a unit test that imports no module from its own
 directory, and a spec filed on the wrong side of the split.

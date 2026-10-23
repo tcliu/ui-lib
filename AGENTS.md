@@ -256,6 +256,6 @@ npm test
 
 - Measure unit coverage with `npm run test:coverage` (vitest v8 provider); use the summary as evidence for test-coverage findings, never as a percentage target.
 - Browser (e2e) specs live one-per-component/concern under `tests/`, with shared helpers not one growing spec; anchor locators on roles, accessible names, or `data-*` hooks, never DOM nesting.
-- A unit test lives beside its module (`foo.test.ts`, fixture `*.harness.svelte`); browser specs stay in root `tests/`, with no test-only directory in `src/` or `scripts/`. `npm run check` enforces it (`scripts/check-test-layout.mjs`); shared parity exempts tests and harnesses. Mechanism in `ARCHITECTURE.md`.
+- A unit test lives beside its module (`foo.test.ts`, fixture `*.harness.svelte`); browser specs stay in root `tests/`, with no test-only directory in `src/`, `scripts/`, or `tools/`. `npm run check` enforces it (`tools/check-test-layout.mjs`); shared parity exempts tests and harnesses. Mechanism in `ARCHITECTURE.md`.
 - Portaled overlays render under `document.body`, not the demo hook, so anchor those assertions page-wide; match exactly when one accessible name prefixes another (`~/.agents/references/testing.md`).
 - TypeScript rides dual installs: keep `typescript@~6` main (`svelte-check` peers only on 5/6) and `@typescript/native` checking via `--tsgo`; promoting to 7 breaks the gate.

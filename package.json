@@ -26,7 +26,7 @@
   "scripts": {
     "dev": "vite dev --host",
     "build": "svelte-kit sync && vite build",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --tsgo && node scripts/check-test-layout.mjs && node scripts/check-shared-parity.mjs --strict",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --tsgo && node tools/check-test-layout.mjs && node tools/check-shared-parity.mjs --strict",
     "test": "vitest run --passWithNoTests",
     "test:coverage": "vitest run --coverage --passWithNoTests",
     "test:watch": "vitest",
@@ -35,7 +35,7 @@
     "publish:check": "npm run check && npm run build && npm test && node package/check.mjs --consumer",
     "audit": "npm audit",
     "format": "prettier --write '**/*.{js,ts,svelte}'",
-    "e2e": "node scripts/run-e2e.mjs",
+    "e2e": "node tools/run-e2e.mjs",
     "deploy": "node scripts/deploy.mjs",
     "heartbeat": "node scripts/heartbeat.mjs",
     "env:sync:vercel": "node ./scripts/sync-vercel-env.mjs",

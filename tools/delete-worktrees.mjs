@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 import path from 'node:path'
 
-import { c, parseCliArgsOrExit, selectOne } from './_terminal.mjs'
-import { interactiveShell } from './_interactive-shell.mjs'
-import { CHECKLIST_HINT, renderList, renderOptionPicker } from './_pickers.mjs'
-import { failExit } from './_deploy/core.mjs'
-import { errorMessage, logEvent } from './log-event.mjs'
+import { c, parseCliArgsOrExit, selectOne } from '../scripts/_terminal.mjs'
+import { interactiveShell } from '../scripts/_interactive-shell.mjs'
+import { CHECKLIST_HINT, renderList, renderOptionPicker } from '../scripts/_pickers.mjs'
+import { failExit } from '../scripts/_deploy/core.mjs'
+import { errorMessage, logEvent } from '../scripts/log-event.mjs'
 import {
   countDirtyFiles,
   deleteBranch,
@@ -14,7 +14,7 @@ import {
   removeWorktree,
   resolveWorktreesDir,
   terminateProcessesInPath,
-} from './_worktrees.mjs'
+} from '../scripts/_worktrees.mjs'
 
 function fail(message) {
   failExit(`${c.red}${message}${c.reset}`)
@@ -22,8 +22,8 @@ function fail(message) {
 
 function printUsage() {
   console.log(`${c.bold}Usage:${c.reset}`)
-  console.log('  scripts/delete-worktrees.mjs [paths or names...] [--yes]')
-  console.log('  scripts/delete-worktrees.mjs --interactive')
+  console.log('  tools/delete-worktrees.mjs [paths or names...] [--yes]')
+  console.log('  tools/delete-worktrees.mjs --interactive')
   console.log('')
   console.log('  --yes, -y   skip the delete confirmation (required when stdin is not a TTY)')
   console.log('  --force, -f delete guarded targets anyway (running processes or')
@@ -273,7 +273,7 @@ async function main() {
       console.log(`${c.green}Removed worktree${c.reset}: ${worktree.path}`)
       // Unregistered dirs get their branch from a foreign .git, so deleting
       // that name in the main repo can hit an unrelated real branch. Mirrors
-      // the safety divergence documented in scripts/worktree-manager.mjs.
+      // the safety divergence documented in tools/worktree-manager.mjs.
       let branchDeleted = false
       if (worktree.registered !== false && deleteBranch(root, worktree.branch)) {
         branchDeleted = true

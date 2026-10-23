@@ -21,7 +21,7 @@ organized, see `ARCHITECTURE.md`; for how to write code in this project, see
 | `VERCEL_PROJECT` | No | — | Vercel project slug used to auto-link an unlinked checkout |
 | `CLOUDFLARE_PROJECT` | Cloudflare only | — | Pages project name; the live URL is the Pages production hostname derived from it |
 | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare only | — | Cloudflare account ID for the Pages/API steps |
-| `DEV_TAG` | No | — | Worktree badge label (set in `.env.local` by `scripts/create-worktree.mjs`) |
+| `DEV_TAG` | No | — | Worktree badge label (set in `.env.local` by `tools/create-worktree.mjs`) |
 | `PROFILE` | No | — | Explicit `dev`/`prod` runtime profile. The scripts fall back to `dev` when it is unset; the `/api/info` card reports it as `null` in an app with no runtime profile |
 | `SQLITE_PATH` | No | `.data/dev.sqlite` | Dev database file (SQLite) |
 | `DATABASE_URL` | Prod only | — | Neon connection string; required when `PROFILE=prod` |

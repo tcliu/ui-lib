@@ -2,21 +2,21 @@
 import { existsSync } from 'node:fs'
 import path from 'node:path'
 
-import { c, parseCliArgsOrExit } from './_terminal.mjs'
-import { interactiveShell } from './_interactive-shell.mjs'
-import { askCancellable } from './_pickers.mjs'
+import { c, parseCliArgsOrExit } from '../scripts/_terminal.mjs'
+import { interactiveShell } from '../scripts/_interactive-shell.mjs'
+import { askCancellable } from '../scripts/_pickers.mjs'
 import {
   getWorktreesRoot,
   isValidBranchName,
   removeWorktreeAndBranch,
   resolveWorktreesDir,
   setupWorktree,
-} from './_worktrees.mjs'
+} from '../scripts/_worktrees.mjs'
 
 function printUsage() {
   console.log(`${c.bold}Usage:${c.reset}`)
-  console.log('  node scripts/create-worktree.mjs <branch>')
-  console.log('  node scripts/create-worktree.mjs --interactive')
+  console.log('  node tools/create-worktree.mjs <branch>')
+  console.log('  node tools/create-worktree.mjs --interactive')
 }
 
 function parseArgs(argv) {
