@@ -2,13 +2,14 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { createRequire } from 'node:module'
-import { join, posix } from 'node:path'
+import { join, posix, resolve } from 'node:path'
 import { ROOT } from '../scripts/lib/root.mjs'
 
-// Drift gate for the shared UI surface. `ui-lib` is the canonical source; a
+// Drift gate for the shared surface. This checkout is the canonical source; a
 // sibling app must carry byte-identical copies of the shared directories and
-// files it actually uses, apart from the documented per-project exceptions.
-// Run from the `ui-lib` root:
+// files it actually uses, apart from the forks the app declares in its own
+// `shared-parity.json`.
+// Run from the canonical project root:
 //   node tools/check-shared-parity.mjs
 // The gate resolves each sibling's own module references (imports plus literal
 // path references such as `node scripts/foo.mjs` in package.json), so it reasons
@@ -22,43 +23,26 @@ import { ROOT } from '../scripts/lib/root.mjs'
 // Exits non-zero so a port that was not synced back is caught in `check` rather
 // than discovered later.
 
-const SELF = 'ui-lib'
-// Config root: the `~/.agents` checkout that carries the project registry and
-// the parser dependency.
-const CONFIG_ROOT = process.env.AI_CONFIG_DIR ?? join(process.env.HOME ?? '', '.agents')
-const REGISTRY = join(CONFIG_ROOT, '.metadata', 'projects.yml')
-
-// Shared surface, by convention: every file under these directories is
-// canonical. App-private code stays out of them (ui-lib's own chrome lives
-// under src/routes/_chrome/), so no per-file list is maintained here.
-const SHARED_DIRS = [
-  'src/lib/components',
-  'src/lib/icons',
-  'src/lib/actions',
-  'src/lib/data-table',
-  'scripts',
-]
-
-// Top-level shared modules. src/lib/ also holds app-private modules,
-// subdirectories, locales, and tests, so only these files are gated.
-const SHARED_FILES = [
-  'src/lib/app-shell.ts',
-  'src/lib/dropdown-chrome.ts',
-  'src/lib/position-panel.svelte.ts',
-  'src/lib/size-scale.ts',
-  'src/lib/text-size.ts',
-]
-
-// Shared server utilities carried byte-identically by the consuming apps. A
-// directory named `server` marks its content server-only in SvelteKit, so the
-// app cannot pull these into a client bundle.
-const SHARED_SERVER_FILES = [
-  'src/lib/server/card.ts',
-  'src/lib/server/cron-expression.ts',
-  'src/lib/server/d1-binding.mjs',
-  'src/lib/server/log-format.mjs',
-  'src/lib/server/sql-rewrite.mjs',
-]
+// The gate surface is derived, not listed: everything the canonical project
+// carries that every app must keep byte-identical. `src/lib` publishes, so it is
+// gated wholesale apart from the app's own modules; `scripts/` is the shared
+// operations bundle (repo-local tooling lives in `tools/`, which is not gated).
+const GATED_SOURCES = ['src/lib', 'scripts']
+// App-only directories under `src/lib` (never published, never ported).
+const PRIVATE_DIRS = new Set(['app', 'showcase'])
+// Files each app owns and may legitimately differ: the package entry, its
+// dictionaries and store, its storage-key prefix, its logger wiring, and the
+// project-owned deploy/database config.
+const APP_OWNED = new Set([
+  'src/lib/index.ts',
+  'src/lib/i18n.svelte.ts',
+  'src/lib/column-width-storage.ts',
+  'src/lib/locales',
+  'src/lib/server/logging.ts',
+  'scripts/db-config.mjs',
+  'scripts/deploy.config.mjs',
+  'scripts/lib/cron-job.mjs',
+])
 
 // Never gated: a test file, the fixture a test drives, and a test directory.
 // The layout gate (`tools/check-test-layout.mjs`) keeps a test beside the
@@ -71,6 +55,8 @@ function walk(dir) {
   for (const entry of readdirSync(join(ROOT, dir), { withFileTypes: true })) {
     if (entry.name.startsWith('.')) continue
     const rel = `${dir}/${entry.name}`
+    if (APP_OWNED.has(rel)) continue
+    if (dir === 'src/lib' && PRIVATE_DIRS.has(entry.name)) continue
     if (entry.isDirectory()) {
       if (!SKIP_DIRS.has(entry.name)) out.push(...walk(rel))
     } else if (!SKIP_FILE_RE.test(entry.name)) {
@@ -80,44 +66,45 @@ function walk(dir) {
   return out
 }
 
-const SHARED = [...SHARED_DIRS.flatMap(walk), ...SHARED_FILES, ...SHARED_SERVER_FILES].sort()
+const SHARED = GATED_SOURCES.flatMap(dir => walk(dir)).sort()
 
-// Per-project exceptions with the reason each may legitimately differ. A
-// two-element entry exempts the file for every app; a three-element entry
-// `[app, path, reason]` exempts it for that app alone, so the canonical copy is
-// still byte-compared against the other apps. A file that carries no
-// project-specific content left (the schema apply script) is compared
-// byte-for-byte and excepted per app only for the apps still carrying their
-// own fork.
-const EXCEPTIONS = [
-  ['src/lib/column-width-storage.ts', 'per-app storage-key prefix'],
-  ['src/lib/i18n.svelte.ts', 'per-app locale dictionaries'],
-  ['scripts/db-config.mjs', 'per-project database configuration fork'],
-  ['scripts/deploy.config.mjs', 'project-owned plugin/target-availability/required-env selection'],
-  ['scripts/lib/cron-job.mjs', 'per-app scan job title'],
-  ['project-catalog', 'scripts/apply-schema.mjs', 'per-project schema fork'],
-  ['session-catalog', 'src/lib/server/cron-expression.ts', 'session-catalog has no scheduler; the cron parser is unused'],
-  ['oms', 'src/lib/components/BaseDialog.svelte', 'oms adoption pending its in-flight full implementation'],
-  ['oms', 'src/lib/components/SelectDropdown.svelte', 'oms adoption pending its in-flight full implementation'],
-  [
-    'oms',
-    'src/lib/components/select-dropdown-styles.ts',
-    'oms adoption pending its in-flight full implementation',
-  ],
-  [
-    'project-catalog',
-    'src/lib/components/EditableText.svelte',
-    'project-catalog has an in-flight EditableText rewrite; the file is unreferenced until that work lands',
-  ],
-  [
-    'project-catalog',
-    'src/lib/text-size.ts',
-    'project-catalog has an in-flight EditableText rewrite; the module it imports is unreferenced until that work lands',
-  ],
-]
-const globalExceptions = new Set(EXCEPTIONS.filter(entry => entry.length === 2).map(([p]) => p))
-const appExceptions = EXCEPTIONS.filter(entry => entry.length === 3)
-const isAppExcepted = (app, rel) => appExceptions.some(([name, p]) => name === app && p === rel)
+// Config root: the `~/.agents` checkout that carries the project registry and
+// the parser dependency.
+const CONFIG_ROOT = process.env.AI_CONFIG_DIR ?? join(process.env.HOME ?? '', '.agents')
+const REGISTRY = join(CONFIG_ROOT, '.metadata', 'projects.yml')
+
+/**
+ * The forks a project declares for itself, with the reason it keeps them. The
+ * canonical gate carries no project names: an app that must diverge says so in
+ * its own `shared-parity.json`, and a declaration that no longer differs is
+ * reported as stale so the list can only shrink.
+ */
+function declaredForks(app) {
+  const file = join(app.path, 'shared-parity.json')
+  if (!existsSync(file)) return { forks: new Set(), stale: [] }
+  let parsed
+  try {
+    parsed = JSON.parse(readFileSync(file, 'utf8'))
+  } catch (error) {
+    console.error(`shared-parity: failed to parse ${file}: ${error.message}`)
+    process.exit(2)
+  }
+  const entries = parsed?.forks
+  if (!Array.isArray(entries)) {
+    console.error(`shared-parity: ${file} must carry a \`forks\` list`)
+    process.exit(2)
+  }
+  const forks = new Set()
+  const stale = []
+  for (const [index, entry] of entries.entries()) {
+    if (typeof entry?.path !== 'string' || !entry.path || typeof entry?.reason !== 'string' || !entry.reason) {
+      console.error(`shared-parity: ${file}:forks[${index}] must carry string \`path\` and \`reason\``)
+      process.exit(2)
+    }
+    forks.add(entry.path)
+  }
+  return { forks, stale }
+}
 
 // The registry is YAML: parse it with the `yaml` package resolved from the
 // config root, and fail fast (with the file and location) on malformed content.
@@ -170,11 +157,12 @@ function readRegistry() {
 function projectPaths() {
   const entries = readRegistry()
   if (entries === null) return []
-  return entries.filter(e => e.name !== SELF && !isExceptedName(e.name))
+  // The canonical checkout is the source, not a consumer; an entry without a
+  // `src/lib` tree carries no shared surface.
+  return entries.filter(
+    entry => resolve(entry.path) !== resolve(ROOT) && existsSync(join(entry.path, 'src', 'lib')),
+  )
 }
-
-// Non-SvelteKit siblings carry no shared UI surface.
-const isExceptedName = name => name === 'ai'
 
 // Content plus the executable bit: a sibling that loses `chmod +x` on a shared
 // script still byte-matches, so the shebang stops being honoured there and the
@@ -327,7 +315,7 @@ if (apps.length === 0) {
   process.exit(0)
 }
 if (!existsSync(join(ROOT, 'src', 'lib'))) {
-  console.error('shared-parity: run this from the ui-lib project root')
+  console.error('shared-parity: run this from the canonical project root')
   process.exit(2)
 }
 
@@ -337,6 +325,7 @@ const deadPorts = []
 const notNeeded = []
 let compared = 0
 
+const declarations = new Map(apps.map(app => [app.name, declaredForks(app)]))
 const usageCache = new Map()
 const usageFor = app => {
   if (!usageCache.has(app.path)) usageCache.set(app.path, collectUsage(app.path))
@@ -344,7 +333,6 @@ const usageFor = app => {
 }
 
 for (const rel of SHARED) {
-  if (globalExceptions.has(rel)) continue
   const canonical = join(ROOT, rel)
   if (!existsSync(canonical)) {
     console.error(`shared-parity: canonical file missing: ${rel}`)
@@ -352,7 +340,7 @@ for (const rel of SHARED) {
   }
   const want = hash(canonical)
   for (const app of apps) {
-    if (isAppExcepted(app.name, rel)) continue
+    if (declarations.get(app.name).forks.has(rel)) continue
     const usage = usageFor(app)
     const target = join(app.path, rel)
     if (existsSync(target)) {
@@ -391,6 +379,21 @@ if (diverged.length > 0) {
 if (process.argv.includes('--strict') && deadPorts.length > 0) {
   console.log(`\nshared-parity: --strict fails on dead ports; delete them or add a documented exception.`)
   process.exit(1)
+}
+
+const staleDeclarations = []
+for (const app of apps) {
+  for (const rel of declarations.get(app.name).forks) {
+    const target = join(app.path, rel)
+    const canonical = join(ROOT, rel)
+    if (existsSync(target) && existsSync(canonical) && hash(target) === hash(canonical)) {
+      staleDeclarations.push(`${app.name}: ${rel}`)
+    }
+  }
+}
+if (staleDeclarations.length > 0) {
+  console.log(`shared-parity: ${staleDeclarations.length} stale declaration(s) (now identical — remove the entry):`)
+  for (const entry of staleDeclarations) console.log(`  stale    ${entry}`)
 }
 
 console.log(

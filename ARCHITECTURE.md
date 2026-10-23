@@ -195,14 +195,14 @@ deletes the now-unguarded targets; a non-interactive run needs both `--kill` and
 
 ## Shared parity gate
 
-`npm run check` runs `tools/check-shared-parity.mjs` with `--strict`: it
-byte-compares the gated shared directories (`src/lib/components`,
-`src/lib/icons`, `src/lib/actions`, `src/lib/data-table`, `scripts`), the listed
-top-level `src/lib/*.{ts,mjs}` files, and the shared server utilities against
-each registered sibling, resolving each sibling's own module references so a
+`npm run check` runs `tools/check-shared-parity.mjs` with `--strict`: it derives
+the gated surface (everything under `src/lib` and `scripts/`, minus the app-only
+directories, the app-owned files, and tests) and byte-compares it against each
+registered sibling, resolving each sibling's own module references so a
 present-but-unreferenced port is flagged as dead. It fails on a divergence or a
-dead port; a deliberate divergence is recorded in the script's documented
-exception list with a reason.
+dead port. The gate carries no project names: an app that must diverge declares
+the fork and its reason in its own `shared-parity.json`, and the gate reports a
+declaration as stale once the file matches canonical again.
 
 ## The publishable package
 

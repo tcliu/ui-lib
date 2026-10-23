@@ -41,7 +41,7 @@ Project-specific development conventions for the UI Library web app.
 - Everything under `src/lib` is published except `server/`, `showcase/` and `app/`, so an app-only module belongs in one of those three; the package build derives its file list and runtime dependencies from what is left.
 - Shared components never traverse or manipulate the DOM; sanctioned exceptions and the permitted `svelte-ignore` suppressions are in `ARCHITECTURE.md`. Never suppress another `a11y_*` warning or `state_referenced_locally`.
 - Plain-text hints use the `tooltip` prop with the shared `Tooltip` component; a disabled `Button`'s tooltip rides its non-disabled wrapper (disabled triggers fire no events).
-- `npm run check` enforces shared parity; a change is complete only once siblings are re-ported or the divergence is a documented exception. Mechanism in `ARCHITECTURE.md`.
+- `npm run check` enforces shared parity; a change is complete only once siblings are re-ported or the app declares the fork and its reason in its own `shared-parity.json`. Mechanism in `ARCHITECTURE.md`.
 - A module only the server runtime and the scripts use lives under `src/lib/server/`, which SvelteKit keeps out of the client bundle; the scripts import the same file, so the two runtimes cannot drift. Mechanism in `ARCHITECTURE.md`.
 - Keep shared scripts byte-identical: read per-app values from ungated app files, never hardcode an app name or path; project-owned data stays out of gated directories.
 - Tag editing stays one shared control (`TagInput`); map an app's richer tag
