@@ -1,3 +1,4 @@
+// parity: app-owned — the app wires its own logger
 // Shared server-side event logging: one line per event in the documented format
 // `<ISO timestamp> <LEVEL> ip=<ip> action=<action> <key>=<JSON value> ...`. The
 // CLI-side sibling is `scripts/log-event.mjs`, which emits the same shape with

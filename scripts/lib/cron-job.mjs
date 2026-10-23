@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// parity: app-owned — the app's scan job title
 // Minimal cron-job.org REST client (https://docs.cron-job.org/rest-api.html).
 //
 // There is no official Node.js SDK or CLI for cron-job.org, and the API is

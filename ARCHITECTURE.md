@@ -200,9 +200,10 @@ the gated surface (everything under `src/lib` and `scripts/`, minus the app-only
 directories, the app-owned files, and tests) and byte-compares it against each
 registered sibling, resolving each sibling's own module references so a
 present-but-unreferenced port is flagged as dead. It fails on a divergence or a
-dead port. The gate carries no project names: an app that must diverge declares
-the fork and its reason in its own `shared-parity.json`, and the gate reports a
-declaration as stale once the file matches canonical again.
+dead port. The gate carries no path list: a file that owns a per-app value marks its own
+header `// parity: app-owned — reason`, and an app that must diverge declares the
+fork and its reason in its own `shared-parity.json`. A declaration that matches
+canonical again is reported as stale.
 
 ## The publishable package
 

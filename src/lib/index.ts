@@ -1,3 +1,4 @@
+// parity: app-owned — the package entry, never vendored into an app
 // The package's public API.
 //
 // The components and icons are imported by their own path

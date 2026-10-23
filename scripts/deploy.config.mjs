@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// parity: app-owned — project deploy selection
 // deploy.config.mjs — shared loader for this project's deploy capability
 // selection. Base targets (vercel, cloudflare) are offered when their required
 // config resolves at runtime; a plugin that is not selected is inert even

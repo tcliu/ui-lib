@@ -1,3 +1,4 @@
+// parity: app-owned — each app carries its own dictionaries
 import { browser } from '$app/environment'
 import { getContext, hasContext, setContext } from 'svelte'
 import { en } from './locales/en'

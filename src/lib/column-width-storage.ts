@@ -1,3 +1,4 @@
+// parity: app-owned — the storage-key prefix is per app
 const STORAGE_KEY_PREFIX = 'ui-lib:column-widths:'
 
 const DEFAULT_WIDTH = 128

@@ -1,3 +1,4 @@
+// parity: app-owned — the app's dictionary
 export const zhTW = {
   common: {
     close: '關閉',

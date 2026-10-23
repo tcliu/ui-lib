@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// parity: app-owned — project database configuration
 
 import { Pool } from '@neondatabase/serverless'
 import { readFileSync } from 'node:fs'
