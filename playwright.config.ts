@@ -1,3 +1,4 @@
+import { cpus } from 'node:os'
 import { defineConfig } from '@playwright/test'
 
 const baseURL = process.env.E2E_BASE_URL
@@ -11,8 +12,10 @@ export default defineConfig({
   globalTeardown: './tests/global-teardown.ts',
   timeout: 60_000,
   expect: { timeout: 10_000 },
-  fullyParallel: false,
-  workers: 1,
+  fullyParallel: true,
+  workers: process.env.E2E_WORKERS
+    ? Number(process.env.E2E_WORKERS)
+    : Math.min(8, Math.max(1, Math.floor(cpus().length / 2))),
   reporter: [['list']],
   use: {
     baseURL,
