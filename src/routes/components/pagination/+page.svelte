@@ -89,7 +89,6 @@
       if (parsed[field]) next[field] = parsed[field]
     }
     pg.labels = next
-    pg.labelsEnabled = true
   }
 
   // Read the inline `labels={{ ... }}` expression back into a JSON draft:
@@ -226,6 +225,7 @@
         options={customOptions}
         onSelect={() => {
           pg.labels = { ...CUSTOM_LABELS }
+          pg.labelsEnabled = true
         }}
         clearable
         clearLabel="Clear labels"

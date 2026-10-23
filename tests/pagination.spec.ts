@@ -11,7 +11,7 @@ test('showcase: the Pagination trailing cell edits text through a dialog applied
 
   const demo = showcaseDemo(page)
 
-  // The dialog commits text but the eye stays off, so the demo is unchanged.
+  // The dialog commits text and re-applies the eye, so the demo pins it.
   await page.getByRole('button', { name: 'Edit trailing' }).click()
   const dialog = page.getByRole('dialog', { name: 'Edit trailing' })
   await expect(dialog).toBeVisible()
@@ -19,10 +19,6 @@ test('showcase: the Pagination trailing cell edits text through a dialog applied
   await replaceSnippet(page, '1–200 of 200', dialog)
   await dialog.getByRole('button', { name: 'OK', exact: true }).click()
   await expect(dialog).toHaveCount(0)
-  await expect(demo).not.toContainText('1–200 of 200')
-
-  // Applying the eye pins the content to the row's right edge.
-  await page.getByRole('button', { name: 'Apply trailing' }).click()
   await expect(demo).toContainText('1–200 of 200')
 
   // Unapplying removes it again.
@@ -54,6 +50,71 @@ test('showcase: the Pagination currentPage Value cell jumps the demo', async ({ 
   await currentPageCell.click()
   await currentPageCell.fill('7')
   await expect(jump).toHaveValue('7')
+})
+
+// The active page cell is the jump field: it must be the same box as a page
+// button holding the same text — square at one digit, wider only when its own
+// label needs the room — with the accent color as the only styling difference.
+test('showcase: pagination page cells are square and grow only for wider text', async ({ page }) => {
+  await page.goto('/components/pagination')
+  await page.waitForLoadState('networkidle')
+
+  const demo = showcaseDemo(page)
+  const jump = demo.getByRole('textbox')
+  const oneDigit = demo.getByRole('button', { name: '1', exact: true })
+  const twoDigits = demo.getByRole('button', { name: '20', exact: true })
+
+  const square = await jump.boundingBox()
+  const oneBox = await oneDigit.boundingBox()
+  expect(square).not.toBeNull()
+  expect(square!.width).toBe(square!.height)
+  expect(square!.width).toBeCloseTo(oneBox!.width, 0)
+
+  // Same box metrics as a page button; only the accent (and the caret) differ.
+  const metrics = await Promise.all(
+    [jump, oneDigit].map(locator =>
+      locator.evaluate(node => {
+        const style = getComputedStyle(node)
+        return [
+          style.height,
+          style.paddingLeft,
+          style.paddingRight,
+          style.borderRadius,
+          style.borderWidth,
+          style.fontSize,
+          style.fontWeight,
+        ].join('|')
+      }),
+    ),
+  )
+  expect(metrics[0]).toBe(metrics[1])
+
+  // Typing a second digit widens the cell to a two-digit page button's box.
+  const twoBox = await twoDigits.boundingBox()
+  await jump.fill('12')
+  await expect.poll(async () => (await jump.boundingBox())?.width ?? 0).toBeGreaterThan(square!.width)
+  expect(Math.abs((await jump.boundingBox())!.width - twoBox!.width)).toBeLessThanOrEqual(1)
+})
+
+test('showcase: clicking the active page field puts the caret at the end', async ({ page }) => {
+  await page.goto('/components/pagination')
+  await page.waitForLoadState('networkidle')
+
+  const demo = showcaseDemo(page)
+  // Two digits, so the clicked position (the start) differs from the end.
+  const currentPageCell = page.getByRole('textbox', { name: 'currentPage value', exact: true })
+  await currentPageCell.click()
+  await currentPageCell.fill('12')
+  const jump = demo.getByRole('textbox')
+  await expect(jump).toHaveValue('12')
+
+  // Focus, then click inside the left padding: the browser would put the caret
+  // at the start, the field moves it after the value.
+  await jump.click()
+  await jump.click({ position: { x: 3, y: 8 } })
+  await expect
+    .poll(() => jump.evaluate(element => (element as HTMLInputElement).selectionStart))
+    .toBe(2)
 })
 
 test('showcase: the Pagination pageSize Value cell resizes the demo pages', async ({ page }) => {

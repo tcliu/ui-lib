@@ -75,14 +75,14 @@
   const canGoNext = $derived(currentPage < totalPages)
 
   const iconButtonClass =
-    'relative inline-flex h-[var(--pg-btn)] w-[var(--pg-btn)] items-center justify-center rounded-md border border-slate-700 bg-slate-950 font-semibold text-slate-100 outline-none transition hover:border-cyan-500 hover:text-cyan-300 focus:border-cyan-500 focus:text-cyan-300 disabled:cursor-not-allowed disabled:opacity-40'
+    'relative inline-flex h-[var(--pg-btn)] w-[var(--pg-btn)] items-center justify-center rounded-md border border-slate-700 bg-slate-950 font-semibold text-slate-100 outline-none transition hover:border-cyan-500 hover:text-cyan-300 focus-visible:border-cyan-500 focus-visible:text-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-500 disabled:cursor-not-allowed disabled:opacity-40'
 
   // Sizing-only fragment shared by the page buttons and the ellipsis
   // placeholders (which carry no border, surface, or hover chrome).
   const pageButtonBox = 'h-[var(--pg-btn)] min-w-[var(--pg-btn)] px-[var(--pg-pad-x)]'
 
   const pageButtonClass =
-    `relative inline-flex ${pageButtonBox} items-center justify-center rounded-md border border-slate-700 bg-slate-950 font-semibold text-slate-100 outline-none transition hover:border-cyan-500 hover:text-cyan-300 focus:border-cyan-500 focus:text-cyan-300 disabled:cursor-not-allowed disabled:opacity-40`
+    `relative inline-flex ${pageButtonBox} items-center justify-center rounded-md border border-slate-700 bg-slate-950 font-semibold text-slate-100 outline-none transition hover:border-cyan-500 hover:text-cyan-300 focus-visible:border-cyan-500 focus-visible:text-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-500 disabled:cursor-not-allowed disabled:opacity-40`
 
   const pageNumbers = $derived.by(() => {
     if (totalPages <= 7) {
@@ -126,15 +126,18 @@
     })
   })
 
-  // Width for the jump input: the widest page number plus the text being
-  // typed, with the buttons' padding and border and a 2px caret allowance —
-  // the same box as the page buttons, never clipped. Inline style because
-  // runtime widths must not be utilities.
-  const pageInputDigits = $derived(Math.max(1, String(totalPages).length, pageJumpInputValue.length))
-  const pageInputStyle = $derived.by(() => {
-    const pad = `${pgMetrics.padX}px`
-    return `padding-left:${pad};padding-right:${pad};width:calc(${pageInputDigits}ch + 2 * ${pad} + 4px)`
-  })
+  // A page cell is square at rest: the block height floors its width, and only
+  // its own label widens it (the content plus the cell's padding and border).
+  // CSS alone sizes every cell — the page buttons from their text, the active
+  // jump field from its value through `field-sizing` — so an active and an
+  // inactive cell holding the same text render the same width.
+  //
+  // The active page is the editable jump field. It shares the page buttons'
+  // box and chrome; the accent border/text marks it as the current page. The
+  // fixed width is the fallback for a browser without `field-sizing`: it keeps
+  // the square and lets an over-long entry scroll inside it.
+  const jumpInputClass =
+    'w-[var(--pg-btn)] min-w-[var(--pg-btn)] [@supports(field-sizing:content)]:w-auto [@supports(field-sizing:content)]:field-sizing-content h-[var(--pg-btn)] rounded-md border border-cyan-500 bg-slate-950 px-[var(--pg-pad-x)] text-center text-[length:var(--pg-font)] font-semibold text-cyan-300 outline-none focus-visible:border-cyan-500 focus-visible:ring-2 focus-visible:ring-cyan-500'
 
   function goToPage(page: number) {
     if (page < 1 || page > totalPages || page === currentPage) {
@@ -218,12 +221,12 @@
         {size}
         min={1}
         max={totalPages}
-        inputStyle={pageInputStyle}
         onblur={handlePageInputBlur}
         onkeydown={handlePageInputKeydown}
         ariaLabel={resolvedCurrentPageLabel}
         showControls={false}
-        className={`h-[var(--pg-btn)] min-w-[var(--pg-btn)] rounded-md border border-cyan-500 bg-slate-950 text-center text-[length:var(--pg-font)] font-semibold text-cyan-300 outline-none focus-visible:border-cyan-400 focus-visible:ring-2 focus-visible:ring-cyan-500/40`} />
+        caretAtEnd
+        className={jumpInputClass} />
     {:else}
       <button type="button" onclick={() => goToPage(pageNum)} class={pageButtonClass}>{pageNum}</button>
     {/if}

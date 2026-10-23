@@ -76,6 +76,40 @@ describe('Pagination numeric size', () => {
   })
 })
 
+// Every page cell sizes itself in CSS: a page button from its own text (floored
+// square by `min-w-[var(--pg-btn)]`), the active jump field from its value
+// through `field-sizing`. No caller computes a width.
+describe('Pagination page cells', () => {
+  function mountPages(): void {
+    instance = mount(Pagination, {
+      target,
+      props: { total: 200, pageSize: 10, currentPage: 3, onPageChange: () => {} },
+    })
+    flushSync()
+  }
+
+  function pageButton(label: string): HTMLButtonElement | undefined {
+    return [...target.querySelectorAll('button')].find(
+      button => button.textContent?.trim() === label && button.className.includes('min-w-[var(--pg-btn)]'),
+    )
+  }
+
+  it('sizes every page cell in CSS, with no per-cell width computation', () => {
+    mountPages()
+    // A page button carries no inline width: one digit is floored square, two
+    // digits widen it from its own text.
+    expect(pageButton('1')?.getAttribute('style')).toBeNull()
+    expect(pageButton('20')?.getAttribute('style')).toBeNull()
+    // The active cell is the same box: the square floor plus the button's
+    // padding, with `field-sizing` tracking its own value.
+    const jump = target.querySelector('input')!
+    expect(jump.getAttribute('style') ?? '').not.toContain('width')
+    expect(jump.className).toContain('min-w-[var(--pg-btn)]')
+    expect(jump.className).toContain('px-[var(--pg-pad-x)]')
+    expect(jump.className).toContain('[@supports(field-sizing:content)]:field-sizing-content')
+  })
+})
+
 describe('Pagination page-size options', () => {
   function openPageSizeOptions(): string[] {
     target.querySelector('[aria-label="Page size"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
