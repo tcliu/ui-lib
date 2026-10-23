@@ -18,6 +18,43 @@ npm run dev        # dev server (Vite, host-exposed)
 - `npm run e2e` runs the Playwright specs against a running or freshly started
   server; `npm run test:coverage` measures unit coverage.
 
+## The npm package
+
+The shared surface in `src/lib` also ships as `@codepg/ui-lib`. The package is
+built from the same sources — it is a generated artifact, not a second copy.
+
+```bash
+npm run package:build   # compile the surface into dist/ and pack the tarball
+npm run publish:check   # verify the package and build a scratch consumer
+```
+
+`dist/` is gitignored. A consuming app installs the tarball
+(`@codepg/ui-lib`) and imports the components by name; the app's own i18n
+dictionary merges over the shared one. See `ARCHITECTURE.md` for the surface,
+the rewrite and the exports map.
+
+### Publishing locally
+
+A local registry rehearses the real publish path — `npm publish` → registry →
+consumer install — without an npm account:
+
+```bash
+npx verdaccio --config <config> --listen 4873   # the registry
+npm run package:build
+npm run publish:local
+```
+
+`publish:local` runs `cd dist && npm publish --registry
+http://localhost:4873/ --tag latest`: it publishes the built package, never
+the app root, and the explicit tag keeps a rehearsal working once the registry
+already holds a higher version.
+
+The consumer then installs it like any published package
+(`"@codepg/ui-lib": "^0.1.0"`). Two consequences: a registry never accepts the
+same version twice, so every shared-surface change needs a new version; and the
+consumer's lockfile pins the registry's URL, so it is a local artifact until
+the package is published for real.
+
 ## Environment variables
 
 `.env.example` is the single example file documenting all knobs; it is never

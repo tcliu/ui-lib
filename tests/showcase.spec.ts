@@ -39,13 +39,13 @@ test('showcase: the theme icon menu changes the document theme', async ({ page }
 
 test('showcase: a deep link selects its component in the picker', async ({ page }) => {
   await page.goto('/components/tabs')
-  await expect(page.getByRole('heading', { level: 1, name: 'Tabs' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 2, name: 'Tabs' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Tabs' })).toHaveAttribute('aria-current', 'page')
 })
 
 test('showcase: an unknown slug renders the localized not-found state', async ({ page }) => {
   await page.goto('/components/nope')
-  await expect(page.getByRole('heading', { level: 1, name: 'Component not found' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 2, name: 'Component not found' })).toBeVisible()
 })
 
 test('showcase: a component page links to related components as chips', async ({ page }) => {
@@ -56,7 +56,7 @@ test('showcase: a component page links to related components as chips', async ({
   await expect(related.getByRole('link', { name: 'SelectDropdown' })).toHaveCount(0)
   await related.getByRole('link', { name: 'Menu' }).click()
   await expect(page).toHaveURL(/\/components\/menu$/)
-  await expect(page.getByRole('heading', { level: 1, name: 'Menu' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 2, name: 'Menu' })).toBeVisible()
 })
 
 test('showcase: the reset button restores a snippet demo', async ({ page, context }) => {

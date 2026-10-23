@@ -11,8 +11,8 @@
   import SearchInput from '$lib/components/SearchInput.svelte'
   import ThemeMenu from './_chrome/ThemeMenu.svelte'
   import { createAppI18n, setI18nContext } from '$lib/i18n.svelte'
-  import { SHOWCASE_COMPONENTS } from '$lib/showcase-components'
-  import { getPickerOpen, setPickerOpen } from '$lib/showcase-picker.svelte'
+  import { SHOWCASE_COMPONENTS } from '$lib/showcase/showcase-components'
+  import { getPickerOpen, setPickerOpen } from '$lib/showcase/showcase-picker.svelte'
   import type { LayoutData } from './$types'
 
   // One i18n store per app instance; children read it through the context.

@@ -2,7 +2,7 @@
   import { page } from '$app/state'
   import Chip from '$lib/components/Chip.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import { getRelatedComponents } from '$lib/showcase-components'
+  import { getRelatedComponents } from './showcase-components'
 
   const i18n = getI18nContext()
   // Unique per instance so two mounted navs never collide on the label id.

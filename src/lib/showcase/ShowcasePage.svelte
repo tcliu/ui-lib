@@ -194,6 +194,7 @@
       (the host below still clips what outgrows the frame, with a margin). -->
     <div
       data-showcase-demo
+      data-showcase-live={preview.live ? '' : undefined}
       class={FRAME_ROW}
       style={showDemo ? undefined : 'display:none'}>
       <div class={FRAME_HOST}>
@@ -223,6 +224,7 @@
     <div
       bind:this={preview.liveEl}
       data-showcase-demo
+      data-showcase-live=""
       class="flex flex-wrap items-start gap-4"
       style={showDemo ? undefined : 'display:none'}></div>
   {:else}
@@ -288,7 +290,7 @@
   class="mx-auto flex h-full w-full flex-col gap-3 px-4 pt-6 max-w-7xl">
   <div class="flex flex-none flex-col gap-3">
     <header data-showcase-titlebar class="flex items-start justify-between gap-3">
-      <h1 class="text-lg font-semibold tracking-tight sm:text-xl">{title}</h1>
+      <h2 class="text-lg font-semibold tracking-tight sm:text-xl">{title}</h2>
       <div class="flex items-center gap-2">
         <Button
           variant="ghost"

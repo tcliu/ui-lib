@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { SHOWCASE_COMPONENTS } from '../src/lib/showcase-components'
+import { SHOWCASE_COMPONENTS } from '../src/lib/showcase/showcase-components'
 import {
   hideCodeToggle,
   normalizeDemoText,
@@ -39,19 +39,23 @@ for (const { slug, name } of SHOWCASE_COMPONENTS) {
     await expect(toggle).toHaveCount(1)
 
     // Opening Show code compiles the seed, which reproduces the static demo
-    // with no inline error.
+    // with no inline error. Wait for the live marker first: the demo shows the
+    // static seed until the debounced compile mounts, so checking the alert
+    // before the swap would pass on a snippet that never compiled.
     const before = normalizeDemoText(await demo.textContent())
     await toggle.click()
     await expect(snippetEditor(page)).toBeVisible()
+    await expect(block.locator('[data-showcase-live]')).toHaveCount(1)
     await expect.poll(async () => normalizeDemoText(await demo.textContent()), { timeout: 15000 }).toBe(before)
     await expect(snippetError(page)).toHaveCount(0)
 
     // Closing restores the static demo and tears the code editor down. Scope
     // to the shell's Code region: a code-editor demo renders its own
-    // `.cm-content` inside the demo and would defeat a page-wide count.
+    // `.cm-content` inside the demo and would defeat a page-wide count. Poll
+    // the restored text: a lazy demo remounts its editor asynchronously.
     await hideCodeToggle(page).click()
     await expect(snippetRegion(page)).toHaveCount(0)
-    expect(normalizeDemoText(await demo.textContent())).toBe(before)
+    await expect.poll(async () => normalizeDemoText(await demo.textContent()), { timeout: 15000 }).toBe(before)
   })
 }
 
