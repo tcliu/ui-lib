@@ -4,12 +4,7 @@
   import type { createGridModel, HistoryState } from './use-grid-model.svelte'
   import type { createGridSelection } from './use-grid-selection.svelte'
   import TableIcon from '$lib/icons/TableIcon.svelte'
-  import RowInsertAboveIcon from '$lib/icons/RowInsertAboveIcon.svelte'
-  import RowInsertBelowIcon from '$lib/icons/RowInsertBelowIcon.svelte'
-  import ColumnInsertBeforeIcon from '$lib/icons/ColumnInsertBeforeIcon.svelte'
-  import ColumnInsertAfterIcon from '$lib/icons/ColumnInsertAfterIcon.svelte'
-  import DeleteRowsIcon from '$lib/icons/DeleteRowsIcon.svelte'
-  import DeleteColumnsIcon from '$lib/icons/DeleteColumnsIcon.svelte'
+  import DeleteIcon from '$lib/icons/DeleteIcon.svelte'
   import TrimIcon from '$lib/icons/TrimIcon.svelte'
   import UndoIcon from '$lib/icons/UndoIcon.svelte'
   import RedoIcon from '$lib/icons/RedoIcon.svelte'
@@ -73,7 +68,7 @@
       onClick={() => sel.insertRowAt(sel.actionRow, false)}
       disabled={mutationDisabled(sel.rowInsertDisabled)}>
       {#snippet icon()}
-        <RowInsertAboveIcon />
+        <TableIcon variant="insertRowAbove" />
       {/snippet}
     </Button>
     <Button
@@ -83,7 +78,7 @@
       onClick={() => (sel.noSelection ? sel.addRow() : sel.insertRowAt(sel.actionRow, true))}
       disabled={!editable}>
       {#snippet icon()}
-        <RowInsertBelowIcon />
+        <TableIcon variant="insertRowBelow" />
       {/snippet}
     </Button>
     {#if maxColumns == null}
@@ -94,7 +89,7 @@
         onClick={() => sel.insertColumnAt(sel.actionCol, true)}
         disabled={mutationDisabled(sel.colInsertDisabled)}>
         {#snippet icon()}
-          <ColumnInsertBeforeIcon />
+          <TableIcon variant="insertColumnBefore" />
         {/snippet}
       </Button>
       <Button
@@ -104,7 +99,7 @@
         onClick={() => (sel.noSelection ? sel.addColumn() : sel.insertColumnAt(sel.actionCol + 1, true))}
         disabled={!editable}>
         {#snippet icon()}
-          <ColumnInsertAfterIcon />
+          <TableIcon variant="insertColumnAfter" />
         {/snippet}
       </Button>
     {/if}
@@ -115,7 +110,7 @@
       onClick={() => sel.deleteSelectedRows()}
       disabled={mutationDisabled(sel.selectedRows.size === 0)}>
       {#snippet icon()}
-        <DeleteRowsIcon />
+        <DeleteIcon variant="rows" />
       {/snippet}
     </Button>
     {#if maxColumns == null}
@@ -126,7 +121,7 @@
         onClick={() => sel.deleteSelectedColumns()}
         disabled={mutationDisabled(sel.selectedCols.size === 0)}>
         {#snippet icon()}
-          <DeleteColumnsIcon />
+          <DeleteIcon variant="columns" />
         {/snippet}
       </Button>
     {/if}

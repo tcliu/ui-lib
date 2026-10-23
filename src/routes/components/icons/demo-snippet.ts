@@ -20,15 +20,11 @@ import ChevronUpIcon from '$lib/icons/ChevronUpIcon.svelte'
 import CloseIcon from '$lib/icons/CloseIcon.svelte'
 import CloudIcon from '$lib/icons/CloudIcon.svelte'
 import CodeIcon from '$lib/icons/CodeIcon.svelte'
-import ColumnInsertAfterIcon from '$lib/icons/ColumnInsertAfterIcon.svelte'
-import ColumnInsertBeforeIcon from '$lib/icons/ColumnInsertBeforeIcon.svelte'
 import ColumnsIcon from '$lib/icons/ColumnsIcon.svelte'
 import CompareIcon from '$lib/icons/CompareIcon.svelte'
 import CopyIcon from '$lib/icons/CopyIcon.svelte'
 import DashboardIcon from '$lib/icons/DashboardIcon.svelte'
 import DeleteIcon from '$lib/icons/DeleteIcon.svelte'
-import DeleteColumnsIcon from '$lib/icons/DeleteColumnsIcon.svelte'
-import DeleteRowsIcon from '$lib/icons/DeleteRowsIcon.svelte'
 import DocumentIcon from '$lib/icons/DocumentIcon.svelte'
 import DoubleChevronDownIcon from '$lib/icons/DoubleChevronDownIcon.svelte'
 import DoubleChevronLeftIcon from '$lib/icons/DoubleChevronLeftIcon.svelte'
@@ -68,8 +64,6 @@ import RedoIcon from '$lib/icons/RedoIcon.svelte'
 import RefreshIcon from '$lib/icons/RefreshIcon.svelte'
 import ResetIcon from '$lib/icons/ResetIcon.svelte'
 import RestoreIcon from '$lib/icons/RestoreIcon.svelte'
-import RowInsertAboveIcon from '$lib/icons/RowInsertAboveIcon.svelte'
-import RowInsertBelowIcon from '$lib/icons/RowInsertBelowIcon.svelte'
 import SaveIcon from '$lib/icons/SaveIcon.svelte'
 import SearchIcon from '$lib/icons/SearchIcon.svelte'
 import SettingsIcon from '$lib/icons/SettingsIcon.svelte'
@@ -117,15 +111,11 @@ export const ICON_ENTRIES: IconEntry[] = [
   { name: 'Close' },
   { name: 'Cloud' },
   { name: 'Code' },
-  { name: 'ColumnInsertAfter' },
-  { name: 'ColumnInsertBefore' },
   { name: 'Columns' },
   { name: 'Compare' },
   { name: 'Copy' },
   { name: 'Dashboard' },
   { name: 'Delete' },
-  { name: 'DeleteColumns' },
-  { name: 'DeleteRows' },
   { name: 'Document' },
   { name: 'DoubleChevronDown' },
   { name: 'DoubleChevronLeft' },
@@ -165,8 +155,6 @@ export const ICON_ENTRIES: IconEntry[] = [
   { name: 'Refresh' },
   { name: 'Reset' },
   { name: 'Restore' },
-  { name: 'RowInsertAbove' },
-  { name: 'RowInsertBelow' },
   { name: 'Save' },
   { name: 'Search' },
   { name: 'Settings' },
@@ -234,15 +222,11 @@ export const ICON_COMPONENTS: Record<string, Component> = {
   Close: CloseIcon,
   Cloud: CloudIcon,
   Code: CodeIcon,
-  ColumnInsertAfter: ColumnInsertAfterIcon,
-  ColumnInsertBefore: ColumnInsertBeforeIcon,
   Columns: ColumnsIcon,
   Compare: CompareIcon,
   Copy: CopyIcon,
   Dashboard: DashboardIcon,
   Delete: DeleteIcon,
-  DeleteColumns: DeleteColumnsIcon,
-  DeleteRows: DeleteRowsIcon,
   Document: DocumentIcon,
   DoubleChevronDown: DoubleChevronDownIcon,
   DoubleChevronLeft: DoubleChevronLeftIcon,
@@ -282,8 +266,6 @@ export const ICON_COMPONENTS: Record<string, Component> = {
   Refresh: RefreshIcon,
   Reset: ResetIcon,
   Restore: RestoreIcon,
-  RowInsertAbove: RowInsertAboveIcon,
-  RowInsertBelow: RowInsertBelowIcon,
   Save: SaveIcon,
   Search: SearchIcon,
   Settings: SettingsIcon,

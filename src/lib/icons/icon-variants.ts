@@ -5,10 +5,11 @@
 // icon for the same concept.
 //
 // The chevron family's own weight ladder lives in `chevron-stroke.ts`; the
-// double chevrons carry a third, fuller rendering, and the copy and edit
-// marks carry their own. The icon viewport spec reads this registry, so each
-// rendering's geometry is validated against its own stroke treatment instead
-// of against the union of the glyph's renderings.
+// double chevrons carry a third, fuller rendering, the copy and edit marks
+// carry their own, the delete mark adds its row/column band markers, and the
+// table mark adds the four insert edges. The icon viewport spec reads this
+// registry, so each rendering's geometry is validated against its own stroke
+// treatment instead of against the union of the glyph's renderings.
 import { CHEVRON_STYLE, CHEVRON_VARIANTS, type ChevronStrokeStyle } from './chevron-stroke'
 
 export interface IconVariantLadder {
@@ -47,6 +48,38 @@ export const EDIT_STYLE: Record<(typeof EDIT_VARIANTS)[number], ChevronStrokeSty
   solid: { stroke: 0, linecap: 'round', linejoin: 'round' },
 }
 
+// The delete mark: `regular` is the set's filled trash can; `rows` and
+// `columns` keep the can as an outline and mark the affected band inside it.
+// Their line weights are the ones those marks were authored at, so the body
+// reads lighter than the selected band.
+export const DELETE_VARIANTS = ['regular', 'rows', 'columns'] as const
+export type DeleteVariant = (typeof DELETE_VARIANTS)[number]
+export const DELETE_STYLE: Record<(typeof DELETE_VARIANTS)[number], ChevronStrokeStyle> = {
+  regular: { stroke: 0, linecap: 'round', linejoin: 'round' },
+  rows: { stroke: 2.35, linecap: 'round', linejoin: 'round' },
+  columns: { stroke: 1.82, linecap: 'round', linejoin: 'round' },
+}
+
+// The table mark: `regular` is the table frame with its header and column
+// rules; the insert renderings replace those rules with the band boundary and
+// the insertion tick, naming the row/column edge they add.
+const TABLE_SPACE_STYLE: ChevronStrokeStyle = { stroke: 2.05, linecap: 'round', linejoin: 'round' }
+export const TABLE_VARIANTS = [
+  'regular',
+  'insertRowAbove',
+  'insertRowBelow',
+  'insertColumnBefore',
+  'insertColumnAfter',
+] as const
+export type TableVariant = (typeof TABLE_VARIANTS)[number]
+export const TABLE_STYLE: Record<(typeof TABLE_VARIANTS)[number], ChevronStrokeStyle> = {
+  regular: TABLE_SPACE_STYLE,
+  insertRowAbove: TABLE_SPACE_STYLE,
+  insertRowBelow: TABLE_SPACE_STYLE,
+  insertColumnBefore: TABLE_SPACE_STYLE,
+  insertColumnAfter: TABLE_SPACE_STYLE,
+}
+
 /**
  * Every glyph that carries variants, keyed by its file name in `src/lib/icons`.
  * The spec pairs each rendering with its style through this table.
@@ -61,5 +94,7 @@ export const VARIANT_LADDERS: Record<string, IconVariantLadder> = {
   'DoubleChevronRightIcon.svelte': { variants: DOUBLE_CHEVRON_VARIANTS, styles: DOUBLE_CHEVRON_VARIANTS.map((v) => DOUBLE_CHEVRON_STYLE[v]) },
   'DoubleChevronUpIcon.svelte': { variants: DOUBLE_CHEVRON_VARIANTS, styles: DOUBLE_CHEVRON_VARIANTS.map((v) => DOUBLE_CHEVRON_STYLE[v]) },
   'CopyIcon.svelte': { variants: COPY_VARIANTS, styles: COPY_VARIANTS.map((v) => COPY_STYLE[v]) },
+  'DeleteIcon.svelte': { variants: DELETE_VARIANTS, styles: DELETE_VARIANTS.map((v) => DELETE_STYLE[v]) },
   'EditIcon.svelte': { variants: EDIT_VARIANTS, styles: EDIT_VARIANTS.map((v) => EDIT_STYLE[v]) },
+  'TableIcon.svelte': { variants: TABLE_VARIANTS, styles: TABLE_VARIANTS.map((v) => TABLE_STYLE[v]) },
 }

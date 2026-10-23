@@ -2,6 +2,7 @@ import { readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { VARIANT_LADDERS } from '$lib/icons/icon-variants'
+import { createSnippetComponent } from '$lib/showcase/snippet-playground'
 import {
   ALL_VARIANTS,
   buildIconsSnippet,
@@ -16,6 +17,11 @@ import {
 const BARE = { size: '', sizeOn: true, tint: '', className: '', classNameOn: true, variant: '', variantOn: false }
 
 describe('buildIconsSnippet', () => {
+  it('compiles the gallery seed through the playground preamble', { timeout: 30000 }, async () => {
+    const component = await createSnippetComponent(buildIconsSnippet(BARE), {})
+    expect(typeof component).toBe('function')
+  })
+
   it('renders bare icons while unset', () => {
     const source = buildIconsSnippet(BARE)
     for (const entry of ICON_ENTRIES) {
@@ -70,6 +76,18 @@ describe('buildIconsSnippet', () => {
     const solid = buildIconsSnippet({ ...BARE, variant: 'solid', variantOn: true })
     expect(solid).toContain('<EditIcon variant="solid" />Edit')
     expect(solid).not.toContain('<ChevronUpIcon variant="solid" />ChevronUp')
+
+    const rows = buildIconsSnippet({ ...BARE, variant: 'rows', variantOn: true })
+    expect(rows).toContain('<DeleteIcon variant="rows" />Delete')
+    expect(rows).not.toContain('<TableIcon variant="rows" />Table')
+
+    const columns = buildIconsSnippet({ ...BARE, variant: 'columns', variantOn: true })
+    expect(columns).toContain('<DeleteIcon variant="columns" />Delete')
+    expect(columns).not.toContain('<TableIcon variant="columns" />Table')
+
+    const insertRowAbove = buildIconsSnippet({ ...BARE, variant: 'insertRowAbove', variantOn: true })
+    expect(insertRowAbove).toContain('<TableIcon variant="insertRowAbove" />Table')
+    expect(insertRowAbove).not.toContain('<DeleteIcon variant="insertRowAbove" />Delete')
   })
 
   it('offers every registered variant in the playground', () => {
@@ -131,11 +149,13 @@ describe('icon gallery coverage', () => {
       'ChevronRight',
       'ChevronUp',
       'Copy',
+      'Delete',
       'DoubleChevronDown',
       'DoubleChevronLeft',
       'DoubleChevronRight',
       'DoubleChevronUp',
       'Edit',
+      'Table',
     ])
   })
 

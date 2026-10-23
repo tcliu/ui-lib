@@ -44,6 +44,9 @@ import TextArea from '$lib/components/TextArea.svelte'
 import TextInput from '$lib/components/TextInput.svelte'
 import Toast from '$lib/components/Toast.svelte'
 import Tooltip from '$lib/components/Tooltip.svelte'
+import AutoRefreshIcon from '$lib/icons/AutoRefreshIcon.svelte'
+import BrowseIcon from '$lib/icons/BrowseIcon.svelte'
+import CalendarIcon from '$lib/icons/CalendarIcon.svelte'
 import CaretDownIcon from '$lib/icons/CaretDownIcon.svelte'
 import CaretLeftIcon from '$lib/icons/CaretLeftIcon.svelte'
 import CaretRightIcon from '$lib/icons/CaretRightIcon.svelte'
@@ -57,34 +60,62 @@ import CloseIcon from '$lib/icons/CloseIcon.svelte'
 import CloudIcon from '$lib/icons/CloudIcon.svelte'
 import CodeIcon from '$lib/icons/CodeIcon.svelte'
 import ColumnsIcon from '$lib/icons/ColumnsIcon.svelte'
+import CompareIcon from '$lib/icons/CompareIcon.svelte'
 import CopyIcon from '$lib/icons/CopyIcon.svelte'
+import DashboardIcon from '$lib/icons/DashboardIcon.svelte'
 import DeleteIcon from '$lib/icons/DeleteIcon.svelte'
 import DocumentIcon from '$lib/icons/DocumentIcon.svelte'
+import DoubleChevronDownIcon from '$lib/icons/DoubleChevronDownIcon.svelte'
+import DoubleChevronLeftIcon from '$lib/icons/DoubleChevronLeftIcon.svelte'
+import DoubleChevronRightIcon from '$lib/icons/DoubleChevronRightIcon.svelte'
+import DoubleChevronUpIcon from '$lib/icons/DoubleChevronUpIcon.svelte'
 import DownloadIcon from '$lib/icons/DownloadIcon.svelte'
+import EditIcon from '$lib/icons/EditIcon.svelte'
 import ExportIcon from '$lib/icons/ExportIcon.svelte'
+import ExternalLinkIcon from '$lib/icons/ExternalLinkIcon.svelte'
 import EyeIcon from '$lib/icons/EyeIcon.svelte'
 import EyeSlashIcon from '$lib/icons/EyeSlashIcon.svelte'
 import FireIcon from '$lib/icons/FireIcon.svelte'
+import FollowIcon from '$lib/icons/FollowIcon.svelte'
 import ForestIcon from '$lib/icons/ForestIcon.svelte'
+import FormatIcon from '$lib/icons/FormatIcon.svelte'
 import GlobeIcon from '$lib/icons/GlobeIcon.svelte'
+import GridIcon from '$lib/icons/GridIcon.svelte'
+import HelpIcon from '$lib/icons/HelpIcon.svelte'
+import HistoryIcon from '$lib/icons/HistoryIcon.svelte'
 import InfoIcon from '$lib/icons/InfoIcon.svelte'
 import KebabIcon from '$lib/icons/KebabIcon.svelte'
 import LavenderIcon from '$lib/icons/LavenderIcon.svelte'
 import LightBulbIcon from '$lib/icons/LightBulbIcon.svelte'
+import LinkIcon from '$lib/icons/LinkIcon.svelte'
+import ListIcon from '$lib/icons/ListIcon.svelte'
+import LockIcon from '$lib/icons/LockIcon.svelte'
+import MaximizeIcon from '$lib/icons/MaximizeIcon.svelte'
 import MenuIcon from '$lib/icons/MenuIcon.svelte'
 import MidnightIcon from '$lib/icons/MidnightIcon.svelte'
+import MinimizeIcon from '$lib/icons/MinimizeIcon.svelte'
 import MintIcon from '$lib/icons/MintIcon.svelte'
 import MoonIcon from '$lib/icons/MoonIcon.svelte'
 import PaletteIcon from '$lib/icons/PaletteIcon.svelte'
 import PlusIcon from '$lib/icons/PlusIcon.svelte'
+import ProfileIcon from '$lib/icons/ProfileIcon.svelte'
+import RedoIcon from '$lib/icons/RedoIcon.svelte'
 import RefreshIcon from '$lib/icons/RefreshIcon.svelte'
 import ResetIcon from '$lib/icons/ResetIcon.svelte'
+import RestoreIcon from '$lib/icons/RestoreIcon.svelte'
 import SaveIcon from '$lib/icons/SaveIcon.svelte'
 import SearchIcon from '$lib/icons/SearchIcon.svelte'
 import SettingsIcon from '$lib/icons/SettingsIcon.svelte'
+import ShareIcon from '$lib/icons/ShareIcon.svelte'
 import SignOutIcon from '$lib/icons/SignOutIcon.svelte'
 import SparklesIcon from '$lib/icons/SparklesIcon.svelte'
+import SpeakerIcon from '$lib/icons/SpeakerIcon.svelte'
+import StopIcon from '$lib/icons/StopIcon.svelte'
 import SunIcon from '$lib/icons/SunIcon.svelte'
+import TableIcon from '$lib/icons/TableIcon.svelte'
+import TagsIcon from '$lib/icons/TagsIcon.svelte'
+import TrimIcon from '$lib/icons/TrimIcon.svelte'
+import UndoIcon from '$lib/icons/UndoIcon.svelte'
 import UploadIcon from '$lib/icons/UploadIcon.svelte'
 import * as structureValue from '$lib/components/structure-value'
 
@@ -149,6 +180,9 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/TextInput.svelte': { default: TextInput },
   'ui/Toast.svelte': { default: Toast },
   'ui/Tooltip.svelte': { default: Tooltip },
+  'ui/AutoRefreshIcon.svelte': { default: AutoRefreshIcon },
+  'ui/BrowseIcon.svelte': { default: BrowseIcon },
+  'ui/CalendarIcon.svelte': { default: CalendarIcon },
   'ui/CaretDownIcon.svelte': { default: CaretDownIcon },
   'ui/CaretLeftIcon.svelte': { default: CaretLeftIcon },
   'ui/CaretRightIcon.svelte': { default: CaretRightIcon },
@@ -162,34 +196,62 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/CloudIcon.svelte': { default: CloudIcon },
   'ui/CodeIcon.svelte': { default: CodeIcon },
   'ui/ColumnsIcon.svelte': { default: ColumnsIcon },
+  'ui/CompareIcon.svelte': { default: CompareIcon },
   'ui/CopyIcon.svelte': { default: CopyIcon },
+  'ui/DashboardIcon.svelte': { default: DashboardIcon },
   'ui/DeleteIcon.svelte': { default: DeleteIcon },
   'ui/DocumentIcon.svelte': { default: DocumentIcon },
+  'ui/DoubleChevronDownIcon.svelte': { default: DoubleChevronDownIcon },
+  'ui/DoubleChevronLeftIcon.svelte': { default: DoubleChevronLeftIcon },
+  'ui/DoubleChevronRightIcon.svelte': { default: DoubleChevronRightIcon },
+  'ui/DoubleChevronUpIcon.svelte': { default: DoubleChevronUpIcon },
   'ui/DownloadIcon.svelte': { default: DownloadIcon },
+  'ui/EditIcon.svelte': { default: EditIcon },
   'ui/ExportIcon.svelte': { default: ExportIcon },
+  'ui/ExternalLinkIcon.svelte': { default: ExternalLinkIcon },
   'ui/EyeIcon.svelte': { default: EyeIcon },
   'ui/EyeSlashIcon.svelte': { default: EyeSlashIcon },
   'ui/FireIcon.svelte': { default: FireIcon },
+  'ui/FollowIcon.svelte': { default: FollowIcon },
   'ui/ForestIcon.svelte': { default: ForestIcon },
+  'ui/FormatIcon.svelte': { default: FormatIcon },
   'ui/GlobeIcon.svelte': { default: GlobeIcon },
+  'ui/GridIcon.svelte': { default: GridIcon },
+  'ui/HelpIcon.svelte': { default: HelpIcon },
+  'ui/HistoryIcon.svelte': { default: HistoryIcon },
   'ui/InfoIcon.svelte': { default: InfoIcon },
   'ui/KebabIcon.svelte': { default: KebabIcon },
   'ui/LavenderIcon.svelte': { default: LavenderIcon },
   'ui/LightBulbIcon.svelte': { default: LightBulbIcon },
+  'ui/LinkIcon.svelte': { default: LinkIcon },
+  'ui/ListIcon.svelte': { default: ListIcon },
+  'ui/LockIcon.svelte': { default: LockIcon },
+  'ui/MaximizeIcon.svelte': { default: MaximizeIcon },
   'ui/MenuIcon.svelte': { default: MenuIcon },
   'ui/MidnightIcon.svelte': { default: MidnightIcon },
+  'ui/MinimizeIcon.svelte': { default: MinimizeIcon },
   'ui/MintIcon.svelte': { default: MintIcon },
   'ui/MoonIcon.svelte': { default: MoonIcon },
   'ui/PaletteIcon.svelte': { default: PaletteIcon },
   'ui/PlusIcon.svelte': { default: PlusIcon },
+  'ui/ProfileIcon.svelte': { default: ProfileIcon },
+  'ui/RedoIcon.svelte': { default: RedoIcon },
   'ui/RefreshIcon.svelte': { default: RefreshIcon },
   'ui/ResetIcon.svelte': { default: ResetIcon },
+  'ui/RestoreIcon.svelte': { default: RestoreIcon },
   'ui/SaveIcon.svelte': { default: SaveIcon },
   'ui/SearchIcon.svelte': { default: SearchIcon },
   'ui/SettingsIcon.svelte': { default: SettingsIcon },
+  'ui/ShareIcon.svelte': { default: ShareIcon },
   'ui/SignOutIcon.svelte': { default: SignOutIcon },
   'ui/SparklesIcon.svelte': { default: SparklesIcon },
+  'ui/SpeakerIcon.svelte': { default: SpeakerIcon },
+  'ui/StopIcon.svelte': { default: StopIcon },
   'ui/SunIcon.svelte': { default: SunIcon },
+  'ui/TableIcon.svelte': { default: TableIcon },
+  'ui/TagsIcon.svelte': { default: TagsIcon },
+  'ui/TrimIcon.svelte': { default: TrimIcon },
+  'ui/UndoIcon.svelte': { default: UndoIcon },
   'ui/UploadIcon.svelte': { default: UploadIcon },
   // Shared tree helpers for StructureTree snippets (pure functions only:
   // no stores, no fetch, no DOM access).
