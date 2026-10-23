@@ -20,9 +20,13 @@
     disabled?: boolean
     className?: string
     showControls?: boolean
-    // Inline style forwarded to the native input. Used by callers that hide
-    // the steppers to size the field themselves (runtime widths must not be
-    // utilities); pagination passes a ch-based width here.
+    // Caret placement on focus and click: the default keeps the browser's caret
+    // at the clicked position; this puts it after the last character, for a
+    // field whose whole value is replaced by typing (a page jump). A drag-select
+    // inside the field collapses to the end, so keep it to a single-token value.
+    caretAtEnd?: boolean
+    // Inline style forwarded to the native input, for a caller that sizes the
+    // field itself (runtime widths must not be utilities).
     inputStyle?: string
     id?: string
     ariaLabel: string
@@ -47,6 +51,7 @@
     disabled = false,
     className = '',
     showControls = true,
+    caretAtEnd = false,
     inputStyle,
     id,
     ariaLabel,
@@ -116,7 +121,28 @@
 
   function handleFocus(event: FocusEvent) {
     focused = true
+    if (caretAtEnd) {
+      const input = event.currentTarget as HTMLInputElement
+      // Deferred so it lands after the browser's own caret placement on a
+      // pointer press while still covering a keyboard focus (no click).
+      queueMicrotask(() => {
+        if (focused) placeCaretAtEnd(input)
+      })
+      return
+    }
     moveCaretToEndIfKeyboardFocus(event)
+  }
+
+  function placeCaretAtEnd(input: HTMLInputElement) {
+    const end = input.value.length
+    input.setSelectionRange(end, end)
+  }
+
+  // A click on an already-focused field fires no focus event, so the caret is
+  // placed here too; the click runs after the browser's caret placement, so it
+  // wins over the clicked position.
+  function handleClick(event: MouseEvent) {
+    if (caretAtEnd) placeCaretAtEnd(event.currentTarget as HTMLInputElement)
   }
 
   function moveCaretToEndIfKeyboardFocus(event: FocusEvent) {
@@ -127,8 +153,7 @@
     }
     queueMicrotask(() => {
       if (!focused) return
-      const end = input.value.length
-      input.setSelectionRange(end, end)
+      placeCaretAtEnd(input)
     })
   }
 
@@ -333,6 +358,7 @@
       pointerFocused = false
     }}
     onfocus={handleFocus}
+    onclick={handleClick}
     oninput={e => {
       handleInput(e)
       oninput?.(e)

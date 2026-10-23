@@ -7,6 +7,8 @@ function state(overrides: Partial<NumberInputSnippetState> = {}): NumberInputSni
     value: '5',
     ariaLabel: '',
     ariaLabelOn: true,
+    caretAtEnd: '',
+    caretAtEndOn: true,
     min: '',
     minOn: true,
     max: '',
@@ -164,6 +166,15 @@ describe('buildNumberInputSnippet', () => {
   it('ignores non-numeric bounds', () => {
     const source = buildNumberInputSnippet(state({ min: 'abc' }))
     expect(source).not.toContain('min=')
+  })
+
+  it('emits caretAtEnd only while it is set and differing from the default', () => {
+    expect(buildNumberInputSnippet(state())).not.toContain('caretAtEnd')
+    expect(buildNumberInputSnippet(state({ caretAtEnd: 'yes' }))).toContain('  caretAtEnd\n')
+    expect(buildNumberInputSnippet(state({ caretAtEnd: 'no' }))).not.toContain('caretAtEnd')
+    expect(buildNumberInputSnippet(state({ caretAtEnd: 'yes', caretAtEndOn: false }))).not.toContain(
+      'caretAtEnd',
+    )
   })
 
   it('compiles the generated snippet', { timeout: 30000 }, async () => {

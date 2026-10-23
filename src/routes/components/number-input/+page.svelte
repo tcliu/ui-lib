@@ -22,6 +22,8 @@
     valueOn: true,
     ariaLabel: 'Apply',
     ariaLabelOn: true,
+    caretAtEnd: 'no' as TriState,
+    caretAtEndOn: false,
     min: '',
     minOn: false,
     max: '',
@@ -108,6 +110,8 @@
       value: pg.value,
       ariaLabel: pg.ariaLabel,
       ariaLabelOn: pg.ariaLabelOn,
+      caretAtEnd: pg.caretAtEnd,
+      caretAtEndOn: pg.caretAtEndOn,
       min: pg.min,
       minOn: pg.minOn,
       max: pg.max,
@@ -148,6 +152,7 @@
   // props (A–Z).
   const fields: SyncableFieldConfig[] = $derived([
     { name: 'ariaLabel', type: 'string', defaultValue: '—', note: 'Accessible name for the control.', editor: 'text', clearable: true, value: pg.ariaLabel, onChange: value => { pg.ariaLabel = value; pg.ariaLabelOn = true; }, toggle: snippetToggle(pg.ariaLabelOn, enabled => (pg.ariaLabelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'applyLabel' } },
+    boolField({ name: 'caretAtEnd', defaultValue: 'false', note: 'Places the caret after the last character on focus and click instead of at the clicked position.', value: pg.caretAtEnd, onChange: v => (pg.caretAtEnd = v as TriState), enabled: pg.caretAtEndOn, setEnabled: v => (pg.caretAtEndOn = v) }),
     textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes for the input.', value: pg.className, onChange: v => (pg.className = v), editorDefaultValue: '', clearable: true, enabled: pg.classNameOn, setEnabled: v => (pg.classNameOn = v) }),
     textField({ name: 'clearLabel', type: 'string?', defaultValue: "'Clear'", note: 'Accessible name for the clear button.', value: pg.clearLabel, onChange: v => (pg.clearLabel = v), editorDefaultValue: 'Clear', clearable: true, placeholder: 'Clear', enabled: pg.clearLabelOn, setEnabled: v => (pg.clearLabelOn = v) }),
     enumField({ name: 'clearPlacement', type: "'auto' | 'inside' | 'outside'", defaultValue: "'auto'", note: 'Inside sits left of the steppers; outside sits after them; auto renders outside because the steppers own the right edge.', options: clearPlacementOptions, value: pg.clearPlacement, onChange: v => (pg.clearPlacement = v), placeholder: 'auto', clearLabel: 'Clear placement', enabled: pg.clearPlacementOn, setEnabled: v => (pg.clearPlacementOn = v) }),
@@ -236,6 +241,7 @@
       <NumberInput
         bind:value={pg.value}
         ariaLabel={demoAriaLabel}
+        caretAtEnd={pg.caretAtEndOn ? flagOn(pg.caretAtEnd) : undefined}
         {min}
         {max}
         {step}

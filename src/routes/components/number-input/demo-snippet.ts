@@ -12,6 +12,8 @@ export interface NumberInputSnippetState {
   value: string
   ariaLabel: string
   ariaLabelOn: boolean
+  caretAtEnd: TriState
+  caretAtEndOn: boolean
   min: string
   minOn: boolean
   max: string
@@ -78,6 +80,8 @@ export function buildNumberInputSnippet({
   value,
   ariaLabel,
   ariaLabelOn,
+  caretAtEnd,
+  caretAtEndOn,
   min,
   minOn,
   max,
@@ -122,6 +126,7 @@ export function buildNumberInputSnippet({
     ...(ariaLabelOn && ariaLabel
       ? [`  <NumberInput bind:value={value} ariaLabel="${escapeAttr(ariaLabel)}"`]
       : ['  <NumberInput bind:value={value} ariaLabel={applyLabel}']),
+    ...(caretAtEndOn ? flagLine('caretAtEnd', caretAtEnd, 'no') : []),
     ...(minOn ? numberLine('min', min) : []),
     ...(maxOn ? numberLine('max', max) : []),
     // The step row prefills its component default in the Value column; the
