@@ -14,4 +14,5 @@ export type { I18nStore, Locale, MessageKey } from './i18n.svelte'
 export { FONT_RATIO, ICON_RATIO, SIZE_ORDER, SIZE_PX, resolveFontPx } from './size-scale'
 export type { SizeInput, SizeName } from './size-scale'
 
-export { clearColumnWidths, loadColumnWidths, saveColumnWidths } from './column-width-storage'
+export { useColumnWidthStorage, type ColumnWidthStore } from './column-width-storage'
+export { createPersistStore, type PersistStore } from './persist-storage'

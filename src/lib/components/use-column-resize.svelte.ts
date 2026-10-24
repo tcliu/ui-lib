@@ -1,4 +1,4 @@
-import { clearColumnWidths, loadColumnWidths, saveColumnWidths } from '$lib/column-width-storage'
+import { useColumnWidthStorage } from '$lib/column-width-storage'
 
 // Shared column-resize engine for tables that render resizable columns via a
 // fixed-layout `<colgroup>` (DataGrid and DataTable). Each data column is
@@ -177,7 +177,7 @@ export function createColumnResize(config: ColumnResizeConfig) {
     const count = getColumnCount()
     if (persistedCount !== count) {
       const storageKey = getStorageKey()
-      const stored = storageKey ? loadColumnWidths(storageKey) : null
+      const stored = storageKey ? useColumnWidthStorage().load(storageKey) : null
       persistedWidths = stored && stored.length === count ? stored : null
       persistedCount = count
     }
@@ -190,7 +190,7 @@ export function createColumnResize(config: ColumnResizeConfig) {
   // stops an armed debounce from saving the pre-reset widths back.
   function clearPersistedWidths(): void {
     const storageKey = getStorageKey()
-    if (storageKey) clearColumnWidths(storageKey)
+    if (storageKey) useColumnWidthStorage().clear(storageKey)
     persistedWidths = null
     persistedCount = -1
     cancelSave()
@@ -220,7 +220,7 @@ export function createColumnResize(config: ColumnResizeConfig) {
     if (pendingSave === null) return
     const { key, widths: w } = pendingSave
     pendingSave = null
-    saveColumnWidths(key, w)
+    useColumnWidthStorage().save(key, w)
     // Keep the restore cache in step with what was just saved, so a later load
     // for the same column count returns the current widths instead of the
     // pre-drag layout captured at mount.
