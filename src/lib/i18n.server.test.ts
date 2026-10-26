@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 // The server has no shared fallback store: every call must build a fresh one,
 // or two concurrent requests would share a locale.
-vi.mock('$app/environment', () => ({ browser: false }))
+vi.mock('esm-env', async (importOriginal) => ({ ...(await importOriginal()), BROWSER: false }))
 
 import { flushSync, mount, unmount } from 'svelte'
 import Harness from './i18n.harness.svelte'

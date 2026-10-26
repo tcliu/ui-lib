@@ -1,5 +1,5 @@
 // parity: app-owned — each app carries its own dictionaries
-import { browser } from '$app/environment'
+import { BROWSER as browser } from 'esm-env'
 import { getContext, hasContext, setContext } from 'svelte'
 import { en } from './locales/en'
 import { zhCN } from './locales/zh-CN'

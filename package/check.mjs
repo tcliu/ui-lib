@@ -14,7 +14,7 @@
 
 import { spawnSync } from 'node:child_process'
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
-import { mkdir, rm, writeFile } from 'node:fs/promises'
+import { cp, mkdir, rm, writeFile } from 'node:fs/promises'
 import { dirname, join, relative, resolve } from 'node:path'
 
 import { BUILD_DIR, OUT, PACKAGE_NAME, ROOT } from './build.mjs'
@@ -25,6 +25,15 @@ const failures = []
 function check(label, ok, detail = '') {
   console.log(`${ok ? 'ok  ' : 'FAIL'}  ${label}${detail ? ` — ${detail}` : ''}`)
   if (!ok) failures.push(label)
+}
+
+/**
+ * The tarball entries `npm pack --json` reports. npm 12 emits one entry keyed by
+ * package name; earlier releases emit an array.
+ */
+function packEntries(stdout) {
+  const parsed = JSON.parse(stdout)
+  return Array.isArray(parsed) ? parsed : Object.values(parsed)
 }
 
 // --- build -----------------------------------------------------------------
@@ -54,11 +63,11 @@ function walk(dir) {
 }
 
 const shipped = walk(OUT)
-const rel = (abs) => relative(OUT, abs).split(/[\\/]/).join('/')
+const rel = abs => relative(OUT, abs).split(/[\\/]/).join('/')
 
 check('the package carries files', shipped.length > 0, `${shipped.length} files`)
 
-const testFiles = shipped.filter((abs) => /(\.test\.[a-z]+|\.harness\.svelte)$/.test(rel(abs)))
+const testFiles = shipped.filter(abs => /(\.test\.[a-z]+|\.harness\.svelte)$/.test(rel(abs)))
 check('no test or harness ships', testFiles.length === 0, testFiles.map(rel).join(', '))
 
 // A specifier that only resolves inside this app: `from '$lib/x'` or
@@ -73,20 +82,30 @@ for (const abs of shipped) {
 }
 check('no app-only specifier ships', appSpecifiers.length === 0, appSpecifiers.join(', '))
 
-// Every relative import must name a file that exists.
+// Every relative import must resolve. `svelte-package` keeps the specifier it
+// was given, so a source import may omit the compiled extension; resolve the
+// way the consumer's bundler does.
 const RELATIVE_SPECIFIER_RE = /(?:\bfrom|\bimport)\s*\(?\s*['"](\.[^'"]+)['"]/g
+const RESOLVE_SUFFIXES = ['', '.js', '.svelte', '.svelte.js']
+function resolvesRelative(fromAbs, specifier) {
+  const base = resolve(dirname(fromAbs), specifier)
+  if (RESOLVE_SUFFIXES.some(suffix => existsSync(base + suffix) && statSync(base + suffix).isFile())) {
+    return true
+  }
+  return RESOLVE_SUFFIXES.slice(1).some(suffix => existsSync(join(base, `index${suffix}`)))
+}
 const unresolved = []
 for (const abs of shipped) {
   if (!/\.js$/.test(abs)) continue
   const text = readFileSync(abs, 'utf8')
   for (const [, specifier] of text.matchAll(RELATIVE_SPECIFIER_RE)) {
-    const target = resolve(dirname(abs), specifier)
-    if (!existsSync(target)) unresolved.push(`${rel(abs)} -> ${specifier}`)
+    if (!resolvesRelative(abs, specifier)) unresolved.push(`${rel(abs)} -> ${specifier}`)
   }
 }
 check('every relative import resolves', unresolved.length === 0, unresolved.slice(0, 5).join(', '))
 
-// The manifest's promises must exist.
+// The manifest's literal promises must exist. A pattern's target is a template,
+// so the resolution check below covers those.
 const manifest = JSON.parse(readFileSync(join(OUT, 'package.json'), 'utf8'))
 const missingTargets = []
 for (const [key, value] of Object.entries(manifest.exports ?? {})) {
@@ -96,13 +115,47 @@ for (const [key, value] of Object.entries(manifest.exports ?? {})) {
     if (!existsSync(join(OUT, target))) missingTargets.push(`${key} -> ${target}`)
   }
 }
-check('every export target exists', missingTargets.length === 0, missingTargets.join(', '))
+check('every literal export target exists', missingTargets.length === 0, missingTargets.join(', '))
+
+// Every shipped module, stylesheet and the manifest must resolve through Node's
+// own exports resolver: a pattern that misroutes a rune module is invisible to
+// the literal check, and only a consumer install used to catch it.
+const flagged = shipped.filter(abs => /\.(svelte|js|css|json)$/.test(abs) && !/\.d\.ts$/.test(abs)).map(rel)
+const specifierOf = file => {
+  const name = file.endsWith('.js') ? file.slice(0, -'.js'.length) : file
+  return { specifier: `${PACKAGE_NAME}/${name}`, file }
+}
+const resolveDir = join(BUILD_DIR, 'exports-resolve')
+await rm(resolveDir, { recursive: true, force: true, maxRetries: 3 }).catch(() => {})
+await mkdir(join(resolveDir, 'node_modules'), { recursive: true })
+await writeFile(
+  join(resolveDir, 'package.json'),
+  `${JSON.stringify({ name: 'exports-resolve', private: true, type: 'module' })}\n`,
+)
+const [scope, pkgName] = PACKAGE_NAME.split('/')
+await mkdir(join(resolveDir, 'node_modules', scope), { recursive: true })
+await cp(OUT, join(resolveDir, 'node_modules', scope, pkgName), { recursive: true })
+await writeFile(
+  join(resolveDir, 'resolve.mjs'),
+  `import { fileURLToPath } from 'node:url'\n\nconst entries = ${JSON.stringify(flagged.map(specifierOf))}\nconst failures = []\nfor (const { specifier, file } of entries) {\n  try {\n    const resolved = fileURLToPath(import.meta.resolve(specifier))\n    if (!resolved.endsWith(\`/\${file}\`)) failures.push(\`\${specifier} -> \${resolved}\`)\n  } catch (error) {\n    failures.push(\`\${specifier}: \${error.code ?? error.message}\`)\n  }\n}\nif (failures.length > 0) {\n  console.error(failures.join('\\n'))\n  process.exit(1)\n}\n`,
+)
+const resolveRun = spawnSync(process.execPath, [join(resolveDir, 'resolve.mjs')], {
+  cwd: resolveDir,
+  encoding: 'utf8',
+})
+check(
+  'every shipped file resolves through the exports map',
+  resolveRun.status === 0,
+  (resolveRun.stderr ?? '').trim().split('\n').slice(0, 5).join(' | '),
+)
 check('the package declares its peer dependency', Boolean(manifest.peerDependencies?.svelte))
 check('the stylesheet ships', existsSync(join(OUT, 'styles.css')))
 check(
   'the stylesheet points Tailwind at the package',
   readFileSync(join(OUT, 'styles.css'), 'utf8').includes('@source "./"'),
 )
+check('the README ships', existsSync(join(OUT, 'README.md')))
+check('the stylesheet keeps its side effect', manifest.sideEffects?.includes?.('*.css') === true)
 
 // --- the tarball -----------------------------------------------------------
 
@@ -111,12 +164,12 @@ const pack = spawnSync('npm', ['pack', '--dry-run', '--json'], { cwd: OUT, encod
 if (pack.status !== 0) {
   check('npm pack succeeds', false, (pack.stderr ?? '').trim().split('\n')[0])
 } else {
-  const [tarball] = JSON.parse(pack.stdout)
-  const packedFiles = tarball.files.map((file) => file.path)
+  const [tarball] = packEntries(pack.stdout)
+  const packedFiles = tarball.files.map(file => file.path)
   check('the tarball carries the manifest', packedFiles.includes('package.json'))
   check(
     'the tarball carries no test',
-    packedFiles.every((file) => !/(\.test\.[a-z]+|\.harness\.svelte)$/.test(file)),
+    packedFiles.every(file => !/(\.test\.[a-z]+|\.harness\.svelte)$/.test(file)),
   )
   console.log(`       ${tarball.filename} (${packedFiles.length} files, ${tarball.size} bytes)`)
 }
@@ -130,11 +183,11 @@ if (process.argv.includes('--consumer')) {
   await rm(CONSUMER, { recursive: true, force: true, maxRetries: 3 }).catch(() => {})
   await mkdir(join(CONSUMER, 'src'), { recursive: true })
 
-  const tarball = spawnSync('npm', ['pack', '--json'], { cwd: OUT, encoding: 'utf8' })
+  const tarball = spawnSync('npm', ['pack', '--json', '--pack-destination', BUILD_DIR], { cwd: OUT, encoding: 'utf8' })
   if (tarball.status !== 0) {
     check('npm pack succeeds', false, (tarball.stderr ?? '').trim().split('\n')[0])
   } else {
-    const [{ filename }] = JSON.parse(tarball.stdout)
+    const [{ filename }] = packEntries(tarball.stdout)
     const app = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'))
     await writeFile(
       join(CONSUMER, 'package.json'),
@@ -144,7 +197,7 @@ if (process.argv.includes('--consumer')) {
           private: true,
           type: 'module',
           dependencies: {
-            [PACKAGE_NAME]: `file:${join(OUT, filename)}`,
+            [PACKAGE_NAME]: `file:${join(BUILD_DIR, filename)}`,
             'svelte-sonner': app.dependencies['svelte-sonner'],
           },
           devDependencies: {
@@ -161,21 +214,16 @@ if (process.argv.includes('--consumer')) {
     // The consumer imports every component and icon the package ships and lets
     // Tailwind scan the package's own stylesheet, so a broken export or a
     // missing class fails the build.
-    const modules = shipped
-      .filter((abs) => rel(abs).endsWith('.svelte'))
-      .map((abs) => rel(abs).replace(/\.svelte$/, ''))
+    const modules = shipped.filter(abs => rel(abs).endsWith('.svelte')).map(abs => rel(abs).replace(/\.svelte$/, ''))
     await writeFile(
       join(CONSUMER, 'src', 'main.ts'),
-      `import './app.css'\n${modules.map((name) => `import '${PACKAGE_NAME}/${name}.svelte'`).join('\n')}\nconsole.log(${modules.length})\n`,
+      `import './app.css'\n${modules.map(name => `import '${PACKAGE_NAME}/${name}.svelte'`).join('\n')}\nconsole.log(${modules.length})\n`,
     )
     await writeFile(
       join(CONSUMER, 'index.html'),
       '<!doctype html><html><head><meta charset="utf-8"><title>consumer</title></head><body><script type="module" src="/src/main.ts"></script></body></html>\n',
     )
-    await writeFile(
-      join(CONSUMER, 'src', 'app.css'),
-      `@import 'tailwindcss';\n@import '${PACKAGE_NAME}/styles.css';\n`,
-    )
+    await writeFile(join(CONSUMER, 'src', 'app.css'), `@import 'tailwindcss';\n@import '${PACKAGE_NAME}/styles.css';\n`)
     await writeFile(
       join(CONSUMER, 'vite.config.ts'),
       "import { svelte } from '@sveltejs/vite-plugin-svelte'\nimport tailwindcss from '@tailwindcss/vite'\nimport { defineConfig } from 'vite'\n\nexport default defineConfig({ plugins: [svelte(), tailwindcss()] })\n",

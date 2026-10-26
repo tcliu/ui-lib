@@ -30,12 +30,21 @@ Project-specific development conventions for the UI Library web app.
 
 - The project root hosts the browser app.
 - The shared surface stays at `src/lib`; the npm package is a generated artifact
-  (`npm run package:build` writes `dist/`), never a second source of truth.
+  (`npm run package` writes `dist/`), never a second source of truth.
+- The package build leans on `svelte-package`: resolve `$lib` with the staging
+  `svelte.config.js` alias, import `esm-env` at the source, and keep the build's
+  `$app/environment` mapping only for a shared file that must stay
+  byte-identical across projects.
+- Release by bumping `package.json` with `npm version` and publishing `./dist`
+  with `npm publish`; the build does not diff against the registry or bump.
 - A shared component originates here: a sibling that needs one adds it to this
   repo, republishes the package, then consumes it from the package.
 - A consuming app imports the package by name (`@codepg/ui-lib/...`); the
   package's own i18n store and the app's share one context key, so the app
   merges its dictionary over the shared one.
+- The published name is one literal in `package/build.mjs`; the scope, license
+  holder and registry derive from it, and every package script imports it
+  rather than repeating the scope.
 - This project is the canonical source for the shared UI surface; fix a shared component here first, then port it, never fork without syncing back.
 - Reuse the existing shared control for a concern instead of building a parallel one; keep app-private UI out of the shared directories (inventory in `ARCHITECTURE.md`).
 - Everything under `src/lib` is published except `server/`, `showcase/` and `app/`, so an app-only module belongs in one of those three; the package build derives its file list and runtime dependencies from what is left.

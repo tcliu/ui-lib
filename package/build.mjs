@@ -3,33 +3,30 @@
 //
 // The canonical sources stay where they are (`src/lib`), because the shared
 // parity gate and every consuming app address them by that path. This script
-// copies the package surface into a staging tree, prunes the tests, rewrites
-// the specifiers that only resolve inside this app, compiles the result with
-// `svelte-package`, and writes `dist/`, which carries the manifest npm
-// publishes. The app itself never imports `dist/`; it keeps using `$lib`.
+// copies the package surface into a staging tree, prunes the app's private
+// modules and tests, compiles the result with `svelte-package`, and writes
+// `dist/`, which carries the manifest npm publishes. The app itself never
+// imports `dist/`; it keeps using `$lib`.
+//
+// `svelte-package` resolves the `$lib` alias from the staging `svelte.config.js`,
+// so the published package carries relative specifiers without a custom
+// rewrite. The one app-only binding left is the framework's `$app/environment`
+// in a shared file that must stay byte-identical across projects; the staging
+// copy maps it onto `esm-env`.
 //
 // The surface is the whole tree minus the app's private directories, and the
 // runtime dependencies are read from what the staged sources import, so a new
 // shared module or package reaches the published package without a list edit.
-//
-// The rewrite is the load-bearing step: `$lib/x` resolves against this app's
-// `src/lib` and against the consumer's own `src/lib`, so a published package
-// must not keep it. Every relative specifier is normalized to the file name
-// the compiler emits, because `svelte-package` does not add extensions.
-//
-// A specifier that points outside the surface is an error, not a warning: the
-// package must be self-contained, and the surface must not reach into the
-// app's private modules.
 
 import { spawnSync } from 'node:child_process'
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
-import { copyFile, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
+import { readFileSync, readdirSync } from 'node:fs'
+import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const LIB = join(ROOT, 'src', 'lib')
-// Build working area: the staging tree, the tarball and the scratch consumer.
+// Build working area: the staging tree, the scratch consumer and the resolve probe.
 // A dot-directory, like SvelteKit's own generated state (`.svelte-kit/`);
 // `build/` is the adapter's output name in SvelteKit, so it is not reused here.
 const BUILD_DIR = join(ROOT, '.package-build')
@@ -60,13 +57,9 @@ const PRUNE_DIRS = new Set(['__tests__'])
 // manifest behind. The version still comes from the app's manifest, so the
 // package never drifts from the versions the app builds against.
 //
-// Two packages never appear as a surface import:
-//   `@babel/runtime` — the CodeMirror theme package imports it at runtime, and
-//     the surface never does.
-//   `esm-env` — the rewrite maps `$app/environment` onto it, and the app reads
-//     the framework module instead.
+// One package never appears as a surface import: `@babel/runtime` is imported
+// at runtime by the CodeMirror theme package, not by the surface.
 const IMPLICIT_DEPS = ['@babel/runtime']
-const ESM_ENV = 'esm-env'
 // The consumer supplies the compiler, so `svelte` is a peer, never a dependency.
 const PEER_DEPS = new Set(['svelte'])
 // npm's package-name shape, so a specifier read out of a code sample is ignored.
@@ -83,23 +76,23 @@ function runtimeDepOf(specifier) {
   const parts = specifier.split('/')
   const name = specifier.startsWith('@') ? parts.slice(0, 2).join('/') : parts[0]
   if (!DEP_NAME_RE.test(name)) return null
-  return PEER_DEPS.has(name) || name === ESM_ENV ? null : name
+  return PEER_DEPS.has(name) ? null : name
 }
 
-// The published package version follows the app's.
+// The published package version follows the app's. The name is the package's
+// only identity literal: the scope, license holder and registry derive from it,
+// and every package script imports it instead of repeating it.
 const PACKAGE_NAME = '@codepg/ui-lib'
+const SCOPE = PACKAGE_NAME.split('/')[0]
+const DEFAULT_REGISTRY = 'https://registry.npmjs.org/'
 
-// `npm pack` embeds the version in its own file name; the stable name drops it
-// so a consumer's file specifier survives a version bump.
-const TARBALL_NAME = `${PACKAGE_NAME.replace(/^@/, '').replace('/', '-')}.tgz`
-
-export { PACKAGE_NAME, TARBALL_NAME }
+export { PACKAGE_NAME }
 
 // The license the package publishes under. npm checks the field, not the file:
 // publishing is not blocked without a LICENSE file, but the tarball should
 // carry the text, so both live here and change together.
 const LICENSE = 'MIT'
-const LICENSE_HOLDER = 'codepg'
+const LICENSE_HOLDER = SCOPE.replace(/^@/, '')
 const LICENSE_TEXT = `MIT License
 
 Copyright (c) ${new Date().getFullYear()} ${LICENSE_HOLDER}
@@ -124,16 +117,6 @@ SOFTWARE.
 `
 
 // --- the surface -----------------------------------------------------------
-
-/** True when the path belongs to the published surface. */
-function isSurfaceFile(abs) {
-  const rel = relative(LIB, abs)
-  if (!rel || rel.startsWith('..')) return false
-  const segments = rel.split(/[\\/]/)
-  if (PRIVATE_DIRS.has(segments[0])) return false
-  if (segments.some((segment) => PRUNE_DIRS.has(segment))) return false
-  return !PRUNE_FILE_RE.test(segments[segments.length - 1])
-}
 
 /** Every file of the surface, as absolute paths. */
 async function collectSurface() {
@@ -171,36 +154,7 @@ function surfaceHeads(files) {
   return [...heads].sort()
 }
 
-// --- the rewrite -----------------------------------------------------------
-
-// A specifier that names a file, with or without its extension.
-const RESOLVE_SUFFIXES = ['', '.ts', '.svelte.ts', '.svelte', '.js', '.mjs', '/index.ts', '/index.js']
-
-/** The file a specifier names, or null when it names none. */
-function resolveModule(abs) {
-  for (const suffix of RESOLVE_SUFFIXES) {
-    const candidate = abs + suffix
-    if (existsSync(candidate) && statSync(candidate).isFile()) return candidate
-  }
-  return null
-}
-
-/**
- * The file name the compiler emits for a source file: a `.svelte.ts` rune
- * module becomes `.svelte.js`, a `.ts` module becomes `.js`, and a component
- * keeps its name.
- */
-function emittedPath(abs) {
-  if (abs.endsWith('.svelte.ts')) return `${abs.slice(0, -'.svelte.ts'.length)}.svelte.js`
-  if (abs.endsWith('.ts')) return `${abs.slice(0, -'.ts'.length)}.js`
-  return abs
-}
-
-/** A relative specifier from one file to another, always prefixed. */
-function relativeSpecifier(fromFile, target) {
-  const rel = relative(dirname(fromFile), target).split(/[\\/]/).join('/')
-  return rel.startsWith('.') ? rel : `./${rel}`
-}
+// --- the build -------------------------------------------------------------
 
 // `from '...'`, `import '...'` and `import('...')` carry a module specifier.
 const SPECIFIER_RE = /(\bfrom\s*|\bimport\s*|\bimport\(\s*)(['"])([^'"]+)\2/g
@@ -212,12 +166,12 @@ const APP_ENV_IMPORT_RE = /import\s*\{([^}]*)\}\s*from\s*(['"])\$app\/environmen
 
 /** The named bindings of a `$app/environment` import, as `esm-env` names them. */
 function rewriteAppEnvironment(text, fromFile) {
-  return text.replace(APP_ENV_IMPORT_RE, (match, names, quote) => {
+  return text.replace(APP_ENV_IMPORT_RE, (match, names) => {
     const bindings = names
       .split(',')
-      .map((name) => name.trim())
+      .map(name => name.trim())
       .filter(Boolean)
-      .map((name) => {
+      .map(name => {
         const mapped = APP_ENV_NAMES[name]
         if (!mapped) {
           throw new Error(
@@ -230,60 +184,19 @@ function rewriteAppEnvironment(text, fromFile) {
   })
 }
 
-/**
- * The specifier a file should carry in the published package, or null when the
- * specifier stays as it is.
- */
-function rewriteSpecifier(fromFile, specifier) {
-  // The browser flag comes from the package's own environment module: the
-  // consumer's `$app/environment` is not the package's to reach.
-  if (specifier === '$app/environment') return 'esm-env'
-
-  let target = null
-  if (specifier.startsWith('$lib/')) {
-    target = resolveModule(join(LIB, specifier.slice('$lib/'.length)))
-    if (!target) throw new Error(`package: unresolved specifier ${specifier} in ${relative(ROOT, fromFile)}`)
-  } else if (specifier.startsWith('./') || specifier.startsWith('../')) {
-    target = resolveModule(resolve(dirname(fromFile), specifier))
-    // A specifier that names no file stays: a stylesheet or a package the
-    // consumer resolves itself.
-    if (!target) return null
-  } else {
-    return null
-  }
-
-  if (!isSurfaceFile(target)) {
-    throw new Error(
-      `package: ${relative(ROOT, fromFile)} imports ${specifier}, which is outside the package surface`,
-    )
-  }
-  return relativeSpecifier(fromFile, emittedPath(target))
-}
-
-/** The source of a file with every specifier rewritten. */
-function rewriteSource(fromFile, text) {
-  const withEnv = rewriteAppEnvironment(text, fromFile)
-  return withEnv.replace(SPECIFIER_RE, (match, lead, quote, specifier) => {
-    const rewritten = rewriteSpecifier(fromFile, specifier)
-    return rewritten === null ? match : `${lead}${quote}${rewritten}${quote}`
-  })
-}
-
-// --- the build -------------------------------------------------------------
-
 async function copySurface() {
   const files = await collectSurface()
   const imported = new Set()
   for (const abs of files) {
     const rel = relative(LIB, abs)
     const target = join(STAGING, 'src', 'lib', rel)
-    const text = await readFile(abs, 'utf8')
-    for (const match of text.matchAll(SPECIFIER_RE)) {
+    const source = rewriteAppEnvironment(await readFile(abs, 'utf8'), abs)
+    for (const match of source.matchAll(SPECIFIER_RE)) {
       const dep = runtimeDepOf(match[3])
       if (dep) imported.add(dep)
     }
     await mkdir(dirname(target), { recursive: true })
-    await writeFile(target, rewriteSource(abs, text))
+    await writeFile(target, source)
   }
   return { files, imported }
 }
@@ -301,30 +214,58 @@ const STAGING_MANIFEST = {
 }
 
 /**
- * The exports map, one entry per shipped file.
+ * The exports map.
  *
- * A wildcard cannot serve the surface: a rune module compiles to
- * `x.svelte.js`, so `"./*.svelte"` and `"./*"` both claim the same specifier
- * and the wrong one wins. An explicit entry lets a consumer keep the source
- * path it already knows (`components/Button.svelte`, `size-scale`) while the
- * target names the file the compiler emitted.
+ * Three patterns cover the surface — one per directory that ships components,
+ * plus a catch-all for the plain modules — because a per-file map is a 36 KB
+ * manifest for a 1.6 MB package. The one shape a pattern cannot express is a
+ * rune module under a component directory: its specifier ends `.svelte` while
+ * the compiled file keeps `.js` (`use-grid-model.svelte` → `use-grid-model.svelte.js`),
+ * so the directory's `*.svelte` pattern would claim it and point at a missing
+ * file. Those modules keep an explicit entry, which wins over a pattern by
+ * exact match. A consumer still keeps the source path it knows
+ * (`components/Button.svelte`, `i18n.svelte`, `size-scale`).
  */
 function exportsMap() {
-  const entries = {}
-  for (const abs of walk(OUT)) {
-    const rel = relative(OUT, abs).split(/[\\/]/).join('/')
-    if (rel === 'package.json' || rel === 'styles.css' || rel.endsWith('.d.ts')) continue
-    if (rel === 'index.js') continue
-    const natural = rel.endsWith('.svelte.js')
+  const files = walk(OUT)
+    .map(abs => relative(OUT, abs).split(/[\\/]/).join('/'))
+    .filter(rel => rel !== 'package.json' && !rel.endsWith('.d.ts'))
+
+  const natural = rel =>
+    rel.endsWith('.svelte.js')
       ? rel.slice(0, -'.svelte.js'.length) + '.svelte'
       : rel.endsWith('.js')
         ? rel.slice(0, -'.js'.length)
         : rel
-    // The declaration file sits next to the module: `x.svelte.js` is declared
-    // by `x.svelte.d.ts`, and a component by `x.svelte.d.ts` as well.
-    const types = `./${rel.replace(/\.js$/, '')}.d.ts`
-    entries[`./${natural}`] = { types, svelte: `./${rel}`, default: `./${rel}` }
+  // The declaration file sits next to the module: `x.svelte.js` is declared by
+  // `x.svelte.d.ts`, and a component by `x.svelte.d.ts` as well.
+  const entry = rel => ({
+    types: `./${rel.replace(/\.js$/, '')}.d.ts`,
+    svelte: `./${rel}`,
+    default: `./${rel}`,
+  })
+
+  const entries = {}
+  const componentDirs = new Set()
+  for (const rel of files) {
+    if (!rel.endsWith('.svelte')) continue
+    const dir = rel.slice(0, rel.lastIndexOf('/'))
+    // A component at the root has no directory pattern to ride.
+    if (dir === '') entries[`./${natural(rel)}`] = entry(rel)
+    else componentDirs.add(dir)
   }
+  for (const rel of files) {
+    if (!rel.endsWith('.svelte.js')) continue
+    entries[`./${natural(rel)}`] = entry(rel)
+  }
+  for (const dir of componentDirs) {
+    entries[`./${dir}/*.svelte`] = {
+      types: `./${dir}/*.svelte.d.ts`,
+      svelte: `./${dir}/*.svelte`,
+      default: `./${dir}/*.svelte`,
+    }
+  }
+  entries['./*'] = { types: './*.d.ts', svelte: './*.js', default: './*.js' }
   entries['.'] = { types: './index.d.ts', svelte: './index.js', default: './index.js' }
   entries['./styles.css'] = './styles.css'
   entries['./package.json'] = './package.json'
@@ -352,31 +293,31 @@ function publishManifest(imported) {
     }
     dependencies[dep] = version
   }
-  const esmEnv = JSON.parse(
-    readFileSync(join(ROOT, 'node_modules', ESM_ENV, 'package.json'), 'utf8'),
-  ).version
-  dependencies[ESM_ENV] = `^${esmEnv}`
 
   return {
     name: PACKAGE_NAME,
     version: app.version,
     description: 'The shared UI surface: components, icons, actions and the i18n store.',
     license: LICENSE,
+    author: LICENSE_HOLDER,
+    // Registry search reads these; no repository/homepage/bugs until the app
+    // has a remote to point them at.
+    keywords: ['svelte', 'sveltekit', 'ui', 'components', 'design-system'],
     type: 'module',
     svelte: './index.js',
-    sideEffects: false,
+    // The stylesheet import is a side effect a bundler must keep; every JS
+    // module in the surface is side-effect free.
+    sideEffects: ['*.css'],
     // The package root is `dist/`, so every target is relative to it.
     exports: exportsMap(),
     // The scope is public and lives on the public registry; the account that
     // publishes it is the one this machine is logged in as.
     publishConfig: {
       access: 'public',
-      registry: 'https://registry.npmjs.org/',
+      registry: DEFAULT_REGISTRY,
     },
     peerDependencies: { svelte: app.devDependencies.svelte },
-    dependencies: Object.fromEntries(
-      Object.entries(dependencies).sort(([a], [b]) => (a < b ? -1 : 1)),
-    ),
+    dependencies: Object.fromEntries(Object.entries(dependencies).sort(([a], [b]) => (a < b ? -1 : 1))),
   }
 }
 
@@ -394,10 +335,72 @@ async function writeStyles() {
   await writeFile(join(OUT, 'styles.css'), `${css}\n@source "./";\n`)
 }
 
-/** The license text and the scope's registry. npm never packs an `.npmrc`. */
-async function writePublishingFiles() {
+/** The license text the tarball carries. */
+async function writeLicense() {
   await writeFile(join(OUT, 'LICENSE'), LICENSE_TEXT)
-  await writeFile(join(OUT, '.npmrc'), `@${PACKAGE_NAME.split('/')[0]}:registry=https://registry.npmjs.org/\n`)
+}
+
+/**
+ * The README the registry renders. It describes the published package, not the
+ * showcase app the sources live in, so the counts come from the exports map and
+ * cannot drift from what shipped.
+ */
+async function writeReadme(manifest) {
+  // A rune module's specifier also ends in `.svelte` (`use-grid-model.svelte`),
+  // but its compiled target keeps `.js`; only a component resolves to a
+  // `.svelte` file, so the counts read the target, not the specifier.
+  const shipped = Object.values(manifest.exports).filter(entry => typeof entry === 'object')
+  const count = prefix =>
+    shipped.filter(entry => entry.default.startsWith(prefix) && entry.default.endsWith('.svelte')).length
+  const components = count('./components/')
+  const icons = count('./icons/')
+  await writeFile(
+    join(OUT, 'README.md'),
+    `# ${manifest.name}
+
+${manifest.description}
+
+## Install
+
+\`\`\`bash
+npm install ${manifest.name}
+\`\`\`
+
+\`svelte\` is a peer dependency, so the consuming app supplies it.
+
+## Use
+
+\`\`\`svelte
+<script lang="ts">
+  import Button from '${manifest.name}/components/Button.svelte'
+</script>
+
+<Button>Save</Button>
+\`\`\`
+
+The stylesheet carries the theme tokens and palettes; import it where the app's
+Tailwind entry lives, because it also points Tailwind at the package's files:
+
+\`\`\`css
+@import 'tailwindcss';
+@import '${manifest.name}/styles.css';
+\`\`\`
+
+## Entries
+
+- \`${manifest.name}\` — the barrel export
+- \`${manifest.name}/components/*.svelte\` — ${components} components
+- \`${manifest.name}/icons/*.svelte\` — ${icons} icon glyphs
+- \`${manifest.name}/actions/*\`, \`locales/*\`, \`data-table/*\` — supporting modules
+- \`${manifest.name}/styles.css\` — theme tokens, palettes and Tailwind source globs
+
+The package's \`exports\` map is the full list.
+
+## License
+
+${manifest.license}
+`,
+  )
 }
 
 function runPackager() {
@@ -426,6 +429,18 @@ async function removeDir(dir) {
     }
     await rm(dir, { recursive: true, force: true }).catch(() => {})
   })
+  // A stale directory entry can outlive its removal on a mounted filesystem
+  // (drvfs, 9p): re-read after a beat and retry the stubborn entry before
+  // declaring the tree unremovable, so a rerun is not needed.
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const left = await readdir(dir).catch(() => [])
+    if (left.length === 0) return
+    await new Promise(resolve => setTimeout(resolve, 100))
+    for (const entry of left) {
+      await rm(join(dir, entry), { recursive: true, force: true, maxRetries: 5 }).catch(() => {})
+    }
+    await rm(dir, { recursive: true, force: true }).catch(() => {})
+  }
   const left = await readdir(dir).catch(() => [])
   if (left.length > 0) throw new Error(`package: ${dir} still holds ${left.length} entries`)
 }
@@ -437,6 +452,17 @@ async function main() {
 
   const { files, imported } = await copySurface()
   await writeFile(join(STAGING, 'package.json'), `${JSON.stringify(STAGING_MANIFEST, null, 2)}\n`)
+  await writeFile(
+    join(STAGING, 'svelte.config.js'),
+    `import { fileURLToPath } from 'node:url'
+
+// svelte-package resolves \`$lib\` against this staging tree, so the published
+// sources carry relative specifiers without a \`$lib\` rewrite.
+export default {
+  alias: { $lib: fileURLToPath(new URL('./src/lib', import.meta.url)) },
+}
+`,
+  )
   await writeFile(
     join(STAGING, 'tsconfig.json'),
     `${JSON.stringify(
@@ -465,32 +491,14 @@ async function main() {
   const output = runPackager()
   const manifest = await writeManifest(imported)
   await writeStyles()
-  await writePublishingFiles()
+  await writeLicense()
+  await writeReadme(manifest)
 
-  // The tarball a consumer installs from. It lands outside the build tree, so
-  // the package root stays the compiled output and the tarball is a copy of it.
-  const packed = await runPack()
   const shipped = (await readdir(OUT, { recursive: true })).length
-  console.log(`package: ${files.length} source files from ${surfaceHeads(files).join(', ')} -> ${shipped} files in dist/`)
+  console.log(
+    `package: ${files.length} source files from ${surfaceHeads(files).join(', ')} -> ${shipped} files in dist/`,
+  )
   console.log(`package: ${manifest.name}@${manifest.version} (${output.trim().split('\n')[0] ?? 'built'})`)
-  console.log(`package: tarball ${packed}`)
-}
-
-/**
- * Pack the built package into the build directory, where a consumer installs
- * it from.
- */
-async function runPack() {
-  const result = spawnSync('npm', ['pack', '--pack-destination', BUILD_DIR], {
-    cwd: OUT,
-    encoding: 'utf8',
-  })
-  if (result.status !== 0) {
-    throw new Error(`package: npm pack failed\n${result.stderr ?? ''}`)
-  }
-  const filename = (result.stdout ?? '').trim().split('\n').pop()
-  await copyFile(join(BUILD_DIR, filename), join(BUILD_DIR, TARBALL_NAME))
-  return TARBALL_NAME
 }
 
 // The check script imports this module for the shared paths; running it

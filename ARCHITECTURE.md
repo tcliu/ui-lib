@@ -75,7 +75,7 @@ ui-lib/
 │   ├── design.md                 # User-facing behavior
 │   └── spec.md                   # Behavioral contracts, API specs, constraints
 ├── package/                      # The publishable package (build only, not the source)
-│   ├── build.mjs                 # Copies, prunes and rewrites the surface into dist/
+│   ├── build.mjs                 # Copies and prunes the surface, then runs svelte-package
 │   └── check.mjs                 # Verifies the built package and the scratch consumer
 └── .worktrees/                   # Git worktrees (gitignored)
 ```
@@ -209,16 +209,16 @@ canonical again is reported as stale.
 
 `src/lib` is the canonical shared surface, and it stays there: the parity gate and
 every consuming app address it by that path. The npm package is a **generated
-artifact**, not a second source of truth — `npm run package:build` compiles the
+artifact**, not a second source of truth — `npm run package` compiles the
 surface into `dist/`, which carries the manifest npm publishes.
 
 ```
 src/lib/**                       canonical, unchanged, siblings unaffected
-  └─ package/build.mjs
-       .package-build/staging/    copy → prune tests → rewrite specifiers
-         $lib/x        → ../x     (relative, per file)
-         $app/environment → esm-env
-       dist/                      svelte-package output + the publish manifest
+  └─ npm run package
+       .package-build/staging/    copy → prune tests
+         svelte.config.js         alias: { $lib: ./src/lib }
+         svelte-package           $lib/x → ../x; .ts → .js
+       dist/                      compiled output + the publish manifest
 ```
 
 - **The surface** — everything under `src/lib` except the app's own modules:
@@ -229,25 +229,47 @@ src/lib/**                       canonical, unchanged, siblings unaffected
 - **The dependencies** — read from the bare specifiers the staged sources import
   and pinned to the app's own versions, so the published manifest cannot drift
   from what the app builds against. `@babel/runtime` is implicit (the CodeMirror
-  theme package imports it at runtime), `esm-env` comes from the installed copy,
-  and `svelte` stays a peer.
-- **The rewrite** — `$lib/x` resolves against the consumer's own `src/lib`, so a
-  published package must not keep it; every relative specifier is normalized to
-  the file the compiler emits (`x.svelte.ts` → `x.svelte.js`, `x.ts` → `x.js`),
-  because `svelte-package` adds no extension.
-- **`$app/environment`** — the framework's module does not ship with the
-  package; the browser flag comes from `esm-env`, whose flags are named in upper
-  case (`BROWSER as browser`).
-- **The exports map** — one entry per shipped file, because a wildcard cannot
-  serve it: a rune module compiles to `x.svelte.js`, so `"./*.svelte"` and
-  `"./*"` claim the same specifier. A consumer keeps the source path it knows
-  (`components/Button.svelte`, `size-scale`, `i18n.svelte`).
+  theme package imports it at runtime), `esm-env` is a normal dependency, and
+  `svelte` stays a peer.
+- **The alias** — `$lib/x` resolves against this app's `src/lib` and against the
+  consumer's own `src/lib`, so a published package must not keep it. The staging
+  `svelte.config.js` points `$lib` at the staging tree and `svelte-package`
+  resolves it to a relative specifier, so there is no `$lib` rewrite. The
+  compiler keeps the source specifier shape (an extensionless import stays
+  extensionless), which the consumer's bundler resolves.
+- **The environment flag** — a shared module imports `BROWSER as browser` from
+  `esm-env` directly where its own copy allows it. The one shared component kept
+  byte-identical across projects keeps `$app/environment`, and the staging copy
+  maps it to `esm-env`, because the framework module never ships.
+- **The exports map** — one `*.svelte` pattern per component directory, one
+  `*` catch-all (`*.js`), and an explicit entry for every rune module a
+  component pattern would otherwise claim: its specifier ends `.svelte` while
+  the compiled file keeps `.js` (`use-grid-model.svelte` →
+  `use-grid-model.svelte.js`), and an exact key wins over a pattern. A consumer
+  keeps the source path it knows (`components/Button.svelte`, `size-scale`,
+  `i18n.svelte`), and the manifest stays ~8 KB instead of one entry per file.
 - **The stylesheet** — `dist/styles.css` carries the tokens and the palettes,
   plus the `@source` globs that point the consumer's Tailwind at the package
   (Tailwind does not scan `node_modules`).
+- **The manifest** — carries the package identity (`name`, `version`,
+  `description`, `license`, `author`, `keywords`), the public `publishConfig`,
+  and the exports map above; `sideEffects: ['*.css']` keeps a bundler from
+  pruning the stylesheet import while every JS module stays side-effect free,
+  and `repository`/`homepage`/`bugs` stay absent until the app has a remote to
+  point them at.
+- **The README** — `dist/README.md` describes the published package (install,
+  the stylesheet import, the entry groups), its counts read from the exports
+  map; the app's own `README.md` covers the showcase instead.
 - **`npm run publish:check`** — builds the package, asserts that no test and no
-  app-only specifier ships, that every import resolves, that every export
-  target exists, packs the tarball, and builds a scratch consumer against it.
+  app-only specifier ships, that every import resolves, that every shipped file
+  resolves through the exports map, that the README ships and the stylesheet
+  keeps its side effect, packs the tarball, and builds a scratch consumer
+  against it.
+- **`npm run release`** — bumps nothing by itself: run `npm version <patch|minor|major>`
+  first, then the release script runs `publish:check`, rebuilds with `package`
+  (including `publint`), and publishes the built directory with
+  `npm publish ./dist --access public`. A version already on the registry fails
+  at npm, so there is no registry-diff or auto-bump step.
 
 The i18n store is the one module the package owns and the app also uses: the
 context key comes from the global symbol registry (`Symbol.for('ui-lib:i18n')`),
@@ -711,7 +733,8 @@ attributes in place). These isolated infrastructure helpers are the only
 exceptions, and the pattern must not be copied into feature code:
 `position-panel.svelte.ts`, `BaseDialog` + `use-app-shell-drawer.svelte.ts`,
 `use-dropdown.svelte.ts`, `click-outside.ts`, `use-focusout-close.ts`,
-`focus-within.ts`, `drag-close-down.ts`, `Tooltip.svelte`, `AppShell.svelte`,
+`focus-within.ts`, `drag-close-down.ts`, `caret-at-end-on-keyboard-focus.ts`,
+`Tooltip.svelte`, `AppShell.svelte`,
 `use-grid-autoscroll.svelte.ts`, `grid-cell-refs.ts`,
 `use-table-scroll-sync.svelte.ts`, `app/theme.svelte.ts`, and `i18n.svelte.ts`.
 

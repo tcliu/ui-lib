@@ -24,14 +24,25 @@ The shared surface in `src/lib` also ships as `@codepg/ui-lib`. The package is
 built from the same sources — it is a generated artifact, not a second copy.
 
 ```bash
-npm run package:build   # compile the surface into dist/ and pack the tarball
+npm run package         # compile the surface into dist/
 npm run publish:check   # verify the package and build a scratch consumer
 ```
 
-`dist/` is gitignored. A consuming app installs the tarball
-(`@codepg/ui-lib`) and imports the components by name; the app's own i18n
-dictionary merges over the shared one. See `ARCHITECTURE.md` for the surface,
-the rewrite and the exports map.
+`dist/` is gitignored. A consuming app installs `@codepg/ui-lib` and imports the
+components by name; the app's own i18n dictionary merges over the shared one.
+See `ARCHITECTURE.md` for the surface, the `$lib` alias and the exports map.
+
+### Releasing
+
+Bump the version, then publish the built package root:
+
+```bash
+npm version patch       # or minor / major
+npm run release         # publish:check + package + npm publish ./dist --access public
+```
+
+`npm run release` does not bump or diff against the registry; npm rejects a
+version that is already published.
 
 ### Publishing locally
 
@@ -40,11 +51,10 @@ consumer install — without an npm account:
 
 ```bash
 npx verdaccio --config <config> --listen 4873   # the registry
-npm run package:build
 npm run publish:local
 ```
 
-`publish:local` runs `cd dist && npm publish --registry
+`publish:local` builds the package and runs `cd dist && npm publish --registry
 http://localhost:4873/ --tag latest`: it publishes the built package, never
 the app root, and the explicit tag keeps a rehearsal working once the registry
 already holds a higher version.
