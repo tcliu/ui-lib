@@ -28,26 +28,35 @@ Project-specific development conventions for the UI Library web app.
 
 ## Architecture
 
-- The project root hosts the browser app.
-- The shared surface stays at `src/lib`; the npm package is a generated artifact
-  (`npm run package` writes `dist/`), never a second source of truth.
-- The package build leans on `svelte-package`: resolve `$lib` with the staging
-  `svelte.config.js` alias, import `esm-env` at the source, and keep the build's
-  `$app/environment` mapping only for a shared file that must stay
-  byte-identical across projects.
-- Release by bumping `package.json` with `npm version` and publishing `./dist`
-  with `npm publish`; the build does not diff against the registry or bump.
+- The project root hosts the browser app and the npm package: the shared source
+  stays in `src/lib`, and the root `package.json` is the package manifest.
+- `npm run package` runs `tools/build-package.mjs`: `svelte-package` with
+  `PACKAGE=1`, the prune of server-only output and tests from `dist/`, then
+  `publint`. The root `exports`/`files` fields define what ships.
+- That tool drops `svelte-package`'s server-only guard warning only for the
+  files the prune removes; it names them and fails when one survives, or when
+  any other warning remains. Never add an `$app/server` guard import to silence
+  it.
+- The root `svelte.config.js` keeps the app aliases under `kit` and adds the
+  package-only `$lib`/`$app/environment` ones when `PACKAGE=1`, because
+  `svelte-package` and SvelteKit read different config keys.
+- Release by bumping the root version with `npm version <patch|minor|major>` and
+  running `npm publish`; npm's `prepublishOnly` hook runs `npm run publish:check`
+  first, and the build does not diff against the registry or bump.
 - A shared component originates here: a sibling that needs one adds it to this
   repo, republishes the package, then consumes it from the package.
 - A consuming app imports the package by name (`@codepg/ui-lib/...`); the
   package's own i18n store and the app's share one context key, so the app
   merges its dictionary over the shared one.
-- The published name is one literal in `package/build.mjs`; the scope, license
-  holder and registry derive from it, and every package script imports it
-  rather than repeating the scope.
+- The published identity lives in the root `package.json`; scripts read the name
+  rather than repeating the scope. Dependencies used only by the app's scripts
+  or server stay in `devDependencies`.
 - This project is the canonical source for the shared UI surface; fix a shared component here first, then port it, never fork without syncing back.
 - Reuse the existing shared control for a concern instead of building a parallel one; keep app-private UI out of the shared directories (inventory in `ARCHITECTURE.md`).
-- Everything under `src/lib` is published except `server/`, `showcase/` and `app/`, so an app-only module belongs in one of those three; the package build derives its file list and runtime dependencies from what is left.
+- `server/` stays under `src/lib` so SvelteKit's `$lib/server` guard covers it;
+  the package prunes it from `dist/`. `showcase/` and `app/` are app-private and
+  live in `src/showcase` and `src/app`, outside the package source. An
+  app-only module belongs in one of those two.
 - An app-owned value rides a shared default plus an app-supplied override (a configure call or a data file read at the call site): the shared module stays byte-identical and the package owns it, so the app supplies data instead of owning code. A per-app literal inside a shared module is the exception the parity gate has to whitelist; prefer the override shape.
 - A keyed `localStorage` surface layers a generic store and a typed wrapper instead of hand-rolling prefix logic: `createPersistStore(prefixes)` owns the chain (first prefix writes, later ones are migrated read fallbacks, removal clears all) and the domain module (`useColumnWidthStorage`) owns parsing and appends its canonical prefix. The caller passes its own prefixes; no module-level `configure` call or global registry, so behavior never depends on startup order.
 - A module whose only per-app part is such a value becomes package-owned (its marker drops); a marker survives only for app content — dictionary bodies, project config data, a package entry — where no call site can supply it.
@@ -166,7 +175,7 @@ Project-specific development conventions for the UI Library web app.
 - Never assign a constructed collection (`new Set()`/`new Map()`) to snippet state; the compiler emits a legacy `init()` that throws at root mount.
 - The playground executes arbitrary JavaScript in the page and is not a sandbox:
   never hand it app secrets, stores, or fetch wrappers.
-- Register every page in `src/lib/showcase/showcase-components.ts` and start a new page
+- Register every page in `src/showcase/showcase-components.ts` and start a new page
   from a close existing one; the add-a-page checklist is in `ARCHITECTURE.md`
   (Showcase component pages).
 - The Icons page indexes the whole set: every glyph under `src/lib/icons` gets an entry, in name order, and the snippet playground's preamble imports every glyph, so a directory-parity spec fails when either list misses one.
@@ -187,7 +196,7 @@ Project-specific development conventions for the UI Library web app.
 - A Value cell's Type takes a `?` suffix only when the prop is optional, so a required value keeps the bare type.
 - A Value input's placeholder is the literal default when the prop has one, otherwise absent, never a meta-hint like `(none)` or `(built-in)`.
 - Build a dialog-backed prop row with the shared `snippetField`/`jsonField`/`snippetToggle`/`resetToggle`/`snippetDialog` helpers rather than inline row literals; the row's seed and commit stay page-specific. Mechanism in `ARCHITECTURE.md`.
-- Build a `size`/`text`/`boolean`/`enum` prop row with the shared `sizeField`/`textField`/`boolField`/`enumField` helper rather than an inline literal; Show-code builders share escaping and tri-state helpers (`escapeAttr`/`escapeText`/`escapeRawLine`/`unescapeAttr`/`TriState`/`flagOn`) from `$lib/showcase/snippet-build.ts` instead of re-declaring them per page.
+- Build a `size`/`text`/`boolean`/`enum` prop row with the shared `sizeField`/`textField`/`boolField`/`enumField` helper rather than an inline literal; Show-code builders share escaping and tri-state helpers (`escapeAttr`/`escapeText`/`escapeRawLine`/`unescapeAttr`/`TriState`/`flagOn`) from `$showcase/snippet-build.ts` instead of re-declaring them per page.
 - The shell owns the snippet preview: a page passes `scope`/`sync` (plus `scopeRefresh`/`scopeRefreshWhen` when its snippet reads scope keys the seed omits) to `ShowcasePage` rather than constructing a `SnippetPreview` itself.
 - Seed a dialog-backed Value cell from the fallback-resolved demo value, not the raw override; map the untouched default back to unset on commit.
 - A dialog-backed row must round-trip every editable facet its dialog presents, with `dialog.valid` rejecting any shape it cannot reproduce; cover each with a round-trip spec.
@@ -215,7 +224,7 @@ Project-specific development conventions for the UI Library web app.
 
 ## Theming
 
-- Theme palettes live only in `src/styles.css` as `[data-theme]` overrides of
+- Theme palettes live only in `src/lib/styles.css` as `[data-theme]` overrides of
   the Tailwind palette variables; do not add per-component theme conditionals
   or duplicate palette values.
 - Ink on vivid accent fills uses the fixed `text-onaccent` token, never a
@@ -226,7 +235,7 @@ Project-specific development conventions for the UI Library web app.
 ## References
 
 - Follow `~/.agents/references/svelte.md` for Svelte 5 runes and effect rules.
-- Follow `~/.agents/references/packaging.md` for the package delivery model (generated artifact, specifier rewrite, exports map, republish flow).
+- Follow `~/.agents/references/packaging.md` for the package delivery model (in-place compile, exports map, published manifest, republish flow).
 - Follow `~/.agents/references/js-ts.md` for module design (coherent responsibility, one-way dependency flow, domain helpers split from presentation).
 - Follow `~/.agents/references/tailwind.md` for literal utility classes and attribute-driven palette remapping.
 - Follow `~/.agents/references/accessibility.md` for focus management, keyboard access, labels, and reduced motion.

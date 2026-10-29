@@ -20,29 +20,50 @@ npm run dev        # dev server (Vite, host-exposed)
 
 ## The npm package
 
-The shared surface in `src/lib` also ships as `@codepg/ui-lib`. The package is
-built from the same sources — it is a generated artifact, not a second copy.
+The shared surface in `src/lib` is also the npm package `@codepg/ui-lib`; the
+root `package.json` carries its name, `exports` and `files`.
 
 ```bash
-npm run package         # compile the surface into dist/
+npm install @codepg/ui-lib
+```
+
+Svelte `^5.57` is a peer dependency. Import the stylesheet once in the app
+shell, after Tailwind's own import, so the consumer's Tailwind also scans the
+package's compiled files:
+
+```css
+@import 'tailwindcss';
+@import '@codepg/ui-lib/styles.css';
+```
+
+Components and icons import by path (`@codepg/ui-lib/components/Button.svelte`,
+`@codepg/ui-lib/icons/CheckIcon.svelte`); the package entry
+(`@codepg/ui-lib`) carries the i18n store and the size/persistence helpers. The
+package is consumed through a bundler: its compiled modules keep the source's
+extensionless relative imports.
+
+```bash
+npm run package         # compile + prune + publint
 npm run publish:check   # verify the package and build a scratch consumer
 ```
 
-`dist/` is gitignored. A consuming app installs `@codepg/ui-lib` and imports the
-components by name; the app's own i18n dictionary merges over the shared one.
-See `ARCHITECTURE.md` for the surface, the `$lib` alias and the exports map.
+`dist/` is gitignored. A consuming app installs `@codepg/ui-lib` and imports
+the components by name; the app's own i18n dictionary merges over the shared
+one. See `ARCHITECTURE.md` for the surface, the aliases and the exports map.
+`publish:check` installs the packed tarball into a scratch app, so it needs
+registry access; `npm run package` alone is offline.
 
 ### Releasing
 
-Bump the version, then publish the built package root:
+Bump the version, then publish the package:
 
 ```bash
 npm version patch       # or minor / major
-npm run release         # publish:check + package + npm publish ./dist --access public
+npm publish             # prepublishOnly runs publish:check first
 ```
 
-`npm run release` does not bump or diff against the registry; npm rejects a
-version that is already published.
+`npm publish` does not bump or diff against the registry; npm rejects a version
+that is already published.
 
 ### Publishing locally
 
@@ -54,10 +75,12 @@ npx verdaccio --config <config> --listen 4873   # the registry
 npm run publish:local
 ```
 
-`publish:local` builds the package and runs `cd dist && npm publish --registry
-http://localhost:4873/ --tag latest`: it publishes the built package, never
-the app root, and the explicit tag keeps a rehearsal working once the registry
-already holds a higher version.
+`publish:local` builds the package and publishes it with `npm publish
+--registry http://localhost:4873/ --tag latest --ignore-scripts`: the tarball
+carries only `dist/` (plus the manifest, README and license), and the explicit
+tag keeps a rehearsal working once the registry already holds a higher version.
+`--ignore-scripts` skips the `prepublishOnly` gate, since the rehearsal already
+built the package and a real publish runs the full check.
 
 The consumer then installs it like any published package
 (`"@codepg/ui-lib": "^0.1.0"`). Two consequences: a registry never accepts the

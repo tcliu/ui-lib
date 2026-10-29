@@ -65,7 +65,7 @@ No POST routes exist. The only API route is `GET /api/info` above.
 
 ## Constraints
 
-- Theme palettes live only in `src/styles.css` (`[data-theme]` overrides of the
+- Theme palettes live only in `src/lib/styles.css` (`[data-theme]` overrides of the
   Tailwind palette variables; `dark` is the default with no attribute)
 - Z-index ladder: sticky `z-10`, drawer backdrop `z-30`, floating drawer and
   overlays `z-40`, dev tag `z-50`

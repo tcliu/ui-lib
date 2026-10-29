@@ -17,7 +17,6 @@ for how to write code in this project, see `AGENTS.md`.
 ui-lib/
 ├── src/
 │   ├── app.html                  # HTML shell, pre-paint theme script
-│   ├── styles.css                # Tailwind entry, theme palette overrides
 │   ├── routes/
 │   │   ├── +layout.svelte        # App shell: top bar, two-pane showcase, dev tag
 │   │   ├── +layout.server.ts     # Passes the DEV_TAG env to the layout
@@ -27,14 +26,13 @@ ui-lib/
 │   │   │   └── <slug>/+page.svelte # One showcase page per component
 │   │   └── api/
 │   │       └── info/+server.ts    # GET /api/info — project self-card for discovery
+│   ├── app/                      # App-only chrome (theme state, web-settings storage); never published
+│   ├── showcase/                 # Showcase shell (ShowcasePage/ShowcaseStage, snippet playground, component index)
 │   └── lib/
 │       ├── components/           # Presentational UI components (canonical shared surface)
 │       ├── actions/              # Shared interaction helpers (type-ahead, option match, list key-nav)
-│       ├── data-table/           # DataTable helpers
 │       ├── icons/                # Shared icon glyphs
 │       ├── locales/              # i18n dictionaries (en, zh-CN, zh-TW)
-│       ├── app/                  # App-only chrome (theme state, web-settings storage); never published
-│       ├── showcase/             # Showcase shell (ShowcasePage/ShowcaseStage, snippet playground, RelatedNav, component index)
 │       ├── server/               # Server-only: SvelteKit keeps this out of the client bundle
 │       │   ├── card.ts           # Shared card contract (normalize + resolve)
 │       │   ├── cron-expression.ts # Shared cron parser (scheduler apps)
@@ -43,7 +41,8 @@ ui-lib/
 │       │   ├── sql-rewrite.mjs   # Postgres→SQLite token rewrite (app runtime + scripts)
 │       │   └── d1-binding.mjs    # D1 binding name (deploy flow + runtime selector)
 │       ├── app-shell.ts          # AppShell geometry + drawer-mode ruler (768px container breakpoint)
-│       └── i18n.svelte.ts        # App i18n store + context
+│       ├── i18n.svelte.ts        # App i18n store + context
+│       └── styles.css            # Tailwind entry, theme palette overrides
 ├── static/
 │   └── favicon.svg               # Served as-is (browser tab mark)
 ├── scripts/
@@ -74,9 +73,6 @@ ui-lib/
 ├── docs/
 │   ├── design.md                 # User-facing behavior
 │   └── spec.md                   # Behavioral contracts, API specs, constraints
-├── package/                      # The publishable package (build only, not the source)
-│   ├── build.mjs                 # Copies and prunes the surface, then runs svelte-package
-│   └── check.mjs                 # Verifies the built package and the scratch consumer
 └── .worktrees/                   # Git worktrees (gitignored)
 ```
 
@@ -86,9 +82,9 @@ ui-lib/
    Read this first to see the top bar (picker toggle, title, theme/language
    menus), the searchable component list, and the AppShell that separates them.
 
-2. **`src/lib/showcase/showcase-components.ts`** — the showcase index (`SHOWCASE_COMPONENTS`)
+2. **`src/showcase/showcase-components.ts`** — the showcase index (`SHOWCASE_COMPONENTS`)
    and browsing groups (`SHOWCASE_COMPONENT_GROUPS`); `/` redirects to
-   `/components/base-dialog`. Helpers in `src/lib/showcase/` (`ShowcasePage`,
+   `/components/base-dialog`. Helpers in `src/showcase/` (`ShowcasePage`,
    `SnippetPreview` +
    `snippet-playground.ts`, `FieldTable` rows) compose each page.
 
@@ -100,7 +96,7 @@ Showcase pages are thin composition over the shared surface:
 Route (components/<slug>/+page.svelte + colocated demo-snippet.ts)
   │  composes
   ▼
-Showcase shell (src/lib/showcase/) + FieldTable rows
+Showcase shell (src/showcase/) + FieldTable rows
   │  drive
   ▼
 Shared components (src/lib/components/) + actions/i18n/theme helpers
@@ -156,7 +152,7 @@ byte-identically by the consuming apps through the parity gate's server list.
   content).
 - **Thin routes** — `+page.svelte` is mostly declarative markup; all logic
   lives in composables and `page/` helpers.
-- **Theme system** — themes are CSS variable overrides in `src/styles.css`
+- **Theme system** — themes are CSS variable overrides in `src/lib/styles.css`
   under `[data-theme='…']`. A pre-paint inline script in `app.html` applies
   the stored theme before first paint.
 - **AppShell responsive presentation** — one `floating` boolean, measured from
@@ -196,8 +192,8 @@ deletes the now-unguarded targets; a non-interactive run needs both `--kill` and
 ## Shared parity gate
 
 `npm run check` runs `tools/check-shared-parity.mjs` with `--strict`: it derives
-the gated surface (everything under `src/lib` and `scripts/`, minus the app-only
-directories, the app-owned files, and tests) and byte-compares it against each
+the gated surface (everything under `src/lib` and `scripts/`, minus the
+app-owned files and tests) and byte-compares it against each
 registered sibling, resolving each sibling's own module references so a
 present-but-unreferenced port is flagged as dead. It fails on a divergence or a
 dead port. The gate carries no path list: a file that owns a per-app value marks its own
@@ -207,69 +203,69 @@ canonical again is reported as stale.
 
 ## The publishable package
 
-`src/lib` is the canonical shared surface, and it stays there: the parity gate and
-every consuming app address it by that path. The npm package is a **generated
-artifact**, not a second source of truth — `npm run package` compiles the
-surface into `dist/`, which carries the manifest npm publishes.
+`src/lib` is the canonical shared surface and the package source; the root
+`package.json` is the package manifest as well as the app's manifest. The app's
+own scripts and server dependencies stay out of the published dependency set.
 
 ```
-src/lib/**                       canonical, unchanged, siblings unaffected
-  └─ npm run package
-       .package-build/staging/    copy → prune tests
-         svelte.config.js         alias: { $lib: ./src/lib }
-         svelte-package           $lib/x → ../x; .ts → .js
-       dist/                      compiled output + the publish manifest
+src/lib/**                       canonical shared source
+  └─ npm run package             tools/build-package.mjs
+       PACKAGE=1 svelte-package  $lib → relative; $app/environment → shim
+       dist/                      compiled output; server-only + tests pruned
 ```
 
-- **The surface** — everything under `src/lib` except the app's own modules:
-  `server/` (SvelteKit's server-only directory), `showcase/` (the demo shell) and
-  `app/` (theme state and web-settings storage), with tests pruned. A new shared
-  module therefore ships without a list edit, and a specifier that points at a
-  private or unresolved file fails the build: the package must be self-contained.
-- **The dependencies** — read from the bare specifiers the staged sources import
-  and pinned to the app's own versions, so the published manifest cannot drift
-  from what the app builds against. `@babel/runtime` is implicit (the CodeMirror
-  theme package imports it at runtime), `esm-env` is a normal dependency, and
-  `svelte` stays a peer.
-- **The alias** — `$lib/x` resolves against this app's `src/lib` and against the
-  consumer's own `src/lib`, so a published package must not keep it. The staging
-  `svelte.config.js` points `$lib` at the staging tree and `svelte-package`
-  resolves it to a relative specifier, so there is no `$lib` rewrite. The
-  compiler keeps the source specifier shape (an extensionless import stays
-  extensionless), which the consumer's bundler resolves.
-- **The environment flag** — a shared module imports `BROWSER as browser` from
-  `esm-env` directly where its own copy allows it. The one shared component kept
-  byte-identical across projects keeps `$app/environment`, and the staging copy
-  maps it to `esm-env`, because the framework module never ships.
-- **The exports map** — one `*.svelte` pattern per component directory, one
-  `*` catch-all (`*.js`), and an explicit entry for every rune module a
-  component pattern would otherwise claim: its specifier ends `.svelte` while
-  the compiled file keeps `.js` (`use-grid-model.svelte` →
-  `use-grid-model.svelte.js`), and an exact key wins over a pattern. A consumer
-  keeps the source path it knows (`components/Button.svelte`, `size-scale`,
-  `i18n.svelte`), and the manifest stays ~8 KB instead of one entry per file.
-- **The stylesheet** — `dist/styles.css` carries the tokens and the palettes,
-  plus the `@source` globs that point the consumer's Tailwind at the package
+- **The surface** — `svelte-package` compiles all of `src/lib`; the root
+  `exports` exposes the shared directories plus the `app-environment` shim the
+  compiled `BaseDialog` imports, `files: ["dist"]` limits the tarball, and
+  `npm run package` (`tools/build-package.mjs`) prunes `server/` and tests from
+  `dist/` after compiling, then runs `publint`. The tool also filters
+  `svelte-package`'s server-only guard warning, which fires for every `.server.`
+  file and every file under a `server/` directory before the prune can show they
+  never ship: the warning is dropped only when every path it lists is absent from
+  the pruned `dist/`, it names those paths, and it fails when one survives or when
+  any warning remains that it cannot prove moot. The alternative — the
+  `$app/server` guard import the warning suggests — would put a SvelteKit runtime
+  import into shared source that plain-`node` scripts import. The app-private
+  `showcase/` and `app/` live outside `src/lib`.
+  The exports map is seven patterns: `.`, `./*`, `./components/use-*.svelte`,
+  `./components/*.svelte`, `./icons/*.svelte`, `./styles.css`,
+  `./package.json`. The more specific `use-*` pattern outranks the directory
+  wildcard for a rune module under `components/`, resolving it to `.svelte.js`;
+  root and `actions/` rune modules ride the `./*` catch-all. A rune module
+  outside those shapes needs an explicit entry, and the package check catches
+  the miss because every shipped file must resolve.
+- **The manifest** — the root `package.json` carries the package identity,
+  `exports` (patterns), `files`, `svelte`, `sideEffects: ["**/*.css"]`,
+  `publishConfig`, `peerDependencies.svelte`, and the runtime dependencies. It is
+  not generated, so `npm publish` reads exactly what the repository carries.
+- **The aliases** — `svelte.config.js` keeps the app's `kit` config (with
+  `$showcase` → `src/showcase` and `$appLib` → `src/app`) and adds top-level
+  `$lib`/`$app/environment` aliases only when `PACKAGE=1`, because
+  `svelte-package` reads top-level aliases while SvelteKit accepts them only
+  under `kit`. `$app/environment` maps to `app-environment.ts`, which re-exports
+  `esm-env`; the output carries neither alias. The canonical `BaseDialog` keeps
+  the framework import so it stays byte-identical across projects.
+- **The dependencies** — every shared runtime package stays in `dependencies`;
+  packages used only by the app's scripts or server tooling
+  (`@neondatabase/serverless`, `better-sqlite3`) stay in `devDependencies`, so
+  a consumer never installs them.
+- **The stylesheet** — `src/lib/styles.css` ships as `dist/styles.css` and
+  carries `@source "./"`, which points the consumer's Tailwind at the package
   (Tailwind does not scan `node_modules`).
-- **The manifest** — carries the package identity (`name`, `version`,
-  `description`, `license`, `author`, `keywords`), the public `publishConfig`,
-  and the exports map above; `sideEffects: ['*.css']` keeps a bundler from
-  pruning the stylesheet import while every JS module stays side-effect free,
-  and `repository`/`homepage`/`bugs` stay absent until the app has a remote to
-  point them at.
-- **The README** — `dist/README.md` describes the published package (install,
-  the stylesheet import, the entry groups), its counts read from the exports
-  map; the app's own `README.md` covers the showcase instead.
-- **`npm run publish:check`** — builds the package, asserts that no test and no
-  app-only specifier ships, that every import resolves, that every shipped file
-  resolves through the exports map, that the README ships and the stylesheet
-  keeps its side effect, packs the tarball, and builds a scratch consumer
-  against it.
-- **`npm run release`** — bumps nothing by itself: run `npm version <patch|minor|major>`
-  first, then the release script runs `publish:check`, rebuilds with `package`
-  (including `publint`), and publishes the built directory with
-  `npm publish ./dist --access public`. A version already on the registry fails
-  at npm, so there is no registry-diff or auto-bump step.
+- **The README and license** — npm packs the root `README.md` and `LICENSE`
+  beside `dist/`; both are tracked, because a publish from a clean checkout packs
+  only files the repository carries.
+- **`npm run publish:check`** — runs the app gates, builds the package, asserts
+  that no test and no app-only alias ships, that every import, export target and
+  TypeScript type declaration resolves, that the README ships and the stylesheet
+  keeps its side effect, packs the tarball, and builds a scratch consumer against
+  it.
+- **`npm publish`** — the standard publish path: bump with
+  `npm version <patch|minor|major>` first, then publish, and npm's
+  `prepublishOnly` hook runs `npm run publish:check` before anything is
+  uploaded. `publishConfig.access` already marks the scoped package public, so
+  the command needs no flags. A version already on the registry fails at npm, so
+  there is no registry-diff or auto-bump step.
 
 The i18n store is the one module the package owns and the app also uses: the
 context key comes from the global symbol registry (`Symbol.for('ui-lib:i18n')`),
@@ -596,7 +592,9 @@ of building a parallel control.
   no footer. The managed column-width engine lives in
   `use-table-columns.svelte.ts`: pixel widths aligned by column key, the
   persisted copy, the reset signal, and the shared `use-column-resize`; the
-  component keeps the DOM refs.
+  component keeps the DOM refs. A reset is a rising `resetWidthsSignal` number,
+  not a callback: the caller only tells the table that the saved widths should
+  drop, and a repeated bump still differs from the last value it saw.
   `variant="docs"` swaps the viewer chrome for the static docs chrome.
   `bordered={false}` drops the viewer/split container chrome for borderless
   embedding. `FieldTable` rides on `DataTable` to render `FieldConfig[]`
@@ -736,7 +734,7 @@ exceptions, and the pattern must not be copied into feature code:
 `focus-within.ts`, `drag-close-down.ts`, `caret-at-end-on-keyboard-focus.ts`,
 `Tooltip.svelte`, `AppShell.svelte`,
 `use-grid-autoscroll.svelte.ts`, `grid-cell-refs.ts`,
-`use-table-scroll-sync.svelte.ts`, `app/theme.svelte.ts`, and `i18n.svelte.ts`.
+`use-table-scroll-sync.svelte.ts`, `src/app/theme.svelte.ts`, and `i18n.svelte.ts`.
 
 One component carries a single, named exception rather than a general licence:
 `StructureNode.svelte`'s inline-edit text measurement writes and clears a hidden
@@ -751,13 +749,13 @@ DataGrid (`a11y_no_static_element_interactions`) subtrees; never suppress anothe
 ## Showcase component pages
 
 Each component has one route, `src/routes/components/<slug>/+page.svelte`,
-registered in `src/lib/showcase/showcase-components.ts`: `SHOWCASE_COMPONENTS`
+registered in `src/showcase/showcase-components.ts`: `SHOWCASE_COMPONENTS`
 (`{ slug, name }[]`) is the index and route source (`/` redirects to
 `/components/base-dialog`), and `SHOWCASE_COMPONENT_GROUPS` (`Record<group, slug[]>`) declares the
 relatedness behind each page's `RelatedNav` chips — two components are related
 when they share a group, so the relation is symmetric by construction.
 
-A page composes shared pieces from `src/lib/showcase/`:
+A page composes shared pieces from `src/showcase/`:
 
 - `ShowcasePage` — page container and demo block: `title`, demo `children`,
   `code`, the `scope`/`sync` it builds its own `SnippetPreview` from (a
@@ -879,16 +877,16 @@ same literal default is the editors' clear baseline, so the cross hides while
 the Value matches it. A row
 with a `dialog` editor opens `FieldTable`'s dialog
 (`OK` commits, `Reset` reverts); pure snippet helpers shared across demos live in
-`$lib/showcase/`. A dialog-backed prop row is built with `snippetField`
+`$showcase/`. A dialog-backed prop row is built with `snippetField`
 (markup dialog) or `jsonField` (JSON dialog) plus `snippetToggle` (optional
 eye) / `resetToggle` (required eye) / `snippetDialog`
-(`$lib/showcase/snippet-field.ts`), which supply its `type`/`defaultValue`/
+(`$showcase/snippet-field.ts`), which supply its `type`/`defaultValue`/
 `editor` boilerplate, apply-eye toggle, and exact-shape dialog; only the
 row's seed and commit stay page-specific. A non-dialog row family is built the
 same way: the `size`/`text`/`boolean`/`enum` rows are `sizeField`/`textField`/
 `boolField`/`enumField` (same module), and the Show-code
 builders share their escaping and tri-state helpers from
-`$lib/showcase/snippet-build.ts` rather than re-declaring them. A
+`$showcase/snippet-build.ts` rather than re-declaring them. A
 dialog-backed `children` row that takes free-form HTML (the
 AppShell block) accepts only well-balanced markup the demo and the compiled seed
 render identically — no expressions, component tags, directives, comments,
@@ -921,9 +919,11 @@ that directory. The suite is still called end-to-end in the tooling (`npm run
 e2e`, `tools/run-e2e.mjs`); only its directory follows the scaffold.
 
 `npm run check` runs `tools/check-test-layout.mjs`: it fails on a test-only
-directory, a unit test outside `src/` or `scripts/`, a unit test whose
+directory, a unit test outside `src/`, `scripts/` or `tools/`, a unit test whose
 directory holds no module, a unit test that imports no module from its own
-directory, and a spec filed on the wrong side of the split.
+directory, and a spec filed on the wrong side of the split. It reads `$lib` and
+the app aliases from the generated `.svelte-kit/tsconfig.json` rather than
+restating them, so an alias added to `svelte.config.js` needs no second edit.
 
 ## End-to-end tests
 
@@ -932,3 +932,8 @@ directory, and a spec filed on the wrong side of the split.
 Locator hooks include `data-showcase-demo` (and `data-showcase-live` once the
 snippet's live compile has mounted); a portaled overlay renders under
 `document.body`, not the demo hook, so its assertions are page-wide.
+
+`tools/run-e2e.mjs` reuses a running dev server for the same project and branch,
+or starts one on the first free port. The project it matches is the manifest
+name without an npm scope: the root manifest doubles as the published package, so
+its name may be `@scope/app` while the app's `/api/info` card id stays `app`.
