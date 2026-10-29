@@ -1,4 +1,4 @@
-<script module>
+<script module lang="ts">
   // Ids of the dialogs currently mounted. The topmost dialog is the most
   // recently mounted one still mounted; a live id set (rather than a mount-time
   // counter) stays correct when a base dialog unmounts while a stacked confirm

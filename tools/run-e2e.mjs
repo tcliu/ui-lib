@@ -26,14 +26,16 @@ import { readBranchFromGitDir } from '../scripts/_worktrees.mjs'
 const START_TIMEOUT_MS = 120_000
 const POLL_MS = 500
 
-// App props from the manifest: the default e2e project is this package's
-// `name` (it matches the app's /api/info id), and `e2eEnv` carries extra
-// environment for a spawned dev server. session-catalog ships
-// `SESSIONS_LIVE=0` there so e2e serves the deterministic bundled payload
-// instead of whatever sessions exist on the machine; the hook is inert for
-// apps that do not read those vars.
+// App props from the manifest: the default e2e project is this app's `/api/info`
+// id, which is the manifest name without an npm scope — the root manifest doubles
+// as the published package, so its name may be `@scope/app` while the app's own
+// card id stays `app`. `e2eEnv` carries extra environment for a spawned dev
+// server. session-catalog ships `SESSIONS_LIVE=0` there so e2e serves the
+// deterministic bundled payload instead of whatever sessions exist on the
+// machine; the hook is inert for apps that do not read those vars.
 const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
-const defaultProject = typeof manifest.name === 'string' && manifest.name ? manifest.name : null
+const manifestName = typeof manifest.name === 'string' && manifest.name ? manifest.name : null
+const defaultProject = manifestName ? manifestName.split('/').pop() : null
 const extraSpawnEnv = manifest.e2eEnv != null && typeof manifest.e2eEnv === 'object' ? manifest.e2eEnv : {}
 
 function currentBranch() {

@@ -314,3 +314,7 @@ button:disabled {
   @apply pointer-events-none fixed z-40 whitespace-nowrap rounded border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-200 shadow-lg transition-opacity duration-150 motion-reduce:transition-none;
   opacity: 0;
 }
+
+/* The consumer's Tailwind does not scan node_modules; point it at the
+   package's own compiled files. */
+@source "./";

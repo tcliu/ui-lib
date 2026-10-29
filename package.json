@@ -1,8 +1,80 @@
 {
-  "name": "ui-lib",
+  "name": "@codepg/ui-lib",
   "version": "0.1.8",
-  "private": true,
+  "description": "The shared UI surface: components, icons, actions and the i18n store.",
+  "license": "MIT",
+  "author": "codepg",
+  "keywords": [
+    "svelte",
+    "sveltekit",
+    "ui",
+    "components",
+    "design-system"
+  ],
   "type": "module",
+  "svelte": "./dist/index.js",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "svelte": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "svelte": "./dist/*.js",
+      "default": "./dist/*.js"
+    },
+    "./components/use-*.svelte": {
+      "types": "./dist/components/use-*.svelte.d.ts",
+      "svelte": "./dist/components/use-*.svelte.js",
+      "default": "./dist/components/use-*.svelte.js"
+    },
+    "./components/*.svelte": {
+      "types": "./dist/components/*.svelte.d.ts",
+      "svelte": "./dist/components/*.svelte",
+      "default": "./dist/components/*.svelte"
+    },
+    "./icons/*.svelte": {
+      "types": "./dist/icons/*.svelte.d.ts",
+      "svelte": "./dist/icons/*.svelte",
+      "default": "./dist/icons/*.svelte"
+    },
+    "./package.json": "./package.json",
+    "./styles.css": "./dist/styles.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite dev --host",
+    "build": "svelte-kit sync && vite build",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --tsgo && node tools/check-test-layout.mjs && node tools/check-shared-parity.mjs --strict",
+    "test": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage --passWithNoTests",
+    "test:watch": "vitest",
+    "package": "node tools/build-package.mjs",
+    "publish:local": "npm run package && npm publish --registry http://localhost:4873/ --tag latest --ignore-scripts",
+    "publish:check": "npm run check && npm run build && npm test && npm run package && node tools/check-package.mjs",
+    "audit": "npm audit",
+    "format": "prettier --write '**/*.{js,ts,svelte}'",
+    "e2e": "node tools/run-e2e.mjs",
+    "deploy": "node scripts/deploy.mjs",
+    "heartbeat": "node scripts/heartbeat.mjs",
+    "env:sync:vercel": "node ./scripts/sync-vercel-env.mjs",
+    "env:sync:cloudflare": "node ./scripts/sync-cloudflare-env.mjs",
+    "schema:apply": "node ./scripts/apply-schema.mjs",
+    "prepublishOnly": "npm run publish:check"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "peerDependencies": {
+    "svelte": "^5.57.2"
+  },
   "dependencies": {
     "@babel/runtime": "^8.0.5",
     "@codemirror/autocomplete": "^6.20.3",
@@ -17,34 +89,13 @@
     "@codemirror/search": "^6.7.1",
     "@codemirror/state": "^6.7.0",
     "@codemirror/view": "^6.43.4",
-    "@neondatabase/serverless": "^1.1.0",
     "@uiw/codemirror-theme-github": "^4.25.10",
-    "better-sqlite3": "^13.0.3",
     "dayjs": "^1.11.23",
     "esm-env": "^1.2.2",
     "svelte-sonner": "^1.1.1"
   },
-  "scripts": {
-    "dev": "vite dev --host",
-    "build": "svelte-kit sync && vite build",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --tsgo && node tools/check-test-layout.mjs && node tools/check-shared-parity.mjs --strict",
-    "test": "vitest run --passWithNoTests",
-    "test:coverage": "vitest run --coverage --passWithNoTests",
-    "test:watch": "vitest",
-    "package": "node package/build.mjs && publint dist",
-    "publish:local": "npm run package && cd dist && npm publish --registry http://localhost:4873/ --tag latest",
-    "publish:check": "npm run check && npm run build && npm test && node package/check.mjs --consumer",
-    "audit": "npm audit",
-    "format": "prettier --write '**/*.{js,ts,svelte}'",
-    "e2e": "node tools/run-e2e.mjs",
-    "deploy": "node scripts/deploy.mjs",
-    "heartbeat": "node scripts/heartbeat.mjs",
-    "env:sync:vercel": "node ./scripts/sync-vercel-env.mjs",
-    "env:sync:cloudflare": "node ./scripts/sync-cloudflare-env.mjs",
-    "schema:apply": "node ./scripts/apply-schema.mjs",
-    "release": "npm run publish:check && npm run package && npm publish ./dist --access public"
-  },
   "devDependencies": {
+    "@neondatabase/serverless": "^1.1.0",
     "@playwright/test": "^1.63.0",
     "@sveltejs/adapter-cloudflare": "^7.2.9",
     "@sveltejs/adapter-vercel": "^6.3.4",
@@ -55,6 +106,7 @@
     "@types/node": "^26.4.1",
     "@typescript/native": "npm:typescript@^7.0.2",
     "@vitest/coverage-v8": "^5.0.3",
+    "better-sqlite3": "^13.0.3",
     "jsdom": "^30.1.2",
     "prettier": "^3.9.6",
     "prettier-plugin-svelte": "^4.1.1",

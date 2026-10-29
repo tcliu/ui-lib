@@ -21,11 +21,10 @@ data/
 !.env.*.example
 .sqlite
 
-# The publishable package (npm run package:build); never commit.
+# The publishable package (npm run package); never commit.
 dist/
 
-# The package build's working area (staging tree, tarball, scratch
-# consumer); never commit.
+# The package build's working area (tarball, scratch consumer); never commit.
 .package-build/
 
 # Generated Cloudflare Pages config (npm run env:sync:cloudflare); never commit.

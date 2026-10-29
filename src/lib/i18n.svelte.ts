@@ -1,5 +1,5 @@
 // parity: app-owned — each app carries its own dictionaries
-import { BROWSER as browser } from 'esm-env'
+import { BROWSER as browser, DEV } from 'esm-env'
 import { getContext, hasContext, setContext } from 'svelte'
 import { en } from './locales/en'
 import { zhCN } from './locales/zh-CN'
@@ -187,7 +187,7 @@ export function getI18nContext<TKey extends string = MessageKey>(): I18nStore<TK
   // default English store so primitives still render. App code under the layout
   // always hits the provider above: warn in dev so a provider-less component
   // fails loudly instead of silently staying English.
-  if (import.meta.env.DEV) {
+  if (DEV) {
     console.warn('getI18nContext: no i18n provider above; using the default English store')
   }
   return fallbackStore()
