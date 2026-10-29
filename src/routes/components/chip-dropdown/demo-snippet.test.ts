@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createSnippetComponent } from '$lib/showcase/snippet-playground'
+import { createSnippetComponent } from '$showcase/snippet-playground'
 import { buildChipDropdownSnippet, DEFAULT_CHIP_DROPDOWN_ARIA_LABEL, type ChipDropdownSnippetState } from './demo-snippet'
 
 function state(overrides: Partial<ChipDropdownSnippetState> = {}): ChipDropdownSnippetState {

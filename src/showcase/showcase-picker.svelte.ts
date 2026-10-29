@@ -1,4 +1,4 @@
-import { readWebSettings, writeWebSetting } from '$lib/app/web-settings'
+import { readWebSettings, writeWebSetting } from '$appLib/web-settings'
 
 // The component picker starts open on a fresh visit; the user's last choice
 // persists in the shared web-settings object alongside the theme.

@@ -1,12 +1,12 @@
 <script lang="ts">
-  import { flagOn } from '$lib/showcase/snippet-build'
+  import { flagOn } from '$showcase/snippet-build'
   import DataTable, { type DataTableColumn } from '$lib/components/DataTable.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import ShowcaseStage from '$lib/showcase/ShowcaseStage.svelte'
-  import { parseSizeValue } from '$lib/showcase/size-input'
-  import { textField, boolField, sizeField, jsonField, resetToggle, snippetDialog, snippetToggle } from '$lib/showcase/snippet-field'
-  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import ShowcasePage from '$showcase/ShowcasePage.svelte'
+  import ShowcaseStage from '$showcase/ShowcaseStage.svelte'
+  import { parseSizeValue } from '$showcase/size-input'
+  import { textField, boolField, sizeField, jsonField, resetToggle, snippetDialog, snippetToggle } from '$showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
   import {
     buildDataTableSnippet,
     DEFAULT_ROWS,

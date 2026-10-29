@@ -1,11 +1,11 @@
 <script lang="ts">
   import FieldTable, { type FieldConfig } from '$lib/components/FieldTable.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { parseSizeValue } from '$lib/showcase/size-input'
-  import { jsonField, resetToggle, sizeField, snippetToggle } from '$lib/showcase/snippet-field'
-  import { syncFieldsOf, type SyncField, type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import type { SnippetAttribute } from '$lib/showcase/snippet-attributes'
+  import ShowcasePage from '$showcase/ShowcasePage.svelte'
+  import { parseSizeValue } from '$showcase/size-input'
+  import { jsonField, resetToggle, sizeField, snippetToggle } from '$showcase/snippet-field'
+  import { syncFieldsOf, type SyncField, type SyncableFieldConfig } from '$showcase/snippet-sync'
+  import type { SnippetAttribute } from '$showcase/snippet-attributes'
   import { buildFieldTableSnippet, FIELD_TABLE_DEMO_ROWS, parseHeadersJson, type TriState } from './demo-snippet'
 
   const i18n = getI18nContext()

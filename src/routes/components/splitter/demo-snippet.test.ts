@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { STAGE_PANE, STAGE_ROW } from '$lib/showcase/resizable-stage'
+import { STAGE_PANE, STAGE_ROW } from '$showcase/resizable-stage'
 import { SPLITTER_MAIN, SPLITTER_PANE, SPLITTER_WRAPPER, buildSplitterSnippet, parseSplitterBound, splitterPreset } from './demo-snippet'
 
 const unset = { orientation: '', orientationOn: true, unit: '', unitOn: true, ariaLabel: '', ariaLabelOn: true, className: '', classNameOn: true, lineClass: '', lineClassOn: true, invert: '', invertOn: true, min: '', minOn: true, max: '', maxOn: true } as const

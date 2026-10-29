@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createSnippetComponent } from '$lib/showcase/snippet-playground'
+import { createSnippetComponent } from '$showcase/snippet-playground'
 import {
   buildStructureTreeSnippet,
   DEFAULT_TREE_VALUE,

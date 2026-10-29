@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { flagOn } from '$lib/showcase/snippet-build'
+  import { flagOn } from '$showcase/snippet-build'
   import LazyCodeEditor from '$lib/components/LazyCodeEditor.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { textField, boolField, snippetField, resetToggle, snippetToggle } from '$lib/showcase/snippet-field'
+  import ShowcasePage from '$showcase/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
+  import { textField, boolField, snippetField, resetToggle, snippetToggle } from '$showcase/snippet-field'
   import {
     DEFAULT_CONTENT,
     DEFAULT_DOC_TYPE,

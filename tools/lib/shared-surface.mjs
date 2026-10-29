@@ -5,8 +5,6 @@ import { ROOT } from '../../scripts/lib/root.mjs'
 // Gated roots: the published surface and the shared operations bundle. Repo-local
 // tooling (`tools/`) and app-private code sit outside them by construction.
 export const GATED_ROOTS = ['src/lib', 'scripts']
-// App-only directories under the published tree (never ported).
-const PRIVATE_DIRS = new Set(['app', 'showcase'])
 // A test, the fixture a test drives, and a test directory never reach the port.
 const SKIP_FILE_RE = /(\.test\.[a-z]+|\.harness\.svelte)$/
 const SKIP_DIRS = new Set(['__tests__'])
@@ -31,7 +29,6 @@ function walk(dir) {
   for (const entry of readdirSync(join(ROOT, dir), { withFileTypes: true })) {
     if (entry.name.startsWith('.')) continue
     const rel = `${dir}/${entry.name}`
-    if (dir === 'src/lib' && PRIVATE_DIRS.has(entry.name)) continue
     if (entry.isDirectory()) {
       if (!SKIP_DIRS.has(entry.name)) out.push(...walk(rel))
     } else if (!SKIP_FILE_RE.test(entry.name) && !isAppOwned(join(ROOT, rel))) {

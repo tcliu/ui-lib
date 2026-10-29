@@ -2,7 +2,7 @@
 // playground form state: the section regenerates the editor text from this, so
 // the editor always shows the markup behind the demo above.
 
-import { sizeAttributeFragment } from '$lib/showcase/size-input'
+import { sizeAttributeFragment } from '$showcase/size-input'
 export interface SpinnerSnippetState {
   size: string
   sizeOn: boolean

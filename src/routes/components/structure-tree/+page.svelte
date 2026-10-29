@@ -1,15 +1,15 @@
 <script lang="ts">
-  import { flagOn } from '$lib/showcase/snippet-build'
+  import { flagOn } from '$showcase/snippet-build'
   import StructureTree from '$lib/components/StructureTree.svelte'
   import {
     DEFAULT_CONTAINER_ROW_CLASS,
     DEFAULT_LEAF_ROW_CLASS,
   } from '$lib/components/StructureNode.svelte'
   import { isContainer, renameKeyAtPath, setAtPath } from '$lib/components/structure-value'
-  import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { boolField, jsonField, resetToggle, sizeField, snippetToggle } from '$lib/showcase/snippet-field'
-  import { parseSizeValue } from '$lib/showcase/size-input'
+  import ShowcasePage from '$showcase/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
+  import { boolField, jsonField, resetToggle, sizeField, snippetToggle } from '$showcase/snippet-field'
+  import { parseSizeValue } from '$showcase/size-input'
   import {
     buildStructureTreeSnippet,
     DEFAULT_TREE_VALUE,

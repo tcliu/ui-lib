@@ -4,10 +4,10 @@
   import Buttons from '$lib/components/Buttons.svelte'
   import Copyable from '$lib/components/Copyable.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { enumField, textField, snippetDialog, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
-  import { buildHeaderLine, parseHeaderMarkup } from '$lib/showcase/snippet-header'
+  import ShowcasePage from '$showcase/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
+  import { enumField, textField, snippetDialog, snippetField, snippetToggle } from '$showcase/snippet-field'
+  import { buildHeaderLine, parseHeaderMarkup } from '$showcase/snippet-header'
   import {
     DISMISS_HANDLER,
     buildBaseDialogSnippet,

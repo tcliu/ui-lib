@@ -2,7 +2,7 @@
 // playground form state: the section regenerates the editor text from this, so
 // the editor always shows the markup behind the demo above.
 
-import { escapeAttr } from '$lib/showcase/snippet-build'
+import { escapeAttr } from '$showcase/snippet-build'
 
 export interface TooltipSnippetState {
   label: string

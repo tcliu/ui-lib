@@ -2,9 +2,9 @@
 // the playground form state: the section regenerates the editor text from
 // this, so the editor always shows the markup behind the demo above.
 
-import { escapeAttr, escapeRawLine, unescapeAttr } from '$lib/showcase/snippet-build'
-import { isBasicHtmlMarkup } from '$lib/showcase/snippet-html'
-import { buildHeaderLine, parseHeaderMarkup } from '$lib/showcase/snippet-header'
+import { escapeAttr, escapeRawLine, unescapeAttr } from '$showcase/snippet-build'
+import { isBasicHtmlMarkup } from '$showcase/snippet-html'
+import { buildHeaderLine, parseHeaderMarkup } from '$showcase/snippet-header'
 
 export type TriState = '' | 'yes' | 'no'
 

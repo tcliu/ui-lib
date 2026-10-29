@@ -5,8 +5,8 @@
 // The resize harness is ShowcasePage-owned chrome (its `stage` prop), so the
 // snippet carries only the demo content the page authors inside that frame.
 
-import { escapeAttr } from '$lib/showcase/snippet-build'
-import { sizeAttributeLine } from '$lib/showcase/size-input'
+import { escapeAttr } from '$showcase/snippet-build'
+import { sizeAttributeLine } from '$showcase/size-input'
 
 export type TriState = '' | 'yes' | 'no'
 

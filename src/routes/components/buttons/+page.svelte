@@ -4,10 +4,10 @@
   import FormField from '$lib/components/FormField.svelte'
   import SelectDropdown from '$lib/components/SelectDropdown.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { parseSizeValue } from '$lib/showcase/size-input'
-  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { enumField, textField, sizeField, snippetDialog, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
+  import ShowcasePage from '$showcase/ShowcasePage.svelte'
+  import { parseSizeValue } from '$showcase/size-input'
+  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
+  import { enumField, textField, sizeField, snippetDialog, snippetField, snippetToggle } from '$showcase/snippet-field'
   import { buildButtonsSnippet, buttonsChildrenSnippet, normalizeButtonsDraft, parseButtonsList, type ButtonsChildSegment } from './demo-snippet'
 
   const i18n = getI18nContext()

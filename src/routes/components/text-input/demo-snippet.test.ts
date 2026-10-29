@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createSnippetComponent } from '$lib/showcase/snippet-playground'
+import { createSnippetComponent } from '$showcase/snippet-playground'
 import { buildTextInputSnippet, type TextInputSnippetState } from './demo-snippet'
 
 function state(overrides: Partial<TextInputSnippetState> = {}): TextInputSnippetState {

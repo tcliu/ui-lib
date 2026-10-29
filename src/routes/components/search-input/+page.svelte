@@ -1,14 +1,14 @@
 <script lang="ts">
-  import { flagOn } from '$lib/showcase/snippet-build'
+  import { flagOn } from '$showcase/snippet-build'
   import { onMount } from 'svelte'
   import FormField from '$lib/components/FormField.svelte'
   import SearchInput from '$lib/components/SearchInput.svelte'
   import SelectDropdown from '$lib/components/SelectDropdown.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { parseSizeValue } from '$lib/showcase/size-input'
-  import { enumField, textField, boolField, sizeField, snippetToggle, resetToggle } from '$lib/showcase/snippet-field'
-  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import ShowcasePage from '$showcase/ShowcasePage.svelte'
+  import { parseSizeValue } from '$showcase/size-input'
+  import { enumField, textField, boolField, sizeField, snippetToggle, resetToggle } from '$showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
   import { STYLED_INPUT, STYLED_WRAPPER, buildSearchInputSnippet, type TriState } from './demo-snippet'
 
   const i18n = getI18nContext()

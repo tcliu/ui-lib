@@ -1,12 +1,12 @@
 <script lang="ts">
-  import { flagOn } from '$lib/showcase/snippet-build'
+  import { flagOn } from '$showcase/snippet-build'
   import EditableText from '$lib/components/EditableText.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { textField, boolField, sizeField, snippetToggle, resetToggle } from '$lib/showcase/snippet-field'
+  import ShowcasePage from '$showcase/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
+  import { textField, boolField, sizeField, snippetToggle, resetToggle } from '$showcase/snippet-field'
   import { DEFAULT_TEXT, buildEditableTextSnippet, type TriState } from './demo-snippet'
-  import { parseSizeValue } from '$lib/showcase/size-input'
+  import { parseSizeValue } from '$showcase/size-input'
 
   const i18n = getI18nContext()
 

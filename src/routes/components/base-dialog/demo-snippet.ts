@@ -2,7 +2,7 @@
 // the playground form state: the section regenerates the editor text from
 // this, so the editor always shows the markup behind the demo above.
 
-import { escapeAttr, escapeRawLine } from '$lib/showcase/snippet-build'
+import { escapeAttr, escapeRawLine } from '$showcase/snippet-build'
 
 export interface BaseDialogSnippetState {
   widthVariant: string

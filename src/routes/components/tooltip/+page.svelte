@@ -2,9 +2,9 @@
   import Button from '$lib/components/Button.svelte'
   import Tooltip from '$lib/components/Tooltip.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { enumField, textField, resetToggle, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
+  import ShowcasePage from '$showcase/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
+  import { enumField, textField, resetToggle, snippetField, snippetToggle } from '$showcase/snippet-field'
   import { buildTooltipSnippet } from './demo-snippet'
 
   const i18n = getI18nContext()

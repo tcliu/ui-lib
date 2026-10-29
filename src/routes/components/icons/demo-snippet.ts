@@ -3,7 +3,7 @@
 // the editor always shows the markup behind the demo above.
 
 import type { Component } from 'svelte'
-import { sizeAttributeFragment } from '$lib/showcase/size-input'
+import { sizeAttributeFragment } from '$showcase/size-input'
 import { VARIANT_LADDERS } from '$lib/icons/icon-variants'
 import AutoRefreshIcon from '$lib/icons/AutoRefreshIcon.svelte'
 import BrowseIcon from '$lib/icons/BrowseIcon.svelte'

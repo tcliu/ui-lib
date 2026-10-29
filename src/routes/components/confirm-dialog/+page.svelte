@@ -1,13 +1,13 @@
 <script lang="ts">
-  import { flagOn } from '$lib/showcase/snippet-build'
+  import { flagOn } from '$showcase/snippet-build'
   import Button from '$lib/components/Button.svelte'
   import ConfirmDialog from '$lib/components/ConfirmDialog.svelte'
   import { DIALOG_SIZE_VARIANTS } from '$lib/components/BaseDialog.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { parseSizeValue } from '$lib/showcase/size-input'
-  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { enumField, textField, boolField, sizeField, snippetToggle } from '$lib/showcase/snippet-field'
+  import ShowcasePage from '$showcase/ShowcasePage.svelte'
+  import { parseSizeValue } from '$showcase/size-input'
+  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
+  import { enumField, textField, boolField, sizeField, snippetToggle } from '$showcase/snippet-field'
   import { buildConfirmDialogSnippet, type TriState } from './demo-snippet'
 
   const i18n = getI18nContext()

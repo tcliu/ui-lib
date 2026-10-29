@@ -4,8 +4,8 @@
 // Single-quoted lines throughout: backticks and ${} inside them stay literal,
 // so no escaping.
 
-import { escapeAttr } from '$lib/showcase/snippet-build'
-import { sizeAttributeLine } from '$lib/showcase/size-input'
+import { escapeAttr } from '$showcase/snippet-build'
+import { sizeAttributeLine } from '$showcase/size-input'
 
 export type TriState = '' | 'yes' | 'no'
 

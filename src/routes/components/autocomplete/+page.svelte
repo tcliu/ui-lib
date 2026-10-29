@@ -1,13 +1,13 @@
 <script lang="ts">
-  import { flagOn } from '$lib/showcase/snippet-build'
+  import { flagOn } from '$showcase/snippet-build'
   import AutoComplete from '$lib/components/AutoComplete.svelte'
   import type { SelectOption } from '$lib/components/SelectDropdown.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { parseSizeValue } from '$lib/showcase/size-input'
-  import { parseOptionArrayJson } from '$lib/showcase/option-json'
-  import { enumField, textField, boolField, sizeField, jsonField, resetToggle, snippetToggle } from '$lib/showcase/snippet-field'
-  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import ShowcasePage from '$showcase/ShowcasePage.svelte'
+  import { parseSizeValue } from '$showcase/size-input'
+  import { parseOptionArrayJson } from '$showcase/option-json'
+  import { enumField, textField, boolField, sizeField, jsonField, resetToggle, snippetToggle } from '$showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
   import {
     buildAutoCompleteSnippet,
     AUTOCOMPLETE_STAGE_DEFAULT_WIDTH,

@@ -5,9 +5,9 @@
 // round-trip through the shared structure-value helpers, which the playground
 // resolves from its module registry.
 
-import { extractScriptConst } from '$lib/showcase/snippet-attributes'
-import { escapeAttr } from '$lib/showcase/snippet-build'
-import { sizeAttributeLine } from '$lib/showcase/size-input'
+import { extractScriptConst } from '$showcase/snippet-attributes'
+import { escapeAttr } from '$showcase/snippet-build'
+import { sizeAttributeLine } from '$showcase/size-input'
 
 export type TriState = '' | 'yes' | 'no'
 

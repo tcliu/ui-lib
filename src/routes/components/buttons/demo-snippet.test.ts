@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createSnippetComponent } from '$lib/showcase/snippet-playground'
+import { createSnippetComponent } from '$showcase/snippet-playground'
 import { buildButtonsSnippet, buttonsChildrenSnippet, normalizeButtonsDraft, parseButtonsList, type ButtonsSnippetState } from './demo-snippet'
 
 // A layout-preset class the builder only passes through, used to check the

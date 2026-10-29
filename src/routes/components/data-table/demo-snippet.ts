@@ -5,9 +5,9 @@
 // Single-quoted lines throughout: backticks and ${} inside them stay literal,
 // so no escaping.
 
-import { escapeAttr, escapeText } from '$lib/showcase/snippet-build'
-import { sizeAttributeLine } from '$lib/showcase/size-input'
-import { stageStaticCloseLines, stageStaticOpenLines } from '$lib/showcase/resizable-stage'
+import { escapeAttr, escapeText } from '$showcase/snippet-build'
+import { sizeAttributeLine } from '$showcase/size-input'
+import { stageStaticCloseLines, stageStaticOpenLines } from '$showcase/resizable-stage'
 
 // A string attribute line, omitted while unset.
 function textLine(name: string, value: string): string[] {

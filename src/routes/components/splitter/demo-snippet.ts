@@ -4,8 +4,8 @@
 // local $state in the snippet (seeded from scope) so the live instance is
 // draggable, matching the static demo.
 
-import { escapeAttr } from '$lib/showcase/snippet-build'
-import { stageStaticCloseLines, stageStaticOpenLines } from '$lib/showcase/resizable-stage'
+import { escapeAttr } from '$showcase/snippet-build'
+import { stageStaticCloseLines, stageStaticOpenLines } from '$showcase/resizable-stage'
 
 export type SplitterOrientation = 'vertical' | 'horizontal'
 export type SplitterUnit = 'px' | '%'

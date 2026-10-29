@@ -8,7 +8,7 @@
 // customized key renders as a literal.
 
 import type { FieldEditor, FieldOption } from '$lib/components/FieldTable.svelte'
-import { sizeAttributeLine } from '$lib/showcase/size-input'
+import { sizeAttributeLine } from '$showcase/size-input'
 
 export type TriState = '' | 'yes' | 'no'
 

@@ -15,16 +15,29 @@
 // test parked in the wrong place. The rule is what keeps the shared surface
 // honest: a sibling app ports `src/lib/components/` wholesale, so a test
 // file that sits in the ported directory travels with it.
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, realpathSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 // Directories the gate never walks: build output, dependencies, and the
 // worktree checkouts that live inside the project.
 const IGNORED_DIRS = new Set([
-  'node_modules', '.git', '.svelte-kit', '.worktrees', 'coverage', 'build',
-  'dist', '.tmp', '.data', 'archive', 'test-results', '.vercel', '.wrangler',
-  '.netlify', '.output', '.pnpm-store',
+  'node_modules',
+  '.git',
+  '.svelte-kit',
+  '.worktrees',
+  'coverage',
+  'build',
+  'dist',
+  '.tmp',
+  '.data',
+  'archive',
+  'test-results',
+  '.vercel',
+  '.wrangler',
+  '.netlify',
+  '.output',
+  '.pnpm-store',
 ])
 
 // A directory that holds only tests. Inside `src/`, `scripts/`, or `tools/` it
@@ -83,20 +96,45 @@ function listDirs(dir, root, out = []) {
   return out
 }
 
+// The project aliases a test's import may go through, read from the generated
+// `.svelte-kit/tsconfig.json` (SvelteKit writes `kit.alias`, `$lib` and the
+// framework's own entries there), so a new alias needs no edit here. A tree
+// without that generated config (a scratch fixture) takes the caller's map.
+// `$app/*` stays unresolved because it names a framework module, not a project
+// file.
+export function readAliases(root) {
+  const configPath = join(root, '.svelte-kit', 'tsconfig.json')
+  if (!existsSync(configPath)) return new Map()
+  const { compilerOptions } = JSON.parse(readFileSync(configPath, 'utf8'))
+  const aliases = new Map()
+  for (const [alias, targets] of Object.entries(compilerOptions?.paths ?? {})) {
+    const target = targets?.[0]
+    if (!target || alias.endsWith('/*') || alias.startsWith('$app/')) continue
+    aliases.set(
+      alias,
+      relative(root, resolve(dirname(configPath), target))
+        .split('\\')
+        .join('/'),
+    )
+  }
+  return aliases
+}
+
 // Resolve an import specifier to the file it points at, or null when it is a
 // package, a virtual module, or a path this project does not carry.
-function resolveImport(specifier, importerDir, root) {
+function resolveImport(specifier, importerDir, root, aliases) {
   let base
   if (specifier.startsWith('./') || specifier.startsWith('../')) {
     base = resolve(importerDir, specifier)
-  } else if (specifier === '$lib' || specifier.startsWith('$lib/')) {
-    base = resolve(root, 'src/lib', specifier === '$lib' ? '' : specifier.slice('$lib/'.length))
   } else {
-    return null
+    const [alias, ...rest] = specifier.split('/')
+    const target = aliases.get(alias)
+    if (target === undefined) return null
+    base = resolve(root, target, rest.join('/'))
   }
   for (const suffix of PROBE_SUFFIXES) {
     const candidate = base + suffix
-    if (existsSync(candidate)) return candidate
+    if (existsSync(candidate)) return realpathSync(candidate)
   }
   return null
 }
@@ -107,7 +145,7 @@ function importSpecifiers(file) {
 }
 
 // The violations the layout rule forbids, as human-readable lines.
-export function collectViolations(root) {
+export function collectViolations(root, aliases = readAliases(root)) {
   const violations = []
   const files = listFiles(root, root)
   const dirs = listDirs(root, root)
@@ -115,9 +153,7 @@ export function collectViolations(root) {
   for (const dir of dirs) {
     if (!TEST_DIR_NAMES.has(dir.name)) continue
     if (dir.rel === BROWSER_TEST_ROOT) continue
-    violations.push(
-      `test dir  ${dir.rel} — a test-only directory; put each test beside the module it exercises`,
-    )
+    violations.push(`test dir  ${dir.rel} — a test-only directory; put each test beside the module it exercises`)
   }
 
   for (const file of files) {
@@ -134,6 +170,7 @@ export function collectViolations(root) {
         continue
       }
       const dir = dirname(file.abs)
+      const ownDirPath = realpathSync(dir)
       const siblings = readdirSync(dir).filter(name => isSourceFile(name))
       if (siblings.length === 0) {
         violations.push(`misplaced  ${file.rel} — no module in ${relative(root, dir)} to sit beside`)
@@ -141,8 +178,8 @@ export function collectViolations(root) {
       }
       const imports = importSpecifiers(file.abs)
       const ownDir = imports.some(specifier => {
-        const target = resolveImport(specifier, dir, root)
-        return target !== null && dirname(target) === dir
+        const target = resolveImport(specifier, dir, root, aliases)
+        return target !== null && dirname(target) === ownDirPath
       })
       if (!ownDir) {
         violations.push(`misplaced  ${file.rel} — imports no module from ${relative(root, dir)}`)
@@ -159,6 +196,13 @@ export function collectViolations(root) {
 
 function main() {
   const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+  // The aliases come from the generated config `svelte-kit sync` writes; without
+  // it a `$lib` import would look unresolvable and report a false violation.
+  if (!existsSync(join(root, '.svelte-kit', 'tsconfig.json'))) {
+    console.error('test-layout: .svelte-kit/tsconfig.json is missing — run `svelte-kit sync` first')
+    process.exitCode = 1
+    return
+  }
   const violations = collectViolations(root)
   if (violations.length === 0) {
     console.log('test-layout: every test sits beside the module it exercises')

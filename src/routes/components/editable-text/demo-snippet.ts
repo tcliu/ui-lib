@@ -4,8 +4,8 @@
 // value lives in a local `$state` so the live snippet keeps its own edits and
 // still starts from the demo's displayed text.
 
-import { escapeAttr } from '$lib/showcase/snippet-build'
-import { sizeAttributeLine } from '$lib/showcase/size-input'
+import { escapeAttr } from '$showcase/snippet-build'
+import { sizeAttributeLine } from '$showcase/size-input'
 export type TriState = '' | 'yes' | 'no'
 
 // Default value shared by the page and the snippet so the static demo and the

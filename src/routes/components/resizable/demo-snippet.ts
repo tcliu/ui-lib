@@ -4,7 +4,7 @@
 // $state in the snippet (seeded from scope) so the live instance is resizable,
 // matching the static demo.
 
-import { escapeAttr, unescapeAttr } from '$lib/showcase/snippet-build'
+import { escapeAttr, unescapeAttr } from '$showcase/snippet-build'
 
 export const RESIZABLE_DEFAULT_WIDTH = 320
 export const RESIZABLE_DEFAULT_HEIGHT = 240

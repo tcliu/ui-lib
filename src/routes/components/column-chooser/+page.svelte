@@ -1,10 +1,10 @@
 <script lang="ts">
   import ColumnChooser from '$lib/components/ColumnChooser.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { parseSizeValue } from '$lib/showcase/size-input'
-  import { sizeField, jsonField, resetToggle, snippetToggle } from '$lib/showcase/snippet-field'
-  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
+  import ShowcasePage from '$showcase/ShowcasePage.svelte'
+  import { parseSizeValue } from '$showcase/size-input'
+  import { sizeField, jsonField, resetToggle, snippetToggle } from '$showcase/snippet-field'
+  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
   import {
     buildColumnChooserSnippet,
     CHOOSER_LABEL,

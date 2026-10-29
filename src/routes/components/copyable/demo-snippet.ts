@@ -2,8 +2,8 @@
 // the playground form state: the section regenerates the editor text from
 // this, so the editor always shows the markup behind the demo above.
 
-import { escapeAttr, escapeText } from '$lib/showcase/snippet-build'
-import { sizeAttributeLine } from '$lib/showcase/size-input'
+import { escapeAttr, escapeText } from '$showcase/snippet-build'
+import { sizeAttributeLine } from '$showcase/size-input'
 
 export interface CopyableSnippetState {
   text: string

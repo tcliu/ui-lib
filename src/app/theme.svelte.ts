@@ -2,7 +2,7 @@ import { browser } from '$app/environment'
 import { readWebSettings, writeWebSetting } from './web-settings'
 
 // UI themes. Dark is the default palette (no data-theme attribute); every other
-// theme opts in through `data-theme`, matching the palettes in `src/styles.css`
+// theme opts in through `data-theme`, matching the palettes in `src/lib/styles.css`
 // and the pre-paint script in `src/app.html`.
 export type UiTheme =
   'dark' | 'light' | 'ember' | 'sepia' | 'nebula' | 'sky' | 'forest' | 'midnight' | 'mint' | 'lavender'

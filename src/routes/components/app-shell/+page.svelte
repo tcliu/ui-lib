@@ -5,9 +5,9 @@
   import type { AppShellHeaderApi } from '$lib/app-shell'
   import Resizable from '$lib/components/Resizable.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { enumField, textField, jsonField, snippetDialog, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
+  import ShowcasePage from '$showcase/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
+  import { enumField, textField, jsonField, snippetDialog, snippetField, snippetToggle } from '$showcase/snippet-field'
   import {
     APP_SHELL_HEADER_MARKUP,
     appShellChildrenMarkup,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { STAGE_PANE, STAGE_ROW } from '$lib/showcase/resizable-stage'
+import { STAGE_PANE, STAGE_ROW } from '$showcase/resizable-stage'
 import {
   buildDataTableSnippet,
   parseChooserColumnsJson,

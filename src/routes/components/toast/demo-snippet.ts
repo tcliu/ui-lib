@@ -2,8 +2,8 @@
 // playground form state: the section regenerates the editor text from this, so
 // the editor always shows the markup behind the demo above.
 
-import { escapeAttr } from '$lib/showcase/snippet-build'
-import { sizeAttributeLine } from '$lib/showcase/size-input'
+import { escapeAttr } from '$showcase/snippet-build'
+import { sizeAttributeLine } from '$showcase/size-input'
 export interface ToastSnippetState {
   message: string
   messageOn: boolean

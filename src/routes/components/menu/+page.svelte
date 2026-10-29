@@ -1,13 +1,13 @@
 <script lang="ts">
-  import { flagOn } from '$lib/showcase/snippet-build'
+  import { flagOn } from '$showcase/snippet-build'
   import Menu, { type MenuItemState } from '$lib/components/Menu.svelte'
   import KebabIcon from '$lib/icons/KebabIcon.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { parseSizeValue } from '$lib/showcase/size-input'
-  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import type { SnippetAttribute } from '$lib/showcase/snippet-attributes'
-  import { enumField, textField, boolField, jsonField, resetToggle, snippetDialog, snippetField, snippetToggle, sizeField } from '$lib/showcase/snippet-field'
+  import ShowcasePage from '$showcase/ShowcasePage.svelte'
+  import { parseSizeValue } from '$showcase/size-input'
+  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
+  import type { SnippetAttribute } from '$showcase/snippet-attributes'
+  import { enumField, textField, boolField, jsonField, resetToggle, snippetDialog, snippetField, snippetToggle, sizeField } from '$showcase/snippet-field'
   import {
     buildMenuIconMarkup,
     buildMenuSnippet,

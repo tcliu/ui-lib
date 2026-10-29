@@ -1,10 +1,10 @@
 <script lang="ts">
   import BarChart from '$lib/components/BarChart.svelte'
-  import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { flagOn, type TriState } from '$lib/showcase/snippet-build'
-  import { boolField, jsonField, resetToggle, sizeField, snippetToggle, textField } from '$lib/showcase/snippet-field'
-  import { parseSizeValue } from '$lib/showcase/size-input'
+  import ShowcasePage from '$showcase/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
+  import { flagOn, type TriState } from '$showcase/snippet-build'
+  import { boolField, jsonField, resetToggle, sizeField, snippetToggle, textField } from '$showcase/snippet-field'
+  import { parseSizeValue } from '$showcase/size-input'
   import { barHeight, buildBarChartSnippet, DEMO_COLUMNS, parseColumnsJson, parseColumnsValue } from './demo-snippet'
 
   // Customizer playground state. Every curated option starts at the component

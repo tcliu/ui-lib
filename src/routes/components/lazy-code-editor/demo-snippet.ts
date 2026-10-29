@@ -8,7 +8,7 @@
 // Curated playground option: unset or the component default renders the
 // default, Yes/No force the value. Options start at the default, so the
 // cleared form applies no overrides.
-import { escapeAttr } from '$lib/showcase/snippet-build'
+import { escapeAttr } from '$showcase/snippet-build'
 
 export type TriState = '' | 'yes' | 'no'
 

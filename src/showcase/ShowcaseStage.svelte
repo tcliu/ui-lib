@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
-  import { STAGE_PANE, STAGE_ROW } from '$lib/showcase/resizable-stage'
+  import { STAGE_PANE, STAGE_ROW } from '$showcase/resizable-stage'
 
   // A static demo stage: the demo fills a bounded pane whose size comes from
   // `paneClass`. The width-resizable variant had no caller, so the stage is

@@ -1,15 +1,15 @@
 <script lang="ts">
-  import { flagOn } from '$lib/showcase/snippet-build'
+  import { flagOn } from '$showcase/snippet-build'
   import Button from '$lib/components/Button.svelte'
   import Copyable from '$lib/components/Copyable.svelte'
   import FormDialog from '$lib/components/FormDialog.svelte'
   import { DIALOG_SIZE_VARIANTS } from '$lib/components/BaseDialog.svelte'
   import TextInput from '$lib/components/TextInput.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { enumField, textField, boolField, snippetDialog, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
-  import { buildHeaderLine, parseHeaderMarkup } from '$lib/showcase/snippet-header'
+  import ShowcasePage from '$showcase/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
+  import { enumField, textField, boolField, snippetDialog, snippetField, snippetToggle } from '$showcase/snippet-field'
+  import { buildHeaderLine, parseHeaderMarkup } from '$showcase/snippet-header'
   import {
     buildEditActionsMarkup,
     buildEditBodyMarkup,

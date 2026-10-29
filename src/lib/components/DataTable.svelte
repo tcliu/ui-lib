@@ -11,7 +11,7 @@
   import CaretUpIcon from '$lib/icons/CaretUpIcon.svelte'
   import { createTableColumns, TABLE_MIN_COLUMN_WIDTH, TABLE_SELECT_COLUMN_WIDTH } from './use-table-columns.svelte'
   import { createTableScrollSync } from './use-table-scroll-sync.svelte'
-  import { resolveColumnWidths } from '$lib/data-table/column-helpers'
+  import { resolveColumnWidths } from '$lib/components/column-helpers'
   import Tooltip from './Tooltip.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
 

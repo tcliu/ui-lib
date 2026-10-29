@@ -1,7 +1,7 @@
 <script lang="ts">
   import Menu, { type MenuItemState } from '$lib/components/Menu.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import { getTheme, setTheme, THEMES, type UiTheme } from '$lib/app/theme.svelte'
+  import { getTheme, setTheme, THEMES, type UiTheme } from '$appLib/theme.svelte'
   import PaletteIcon from '$lib/icons/PaletteIcon.svelte'
   import { menuRadioItemClass } from './menu-item-class'
 

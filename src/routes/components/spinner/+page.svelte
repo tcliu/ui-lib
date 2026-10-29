@@ -1,11 +1,11 @@
 <script lang="ts">
   import Spinner from '$lib/components/Spinner.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { sizeField, snippetToggle } from '$lib/showcase/snippet-field'
+  import ShowcasePage from '$showcase/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
+  import { sizeField, snippetToggle } from '$showcase/snippet-field'
   import { buildSpinnerSnippet } from './demo-snippet'
-  import { parseSizeValue } from '$lib/showcase/size-input'
+  import { parseSizeValue } from '$showcase/size-input'
 
   const i18n = getI18nContext()
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { extractScriptValue } from '$lib/showcase/snippet-attributes'
-import { createSnippetComponent } from '$lib/showcase/snippet-playground'
-import { splitLeadingScript } from '$lib/showcase/snippet-source'
+import { extractScriptValue } from '$showcase/snippet-attributes'
+import { createSnippetComponent } from '$showcase/snippet-playground'
+import { splitLeadingScript } from '$showcase/snippet-source'
 import {
   buildFieldTableSnippet,
   FIELD_TABLE_DEMO_ROWS,

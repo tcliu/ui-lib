@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { flagOn } from '$lib/showcase/snippet-build'
+  import { flagOn } from '$showcase/snippet-build'
   import TagInput from '$lib/components/TagInput.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { parseSizeValue } from '$lib/showcase/size-input'
-  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { enumField, textField, boolField, sizeField, jsonField, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
+  import ShowcasePage from '$showcase/ShowcasePage.svelte'
+  import { parseSizeValue } from '$showcase/size-input'
+  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
+  import { enumField, textField, boolField, sizeField, jsonField, snippetField, snippetToggle } from '$showcase/snippet-field'
   import {
     buildTagInputSnippet,
     parseTagListJson,

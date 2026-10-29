@@ -3,9 +3,9 @@
 // the editor always shows the markup behind the demo above. The cell data is a
 // scope binding, so the snippet mirrors the live demo's controlled editing.
 
-import { escapeAttr } from '$lib/showcase/snippet-build'
-import { sizeAttributeLine } from '$lib/showcase/size-input'
-import { stageStaticCloseLines, stageStaticOpenLines } from '$lib/showcase/resizable-stage'
+import { escapeAttr } from '$showcase/snippet-build'
+import { sizeAttributeLine } from '$showcase/size-input'
+import { stageStaticCloseLines, stageStaticOpenLines } from '$showcase/resizable-stage'
 
 export type TriState = '' | 'yes' | 'no'
 

@@ -5,8 +5,8 @@
 // tracks Value edits instead of hiding the entries in scope, and the Value cell
 // can parse an edited list back out of the script block.
 
-import { escapeAttr, type TriState } from '$lib/showcase/snippet-build'
-import { sizeAttributeLine } from '$lib/showcase/size-input'
+import { escapeAttr, type TriState } from '$showcase/snippet-build'
+import { sizeAttributeLine } from '$showcase/size-input'
 import { CHART_TONES, type ChartTone } from '$lib/components/chart-tones'
 import type { ChartColumn, ChartSegment } from '$lib/components/BarChart.svelte'
 

@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { flagOn } from '$lib/showcase/snippet-build'
+  import { flagOn } from '$showcase/snippet-build'
   import Splitter from '$lib/components/Splitter.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import ShowcaseStage from '$lib/showcase/ShowcaseStage.svelte'
-  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import { textField, boolField, enumField, snippetToggle } from '$lib/showcase/snippet-field'
+  import ShowcasePage from '$showcase/ShowcasePage.svelte'
+  import ShowcaseStage from '$showcase/ShowcaseStage.svelte'
+  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
+  import { textField, boolField, enumField, snippetToggle } from '$showcase/snippet-field'
   import {
     SPLITTER_MAIN,
     SPLITTER_PANE,

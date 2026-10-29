@@ -3,12 +3,12 @@
   import Pagination from '$lib/components/Pagination.svelte'
   import SelectDropdown from '$lib/components/SelectDropdown.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$lib/showcase/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$lib/showcase/snippet-sync'
-  import type { SnippetAttribute } from '$lib/showcase/snippet-attributes'
-  import { textField, sizeField, jsonField, resetToggle, snippetDialog, snippetField, snippetToggle } from '$lib/showcase/snippet-field'
+  import ShowcasePage from '$showcase/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
+  import type { SnippetAttribute } from '$showcase/snippet-attributes'
+  import { textField, sizeField, jsonField, resetToggle, snippetDialog, snippetField, snippetToggle } from '$showcase/snippet-field'
   import { CUSTOM_LABELS, DEFAULT_PAGE_SIZE_OPTIONS, LABEL_FIELDS, buildPaginationSnippet, parseLabelsJson, parseLabelsValue, parsePageSizeOptionsJson } from './demo-snippet'
-  import { parseSizeValue } from '$lib/showcase/size-input'
+  import { parseSizeValue } from '$showcase/size-input'
   import type { PaginationLabels } from '$lib/components/pagination-labels'
 
   const i18n = getI18nContext()
