@@ -8,7 +8,7 @@
     <script>
       // Apply the persisted theme before first paint to avoid a dark flash
       // for non-default-theme users; keep the theme list in sync with
-      // src/styles.css.
+      // src/lib/styles.css.
       try {
         var stored = JSON.parse(localStorage.getItem('ui-lib:web-settings') || '{}').theme
         var themes = ['light', 'ember', 'sepia', 'nebula', 'sky', 'forest', 'midnight', 'mint', 'lavender']
