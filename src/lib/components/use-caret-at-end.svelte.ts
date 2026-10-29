@@ -1,6 +1,6 @@
 interface CaretAtEndOptions {
-  /** The input whose caret should move, or null while the field is unmounted. */
-  element: () => HTMLInputElement | null
+  /** The field whose caret should move, or null while the field is unmounted. */
+  element: () => HTMLInputElement | HTMLTextAreaElement | null
   /** Whether the control still holds focus when the deferred fix lands. */
   focused: () => boolean
 }
@@ -10,6 +10,14 @@ export interface CaretAtEnd {
   placeCaretAtEnd: () => void
   /** Drop a pending fix (e.g. before a deliberate selection gesture). */
   cancel: () => void
+}
+
+// `setSelectionRange` throws for an input type outside the text-like set
+// (email, number, date, …), so those skip the write instead of catching it.
+const TEXT_INPUT_TYPES = new Set(['text', 'search', 'url', 'tel', 'password'])
+
+function supportsSelection(field: HTMLInputElement | HTMLTextAreaElement): boolean {
+  return field instanceof HTMLTextAreaElement || TEXT_INPUT_TYPES.has(field.type)
 }
 
 /**
@@ -44,7 +52,7 @@ export function useCaretAtEnd({ element, focused }: CaretAtEndOptions): CaretAtE
     rafId = requestAnimationFrame(() => {
       rafId = null
       const next = element()
-      if (!next || !focused()) {
+      if (!next || !focused() || !supportsSelection(next)) {
         return
       }
       const { selectionStart, selectionEnd, value } = next
