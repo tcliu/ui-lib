@@ -22,6 +22,9 @@ export interface TableColumnsOptions {
   // Whether the fixed selection column is rendered (offsets the fill width).
   getSelectable: () => boolean
   getStorageKey: () => string | undefined
+  // An app-owned prefix for its persisted widths; the package prefix stays the
+  // read fallback.
+  getStoragePrefix?: () => string | undefined
   // Rising signal from the column chooser's reset action; each new value drops
   // managed widths and their persisted copy.
   getResetSignal: () => number
@@ -82,6 +85,7 @@ export function createTableColumns(options: TableColumnsOptions) {
     getMinWidth: columnMinWidth,
     getFillWidthOffset: () => (options.getSelectable() ? TABLE_SELECT_COLUMN_WIDTH : 0),
     getStorageKey: options.getStorageKey,
+    getStoragePrefix: options.getStoragePrefix,
   })
 
   // Keep columnWidths aligned with the current columns while the table is in

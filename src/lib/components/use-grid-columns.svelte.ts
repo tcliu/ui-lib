@@ -13,6 +13,9 @@ export interface GridColumnsOptions {
   getColumnCellWidth: (ci: number) => number
   getInitialColumnWidths: () => string[] | undefined
   getStorageKey: () => string | undefined
+  // An app-owned prefix for its persisted widths; the package prefix stays the
+  // read fallback.
+  getStoragePrefix?: () => string | undefined
 }
 
 const ROW_NUMBER_WIDTH = 36
@@ -91,6 +94,7 @@ export function createGridColumns(options: GridColumnsOptions) {
     getMinWidth: () => MIN_COLUMN_WIDTH,
     getFillWidthOffset: () => TABLE_LEFT_BORDER + ROW_NUMBER_WIDTH,
     getStorageKey: options.getStorageKey,
+    getStoragePrefix: options.getStoragePrefix,
   })
 
   $effect(() => {

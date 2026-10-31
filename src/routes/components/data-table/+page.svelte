@@ -60,6 +60,7 @@
     containerClassName: staged(''),
     tableClassName: staged('min-w-0'),
     storageKey: staged(''),
+    storagePrefix: staged(''),
     size: staged('md'),
     // Bound demo state: the eye resets these to their defaults, and the
     // binding stays, so they start applied.
@@ -258,6 +259,7 @@
       containerClassName: pg.containerClassName,
       tableClassName: pg.tableClassName,
       storageKey: pg.storageKey,
+      storagePrefix: pg.storagePrefix,
       resetWidthsSignal: pg.resetWidthsText,
       size: pg.size,
     }),
@@ -404,6 +406,7 @@
       toggle: eyeResetToggle(pg.sortKey, () => (pg.sortKey.value = null)),
     },
     textField({ name: 'storageKey', type: 'string?', defaultValue: '—', note: 'Persists resized widths under this key.', clearable: true, ...eye(pg.storageKey) }),
+    textField({ name: 'storagePrefix', type: 'string?', defaultValue: '—', note: 'App-owned localStorage prefix for the persisted widths; the package prefix stays the read fallback.', clearable: true, ...eye(pg.storagePrefix) }),
     textField({ name: 'tableClassName', type: 'string?', defaultValue: "'min-w-0'", note: 'Extra classes for the table element; raise the minimum width when columns need a horizontal scroll floor.', editorDefaultValue: 'min-w-0', clearable: true, placeholder: 'min-w-0', ...eye(pg.tableClassName) }),
     {
       name: 'columns',
@@ -558,6 +561,7 @@
         containerClassName={applied(pg.containerClassName) || undefined}
         tableClassName={applied(pg.tableClassName) || undefined}
         storageKey={applied(pg.storageKey) || undefined}
+        storagePrefix={applied(pg.storagePrefix) || undefined}
         size={demoSize}
         resetWidthsSignal={demoResetWidths}
         {loading} />

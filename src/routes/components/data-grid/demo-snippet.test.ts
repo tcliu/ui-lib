@@ -23,6 +23,7 @@ function state(overrides: Partial<DataGridSnippetState> = {}): DataGridSnippetSt
     value: staged([], true),
     maxColumns: staged('', true),
     storageKey: staged(''),
+    storagePrefix: staged(''),
     size: staged('', true),
     ...overrides,
   }
@@ -111,6 +112,9 @@ describe('buildDataGridSnippet', () => {
     )
     expect(source).toContain('maxColumns={2}')
     expect(source).toContain('storageKey="grid-widths"')
+    expect(buildDataGridSnippet(state({ storagePrefix: staged('app:column-widths:', true) }))).toContain(
+      'storagePrefix="app:column-widths:"',
+    )
   })
 
   it('omits the staged storageKey while the eye is off', () => {

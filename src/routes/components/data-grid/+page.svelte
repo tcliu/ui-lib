@@ -34,6 +34,7 @@
     initialColumnWidths: staged([] as string[], true),
     maxColumns: staged(''),
     storageKey: staged(''),
+    storagePrefix: staged(''),
     size: staged('md'),
   }
   let pg = $state(structuredClone(INITIAL))
@@ -76,6 +77,7 @@
       value: pg.value,
       maxColumns: pg.maxColumns,
       storageKey: pg.storageKey,
+      storagePrefix: pg.storagePrefix,
       size: pg.size,
     }),
   )
@@ -120,6 +122,7 @@
     boolField({ name: 'showHeaders', defaultValue: 'true', note: 'Treats the first row as a header (bindable).', ...eyeFlag(pg.showHeaders) }),
     sizeField({ note: 'Toolbar scale; numbers are icon-scale pixels interpolated between the steps.', ...eye(pg.size) }),
     textField({ name: 'storageKey', type: 'string?', defaultValue: '—', note: 'Persists resized widths under this localStorage key.', clearable: true, ...eye(pg.storageKey) }),
+    textField({ name: 'storagePrefix', type: 'string?', defaultValue: '—', note: 'App-owned localStorage prefix for the persisted widths; the package prefix stays the read fallback.', clearable: true, ...eye(pg.storagePrefix) }),
     jsonField({
       name: 'value',
       type: 'string[][]?',
@@ -151,6 +154,6 @@
     scopeRefresh={() => [pg.value.value]}
   >
     <ShowcaseStage paneClass="h-72 w-full">
-      <DataGrid value={applied(pg.value)} onChange={next => (pg.value.value = next)} {editable} {showHeaders} {hideHeaderToggle} columnLabels={demoColumnLabels} initialColumnWidths={demoInitialColumnWidths} maxColumns={demoMaxColumns} storageKey={applied(pg.storageKey) || undefined} size={demoSize} />
+      <DataGrid value={applied(pg.value)} onChange={next => (pg.value.value = next)} {editable} {showHeaders} {hideHeaderToggle} columnLabels={demoColumnLabels} initialColumnWidths={demoInitialColumnWidths} maxColumns={demoMaxColumns} storageKey={applied(pg.storageKey) || undefined} storagePrefix={applied(pg.storagePrefix) || undefined} size={demoSize} />
     </ShowcaseStage>
   </ShowcasePage>

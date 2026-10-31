@@ -40,6 +40,7 @@ const base: DataTableSnippetState = {
   containerClassName: staged(''),
   tableClassName: staged(''),
   storageKey: staged(''),
+  storagePrefix: staged(''),
   resetWidthsSignal: staged('', true),
   size: staged('', true),
 }
@@ -199,6 +200,7 @@ describe('buildDataTableSnippet', () => {
       containerClassName: staged('custom-wrap', true),
       tableClassName: staged('min-w-[40rem]', true),
       storageKey: staged('demo-widths', true),
+      storagePrefix: staged('app:column-widths:', true),
     })
     expect(set).toContain('searchAriaLabel="Find rows"')
     expect(set).toContain('chooserLabel="Columns"')
@@ -207,6 +209,7 @@ describe('buildDataTableSnippet', () => {
     expect(set).toContain('containerClassName="custom-wrap"')
     expect(set).toContain('tableClassName="min-w-[40rem]"')
     expect(set).toContain('storageKey="demo-widths"')
+    expect(set).toContain('storagePrefix="app:column-widths:"')
   })
 
   it('omits staged text props while the eye is off and emits them while on', () => {

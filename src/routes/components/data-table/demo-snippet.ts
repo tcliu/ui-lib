@@ -172,6 +172,7 @@ export interface DataTableSnippetState {
   containerClassName: Staged<string>
   tableClassName: Staged<string>
   storageKey: Staged<string>
+  storagePrefix: Staged<string>
   resetWidthsSignal: Staged<string>
   size: Staged<string>
 }
@@ -201,6 +202,7 @@ export function buildDataTableSnippet({
   containerClassName,
   tableClassName,
   storageKey,
+  storagePrefix,
   resetWidthsSignal,
   size,
 }: DataTableSnippetState): string {
@@ -297,6 +299,7 @@ export function buildDataTableSnippet({
     ...textAttrLine('containerClassName', containerClassName, '      '),
     ...textAttrLine('tableClassName', tableClassName, '      '),
     ...textAttrLine('storageKey', storageKey, '      '),
+    ...textAttrLine('storagePrefix', storagePrefix, '      '),
     // The size row prefills its component default in the Value column; the
     // builder omits the default so Show-code stays minimal.
     ...sizeAttrLine(size, '      '),

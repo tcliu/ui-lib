@@ -137,6 +137,10 @@
     // When set, resized column widths are persisted to localStorage under this
     // key and restored on mount.
     storageKey?: string
+    // An app-owned localStorage prefix for the persisted widths. Writes target
+    // it and reads fall back to the package prefix, so an app that migrated
+    // from its own key keeps its saved layouts.
+    storagePrefix?: string
     // Rising signal from the column chooser's reset action: each new value
     // drops managed widths (and their persisted copy) so the table falls
     // back to the percentage layout.
@@ -186,6 +190,7 @@
     resizeAriaLabel,
     resizable = false,
     storageKey,
+    storagePrefix,
     resetWidthsSignal = 0,
     size = 'md',
   }: Props<T> = $props()
@@ -321,6 +326,7 @@
     getResizable: () => resizable,
     getSelectable: () => selectable,
     getStorageKey: () => storageKey,
+    getStoragePrefix: () => storagePrefix,
     getResetSignal: () => resetWidthsSignal,
     getContainer: () => tableContainer,
     getColumnCellWidth: (i: number) => headerEls[i]?.offsetWidth ?? TABLE_MIN_COLUMN_WIDTH,

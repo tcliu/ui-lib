@@ -29,6 +29,7 @@ export interface DataGridSnippetState {
   value: Staged<string[][]>
   maxColumns: Staged<string>
   storageKey: Staged<string>
+  storagePrefix: Staged<string>
   size: Staged<string>
 }
 
@@ -108,7 +109,7 @@ export function parseGridValueJson(text: string): string[][] | null {
   }
 }
 
-export function buildDataGridSnippet({ editable, showHeaders, hideHeaderToggle, columnLabels, initialColumnWidths, value, maxColumns, storageKey, size }: DataGridSnippetState): string {
+export function buildDataGridSnippet({ editable, showHeaders, hideHeaderToggle, columnLabels, initialColumnWidths, value, maxColumns, storageKey, storagePrefix, size }: DataGridSnippetState): string {
   // JSON.stringify keeps the seeded lists valid no matter what the labels
   // hold. The lists seed script-local state only while set; unset omits both
   // the declaration and the attribute. The script block itself is omitted
@@ -132,6 +133,7 @@ export function buildDataGridSnippet({ editable, showHeaders, hideHeaderToggle, 
     ...boolAttrLine('hideHeaderToggle', hideHeaderToggle, 'no', '      '),
     ...maxColumnsLine(maxColumns, 6),
     ...textAttrLine('storageKey', storageKey, '      '),
+    ...textAttrLine('storagePrefix', storagePrefix, '      '),
     ...sizeAttrLine(size, '      '),
     '    />',
     ...stageStaticCloseLines(''),

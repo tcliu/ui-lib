@@ -21,6 +21,10 @@ export interface ColumnResizeConfig {
   // the grid, checkbox column in the admin table).
   getFillWidthOffset: () => number
   getStorageKey: () => string | undefined
+  // An app-owned prefix for its persisted widths. Writes target it, while the
+  // canonical package prefix stays the read fallback, so an app migrating from
+  // its own key keeps its saved layouts.
+  getStoragePrefix?: () => string | undefined
 }
 
 export function createColumnResize(config: ColumnResizeConfig) {
@@ -33,7 +37,15 @@ export function createColumnResize(config: ColumnResizeConfig) {
     getMinWidth,
     getFillWidthOffset,
     getStorageKey,
+    getStoragePrefix,
   } = config
+
+  // The width store for this table: the caller's prefix (when given) writes
+  // first and reads ahead of the canonical prefix.
+  const widthStorage = () => {
+    const prefix = getStoragePrefix?.()
+    return useColumnWidthStorage(prefix ? [prefix] : [])
+  }
 
   let resizingCol = $state<number | null>(null)
   let resizeStartX = 0
@@ -177,7 +189,7 @@ export function createColumnResize(config: ColumnResizeConfig) {
     const count = getColumnCount()
     if (persistedCount !== count) {
       const storageKey = getStorageKey()
-      const stored = storageKey ? useColumnWidthStorage().load(storageKey) : null
+      const stored = storageKey ? widthStorage().load(storageKey) : null
       persistedWidths = stored && stored.length === count ? stored : null
       persistedCount = count
     }
@@ -190,7 +202,7 @@ export function createColumnResize(config: ColumnResizeConfig) {
   // stops an armed debounce from saving the pre-reset widths back.
   function clearPersistedWidths(): void {
     const storageKey = getStorageKey()
-    if (storageKey) useColumnWidthStorage().clear(storageKey)
+    if (storageKey) widthStorage().clear(storageKey)
     persistedWidths = null
     persistedCount = -1
     cancelSave()
@@ -220,7 +232,7 @@ export function createColumnResize(config: ColumnResizeConfig) {
     if (pendingSave === null) return
     const { key, widths: w } = pendingSave
     pendingSave = null
-    useColumnWidthStorage().save(key, w)
+    widthStorage().save(key, w)
     // Keep the restore cache in step with what was just saved, so a later load
     // for the same column count returns the current widths instead of the
     // pre-drag layout captured at mount.

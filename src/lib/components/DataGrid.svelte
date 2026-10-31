@@ -52,6 +52,10 @@
     // When set, resized column widths are persisted to localStorage under this
     // key and restored on mount (overriding initialColumnWidths).
     storageKey?: string
+    // An app-owned localStorage prefix for the persisted widths. Writes target
+    // it and reads fall back to the package prefix, so an app that migrated
+    // from its own key keeps its saved layouts.
+    storagePrefix?: string
     size?: SizeInput
   }
 
@@ -65,6 +69,7 @@
     hideHeaderToggle = false,
     initialColumnWidths,
     storageKey,
+    storagePrefix,
     size = 'md',
   }: Props = $props()
 
@@ -176,6 +181,7 @@
     getColumnCellWidth: (ci: number) => cellRefs.colSelector(ci)?.offsetWidth ?? 128,
     getInitialColumnWidths: () => initialColumnWidths,
     getStorageKey: () => storageKey,
+    getStoragePrefix: () => storagePrefix,
   })
 
   createTableScrollSync({
