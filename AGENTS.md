@@ -117,6 +117,10 @@ Project-specific development conventions for the UI Library web app.
 - Component attributes stay camelCase.
 - A sized component exposes one numeric size dimension (`xs`–`xl` aliases of the `SIZE_PX` axis) and scales every metric by a fixed ratio; an interrelated metric derives from its base rather than being tuned beside it (the trigger gutter is a fixed share of the horizontal padding), per `~/.agents/references/tailwind.md` (Derived custom properties); details in `ARCHITECTURE.md`.
 - A composite embedding sized controls exposes `size?: SizeInput` and forwards it to every inner sized control, defaulting to the shared `md` step so both agree.
+- `SelectDropdown`'s trigger and its option rows (also `AutoComplete`'s) take
+  the text field's box — the input chrome's font, line, and padding — so a
+  select sits level with a `TextInput` in one row; never tune the select padding
+  beside the input's.
 - `Pagination`'s page blocks match the page-size dropdown trigger's height (same select line, vertical padding, and 1px border), so the row's controls sit level rather than from a hand-tuned block ratio; a page cell sizes in CSS alone — square at rest, widened only by its own label — and the active cell (the jump field) shares the page buttons' box for the same text and puts the caret at the end on focus/click (`caretAtEnd`).
 - A dialog panel's footprint is `BaseDialog`'s `widthVariant`/`heightVariant` (or the `size` shorthand setting both; explicit variant wins), not a `SizeInput` metric scale. Mechanism in `ARCHITECTURE.md`.
 - Size svg primitives (icons, spinner) take `size` attributes, never classes.
@@ -190,13 +194,15 @@ Project-specific development conventions for the UI Library web app.
   as it is), and Reset restores data plus eyes.
 - Start a new eye on when its curated value is non-default; only default-valued rows start off, so the cleared form reproduces the curated demo and seed exactly.
 - The only eye-free dialog row is data applied elsewhere with nothing of its own to preserve (data-table `chooserColumns`); record the reason in a code comment.
-- Build a required dialog row's eye with `resetToggle` (off resets committed data to the row default); an optional row's uses `snippetToggle`. A row whose demo binds the state also uses `resetToggle` (off resets the bound state to its default; the binding stays). Mechanism in `ARCHITECTURE.md`.
+- Build a required dialog row's eye with `eyeResetToggle` (off resets committed data to the row default); an optional row's uses `eyeToggle`. A row whose demo binds the state also uses `eyeResetToggle` (off resets the bound state to its default; the binding stays). Mechanism in `ARCHITECTURE.md`.
 - Declare a `text`/`number`/`tri` row and let `syncFieldsOf` derive its absent-attribute fallback; never hand-write a `sync.set` repeating it (`set` stays for a bespoke setter) — except an eye row prefilling a literal default, which takes a custom `read` (absent resolves to current state) and `set` (default maps back to unset) so compiling never stages the default into the form.
+- Model a curated playground prop as one `Staged<T>` pair (`staged(value, on)` from `$showcase/staged.ts`), never a value plus an `On` flag: read it with `applied`/`appliedFlag`, wire a row with `eye`/`eyeFlag`/`eyeToggle`/`eyeResetToggle`, commit in place with `stage`, and never reassign the pair. Mechanism in `ARCHITECTURE.md`.
+- A Show-code builder takes the pair per prop and applies the eye gate once through a shared `$showcase/snippet-build.ts` attribute-line helper, so the page passes its state straight through instead of flattening `value`/`on` at the call site.
 - A `text`/`number` Value cell with a Value editor sets `clearable`; `TextArea` has no clearable.
 - A Value cell's Type takes a `?` suffix only when the prop is optional, so a required value keeps the bare type.
 - A Value input's placeholder is the literal default when the prop has one, otherwise absent, never a meta-hint like `(none)` or `(built-in)`.
-- Build a dialog-backed prop row with the shared `snippetField`/`jsonField`/`snippetToggle`/`resetToggle`/`snippetDialog` helpers rather than inline row literals; the row's seed and commit stay page-specific. Mechanism in `ARCHITECTURE.md`.
-- Build a `size`/`text`/`boolean`/`enum` prop row with the shared `sizeField`/`textField`/`boolField`/`enumField` helper rather than an inline literal; Show-code builders share escaping and tri-state helpers (`escapeAttr`/`escapeText`/`escapeRawLine`/`unescapeAttr`/`TriState`/`flagOn`) from `$showcase/snippet-build.ts` instead of re-declaring them per page.
+- Build a dialog-backed prop row with the shared `snippetField`/`jsonField`/`eyeToggle`/`eyeResetToggle`/`snippetDialog` helpers rather than inline row literals; the row's seed and commit stay page-specific. Mechanism in `ARCHITECTURE.md`.
+- Build a `size`/`text`/`boolean`/`enum` prop row with the shared `sizeField`/`textField`/`boolField`/`enumField` helper rather than an inline literal; Show-code builders share escaping and tri-state helpers (`escapeAttr`/`escapeText`/`escapeRawLine`/`unescapeAttr`/`TriState`/`flagOn`) and the pair-gated attribute lines (`textAttrLine`/`enumAttrLine`/`boolAttrLine`/`sizeAttrLine`/`popupAttrLine`) from `$showcase/snippet-build.ts` instead of re-declaring them per page.
 - The shell owns the snippet preview: a page passes `scope`/`sync` (plus `scopeRefresh`/`scopeRefreshWhen` when its snippet reads scope keys the seed omits) to `ShowcasePage` rather than constructing a `SnippetPreview` itself.
 - Seed a dialog-backed Value cell from the fallback-resolved demo value, not the raw override; map the untouched default back to unset on commit.
 - A dialog-backed row must round-trip every editable facet its dialog presents, with `dialog.valid` rejecting any shape it cannot reproduce; cover each with a round-trip spec.

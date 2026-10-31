@@ -312,8 +312,11 @@ of building a parallel control.
   the field never outgrows the host. An adornment over
   the field's border (the number steppers) paints no border of its own: it reserves
   the ring with a transparent border so the base border, focus, and disabled
-  colors stay in lockstep. `SelectDropdown`'s box shares the same line/padY ratios
-  so text, search, and select align on one row; a date picker's single-mode field *is*
+  colors stay in lockstep. `SelectDropdown`'s box shares the input chrome's
+  font, line, and both paddings (`INPUT_RATIOS`), so text, search, and select
+  sit on one box — the same height and text inset — in a shared row, and its
+  option rows (also `AutoComplete`'s) reuse that box; a date picker's
+  single-mode field *is*
   this `TextInput` (with the calendar affordance in its `trailing` slot), and its
   range trigger reuses the same field font, line, and padding (`INPUT_RATIOS`),
   so both sit level with a field too. `clearable` renders one shared clear
@@ -385,9 +388,11 @@ of building a parallel control.
   `Pagination`'s page blocks reuse the select trigger's line and vertical
   padding (plus its 1px border), so the numbered blocks, the jump input, and the
   page-size dropdown land on one height. Each block is content-sized — its own
-  label plus its horizontal padding and border — and floored by that height, so
-  a one-digit cell is square and a wider number widens only its own cell, in
-  CSS alone; the jump input tracks its value with `field-sizing: content`
+  label plus its horizontal padding and border — and floored by that height,
+  with the horizontal padding kept small enough that a one-digit label still
+  fits inside it, so a one-digit cell is square and a wider number widens only
+  its own cell, in CSS alone; the jump input tracks its value with
+  `field-sizing: content`
   (falling back to the fixed square where unsupported), so the active cell
   matches a page button holding the same text, and `caretAtEnd` places its
   caret after the value on focus and click so typing replaces the page number.
@@ -874,19 +879,35 @@ already skips). Clearing a Value restores the same default (unsets when the row
 has no literal default) and unapplies the eye, and Reset restores the curated
 playground. The
 same literal default is the editors' clear baseline, so the cross hides while
-the Value matches it. A row
+the Value matches it.
+
+**Staged props.** A curated playground prop lives in one `Staged<T>` pair
+(`$showcase/staged.ts`): its value and its eye together, so the off state keeps
+the committed data instead of parking it in a second variable. `applied` /
+`appliedFlag` gate the demo and scope; `eye` / `eyeFlag` supply a row's
+`value`/`onChange`/`enabled`/`setEnabled`; `eyeToggle` / `eyeResetToggle` build a
+dialog row's toggle; `stage` commits a value and re-applies the eye. The pair is
+a plain object because Reset restores `structuredClone(INITIAL)`, and a page
+mutates it in place (`.value`, `.on`, `stage`) — reassigning the pair would leave
+a captured setter writing to the stale object. A Show-code builder takes the pair
+per prop and applies the eye gate once in a shared attribute-line helper
+(`$showcase/snippet-build.ts`: `textAttrLine`, `enumAttrLine`, `boolAttrLine`,
+`sizeAttrLine`, `popupAttrLine`), so the page passes its state straight through
+and the emitted markup matches the demo.
+
+A row
 with a `dialog` editor opens `FieldTable`'s dialog
 (`OK` commits, `Reset` reverts); pure snippet helpers shared across demos live in
 `$showcase/`. A dialog-backed prop row is built with `snippetField`
-(markup dialog) or `jsonField` (JSON dialog) plus `snippetToggle` (optional
-eye) / `resetToggle` (required eye) / `snippetDialog`
+(markup dialog) or `jsonField` (JSON dialog) plus `eyeToggle` (optional
+eye) / `eyeResetToggle` (required eye) / `snippetDialog`
 (`$showcase/snippet-field.ts`), which supply its `type`/`defaultValue`/
 `editor` boilerplate, apply-eye toggle, and exact-shape dialog; only the
 row's seed and commit stay page-specific. A non-dialog row family is built the
 same way: the `size`/`text`/`boolean`/`enum` rows are `sizeField`/`textField`/
 `boolField`/`enumField` (same module), and the Show-code
-builders share their escaping and tri-state helpers from
-`$showcase/snippet-build.ts` rather than re-declaring them. A
+builders share their escaping, tri-state, and pair-gated attribute-line helpers
+from `$showcase/snippet-build.ts` rather than re-declaring them. A
 dialog-backed `children` row that takes free-form HTML (the
 AppShell block) accepts only well-balanced markup the demo and the compiled seed
 render identically — no expressions, component tags, directives, comments,
