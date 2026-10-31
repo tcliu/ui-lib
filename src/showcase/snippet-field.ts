@@ -135,18 +135,15 @@ export function jsonField({
 interface EyeOptions {
   enabled: boolean
   setEnabled: (enabled: boolean) => void
-  // A bound-state row resets the bound state on eye-off (resetToggle).
-  reset?: () => void
 }
 
 // Apply a staged-eye toggle to a row: committing re-applies the eye, and an
-// eye-off resets the bound state when `reset` is given or keeps the committed
-// data otherwise. `commit` is the page's own setter, so it never depends on
-// the row's preliminary `onChange`.
+// eye-off keeps the committed data. `commit` is the page's own setter, so it
+// never depends on the row's preliminary `onChange`.
 function withEye(
   row: SyncableFieldConfig,
   commit: (value: string) => void,
-  { enabled, setEnabled, reset }: EyeOptions,
+  { enabled, setEnabled }: EyeOptions,
 ): SyncableFieldConfig {
   return {
     ...row,
@@ -154,7 +151,7 @@ function withEye(
       commit(next)
       setEnabled(true)
     },
-    toggle: reset ? resetToggle(enabled, setEnabled, reset) : snippetToggle(enabled, setEnabled),
+    toggle: snippetToggle(enabled, setEnabled),
   }
 }
 
@@ -236,17 +233,14 @@ export interface BoolFieldOptions {
   // Pass both to stage the row behind the eye; omit for an always-applied row.
   enabled?: boolean
   setEnabled?: (enabled: boolean) => void
-  // A bound-state row resets the bound state on eye-off (resetToggle).
-  reset?: () => void
   // Replaces the default `{ kind: 'tri' }` write-back.
   sync?: FieldSyncMeta
 }
 
 // A `boolean`-editor prop row: the shared type/editor/tri-sync boilerplate plus,
-// when `enabled`/`setEnabled` are given, the staged-eye toggle (a `reset` makes
-// eye-off restore the bound state). Only the row's note and its state pair stay
-// page-specific.
-export function boolField({ name, type = 'boolean', defaultValue, note, value, onChange, enabled, setEnabled, reset, sync }: BoolFieldOptions): SyncableFieldConfig {
+// when `enabled`/`setEnabled` are given, the staged-eye toggle. Only the row's
+// note and its state pair stay page-specific.
+export function boolField({ name, type = 'boolean', defaultValue, note, value, onChange, enabled, setEnabled, sync }: BoolFieldOptions): SyncableFieldConfig {
   const row: SyncableFieldConfig = {
     name,
     type,
@@ -258,7 +252,7 @@ export function boolField({ name, type = 'boolean', defaultValue, note, value, o
     sync: sync ?? { kind: 'tri' },
   }
   if (enabled !== undefined && setEnabled !== undefined) {
-    return withEye(row, onChange, { enabled, setEnabled, reset })
+    return withEye(row, onChange, { enabled, setEnabled })
   }
   return row
 }
@@ -276,7 +270,6 @@ export interface TextFieldOptions {
   clearLabel?: string
   enabled?: boolean
   setEnabled?: (enabled: boolean) => void
-  reset?: () => void
   // Replaces the default `{ kind: 'text' }` write-back.
   sync?: FieldSyncMeta
 }
@@ -297,7 +290,6 @@ export function textField({
   clearLabel,
   enabled,
   setEnabled,
-  reset,
   sync,
 }: TextFieldOptions): SyncableFieldConfig {
   const row: SyncableFieldConfig = {
@@ -315,7 +307,7 @@ export function textField({
     sync: sync ?? { kind: 'text' },
   }
   if (enabled !== undefined && setEnabled !== undefined) {
-    return withEye(row, onChange, { enabled, setEnabled, reset })
+    return withEye(row, onChange, { enabled, setEnabled })
   }
   return row
 }
@@ -332,7 +324,6 @@ export interface EnumFieldOptions {
   clearLabel?: string
   enabled?: boolean
   setEnabled?: (enabled: boolean) => void
-  reset?: () => void
   // Replaces the default `{ kind: 'text' }` write-back.
   sync?: FieldSyncMeta
 }
@@ -352,7 +343,6 @@ export function enumField({
   clearLabel,
   enabled,
   setEnabled,
-  reset,
   sync,
 }: EnumFieldOptions): SyncableFieldConfig {
   const row: SyncableFieldConfig = {
@@ -369,7 +359,7 @@ export function enumField({
     sync: sync ?? { kind: 'text' },
   }
   if (enabled !== undefined && setEnabled !== undefined) {
-    return withEye(row, onChange, { enabled, setEnabled, reset })
+    return withEye(row, onChange, { enabled, setEnabled })
   }
   return row
 }

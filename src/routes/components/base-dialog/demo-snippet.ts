@@ -2,28 +2,20 @@
 // the playground form state: the section regenerates the editor text from
 // this, so the editor always shows the markup behind the demo above.
 
-import { escapeAttr, escapeRawLine } from '$showcase/snippet-build'
+import { enumAttrLine, escapeAttr, escapeRawLine, textAttrLine } from '$showcase/snippet-build'
+import type { Staged } from '$showcase/staged'
 
 export interface BaseDialogSnippetState {
-  widthVariant: string
-  widthVariantOn: boolean
-  heightVariant: string
-  heightVariantOn: boolean
-  size: string
-  sizeOn: boolean
-  className: string
-  classNameOn: boolean
-  children: string
-  childrenOn: boolean
-  title: string
-  titleOn: boolean
-  closeLabel: string
-  closeLabelOn: boolean
+  widthVariant: Staged<string>
+  heightVariant: Staged<string>
+  size: Staged<string>
+  className: Staged<string>
+  children: Staged<string>
+  title: Staged<string>
+  closeLabel: Staged<string>
   // Raw header markup committed from the row's code dialog; empty renders the
   // title fallback below.
-  header: string
-  // The eye toggle off means no header snippet is applied.
-  headerOn: boolean
+  header: Staged<string>
 }
 
 export const STYLED_PANEL = 'border-cyan-500/40'
@@ -159,21 +151,13 @@ function unescapeRawLine(value: string): string {
 
 export function buildBaseDialogSnippet({
   widthVariant,
-  widthVariantOn,
   heightVariant,
-  heightVariantOn,
   size,
-  sizeOn,
   className,
-  classNameOn,
   children,
-  childrenOn,
   title,
-  titleOn,
   closeLabel,
-  closeLabelOn,
   header,
-  headerOn,
 }: BaseDialogSnippetState): string {
   // The eye toggle off means no children are applied. Otherwise custom
   // children render from their parsed segments (buttons gain the dismiss
@@ -182,12 +166,12 @@ export function buildBaseDialogSnippet({
   // block when unset), so the editor text and the seed's inner content match
   // line-for-line modulo indent. Handlers emit verbatim, so the seed
   // compiles them.
-  const parsed = childrenOn ? parseBaseBodyMarkup(children) : null
+  const parsed = children.on ? parseBaseBodyMarkup(children.value) : null
   // Slot snippets sit inside the dialog behind the body so the seed compiles
   // the same header the static demo renders; committed lines emit
   // verbatim (validation at commit guarantees the shape).
   const headerLines =
-    headerOn && header ? ['    {#snippet header()}', `      ${escapeRawLine(header)}`, '    {/snippet}'] : []
+    header.on && header.value ? ['    {#snippet header()}', `      ${escapeRawLine(header.value)}`, '    {/snippet}'] : []
   const slotLines = [...headerLines]
   const childLines = parsed
     ? [
@@ -206,12 +190,12 @@ export function buildBaseDialogSnippet({
     '',
     '{#if open}',
     '  <BaseDialog',
-    ...(titleOn && title ? [`    title="${escapeAttr(title)}"`] : ['    title={dialogTitle}']),
-    ...(closeLabelOn && closeLabel ? [`    closeLabel="${escapeAttr(closeLabel)}"`] : []),
-    ...(classNameOn && className ? [`    className="${className}"`] : []),
-    ...(widthVariantOn && widthVariant && widthVariant !== 'md' ? [`    widthVariant="${widthVariant}"`] : []),
-    ...(heightVariantOn && heightVariant && heightVariant !== 'auto' ? [`    heightVariant="${heightVariant}"`] : []),
-    ...(sizeOn && size ? [`    size="${size}"`] : []),
+    ...(title.on && title.value ? [`    title="${escapeAttr(title.value)}"`] : ['    title={dialogTitle}']),
+    ...textAttrLine('closeLabel', closeLabel, '    '),
+    ...textAttrLine('className', className, '    '),
+    ...enumAttrLine('widthVariant', widthVariant, 'md', '    '),
+    ...enumAttrLine('heightVariant', heightVariant, 'auto', '    '),
+    ...textAttrLine('size', size, '    '),
     ...childLines,
     '{/if}',
   ]

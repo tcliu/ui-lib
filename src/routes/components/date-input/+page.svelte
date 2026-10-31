@@ -4,9 +4,10 @@
   import { DATE_STAGE_CONTENT, DATE_STAGE_DEFAULT_WIDTH, DATE_STAGE_MIN_WIDTH } from '$showcase/date-stage'
   import ShowcasePage from '$showcase/ShowcasePage.svelte'
   import { parseSizeValue } from '$showcase/size-input'
-  import { flagOn, type TriState } from '$showcase/snippet-build'
+  import type { TriState } from '$showcase/snippet-build'
   import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { boolField, resetToggle, sizeField, textField } from '$showcase/snippet-field'
+  import { boolField, sizeField, textField } from '$showcase/snippet-field'
+  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, stage, staged } from '$showcase/staged'
   import { buildDateInputSnippet } from './demo-snippet'
 
   // Customizer playground state. The single value and the range pair are
@@ -16,39 +17,32 @@
   // clearing a Value unsets it, and Reset restores the defaults. Stage width is
   // interaction state, not a curated option; Reset restores it.
   const INITIAL = {
-    value: '',
-    valueOn: true,
-    from: '',
-    fromOn: true,
-    to: '',
-    toOn: true,
-    range: 'no' as TriState,
-    rangeOn: false,
-    time: 'no' as TriState,
-    timeOn: false,
-    format: DEFAULT_DATE_FORMAT,
-    formatOn: false,
-    placeholder: '',
-    placeholderOn: false,
-    closeOnSelect: 'no' as TriState,
-    closeOnSelectOn: false,
-    highlightRange: 'no' as TriState,
-    highlightRangeOn: false,
-    size: 'md',
-    sizeOn: false,
+    value: staged('', true),
+    from: staged('', true),
+    to: staged('', true),
+    range: staged('no' as TriState),
+    time: staged('no' as TriState),
+    format: staged(DEFAULT_DATE_FORMAT),
+    placeholder: staged(''),
+    closeOnSelect: staged('no' as TriState),
+    highlightRange: staged('no' as TriState),
+    size: staged('md'),
     stageWidth: DATE_STAGE_DEFAULT_WIDTH,
   }
   let pg = $state(structuredClone(INITIAL))
 
-  const demoFormat = $derived(pg.formatOn && pg.format ? pg.format : undefined)
-  const demoPlaceholder = $derived(pg.placeholderOn && pg.placeholder ? pg.placeholder : undefined)
-  const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
+  const demoFormat = $derived(applied(pg.format) || undefined)
+  const demoPlaceholder = $derived(applied(pg.placeholder) || undefined)
+  const demoSize = $derived.by(() => {
+    const value = applied(pg.size)
+    return value === undefined ? undefined : parseSizeValue(value)
+  })
   // The flags drive which prop set the demo and Show-code carry: an eye off
   // omits the prop, keeping the committed value for re-applying.
-  const demoRange = $derived(pg.rangeOn ? flagOn(pg.range) : undefined)
-  const demoTime = $derived(pg.timeOn ? flagOn(pg.time) : undefined)
-  const demoCloseOnSelect = $derived(pg.closeOnSelectOn ? flagOn(pg.closeOnSelect) : undefined)
-  const demoHighlightRange = $derived(pg.highlightRangeOn ? flagOn(pg.highlightRange) : undefined)
+  const demoRange = $derived(appliedFlag(pg.range))
+  const demoTime = $derived(appliedFlag(pg.time))
+  const demoCloseOnSelect = $derived(appliedFlag(pg.closeOnSelect))
+  const demoHighlightRange = $derived(appliedFlag(pg.highlightRange))
 
   function clearPlayground() {
     pg = structuredClone(INITIAL)
@@ -59,16 +53,13 @@
       value: pg.value,
       from: pg.from,
       to: pg.to,
-      range: pg.rangeOn ? pg.range : '',
-      time: pg.timeOn ? pg.time : '',
+      range: pg.range,
+      time: pg.time,
       format: pg.format,
-      formatOn: pg.formatOn,
       placeholder: pg.placeholder,
-      placeholderOn: pg.placeholderOn,
-      closeOnSelect: pg.closeOnSelectOn ? pg.closeOnSelect : '',
-      highlightRange: pg.highlightRangeOn ? pg.highlightRange : '',
+      closeOnSelect: pg.closeOnSelect,
+      highlightRange: pg.highlightRange,
       size: pg.size,
-      sizeOn: pg.sizeOn,
     }),
   )
 
@@ -77,8 +68,8 @@
   // page keeps its editable Value column and the demo stays driveable there;
   // the `theme` object stays a read-only row.
   const fields: SyncableFieldConfig[] = $derived([
-    boolField({ name: 'closeOnSelect', defaultValue: 'auto', note: 'Close the panel after a day pick; unset follows the control default (closes unless `time` is on).', value: pg.closeOnSelect, onChange: v => (pg.closeOnSelect = v as TriState), enabled: pg.closeOnSelectOn, setEnabled: v => (pg.closeOnSelectOn = v) }),
-    textField({ name: 'format', type: 'string?', defaultValue: "'YYYY-MM-DD'", note: 'Field pattern, dayjs tokens (YYYY, MM, DD, HH, mm, …); typed text is parsed against it and [bracketed] text is literal. Defaults to YYYY-MM-DD, or YYYY-MM-DD HH:mm:ss while `time` is on.', value: pg.format, onChange: v => (pg.format = v), editorDefaultValue: DEFAULT_DATE_FORMAT, clearable: true, placeholder: DEFAULT_DATE_FORMAT, enabled: pg.formatOn, setEnabled: v => (pg.formatOn = v) }),
+    boolField({ name: 'closeOnSelect', defaultValue: 'auto', note: 'Close the panel after a day pick; unset follows the control default (closes unless `time` is on).', ...eyeFlag(pg.closeOnSelect) }),
+    textField({ name: 'format', type: 'string?', defaultValue: "'YYYY-MM-DD'", note: 'Field pattern, dayjs tokens (YYYY, MM, DD, HH, mm, …); typed text is parsed against it and [bracketed] text is literal. Defaults to YYYY-MM-DD, or YYYY-MM-DD HH:mm:ss while `time` is on.', editorDefaultValue: DEFAULT_DATE_FORMAT, clearable: true, placeholder: DEFAULT_DATE_FORMAT, ...eye(pg.format) }),
     {
       name: 'from',
       type: 'string?',
@@ -87,23 +78,16 @@
       note: 'Range start as YYYY-MM-DD (a date-time while `time` is on); an invalid date reads as unset. Applies while `range` is on; the eye resets to the default.',
       editor: 'text',
       clearable: true,
-      value: pg.from,
-      onChange: value => {
-        pg.from = value
-        pg.fromOn = true
-      },
-      toggle: resetToggle(
-        pg.fromOn,
-        enabled => (pg.fromOn = enabled),
-        () => (pg.from = ''),
-      ),
+      ...eye(pg.from),
+      onChange: value => stage(pg.from, value),
+      toggle: eyeResetToggle(pg.from, () => (pg.from.value = '')),
       sync: { kind: 'script', attr: 'from', unsetAbsent: true },
     },
-    boolField({ name: 'highlightRange', defaultValue: 'false', note: 'Highlight the days between the two ends in each end’s calendar, so the range reads as one span; the ends stay the selected days. Applies while `range` is on.', value: pg.highlightRange, onChange: v => (pg.highlightRange = v as TriState), enabled: pg.highlightRangeOn, setEnabled: v => (pg.highlightRangeOn = v) }),
-    textField({ name: 'placeholder', type: 'string?', defaultValue: '—', note: 'Prompt shown while the single field is empty; defaults to the shared message. A range pair names each field after its own end.', value: pg.placeholder, onChange: v => (pg.placeholder = v), clearable: true, enabled: pg.placeholderOn, setEnabled: v => (pg.placeholderOn = v) }),
-    boolField({ name: 'range', defaultValue: 'false', note: 'Render a from/to pair of independent fields, each behaving as the single field with its own calendar.', value: pg.range, onChange: v => (pg.range = v as TriState), enabled: pg.rangeOn, setEnabled: v => (pg.rangeOn = v) }),
-    sizeField({ note: 'Control scale; numbers are icon-scale pixels. Scales every field and its calendar.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
-    boolField({ name: 'time', defaultValue: 'false', note: 'Edit a date-time: every panel gains an hour/minute/second row, and a range pairs two date-time fields. A segment stepped past its range carries into the next unit (23:59:59 + 1s rolls the date).', value: pg.time, onChange: v => (pg.time = v as TriState), enabled: pg.timeOn, setEnabled: v => (pg.timeOn = v) }),
+    boolField({ name: 'highlightRange', defaultValue: 'false', note: 'Highlight the days between the two ends in each end’s calendar, so the range reads as one span; the ends stay the selected days. Applies while `range` is on.', ...eyeFlag(pg.highlightRange) }),
+    textField({ name: 'placeholder', type: 'string?', defaultValue: '—', note: 'Prompt shown while the single field is empty; defaults to the shared message. A range pair names each field after its own end.', clearable: true, ...eye(pg.placeholder) }),
+    boolField({ name: 'range', defaultValue: 'false', note: 'Render a from/to pair of independent fields, each behaving as the single field with its own calendar.', ...eyeFlag(pg.range) }),
+    sizeField({ note: 'Control scale; numbers are icon-scale pixels. Scales every field and its calendar.', ...eye(pg.size) }),
+    boolField({ name: 'time', defaultValue: 'false', note: 'Edit a date-time: every panel gains an hour/minute/second row, and a range pairs two date-time fields. A segment stepped past its range carries into the next unit (23:59:59 + 1s rolls the date).', ...eyeFlag(pg.time) }),
     {
       name: 'to',
       type: 'string?',
@@ -112,16 +96,9 @@
       note: 'Range end as YYYY-MM-DD (a date-time while `time` is on); an invalid date reads as unset. Applies while `range` is on; the eye resets to the default.',
       editor: 'text',
       clearable: true,
-      value: pg.to,
-      onChange: value => {
-        pg.to = value
-        pg.toOn = true
-      },
-      toggle: resetToggle(
-        pg.toOn,
-        enabled => (pg.toOn = enabled),
-        () => (pg.to = ''),
-      ),
+      ...eye(pg.to),
+      onChange: value => stage(pg.to, value),
+      toggle: eyeResetToggle(pg.to, () => (pg.to.value = '')),
       sync: { kind: 'script', attr: 'to', unsetAbsent: true },
     },
     {
@@ -132,16 +109,9 @@
       note: 'Selected date as YYYY-MM-DD (a date-time while `time` is on); an invalid date reads as unset. Applies while `range` is off. Typing is validated on commit (a valid date writes back, anything else reverts); the eye resets to the default.',
       editor: 'text',
       clearable: true,
-      value: pg.value,
-      onChange: value => {
-        pg.value = value
-        pg.valueOn = true
-      },
-      toggle: resetToggle(
-        pg.valueOn,
-        enabled => (pg.valueOn = enabled),
-        () => (pg.value = ''),
-      ),
+      ...eye(pg.value),
+      onChange: value => stage(pg.value, value),
+      toggle: eyeResetToggle(pg.value, () => (pg.value.value = '')),
       sync: { kind: 'script', attr: 'value', unsetAbsent: true },
     },
     {
@@ -187,27 +157,27 @@
         <DateInput
           range
           time={demoTime}
-          from={pg.from}
-          to={pg.to}
-          onFrom={value => (pg.from = value)}
-          onTo={value => (pg.to = value)}
+          from={pg.from.value}
+          to={pg.to.value}
+          onFrom={value => (pg.from.value = value)}
+          onTo={value => (pg.to.value = value)}
           closeOnSelect={demoCloseOnSelect}
           highlightRange={demoHighlightRange}
           format={demoFormat}
           size={demoSize} />
-        <span class="text-sm text-slate-400">range: {pg.from || '—'} – {pg.to || '—'}</span>
+        <span class="text-sm text-slate-400">range: {pg.from.value || '—'} – {pg.to.value || '—'}</span>
       {:else}
         <DateInput
           range={demoRange}
           time={demoTime}
-          value={pg.value}
-          onChange={value => (pg.value = value)}
+          value={pg.value.value}
+          onChange={value => (pg.value.value = value)}
           closeOnSelect={demoCloseOnSelect}
           highlightRange={demoHighlightRange}
           format={demoFormat}
           placeholder={demoPlaceholder}
           size={demoSize} />
-        <span class="text-sm text-slate-400">value: {pg.value || '—'}</span>
+        <span class="text-sm text-slate-400">value: {pg.value.value || '—'}</span>
       {/if}
     </div>
   </ShowcasePage>

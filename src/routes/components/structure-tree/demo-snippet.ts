@@ -6,21 +6,15 @@
 // resolves from its module registry.
 
 import { extractScriptConst } from '$showcase/snippet-attributes'
-import { escapeAttr } from '$showcase/snippet-build'
-import { sizeAttributeLine } from '$showcase/size-input'
-
-export type TriState = '' | 'yes' | 'no'
+import { boolAttrLine, sizeAttrLine, textAttrLine, type TriState } from '$showcase/snippet-build'
+import type { Staged } from '$showcase/staged'
 
 export interface StructureTreeSnippetState {
-  value: unknown
-  editable: TriState
-  editableOn: boolean
-  containerRowClass: string
-  containerRowClassOn: boolean
-  leafRowClass: string
-  leafRowClassOn: boolean
-  size: string
-  sizeOn: boolean
+  value: Staged<unknown>
+  editable: Staged<TriState>
+  containerRowClass: Staged<string>
+  leafRowClass: Staged<string>
+  size: Staged<string>
 }
 
 // Default tree contents, shared by the page and the snippet seed so the static
@@ -32,23 +26,6 @@ export const DEFAULT_TREE_VALUE: Record<string, unknown> = {
   projects: 3,
   teams: ['Platform', 'Research'],
   address: { city: 'London', postcode: 'E1 6AN' },
-}
-
-// A tri-state line: omitted while unset or at the component default, bare
-// while Yes, ={false} while No.
-function flagLine(name: string, value: TriState, def: TriState = ''): string[] {
-  if (value === '' || value === def) {
-    return []
-  }
-  return [`  ${name}${value === 'yes' ? '' : '={false}'}`]
-}
-
-// A class line: omitted unless the eye applies committed text.
-function classLine(name: string, value: string, applied: boolean): string[] {
-  if (!applied || value === '') {
-    return []
-  }
-  return [`  ${name}="${escapeAttr(value)}"`]
 }
 
 // Parse a value-editor draft: any JSON document is a valid tree value. Returns
@@ -74,29 +51,25 @@ export function readTreeValueSeed(declarations: string): string | null {
 export function buildStructureTreeSnippet({
   value,
   editable,
-  editableOn,
   containerRowClass,
-  containerRowClassOn,
   leafRowClass,
-  leafRowClassOn,
   size,
-  sizeOn,
 }: StructureTreeSnippetState): string {
   return [
     '<script>',
     '  import { isContainer, renameKeyAtPath, setAtPath } from "ui/structure-value.ts";',
-    `  let value = $state(${JSON.stringify(value ?? null)});`,
+    `  let value = $state(${JSON.stringify(value.value ?? null)});`,
     '</script>',
     '<StructureTree',
     '  value={value}',
     '  onChange={(path, next) => { if (isContainer(value)) value = setAtPath(value, path, next); }}',
     '  onRenameKey={(parentPath, oldKey, newKey) => { if (isContainer(value)) value = renameKeyAtPath(value, parentPath, oldKey, newKey); }}',
-    ...(editableOn ? flagLine('editable', editable, 'yes') : []),
-    ...classLine('containerRowClass', containerRowClass, containerRowClassOn),
-    ...classLine('leafRowClass', leafRowClass, leafRowClassOn),
+    ...boolAttrLine('editable', editable, 'yes'),
+    ...textAttrLine('containerRowClass', containerRowClass),
+    ...textAttrLine('leafRowClass', leafRowClass),
     // The size prefills its `md` default in the Value column; the builder omits
     // the default so Show-code stays minimal.
-    ...(sizeOn && size !== '' && size !== 'md' ? sizeAttributeLine(size) : []),
+    ...sizeAttrLine(size),
     '/>',
   ].join('\n')
 }

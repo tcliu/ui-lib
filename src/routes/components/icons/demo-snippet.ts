@@ -3,7 +3,9 @@
 // the editor always shows the markup behind the demo above.
 
 import type { Component } from 'svelte'
+import { escapeAttr } from '$showcase/snippet-build'
 import { sizeAttributeFragment } from '$showcase/size-input'
+import type { Staged } from '$showcase/staged'
 import { VARIANT_LADDERS } from '$lib/icons/icon-variants'
 import AutoRefreshIcon from '$lib/icons/AutoRefreshIcon.svelte'
 import BrowseIcon from '$lib/icons/BrowseIcon.svelte'
@@ -80,13 +82,10 @@ import UndoIcon from '$lib/icons/UndoIcon.svelte'
 import UploadIcon from '$lib/icons/UploadIcon.svelte'
 
 export interface IconsSnippetState {
-  size: string
-  sizeOn: boolean
+  size: Staged<string>
   tint: string
-  className: string
-  classNameOn: boolean
-  variant: string
-  variantOn: boolean
+  className: Staged<string>
+  variant: Staged<string>
 }
 
 export interface IconEntry {
@@ -282,18 +281,18 @@ export const ICON_COMPONENTS: Record<string, Component> = {
   Upload: UploadIcon,
 }
 
-export function buildIconsSnippet({ size, sizeOn, tint, className, classNameOn, variant, variantOn }: IconsSnippetState): string {
-  const classes = iconClassFor(tint, classNameOn ? className : '')
+export function buildIconsSnippet({ size, tint, className, variant }: IconsSnippetState): string {
+  const classes = iconClassFor(tint, className.on ? className.value : '')
   // The size Value prefills the component default; the builder omits it so
   // Show-code stays minimal.
-  const sizeFragment = sizeOn && size !== '' && size !== 'md' ? sizeAttributeFragment(size) : ''
+  const sizeFragment = size.on && size.value !== '' && size.value !== 'md' ? sizeAttributeFragment(size.value) : ''
   const classFragment = classes ? ` className="${classes}"` : ''
   // The variant rides the glyphs that carry it; the rest keep their default.
-  const variantFragment = variantOn && variant !== '' ? ` variant="${variant}"` : ''
+  const variantFragment = variant.on && variant.value !== '' ? ` variant="${escapeAttr(variant.value)}"` : ''
   const lines = [
     '<div class="grid grid-cols-4 gap-3 text-xs text-slate-400 sm:grid-cols-8 [&>span]:flex [&>span]:flex-col [&>span]:items-center [&>span]:gap-1">',
     ...ICON_ENTRIES.map(entry => {
-      const entryVariant = variantFragment && variantsFor(entry.name).includes(variant) ? variantFragment : ''
+      const entryVariant = variantFragment && variantsFor(entry.name).includes(variant.value) ? variantFragment : ''
       return `  <span><${entry.name}Icon${sizeFragment}${classFragment}${entryVariant} />${iconLabel(entry)}</span>`
     }),
     '</div>',

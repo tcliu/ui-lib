@@ -1,26 +1,25 @@
 import { describe, expect, it } from 'vitest'
+import { staged } from '$showcase/staged'
 import { STYLED_WRAPPER, buildCheckboxSnippet, type CheckboxSnippetState } from './demo-snippet'
+
+const IDLE: CheckboxSnippetState = {
+  label: staged(''),
+  size: staged(''),
+  disabled: staged(''),
+  indeterminate: staged(''),
+  wrapperClass: staged(''),
+  ariaLabel: staged(''),
+  name: staged(''),
+  stopPropagation: staged(''),
+}
+
+function state(overrides: Partial<CheckboxSnippetState> = {}): CheckboxSnippetState {
+  return { ...IDLE, ...overrides }
+}
 
 describe('buildCheckboxSnippet', () => {
   it('uses the scoped label while unset', () => {
-    const source = buildCheckboxSnippet({
-      label: '',
-      labelOn: false,
-      size: '',
-      sizeOn: false,
-      disabled: '',
-      disabledOn: false,
-      indeterminate: '',
-      indeterminateOn: false,
-      wrapperClass: '',
-      wrapperClassOn: false,
-      ariaLabel: '',
-      ariaLabelOn: false,
-      name: '',
-      nameOn: false,
-      stopPropagation: '',
-      stopPropagationOn: false,
-    })
+    const source = buildCheckboxSnippet(state())
     expect(source).toContain('label={applyLabel}')
     expect(source).not.toContain('size=')
     expect(source).not.toContain('disabled')
@@ -32,22 +31,14 @@ describe('buildCheckboxSnippet', () => {
 
   it('emits size, flags, and the styled wrapper when set', () => {
     const source = buildCheckboxSnippet({
-      label: 'Ok',
-      labelOn: true,
-      size: 'sm',
-      sizeOn: true,
-      disabled: 'yes',
-      disabledOn: true,
-      indeterminate: 'yes',
-      indeterminateOn: true,
-      wrapperClass: STYLED_WRAPPER,
-      wrapperClassOn: true,
-      ariaLabel: 'Confirm',
-      ariaLabelOn: true,
-      name: 'confirm',
-      nameOn: true,
-      stopPropagation: 'no',
-      stopPropagationOn: true,
+      label: staged('Ok', true),
+      size: staged('sm', true),
+      disabled: staged('yes', true),
+      indeterminate: staged('yes', true),
+      wrapperClass: staged(STYLED_WRAPPER, true),
+      ariaLabel: staged('Confirm', true),
+      name: staged('confirm', true),
+      stopPropagation: staged('no', true),
     })
     expect(source).toContain('label="Ok"')
     expect(source).toContain('size="sm"')
@@ -61,22 +52,14 @@ describe('buildCheckboxSnippet', () => {
 
   it('omits component defaults (the Value column prefills them)', () => {
     const source = buildCheckboxSnippet({
-      label: '',
-      labelOn: false,
-      size: 'md',
-      sizeOn: true,
-      disabled: 'no',
-      disabledOn: true,
-      indeterminate: 'no',
-      indeterminateOn: true,
-      wrapperClass: '',
-      wrapperClassOn: false,
-      ariaLabel: '',
-      ariaLabelOn: false,
-      name: '',
-      nameOn: false,
-      stopPropagation: 'yes',
-      stopPropagationOn: true,
+      label: staged(''),
+      size: staged('md', true),
+      disabled: staged('no', true),
+      indeterminate: staged('no', true),
+      wrapperClass: staged(''),
+      ariaLabel: staged(''),
+      name: staged(''),
+      stopPropagation: staged('yes', true),
     })
     expect(source).not.toContain('size=')
     expect(source).not.toContain('disabled')
@@ -85,56 +68,38 @@ describe('buildCheckboxSnippet', () => {
   })
 
   it('emits a numeric size as an expression and omits invalid sizes', () => {
-    const base: Omit<CheckboxSnippetState, 'size' | 'sizeOn'> = {
-      label: '',
-      labelOn: false,
-      disabled: '',
-      disabledOn: false,
-      indeterminate: '',
-      indeterminateOn: false,
-      wrapperClass: '',
-      wrapperClassOn: false,
-      ariaLabel: '',
-      ariaLabelOn: false,
-      name: '',
-      nameOn: false,
-      stopPropagation: '',
-      stopPropagationOn: false,
-    }
-    const numeric = buildCheckboxSnippet({ ...base, size: '14', sizeOn: true })
-    expect(numeric).toContain('size={14}')
-    const invalid = buildCheckboxSnippet({ ...base, size: 'huge', sizeOn: true })
-    expect(invalid).not.toContain('size=')
+    expect(buildCheckboxSnippet(state({ size: staged('14', true) }))).toContain('size={14}')
+    expect(buildCheckboxSnippet(state({ size: staged('huge', true) }))).not.toContain('size=')
   })
 
   it('omits the staged size while its eye is off', () => {
-    const off = buildCheckboxSnippet({ label: '', labelOn: false, size: 'sm', sizeOn: false, disabled: '', disabledOn: false, indeterminate: '', indeterminateOn: false, wrapperClass: '', wrapperClassOn: false, ariaLabel: '', ariaLabelOn: false, name: '', nameOn: false, stopPropagation: '', stopPropagationOn: false })
+    const off = buildCheckboxSnippet(state({ size: staged('sm') }))
     expect(off).not.toContain('size=')
   })
 
   it('stages the eye-gated text rows until applied', () => {
-    const staged = buildCheckboxSnippet({ label: '', labelOn: false, size: '', sizeOn: false, disabled: '', disabledOn: false, indeterminate: '', indeterminateOn: false, wrapperClass: STYLED_WRAPPER, wrapperClassOn: false, ariaLabel: 'Confirm', ariaLabelOn: false, name: 'confirm', nameOn: false, stopPropagation: '', stopPropagationOn: false })
-    expect(staged).not.toContain('wrapperClass=')
-    expect(staged).not.toContain('ariaLabel=')
-    expect(staged).not.toContain('name=')
-    const applied = buildCheckboxSnippet({ label: '', labelOn: false, size: '', sizeOn: false, disabled: '', disabledOn: false, indeterminate: '', indeterminateOn: false, wrapperClass: STYLED_WRAPPER, wrapperClassOn: true, ariaLabel: 'Confirm', ariaLabelOn: true, name: 'confirm', nameOn: true, stopPropagation: '', stopPropagationOn: false })
+    const stagedRows = buildCheckboxSnippet({ ...IDLE, wrapperClass: staged(STYLED_WRAPPER), ariaLabel: staged('Confirm'), name: staged('confirm') })
+    expect(stagedRows).not.toContain('wrapperClass=')
+    expect(stagedRows).not.toContain('ariaLabel=')
+    expect(stagedRows).not.toContain('name=')
+    const applied = buildCheckboxSnippet({ ...IDLE, wrapperClass: staged(STYLED_WRAPPER, true), ariaLabel: staged('Confirm', true), name: staged('confirm', true) })
     expect(applied).toContain(`wrapperClass="${STYLED_WRAPPER}"`)
     expect(applied).toContain('ariaLabel="Confirm"')
     expect(applied).toContain('name="confirm"')
   })
 
   it('omits staged flag props while their eyes are off', () => {
-    const off = buildCheckboxSnippet({ label: '', labelOn: false, size: '', sizeOn: false, disabled: 'yes', disabledOn: false, indeterminate: 'yes', indeterminateOn: false, wrapperClass: '', wrapperClassOn: false, ariaLabel: '', ariaLabelOn: false, name: '', nameOn: false, stopPropagation: 'no', stopPropagationOn: false })
+    const off = buildCheckboxSnippet(state({ disabled: staged('yes'), indeterminate: staged('yes'), stopPropagation: staged('no') }))
     expect(off).not.toContain('disabled')
     expect(off).not.toContain('indeterminate')
     expect(off).not.toContain('stopPropagation')
   })
 
   it('falls back to the scoped label while its eye is off', () => {
-    const off = buildCheckboxSnippet({ label: 'Ok', labelOn: false, size: '', sizeOn: false, disabled: '', disabledOn: false, indeterminate: '', indeterminateOn: false, wrapperClass: '', wrapperClassOn: false, ariaLabel: '', ariaLabelOn: false, name: '', nameOn: false, stopPropagation: '', stopPropagationOn: false })
+    const off = buildCheckboxSnippet(state({ label: staged('Ok') }))
     expect(off).toContain('label={applyLabel}')
     expect(off).not.toContain('label="Ok"')
-    const on = buildCheckboxSnippet({ label: 'Ok', labelOn: true, size: '', sizeOn: false, disabled: '', disabledOn: false, indeterminate: '', indeterminateOn: false, wrapperClass: '', wrapperClassOn: false, ariaLabel: '', ariaLabelOn: false, name: '', nameOn: false, stopPropagation: '', stopPropagationOn: false })
+    const on = buildCheckboxSnippet(state({ label: staged('Ok', true) }))
     expect(on).toContain('label="Ok"')
   })
 })

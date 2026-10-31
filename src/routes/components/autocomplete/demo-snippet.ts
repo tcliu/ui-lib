@@ -4,104 +4,55 @@
 //
 // The resize harness is ShowcasePage-owned chrome (its `stage` prop), so the
 // snippet carries only the demo content the page authors inside that frame.
-import { sizeAttributeLine } from '$showcase/size-input'
-
-export type TriState = '' | 'yes' | 'no'
+import { boolAttrLine, enumAttrLine, sizeAttrLine, textAttrLine, type TriState } from '$showcase/snippet-build'
+import type { Staged } from '$showcase/staged'
 
 export const AUTOCOMPLETE_STAGE_DEFAULT_WIDTH = 560
 export const AUTOCOMPLETE_STAGE_MIN_WIDTH = 240
 
 export interface AutoCompleteSnippetState {
-  ariaLabel: string
-  ariaLabelOn: boolean
+  ariaLabel: Staged<string>
   // Bound value, seeded as script-local state so the snippet text tracks value
   // edits instead of hiding the value in scope.
-  value: string
-  size: string
-  sizeOn: boolean
-  placeholder: string
-  placeholderOn: boolean
-  disabled: TriState
-  disabledOn: boolean
-  clearable: TriState
-  clearableOn: boolean
-  clearLabel: string
-  clearLabelOn: boolean
-  clearPlacement: string
-  clearPlacementOn: boolean
-  defaultValue: string
-  defaultValueOn: boolean
-  align: string
-  alignOn: boolean
-  autoPlace: TriState
-  autoPlaceOn: boolean
-  panelClass: string
-  panelClassOn: boolean
+  value: Staged<string>
+  size: Staged<string>
+  placeholder: Staged<string>
+  disabled: Staged<TriState>
+  clearable: Staged<TriState>
+  clearLabel: Staged<string>
+  clearPlacement: Staged<string>
+  defaultValue: Staged<string>
+  align: Staged<string>
+  autoPlace: Staged<TriState>
+  panelClass: Staged<string>
 }
 
-// A tri-state line: omitted while unset or at the component default, bare
-// while Yes, ={false} while No.
-function flagLine(name: string, value: TriState, indent: string, def: TriState = ''): string[] {
-  if (value === '' || value === def) {
-    return []
-  }
-  return [`${indent}${name}${value === 'yes' ? '' : '={false}'}`]
-}
-
-// A string attribute line, omitted while unset.
-function textLine(name: string, value: string, indent: string): string[] {
-  return value ? [`${indent}${name}="${value}"`] : []
-}
-
-export function buildAutoCompleteSnippet({
-  ariaLabel,
-  ariaLabelOn,
-  value,
-  size,
-  sizeOn,
-  placeholder,
-  placeholderOn,
-  disabled,
-  disabledOn,
-  clearable,
-  clearableOn,
-  clearLabel,
-  clearLabelOn,
-  clearPlacement,
-  clearPlacementOn,
-  defaultValue,
-  defaultValueOn,
-  align,
-  alignOn,
-  autoPlace,
-  autoPlaceOn,
-  panelClass,
-  panelClassOn,
-}: AutoCompleteSnippetState): string {
+export function buildAutoCompleteSnippet(state: AutoCompleteSnippetState): string {
+  const { ariaLabel, value, size, placeholder, disabled, clearable, clearLabel, clearPlacement, defaultValue, align, autoPlace, panelClass } = state
   // The frame is shell chrome, so the component sits at the snippet root with
   // its attributes one step in; the bound value is script-local state.
   const indent = '  '
   const attributes = [
     `${indent}bind:value`,
-    ...(ariaLabelOn && ariaLabel ? [`${indent}ariaLabel="${ariaLabel}"`] : []),
+    ...textAttrLine('ariaLabel', ariaLabel, indent),
     // Enum rows prefill their component default in the Value column; the
     // builder omits the default so Show-code stays minimal.
-    ...(sizeOn && size !== '' && size !== 'md' ? sizeAttributeLine(size, indent) : []),
-    ...(placeholderOn && placeholder ? textLine('placeholder', placeholder, indent) : []),
-    ...(disabledOn ? flagLine('disabled', disabled, indent, 'no') : []),
-    ...(alignOn && align && align !== 'left' ? [`${indent}align="${align}"`] : []),
-    ...(autoPlaceOn ? flagLine('autoPlace', autoPlace, indent, 'yes') : []),
-    ...(panelClassOn && panelClass ? textLine('panelClass', panelClass, indent) : []),
-    ...(clearableOn ? flagLine('clearable', clearable, indent, 'no') : []),
-    ...(clearLabelOn && clearLabel ? textLine('clearLabel', clearLabel, indent) : []),
-    ...(clearPlacementOn && clearPlacement && clearPlacement !== 'auto' ? [`${indent}clearPlacement="${clearPlacement}"`] : []),
-    ...(defaultValueOn && defaultValue ? [`${indent}defaultValue="${defaultValue}"`] : []),
+    ...sizeAttrLine(size, indent),
+    ...textAttrLine('placeholder', placeholder, indent),
+    ...boolAttrLine('disabled', disabled, 'no', indent),
+    ...enumAttrLine('align', align, 'left', indent),
+    ...boolAttrLine('autoPlace', autoPlace, 'yes', indent),
+    ...textAttrLine('panelClass', panelClass, indent),
+    ...boolAttrLine('clearable', clearable, 'no', indent),
+    ...textAttrLine('clearLabel', clearLabel, indent),
+    ...enumAttrLine('clearPlacement', clearPlacement, 'auto', indent),
+    ...textAttrLine('defaultValue', defaultValue, indent),
     `${indent}options={options} />`,
   ]
   return [
     '<script>',
     // JSON.stringify keeps the literal valid no matter what the value holds.
-    `${indent}let value = $state(${JSON.stringify(value)})`,
+    `${indent}let value = $state(${JSON.stringify(value.value)})`,
     '</script>',
     '<AutoComplete',
     ...attributes,

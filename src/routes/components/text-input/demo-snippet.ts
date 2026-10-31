@@ -1,63 +1,40 @@
 // Show-code source for the TextInput demo section. Pure string building over
 // the playground form state: the section regenerates the editor text from this,
 // so the editor always shows the markup behind the demo above.
-import { escapeAttr, escapeText } from '$showcase/snippet-build'
-import { sizeAttributeLine } from '$showcase/size-input'
-
-export type TriState = '' | 'yes' | 'no'
+import { boolAttrLine, enumAttrLine, escapeAttr, escapeText, sizeAttrLine, textAttrLine, type TriState } from '$showcase/snippet-build'
+import { applied, type Staged } from '$showcase/staged'
 
 export interface TextInputSnippetState {
-  ariaLabel: string
-  ariaLabelOn: boolean
+  ariaLabel: Staged<string>
   // Bound value, seeded as script-local state (like the stage size) so the
   // snippet text tracks value edits instead of hiding the value in scope.
-  value: string
-  placeholder: string
-  placeholderOn: boolean
-  size: string
-  sizeOn: boolean
-  disabled: TriState
-  disabledOn: boolean
-  hideOutline: TriState
-  hideOutlineOn: boolean
-  readonly: TriState
-  readonlyOn: boolean
-  required: TriState
-  requiredOn: boolean
-  id: string
-  idOn: boolean
-  inputClass: string
-  inputClassOn: boolean
-  variant: string
-  variantOn: boolean
-  className: string
-  classNameOn: boolean
-  clearable: TriState
-  clearableOn: boolean
-  clearLabel: string
-  clearLabelOn: boolean
-  clearPlacement: string
-  clearPlacementOn: boolean
-  defaultValue: string
-  defaultValueOn: boolean
-  autocomplete: string
-  autocompleteOn: boolean
-  inputmode: string
-  inputmodeOn: boolean
-  name: string
-  nameOn: boolean
-  type: string
-  typeOn: boolean
-  inputStyle: string
-  inputStyleOn: boolean
-  wrapperStyle: string
-  wrapperStyleOn: boolean
+  value: Staged<string>
+  placeholder: Staged<string>
+  size: Staged<string>
+  disabled: Staged<TriState>
+  hideOutline: Staged<TriState>
+  readonly: Staged<TriState>
+  required: Staged<TriState>
+  id: Staged<string>
+  inputClass: Staged<string>
+  variant: Staged<string>
+  className: Staged<string>
+  clearable: Staged<TriState>
+  clearLabel: Staged<string>
+  clearPlacement: Staged<string>
+  defaultValue: Staged<string>
+  autocomplete: Staged<string>
+  inputmode: Staged<string>
+  name: Staged<string>
+  type: Staged<string>
+  inputStyle: Staged<string>
+  wrapperStyle: Staged<string>
   // Adornment text rendered through the leading/trailing snippets; edited
   // through FieldTable's snippet dialogs, like the options-json lists.
-  leading: string
-  trailing: string
+  leading: Staged<string>
+  trailing: Staged<string>
   // Trailer text rendered outside the field through the trailer snippet.
-  trailer: string
+  trailer: Staged<string>
 }
 
 // Adornment chrome shared by the demo and the seed below, so static demo,
@@ -79,124 +56,96 @@ export function adornmentClassName(className: string, leading: string, trailing:
 
 // Element text for the adornment spans below.
 
-// A tri-state line: omitted while unset or at the component default, bare
-// while Yes, ={false} while No.
-function flagLine(name: string, value: TriState, indent: string, def: TriState = ''): string[] {
-  if (value === '' || value === def) {
-    return []
-  }
-  return [`${indent}${name}${value === 'yes' ? '' : '={false}'}`]
-}
-
-export function buildTextInputSnippet({
-  ariaLabel,
-  ariaLabelOn,
-  value,
-  placeholder,
-  placeholderOn,
-  size,
-  sizeOn,
-  disabled,
-  disabledOn,
-  hideOutline,
-  hideOutlineOn,
-  readonly,
-  readonlyOn,
-  required,
-  requiredOn,
-  id,
-  idOn,
-  inputClass,
-  inputClassOn,
-  variant,
-  variantOn,
-  className,
-  classNameOn,
-  clearable,
-  clearableOn,
-  clearLabel,
-  clearLabelOn,
-  clearPlacement,
-  clearPlacementOn,
-  defaultValue,
-  defaultValueOn,
-  autocomplete,
-  autocompleteOn,
-  inputmode,
-  inputmodeOn,
-  name,
-  nameOn,
-  type,
-  typeOn,
-  inputStyle,
-  inputStyleOn,
-  wrapperStyle,
-  wrapperStyleOn,
-  leading,
-  trailing,
-  trailer,
-}: TextInputSnippetState): string {
+export function buildTextInputSnippet(state: TextInputSnippetState): string {
+  const {
+    ariaLabel,
+    value,
+    placeholder,
+    size,
+    disabled,
+    hideOutline,
+    readonly,
+    required,
+    id,
+    inputClass,
+    variant,
+    className,
+    clearable,
+    clearLabel,
+    clearPlacement,
+    defaultValue,
+    autocomplete,
+    inputmode,
+    name,
+    type,
+    inputStyle,
+    wrapperStyle,
+    leading,
+    trailing,
+    trailer,
+  } = state
   const attributeIndent = '    '
-  const composedClassName = adornmentClassName(classNameOn ? className : '', leading, trailing)
-  const hasSnippets = leading !== '' || trailing !== '' || trailer !== ''
+  const appliedLeading = applied(leading) ?? ''
+  const appliedTrailing = applied(trailing) ?? ''
+  const appliedTrailer = applied(trailer) ?? ''
+  const composedClassName = adornmentClassName(applied(className) ?? '', appliedLeading, appliedTrailing)
+  const hasSnippets = appliedLeading !== '' || appliedTrailing !== '' || appliedTrailer !== ''
   const lines = [
     '<script>',
     // JSON.stringify keeps the literal valid no matter what the value holds;
     // escaping `<` stops a value from closing the surrounding script block.
     // `\u003c` is valid JSON, so the literal parses back to the original text.
-    `  let value = $state(${JSON.stringify(value).replace(/</g, '\\u003c')})`,
+    `  let value = $state(${JSON.stringify(value.value).replace(/</g, '\\u003c')})`,
     '</script>',
     '<div class="flex flex-col gap-1">',
     // A custom label renders as a literal while its eye is on; otherwise the
     // control reads the scope label, so the scope ref stands in.
-    ...(ariaLabelOn && ariaLabel
-      ? [`  <TextInput bind:value={value} ariaLabel="${escapeAttr(ariaLabel)}"`]
+    ...(ariaLabel.on && ariaLabel.value
+      ? [`  <TextInput bind:value={value} ariaLabel="${escapeAttr(ariaLabel.value)}"`]
       : ['  <TextInput bind:value={value} ariaLabel={applyLabel}']),
-    ...(placeholderOn && placeholder ? [`${attributeIndent}placeholder="${escapeAttr(placeholder)}"`] : []),
-    ...(sizeOn && size !== '' && size !== 'md' ? sizeAttributeLine(size, attributeIndent) : []),
-    ...(disabledOn ? flagLine('disabled', disabled, attributeIndent, 'no') : []),
-    ...(hideOutlineOn ? flagLine('hideOutline', hideOutline, attributeIndent, 'no') : []),
-    ...(readonlyOn ? flagLine('readonly', readonly, attributeIndent, 'no') : []),
-    ...(requiredOn ? flagLine('required', required, attributeIndent, 'no') : []),
-    ...(idOn && id ? [`${attributeIndent}id="${escapeAttr(id)}"`] : []),
-    ...(typeOn && type ? [`${attributeIndent}type="${escapeAttr(type)}"`] : []),
-    ...(autocompleteOn && autocomplete ? [`${attributeIndent}autocomplete="${escapeAttr(autocomplete)}"`] : []),
-    ...(inputmodeOn && inputmode ? [`${attributeIndent}inputmode="${escapeAttr(inputmode)}"`] : []),
-    ...(nameOn && name ? [`${attributeIndent}name="${escapeAttr(name)}"`] : []),
-    ...(inputClassOn && inputClass ? [`${attributeIndent}inputClass="${escapeAttr(inputClass)}"`] : []),
+    ...textAttrLine('placeholder', placeholder, attributeIndent),
+    ...sizeAttrLine(size, attributeIndent),
+    ...boolAttrLine('disabled', disabled, 'no', attributeIndent),
+    ...boolAttrLine('hideOutline', hideOutline, 'no', attributeIndent),
+    ...boolAttrLine('readonly', readonly, 'no', attributeIndent),
+    ...boolAttrLine('required', required, 'no', attributeIndent),
+    ...textAttrLine('id', id, attributeIndent),
+    ...textAttrLine('type', type, attributeIndent),
+    ...textAttrLine('autocomplete', autocomplete, attributeIndent),
+    ...textAttrLine('inputmode', inputmode, attributeIndent),
+    ...textAttrLine('name', name, attributeIndent),
+    ...textAttrLine('inputClass', inputClass, attributeIndent),
     // Enum rows prefill their component default in the Value column; the
     // builder omits the default so Show-code stays minimal.
-    ...(variantOn && variant && variant !== 'bordered' ? [`${attributeIndent}variant="${escapeAttr(variant)}"`] : []),
-    ...(inputStyleOn && inputStyle ? [`${attributeIndent}inputStyle="${escapeAttr(inputStyle)}"`] : []),
-    ...(wrapperStyleOn && wrapperStyle ? [`${attributeIndent}wrapperStyle="${escapeAttr(wrapperStyle)}"`] : []),
+    ...enumAttrLine('variant', variant, 'bordered', attributeIndent),
+    ...textAttrLine('inputStyle', inputStyle, attributeIndent),
+    ...textAttrLine('wrapperStyle', wrapperStyle, attributeIndent),
     ...(composedClassName ? [`${attributeIndent}className="${escapeAttr(composedClassName)}"`] : []),
-    ...(clearableOn ? flagLine('clearable', clearable, attributeIndent, 'no') : []),
-    ...(clearLabelOn && clearLabel ? [`${attributeIndent}clearLabel="${escapeAttr(clearLabel)}"`] : []),
+    ...boolAttrLine('clearable', clearable, 'no', attributeIndent),
+    ...textAttrLine('clearLabel', clearLabel, attributeIndent),
     // Enum rows prefill their component default in the Value column; the
     // builder omits the default so Show-code stays minimal.
-    ...(clearPlacementOn && clearPlacement && clearPlacement !== 'auto' ? [`${attributeIndent}clearPlacement="${escapeAttr(clearPlacement)}"`] : []),
-    ...(defaultValueOn && defaultValue
-      ? [`${attributeIndent}defaultValue="${escapeAttr(defaultValue)}"`]
-      : []),
+    ...enumAttrLine('clearPlacement', clearPlacement, 'auto', attributeIndent),
+    ...textAttrLine('defaultValue', defaultValue, attributeIndent),
     ...(hasSnippets ? ['  >'] : ['  />']),
-    ...(leading
+    ...(appliedLeading
       ? [
           '    {#snippet leading()}',
-          `      <span class="${LEADING_SPAN}">${escapeText(leading)}</span>`,
+          `      <span class="${LEADING_SPAN}">${escapeText(appliedLeading)}</span>`,
           '    {/snippet}',
         ]
       : []),
-    ...(trailing
+    ...(appliedTrailing
       ? [
           '    {#snippet trailing()}',
-          `      <span class="${TRAILING_SPAN}">${escapeText(trailing)}</span>`,
+          `      <span class="${TRAILING_SPAN}">${escapeText(appliedTrailing)}</span>`,
           '    {/snippet}',
         ]
       : []),
-    ...(trailer
+    ...(appliedTrailer
       ? [
           '    {#snippet trailer()}',
-          `      <span class="${TRAILER_SPAN}">${escapeText(trailer)}</span>`,
+          `      <span class="${TRAILER_SPAN}">${escapeText(appliedTrailer)}</span>`,
           '    {/snippet}',
         ]
       : []),

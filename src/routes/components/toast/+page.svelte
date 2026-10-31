@@ -7,7 +7,8 @@
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$showcase/ShowcasePage.svelte'
   import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { enumField, textField, sizeField, snippetToggle } from '$showcase/snippet-field'
+  import { applied, eye, eyeToggle, stage, staged } from '$showcase/staged'
+  import { enumField, textField, sizeField } from '$showcase/snippet-field'
   import { buildToastSnippet } from './demo-snippet'
   import { parseSizeValue } from '$showcase/size-input'
 
@@ -21,17 +22,12 @@
   const INITIAL = {
     open: false,
     actionTaken: '',
-    message: 'Default',
-    messageOn: true,
-    type: 'info',
-    typeOn: false,
-    position: 'bottom-right',
-    positionOn: false,
-    size: 'md',
-    sizeOn: false,
+    message: staged('Default', true),
+    type: staged('info'),
+    position: staged('bottom-right'),
+    size: staged('md'),
     action: '',
-    closeLabel: '',
-    closeLabelOn: false,
+    closeLabel: staged(''),
   }
   let pg = $state(structuredClone(INITIAL))
 
@@ -48,15 +44,16 @@
     label: value,
   }))
 
-  const demoType = $derived(pg.typeOn ? ((pg.type || undefined) as 'success' | 'info' | 'warning' | 'error' | undefined) : undefined)
+  const demoType = $derived((applied(pg.type) || undefined) as 'success' | 'info' | 'warning' | 'error' | undefined)
   const demoPosition = $derived(
-    pg.positionOn
-      ? ((pg.position || undefined) as 'top-right' | 'top-center' | 'bottom-right' | 'bottom-center' | undefined)
-      : undefined,
+    (applied(pg.position) || undefined) as 'top-right' | 'top-center' | 'bottom-right' | 'bottom-center' | undefined,
   )
-  const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
-  const demoMessage = $derived(pg.messageOn && pg.message ? pg.message : i18n.t('showcase.default'))
-  const demoCloseLabel = $derived(pg.closeLabelOn && pg.closeLabel ? pg.closeLabel : i18n.t('common.close'))
+  const demoSize = $derived.by(() => {
+    const value = applied(pg.size)
+    return value === undefined ? undefined : parseSizeValue(value)
+  })
+  const demoMessage = $derived(applied(pg.message) || i18n.t('showcase.default'))
+  const demoCloseLabel = $derived(applied(pg.closeLabel) || i18n.t('common.close'))
   const demoAction = $derived(
     pg.action ? { label: pg.action, onClick: () => (pg.actionTaken = pg.action) } : undefined,
   )
@@ -68,26 +65,21 @@
   const code = $derived.by(() =>
     buildToastSnippet({
       message: pg.message,
-      messageOn: pg.messageOn,
       toastType: pg.type,
-      toastTypeOn: pg.typeOn,
       position: pg.position,
-      positionOn: pg.positionOn,
       size: pg.size,
-      sizeOn: pg.sizeOn,
       action: pg.action,
       closeLabel: pg.closeLabel,
-      closeLabelOn: pg.closeLabelOn,
     }),
   )
 
   
   const fields: SyncableFieldConfig[] = $derived([
-    textField({ name: 'closeLabel', type: 'string', defaultValue: '—', note: 'Accessible name for the dismiss button.', value: pg.closeLabel, onChange: v => (pg.closeLabel = v), clearable: true, enabled: pg.closeLabelOn, setEnabled: v => (pg.closeLabelOn = v) }),
-    { name: 'message', type: 'string', defaultValue: '—', note: 'Toast body text.', editor: 'text', clearable: true, value: pg.message, onChange: value => { pg.message = value; pg.messageOn = true; }, toggle: snippetToggle(pg.messageOn, enabled => (pg.messageOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'defaultMessage' } },
-    enumField({ name: 'position', type: "'top-right' | 'top-center' | 'bottom-right' | 'bottom-center'", defaultValue: "'bottom-right'", note: 'Viewport edge the toast docks to.', options: positionOptions, value: pg.position, onChange: v => (pg.position = v), placeholder: 'bottom-right', clearLabel: 'Clear position', enabled: pg.positionOn, setEnabled: v => (pg.positionOn = v) }),
-    sizeField({ note: 'Text scale; every metric is a fixed ratio of the size.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
-    enumField({ name: 'type', type: "'success' | 'info' | 'warning' | 'error'", defaultValue: "'info'", note: 'Accent treatment.', options: typeOptions, value: pg.type, onChange: v => (pg.type = v), placeholder: 'info', clearLabel: 'Clear type', enabled: pg.typeOn, setEnabled: v => (pg.typeOn = v) }),
+    textField({ name: 'closeLabel', type: 'string', defaultValue: '—', note: 'Accessible name for the dismiss button.', clearable: true, ...eye(pg.closeLabel) }),
+    { name: 'message', type: 'string', defaultValue: '—', note: 'Toast body text.', editor: 'text', clearable: true, ...eye(pg.message), onChange: value => stage(pg.message, value), toggle: eyeToggle(pg.message), sync: { kind: 'scopeText', scopeRef: 'defaultMessage' } },
+    enumField({ name: 'position', type: "'top-right' | 'top-center' | 'bottom-right' | 'bottom-center'", defaultValue: "'bottom-right'", note: 'Viewport edge the toast docks to.', options: positionOptions, placeholder: 'bottom-right', clearLabel: 'Clear position', ...eye(pg.position) }),
+    sizeField({ note: 'Text scale; every metric is a fixed ratio of the size.', ...eye(pg.size) }),
+    enumField({ name: 'type', type: "'success' | 'info' | 'warning' | 'error'", defaultValue: "'info'", note: 'Accent treatment.', options: typeOptions, placeholder: 'info', clearLabel: 'Clear type', ...eye(pg.type) }),
     { name: 'action', type: '{ label: string; onClick: () => void }?', defaultValue: '—', note: 'Action button; renders only when set.' },
     { name: 'onClose', type: '() => void', defaultValue: '—', note: 'Dismiss handler (button and Escape).' },
   ])
@@ -107,20 +99,17 @@
     </FormField>
     <FormField label="Size">
       <SelectDropdown
-        activeValue={pg.size}
+        activeValue={pg.size.value}
         ariaLabel="Size"
         options={sizeOptions}
         filterable
         allowCustomValue
-        onSelect={value => {
-          pg.size = value
-          pg.sizeOn = true
-        }}
+        onSelect={value => stage(pg.size, value)}
         clearable
         clearLabel="Clear size"
         onClear={() => {
-          pg.size = 'md'
-          pg.sizeOn = false
+          pg.size.value = 'md'
+          pg.size.on = false
         }} />
     </FormField>
   </div>
@@ -143,7 +132,7 @@
 
     sync={{ tag: 'Toast' }}
     scopeRefresh={() => [demoMessage]}
-    scopeRefreshWhen={() => !(pg.messageOn && pg.message)}
+    scopeRefreshWhen={() => !applied(pg.message)}
   >
     <Button variant="primary" onClick={() => (pg.open = true)}>{i18n.t('showcase.openDialog')}</Button>
     {#if pg.open}

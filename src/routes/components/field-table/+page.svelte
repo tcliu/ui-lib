@@ -3,10 +3,12 @@
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$showcase/ShowcasePage.svelte'
   import { parseSizeValue } from '$showcase/size-input'
-  import { jsonField, resetToggle, sizeField, snippetToggle } from '$showcase/snippet-field'
+  import { jsonField, sizeField } from '$showcase/snippet-field'
+  import { applied, eye, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/staged'
   import { syncFieldsOf, type SyncField, type SyncableFieldConfig } from '$showcase/snippet-sync'
   import type { SnippetAttribute } from '$showcase/snippet-attributes'
-  import { buildFieldTableSnippet, FIELD_TABLE_DEMO_ROWS, parseHeadersJson, type TriState } from './demo-snippet'
+  import { type TriState } from '$showcase/snippet-build'
+  import { buildFieldTableSnippet, FIELD_TABLE_DEMO_ROWS, parseHeadersJson } from './demo-snippet'
 
   const i18n = getI18nContext()
 
@@ -21,47 +23,33 @@
     role: 'viewer',
     size: 'md',
     active: 'no' as TriState,
-    notes: '',
-    propHeader: 'Prop',
-    typeHeader: 'Type',
-    defaultHeader: 'Default',
-    valueHeader: 'Value',
-    noteHeader: 'Notes',
-    tableSize: 'md',
-    tableSizeOn: false,
-    headersEnabled: true,
-    notesEnabled: true,
+    notes: staged('', true),
+    headers: staged({ prop: 'Prop', type: 'Type', default: 'Default', value: 'Value', note: 'Notes' }, true),
+    tableSize: staged('md'),
   }
   let pg = $state(structuredClone(INITIAL))
-  // The header overrides and the sample notes apply only while their eye
-  // toggle is on (both on, so the cleared form renders the current demo).
+  // The header overrides apply while their eye toggle is on; the notes sample
+  // is bound demo state, so its row eye resets the text instead.
 
-  const demoPropHeader = $derived(pg.propHeader || i18n.t('showcase.prop'))
-  const demoTypeHeader = $derived(pg.typeHeader || i18n.t('showcase.type'))
-  const demoDefaultHeader = $derived(pg.defaultHeader || i18n.t('showcase.default'))
-  const demoValueHeader = $derived(pg.valueHeader || i18n.t('showcase.value'))
-  const demoNoteHeader = $derived(pg.noteHeader || i18n.t('showcase.note'))
-  const demoTableSize = $derived(pg.tableSizeOn ? parseSizeValue(pg.tableSize) : undefined)
+  const demoHeaders = $derived({
+    prop: pg.headers.value.prop || i18n.t('showcase.prop'),
+    type: pg.headers.value.type || i18n.t('showcase.type'),
+    default: pg.headers.value.default || i18n.t('showcase.default'),
+    value: pg.headers.value.value || i18n.t('showcase.value'),
+    note: pg.headers.value.note || i18n.t('showcase.note'),
+  })
+  const demoTableSize = $derived.by(() => {
+    const value = applied(pg.tableSize)
+    return value === undefined ? undefined : parseSizeValue(value)
+  })
   // Fallback-resolved labels seed the headers JSON dialog, so the editor
   // shows what the demo shows (an unset key reads its localized label).
-  const demoHeaders = $derived({
-    prop: demoPropHeader,
-    type: demoTypeHeader,
-    default: demoDefaultHeader,
-    value: demoValueHeader,
-    note: demoNoteHeader,
-  })
   const headersDraft = $derived(JSON.stringify(demoHeaders, null, 2))
 
   function commitHeadersDraft(draft: string) {
     const parsed = parseHeadersJson(draft)
     if (!parsed) return
-    pg.propHeader = parsed.prop
-    pg.typeHeader = parsed.type
-    pg.defaultHeader = parsed.default
-    pg.valueHeader = parsed.value
-    pg.noteHeader = parsed.note
-    pg.headersEnabled = true
+    stage(pg.headers, parsed)
   }
 
   // Scope refs behind each header key; a snippet write-back maps them to
@@ -118,11 +106,13 @@
     }
     if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return
     const record = parsed as Record<string, unknown>
-    if (typeof record.prop === 'string') pg.propHeader = record.prop
-    if (typeof record.type === 'string') pg.typeHeader = record.type
-    if (typeof record.default === 'string') pg.defaultHeader = record.default
-    if (typeof record.value === 'string') pg.valueHeader = record.value
-    if (typeof record.note === 'string') pg.noteHeader = record.note
+    const next = { ...pg.headers.value }
+    if (typeof record.prop === 'string') next.prop = record.prop
+    if (typeof record.type === 'string') next.type = record.type
+    if (typeof record.default === 'string') next.default = record.default
+    if (typeof record.value === 'string') next.value = record.value
+    if (typeof record.note === 'string') next.note = record.note
+    pg.headers.value = next
   }
 
   // The demo documents FieldTable with itself: five editable sample fields
@@ -140,7 +130,7 @@
       case 'active':
         return pg.active
       case 'notes':
-        return pg.notes
+        return pg.notes.value
       default:
         return undefined
     }
@@ -157,10 +147,7 @@
       case 'active':
         return value => (pg.active = value as TriState)
       case 'notes':
-        return value => {
-          pg.notes = value
-          pg.notesEnabled = true
-        }
+        return value => stage(pg.notes, value)
       default:
         return undefined
     }
@@ -176,11 +163,7 @@
         ...(onChange ? { onChange } : {}),
         ...(toggle
           ? {
-              toggle: resetToggle(
-                pg.notesEnabled,
-                enabled => (pg.notesEnabled = enabled),
-                () => (pg.notes = ''),
-              ),
+              toggle: eyeResetToggle(pg.notes, () => (pg.notes.value = '')),
             }
           : {}),
       }
@@ -197,22 +180,16 @@
       role: pg.role,
       size: pg.size,
       active: pg.active,
-      notes: pg.notes,
-      propHeader: pg.propHeader,
-      typeHeader: pg.typeHeader,
-      defaultHeader: pg.defaultHeader,
-      valueHeader: pg.valueHeader,
-      noteHeader: pg.noteHeader,
-      headersEnabled: pg.headersEnabled,
+      notes: pg.notes.value,
+      headers: pg.headers,
       tableSize: pg.tableSize,
-      tableSizeOn: pg.tableSizeOn,
     }),
   )
 
   
   // Snippet write-backs for the sample values derive from `fields` below
-  // through `syncFieldsOf`; the header keys are demo-only data with no prop
-  // row, so their write-backs stay explicit, like the sample values.
+  // through `syncFieldsOf`; those values have no prop row, so their
+  // write-backs stay explicit.
 
   // Editable rows first (plain data, A–Z), then the read-only rows: `fields`
   // carries functions and `value` is a snippet override, so both stay
@@ -225,10 +202,10 @@
       value: headersDraft,
       onChange: commitHeadersDraft,
       dialog: { valid: (draft: string) => parseHeadersJson(draft) != null, invalidMessage: 'Invalid headers JSON. Use an object with string prop, type, default, value, and note keys.', title: 'Edit headers' },
-      toggle: snippetToggle(pg.headersEnabled, enabled => (pg.headersEnabled = enabled)),
+      toggle: eyeToggle(pg.headers),
       sync: { kind: 'custom', read: readHeadersAttribute, set: commitHeadersWriteBack },
     }),
-    sizeField({ note: 'Editor and action scale; numbers are icon-scale pixels interpolated between the steps.', value: pg.tableSize, onChange: v => (pg.tableSize = v), enabled: pg.tableSizeOn, setEnabled: v => (pg.tableSizeOn = v) }),
+    sizeField({ note: 'Editor and action scale; numbers are icon-scale pixels interpolated between the steps.', ...eye(pg.tableSize) }),
     { name: 'fields', type: 'FieldConfig[]', defaultValue: '—', note: 'Field defs in display order; editors render from editor/value/onChange.' },
     { name: 'value', type: 'Snippet<[FieldConfig]>', defaultValue: '—', note: 'Per-row Value cell override; wins over the built-in editors.' },
   ])
@@ -240,7 +217,7 @@
     { attr: 'role', kind: 'script', set: value => (pg.role = value) },
     { attr: 'size', kind: 'script', set: value => (pg.size = value) },
     { attr: 'active', kind: 'script', set: value => (pg.active = value as TriState) },
-    { attr: 'notes', kind: 'script', set: value => (pg.notes = value) },
+    { attr: 'notes', kind: 'script', set: value => (pg.notes.value = value) },
   ])
 </script>
 
@@ -262,5 +239,5 @@
     <FieldTable
       fields={demoFields}
       size={demoTableSize}
-      headers={pg.headersEnabled ? demoHeaders : undefined} />
+      headers={pg.headers.on ? demoHeaders : undefined} />
   </ShowcasePage>

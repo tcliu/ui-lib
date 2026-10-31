@@ -1,11 +1,12 @@
 <script lang="ts">
-  import { flagOn } from '$showcase/snippet-build'
   import EditableText from '$lib/components/EditableText.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$showcase/ShowcasePage.svelte'
   import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { textField, boolField, sizeField, snippetToggle, resetToggle } from '$showcase/snippet-field'
-  import { DEFAULT_TEXT, buildEditableTextSnippet, type TriState } from './demo-snippet'
+  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/staged'
+  import { textField, boolField, sizeField } from '$showcase/snippet-field'
+  import { type TriState } from '$showcase/snippet-build'
+  import { DEFAULT_CLASS_NAME, DEFAULT_MAX_WIDTH, DEFAULT_TEXT, buildEditableTextSnippet } from './demo-snippet'
   import { parseSizeValue } from '$showcase/size-input'
 
   const i18n = getI18nContext()
@@ -13,16 +14,13 @@
   // The committed value is demo state: double-clicking the label opens the
   // input and the accepted text is written back, so the demo stays controlled.
   const INITIAL = {
-    value: DEFAULT_TEXT,
-    size: 'md',
-    sizeOn: false,
-    copyable: 'no' as TriState,
-    copyableOn: false,
-    valueOn: true,
-    className: 'text-slate-200',
-    classNameOn: true,
-    maxWidth: '480',
-    maxWidthOn: true,
+    value: staged(DEFAULT_TEXT, true),
+    size: staged('md'),
+    copyable: staged('no' as TriState),
+    // Both are at the component default, so their eyes start off; the demo
+    // renders the same and Show-code stays minimal.
+    className: staged(DEFAULT_CLASS_NAME),
+    maxWidth: staged(DEFAULT_MAX_WIDTH),
   }
   let pg = $state(structuredClone(INITIAL))
 
@@ -39,10 +37,16 @@
     return Number.isFinite(parsed) ? parsed : undefined
   }
 
-  const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
-  const copyable = $derived(pg.copyableOn ? flagOn(pg.copyable) : undefined)
-  const demoClassName = $derived(pg.classNameOn && pg.className ? pg.className : undefined)
-  const demoMaxWidth = $derived(pg.maxWidthOn ? asNumber(pg.maxWidth) : undefined)
+  const demoSize = $derived.by(() => {
+    const value = applied(pg.size)
+    return value === undefined ? undefined : parseSizeValue(value)
+  })
+  const copyable = $derived(appliedFlag(pg.copyable))
+  const demoClassName = $derived(applied(pg.className) || undefined)
+  const demoMaxWidth = $derived.by(() => {
+    const value = applied(pg.maxWidth)
+    return value === undefined ? undefined : asNumber(value)
+  })
   const editHint = $derived(i18n.t('edit.doubleClickToEdit'))
 
   function clearPlayground() {
@@ -53,23 +57,19 @@
     buildEditableTextSnippet({
       value: pg.value,
       size: pg.size,
-      sizeOn: pg.sizeOn,
       copyable: pg.copyable,
-      copyableOn: pg.copyableOn,
       className: pg.className,
-      classNameOn: pg.classNameOn,
       maxWidth: pg.maxWidth,
-      maxWidthOn: pg.maxWidthOn,
     }),
   )
 
   
   const fields: SyncableFieldConfig[] = $derived([
-    textField({ name: 'className', type: 'string?', defaultValue: "'text-slate-200'", note: 'Classes for the display label.', value: pg.className, onChange: v => (pg.className = v), editorDefaultValue: 'text-slate-200', clearable: true, placeholder: 'text-slate-200', enabled: pg.classNameOn, setEnabled: v => (pg.classNameOn = v) }),
-    boolField({ name: 'copyable', defaultValue: 'false', note: 'Adds a copy button beside the label.', value: pg.copyable, onChange: v => (pg.copyable = v as TriState), enabled: pg.copyableOn, setEnabled: v => (pg.copyableOn = v) }),
-    { name: 'maxWidth', type: 'number?', defaultValue: '480', editorDefaultValue: '480', note: 'Maximum input width in px; the field also stops at the viewport edge.', editor: 'number', clearable: true, value: pg.maxWidth, onChange: value => { pg.maxWidth = value; pg.maxWidthOn = true; }, placeholder: '480', toggle: snippetToggle(pg.maxWidthOn, enabled => (pg.maxWidthOn = enabled)), sync: { kind: 'number' } },
-    sizeField({ note: 'Text size for the label and the input.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
-    { name: 'text', type: 'string', defaultValue: '—', note: 'Displayed value; double-click or use the edit button to change it (required); the eye resets to the default.', editor: 'text', clearable: true, value: pg.value, onChange: value => { pg.value = value; pg.valueOn = true; }, toggle: resetToggle(pg.valueOn, enabled => (pg.valueOn = enabled), () => (pg.value = DEFAULT_TEXT)), sync: { kind: 'script', attr: 'value' } },
+    textField({ name: 'className', type: 'string?', defaultValue: "'text-slate-200'", note: 'Classes for the display label.', editorDefaultValue: 'text-slate-200', clearable: true, placeholder: 'text-slate-200', ...eye(pg.className) }),
+    boolField({ name: 'copyable', defaultValue: 'false', note: 'Adds a copy button beside the label.', ...eyeFlag(pg.copyable) }),
+    { name: 'maxWidth', type: 'number?', defaultValue: '480', editorDefaultValue: '480', note: 'Maximum input width in px; the field also stops at the viewport edge.', editor: 'number', clearable: true, ...eye(pg.maxWidth), onChange: value => stage(pg.maxWidth, value), placeholder: '480', toggle: eyeToggle(pg.maxWidth), sync: { kind: 'number' } },
+    sizeField({ note: 'Text size for the label and the input.', ...eye(pg.size) }),
+    { name: 'text', type: 'string', defaultValue: '—', note: 'Displayed value; double-click or use the edit button to change it (required); the eye resets to the default.', editor: 'text', clearable: true, ...eye(pg.value), onChange: value => stage(pg.value, value), toggle: eyeResetToggle(pg.value, () => (pg.value.value = DEFAULT_TEXT)), sync: { kind: 'script', attr: 'value' } },
     { name: 'onChange', type: '(text: string) => void | boolean', defaultValue: '—', note: 'Called with the committed value; return false to reject it and keep editing.' },
   ])
 
@@ -90,9 +90,9 @@
   >
     <div class="group flex flex-wrap items-center gap-2">
       <EditableText
-        text={pg.value}
+        text={pg.value.value}
         onChange={next => {
-          pg.value = next
+          pg.value.value = next
         }}
         size={demoSize}
         {copyable}

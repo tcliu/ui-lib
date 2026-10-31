@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { staged } from '$showcase/staged'
 import {
   RESIZABLE_CONTENT,
   RESIZABLE_SCROLLPORT,
@@ -7,9 +8,10 @@ import {
   parseBound,
   parseMaxBound,
   parseResizableChildrenMarkup,
+  type ResizableSnippetState,
 } from './demo-snippet'
 
-const unset = { minWidth: '', minWidthOn: true, minHeight: '', minHeightOn: true, maxWidth: '', maxWidthOn: true, maxHeight: '', maxHeightOn: true, contentClass: '', className: '', classNameOn: true }
+const unset: ResizableSnippetState = { minWidth: staged('', true), minHeight: staged('', true), maxWidth: staged('', true), maxHeight: staged('', true), contentClass: staged(''), className: staged('', true) }
 
 describe('parseBound', () => {
   it('treats empty and non-numeric text as unset', () => {
@@ -57,13 +59,13 @@ describe('buildResizableSnippet', () => {
   })
 
   it('omits component defaults (the Value column prefills them)', () => {
-    const source = buildResizableSnippet({ ...unset, minWidth: '0', minHeight: '0' })
+    const source = buildResizableSnippet({ ...unset, minWidth: staged('0', true), minHeight: staged('0', true) })
     expect(source).not.toContain('minWidth=')
     expect(source).not.toContain('minHeight=')
   })
 
   it('emits the bounds that are set', () => {
-    const source = buildResizableSnippet({ ...unset, minWidth: '120', minHeight: '80', maxWidth: '640', maxHeight: '480' })
+    const source = buildResizableSnippet({ ...unset, minWidth: staged('120', true), minHeight: staged('80', true), maxWidth: staged('640', true), maxHeight: staged('480', true) })
     expect(source).toContain('minWidth={120}')
     expect(source).toContain('minHeight={80}')
     expect(source).toContain('maxWidth={640}')
@@ -71,7 +73,7 @@ describe('buildResizableSnippet', () => {
   })
 
   it('emits the parent keyword as a string attribute', () => {
-    const source = buildResizableSnippet({ ...unset, maxWidth: 'parent', maxHeight: 'parent' })
+    const source = buildResizableSnippet({ ...unset, maxWidth: staged('parent', true), maxHeight: staged('parent', true) })
     expect(source).toContain('maxWidth="parent"')
     expect(source).toContain('maxHeight="parent"')
   })
@@ -84,7 +86,7 @@ describe('buildResizableSnippet', () => {
   })
 
   it('emits a custom content class when set', () => {
-    const source = buildResizableSnippet({ ...unset, contentClass: 'content-x' })
+    const source = buildResizableSnippet({ ...unset, contentClass: staged('content-x') })
     expect(source).toContain('<div class="content-x">{contentLabel}</div>')
   })
 
@@ -96,13 +98,13 @@ describe('buildResizableSnippet', () => {
   it('emits className when set', () => {
     const source = buildResizableSnippet({
       ...unset,
-      className: 'frame-x',
+      className: staged('frame-x', true),
     })
     expect(source).toContain('className="frame-x"')
   })
 
   it('omits the staged bounds while their eyes are off', () => {
-    const source = buildResizableSnippet({ ...unset, minWidth: '120', minWidthOn: false, minHeight: '80', minHeightOn: false })
+    const source = buildResizableSnippet({ ...unset, minWidth: staged('120'), minHeight: staged('80') })
     expect(source).toContain('width={width}')
     expect(source).toContain('height={height}')
     expect(source).not.toContain('minWidth=')
@@ -110,14 +112,14 @@ describe('buildResizableSnippet', () => {
   })
 
   it('omits the staged max bounds while their eyes are off', () => {
-    const source = buildResizableSnippet({ ...unset, maxWidth: '640', maxWidthOn: false, maxHeight: 'parent', maxHeightOn: false })
+    const source = buildResizableSnippet({ ...unset, maxWidth: staged('640'), maxHeight: staged('parent') })
     expect(source).not.toContain('maxWidth=')
     expect(source).not.toContain('maxHeight=')
   })
 
   it('omits the staged className while its eye is off and emits it when on', () => {
-    expect(buildResizableSnippet({ ...unset, className: 'frame-x', classNameOn: false })).not.toContain('className=')
-    expect(buildResizableSnippet({ ...unset, className: 'frame-x', classNameOn: true })).toContain('className="frame-x"')
+    expect(buildResizableSnippet({ ...unset, className: staged('frame-x') })).not.toContain('className=')
+    expect(buildResizableSnippet({ ...unset, className: staged('frame-x', true) })).toContain('className="frame-x"')
   })
 })
 

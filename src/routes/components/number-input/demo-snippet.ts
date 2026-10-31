@@ -1,55 +1,33 @@
 // Show-code source for the NumberInput demo section. Pure string building over
-// the playground form state: the section regenerates the editor text from
-// this, so the editor always shows the markup behind the demo above.
-import { escapeAttr } from '$showcase/snippet-build'
-import { sizeAttributeLine } from '$showcase/size-input'
-
-export type TriState = '' | 'yes' | 'no'
+// the playground form state: the section regenerates the editor text from this,
+// so the editor always shows the markup behind the demo above.
+import { boolAttrLine, enumAttrLine, escapeAttr, sizeAttrLine, textAttrLine, type TriState } from '$showcase/snippet-build'
+import type { Staged } from '$showcase/staged'
 
 export interface NumberInputSnippetState {
   // Bound value, seeded as script-local state (like the stage size) so the
   // snippet text tracks value edits instead of hiding the value in scope.
-  value: string
-  ariaLabel: string
-  ariaLabelOn: boolean
-  caretAtEnd: TriState
-  caretAtEndOn: boolean
-  min: string
-  minOn: boolean
-  max: string
-  maxOn: boolean
-  step: string
-  stepOn: boolean
-  placeholder: string
-  placeholderOn: boolean
-  size?: string
-  sizeOn: boolean
-  variant?: string
-  variantOn: boolean
-  disabled: TriState
-  disabledOn: boolean
-  hideOutline: TriState
-  hideOutlineOn: boolean
-  showControls: TriState
-  showControlsOn: boolean
-  clearable: TriState
-  clearableOn: boolean
-  clearLabel: string
-  clearLabelOn: boolean
-  clearPlacement: string
-  clearPlacementOn: boolean
-  defaultValue: string
-  defaultValueOn: boolean
-  decrementLabel: string
-  decrementLabelOn: boolean
-  incrementLabel: string
-  incrementLabelOn: boolean
-  id: string
-  idOn: boolean
-  inputStyle: string
-  inputStyleOn: boolean
-  className: string
-  classNameOn: boolean
+  value: Staged<string>
+  ariaLabel: Staged<string>
+  caretAtEnd: Staged<TriState>
+  min: Staged<string>
+  max: Staged<string>
+  step: Staged<string>
+  placeholder: Staged<string>
+  size?: Staged<string>
+  variant?: Staged<string>
+  disabled: Staged<TriState>
+  hideOutline: Staged<TriState>
+  showControls: Staged<TriState>
+  clearable: Staged<TriState>
+  clearLabel: Staged<string>
+  clearPlacement: Staged<string>
+  defaultValue: Staged<string>
+  decrementLabel: Staged<string>
+  incrementLabel: Staged<string>
+  id: Staged<string>
+  inputStyle: Staged<string>
+  className: Staged<string>
 }
 
 function asNumber(value: string): number | null {
@@ -60,99 +38,72 @@ function asNumber(value: string): number | null {
   return Number.isFinite(parsed) ? parsed : null
 }
 
-// A tri-state line: omitted while unset or at the component default, bare
-// while Yes, ={false} while No.
-function flagLine(name: string, value: TriState, def: TriState = ''): string[] {
-  if (value === '' || value === def) {
+// A numeric expression line, omitted while the eye is off or the value is not
+// a number.
+function numberLine(name: string, pair: Staged<string>): string[] {
+  if (!pair.on) {
     return []
   }
-  return [`  ${name}${value === 'yes' ? '' : '={false}'}`]
-}
-
-function numberLine(name: string, value: string): string[] {
-  const parsed = asNumber(value)
+  const parsed = asNumber(pair.value)
   return parsed === null ? [] : [`  ${name}={${parsed}}`]
 }
 
-function textLine(name: string, value: string): string[] {
-  return value ? [`  ${name}="${escapeAttr(value)}"`] : []
-}
-
-export function buildNumberInputSnippet({
-  value,
-  ariaLabel,
-  ariaLabelOn,
-  caretAtEnd,
-  caretAtEndOn,
-  min,
-  minOn,
-  max,
-  maxOn,
-  step,
-  stepOn,
-  placeholder,
-  placeholderOn,
-  size = '',
-  sizeOn,
-  variant,
-  variantOn,
-  disabled,
-  disabledOn,
-  hideOutline,
-  hideOutlineOn,
-  showControls,
-  showControlsOn,
-  clearable,
-  clearableOn,
-  clearLabel,
-  clearLabelOn,
-  clearPlacement,
-  clearPlacementOn,
-  defaultValue,
-  defaultValueOn,
-  decrementLabel,
-  decrementLabelOn,
-  incrementLabel,
-  incrementLabelOn,
-  id,
-  idOn,
-  inputStyle,
-  inputStyleOn,
-  className,
-  classNameOn,
-}: NumberInputSnippetState): string {
+export function buildNumberInputSnippet(state: NumberInputSnippetState): string {
+  const {
+    value,
+    ariaLabel,
+    caretAtEnd,
+    min,
+    max,
+    step,
+    placeholder,
+    size,
+    variant,
+    disabled,
+    hideOutline,
+    showControls,
+    clearable,
+    clearLabel,
+    clearPlacement,
+    defaultValue,
+    decrementLabel,
+    incrementLabel,
+    id,
+    inputStyle,
+    className,
+  } = state
   const lines = [
     '<script>',
     // JSON.stringify keeps the literal valid no matter what the value holds.
-    `  let value = $state(${JSON.stringify(value)})`,
+    `  let value = $state(${JSON.stringify(value.value)})`,
     '</script>',
     '<div class="flex flex-col gap-1">',
     // A custom label renders as a literal while its eye is on; unset, the
     // control reads the scope label, so the scope ref stands in.
-    ...(ariaLabelOn && ariaLabel
-      ? [`  <NumberInput bind:value={value} ariaLabel="${escapeAttr(ariaLabel)}"`]
+    ...(ariaLabel.on && ariaLabel.value
+      ? [`  <NumberInput bind:value={value} ariaLabel="${escapeAttr(ariaLabel.value)}"`]
       : ['  <NumberInput bind:value={value} ariaLabel={applyLabel}']),
-    ...(caretAtEndOn ? flagLine('caretAtEnd', caretAtEnd, 'no') : []),
-    ...(minOn ? numberLine('min', min) : []),
-    ...(maxOn ? numberLine('max', max) : []),
+    ...boolAttrLine('caretAtEnd', caretAtEnd, 'no'),
+    ...numberLine('min', min),
+    ...numberLine('max', max),
     // The step row prefills its component default in the Value column; the
     // builder omits the default so Show-code stays minimal.
-    ...(stepOn && step !== '' && step !== '1' ? numberLine('step', step) : []),
-    ...(decrementLabelOn && decrementLabel ? [`  decrementLabel="${escapeAttr(decrementLabel)}"`] : []),
-    ...(incrementLabelOn && incrementLabel ? [`  incrementLabel="${escapeAttr(incrementLabel)}"`] : []),
-    ...(idOn && id ? [`  id="${escapeAttr(id)}"`] : []),
-    ...(inputStyleOn && inputStyle ? [`  inputStyle="${escapeAttr(inputStyle)}"`] : []),
-    ...(placeholderOn && placeholder ? [`  placeholder="${escapeAttr(placeholder)}"`] : []),
-    ...(sizeOn && size !== undefined && size !== '' && size !== 'md' ? sizeAttributeLine(size, '  ') : []),
-    ...(variantOn && variant !== undefined && variant !== '' && variant !== 'bordered' ? textLine('variant', variant) : []),
-    ...(disabledOn ? flagLine('disabled', disabled, 'no') : []),
-    ...(hideOutlineOn ? flagLine('hideOutline', hideOutline, 'no') : []),
-    ...(showControlsOn ? flagLine('showControls', showControls, 'yes') : []),
-    ...(classNameOn && className ? [`  className="${escapeAttr(className)}"`] : []),
-    ...(clearableOn ? flagLine('clearable', clearable, 'no') : []),
-    ...(clearLabelOn && clearLabel ? [`  clearLabel="${escapeAttr(clearLabel)}"`] : []),
-    ...(clearPlacementOn && clearPlacement !== '' && clearPlacement !== 'auto' ? textLine('clearPlacement', clearPlacement) : []),
-    ...(defaultValueOn && defaultValue ? [`  defaultValue="${escapeAttr(defaultValue)}"`] : []),
+    ...(step.on && step.value !== '' && step.value !== '1' ? numberLine('step', step) : []),
+    ...textAttrLine('decrementLabel', decrementLabel),
+    ...textAttrLine('incrementLabel', incrementLabel),
+    ...textAttrLine('id', id),
+    ...textAttrLine('inputStyle', inputStyle),
+    ...textAttrLine('placeholder', placeholder),
+    ...(size ? sizeAttrLine(size) : []),
+    ...(variant ? enumAttrLine('variant', variant, 'bordered') : []),
+    ...boolAttrLine('disabled', disabled, 'no'),
+    ...boolAttrLine('hideOutline', hideOutline, 'no'),
+    ...boolAttrLine('showControls', showControls, 'yes'),
+    ...textAttrLine('className', className),
+    ...boolAttrLine('clearable', clearable, 'no'),
+    ...textAttrLine('clearLabel', clearLabel),
+    ...enumAttrLine('clearPlacement', clearPlacement, 'auto'),
+    ...textAttrLine('defaultValue', defaultValue),
     '  />',
     '  <span class="text-sm text-slate-400">value: {value}</span>',
     '</div>',

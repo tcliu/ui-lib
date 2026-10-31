@@ -3,8 +3,9 @@
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$showcase/ShowcasePage.svelte'
   import { parseSizeValue } from '$showcase/size-input'
-  import { sizeField, jsonField, resetToggle, snippetToggle } from '$showcase/snippet-field'
   import { type SyncableFieldConfig } from '$showcase/snippet-sync'
+  import { applied, eye, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/staged'
+  import { sizeField, jsonField } from '$showcase/snippet-field'
   import {
     buildColumnChooserSnippet,
     CHOOSER_LABEL,
@@ -21,46 +22,51 @@
   // Customizer playground state. The column list is committed state (all
   // checked to start); the size starts at the component default (the Value
   // column shows it), so the cleared form applies no overrides and Show-code
-  // omits the default. Clearing the size unsets it; labels start unset so the
-  // component default renders. Reset restores all three.
-  let pgColumns = $state(seedColumns())
-  // The component requires columns, so the eye resets to the seeds instead
-  // of omitting; committing re-applies.
-  let pgColumnsEnabled = $state(true)
-  let pgTriggerLabel = $state('Choose columns')
-  let pgTriggerLabelOn = $state(true)
-  let pgResetAriaLabel = $state('Reset columns')
-  let pgResetAriaLabelOn = $state(true)
-  let pgSize = $state('md')
-  let pgSizeOn = $state(false)
+  // omits the default. Clearing the size unsets it; labels start applied so the
+  // demo's own labels render. Each curated prop is one `Staged` pair (its
+  // committed value plus its eye flag). Reset restores all four. The columns
+  // are required content, so the eye resets to the seeds instead of omitting;
+  // committing re-applies.
+  let pgColumns = $state(staged(seedColumns(), true))
+  let pgTriggerLabel = $state(staged(CHOOSER_LABEL, true))
+  let pgResetAriaLabel = $state(staged(CHOOSER_RESET_LABEL, true))
+  let pgSize = $state(staged('md'))
   // Stage width is interaction state, not a curated option; Reset restores it.
   let pgStageWidth = $state(COLUMNS_STAGE_DEFAULT_WIDTH)
 
-  const hiddenCount = $derived(pgColumns.filter(column => !column.checked).length)
-  const demoSize = $derived(pgSizeOn ? parseSizeValue(pgSize) : undefined)
+  const hiddenCount = $derived(pgColumns.value.filter(column => !column.checked).length)
+  const demoSize = $derived.by(() => {
+    const value = applied(pgSize)
+    return value === undefined ? undefined : parseSizeValue(value)
+  })
 
   function handleToggleColumn(key: string, checked: boolean): void {
-    pgColumns = pgColumns.map(column => (column.key === key ? { ...column, checked } : column))
+    pgColumns.value = pgColumns.value.map(column => (column.key === key ? { ...column, checked } : column))
   }
 
   function handleResetColumns(): void {
-    pgColumns = pgColumns.map(column => ({ ...column, checked: true }))
+    pgColumns.value = pgColumns.value.map(column => ({ ...column, checked: true }))
   }
 
   function clearPlayground(): void {
-    pgTriggerLabel = 'Choose columns'
-    pgTriggerLabelOn = true
-    pgResetAriaLabel = 'Reset columns'
-    pgResetAriaLabelOn = true
-    pgSize = 'md'
-    pgSizeOn = false
-    pgColumns = seedColumns()
-    pgColumnsEnabled = true
+    pgTriggerLabel.value = CHOOSER_LABEL
+    pgTriggerLabel.on = true
+    pgResetAriaLabel.value = CHOOSER_RESET_LABEL
+    pgResetAriaLabel.on = true
+    pgSize.value = 'md'
+    pgSize.on = false
+    pgColumns.value = seedColumns()
+    pgColumns.on = true
     pgStageWidth = COLUMNS_STAGE_DEFAULT_WIDTH
   }
 
   const code = $derived.by(() =>
-    buildColumnChooserSnippet({ triggerLabel: pgTriggerLabel, triggerLabelOn: pgTriggerLabelOn, resetAriaLabel: pgResetAriaLabel, resetAriaLabelOn: pgResetAriaLabelOn, columns: pgColumns, size: pgSize, sizeOn: pgSizeOn }),
+    buildColumnChooserSnippet({
+      triggerLabel: pgTriggerLabel,
+      resetAriaLabel: pgResetAriaLabel,
+      columns: pgColumns,
+      size: pgSize,
+    }),
   )
 
   
@@ -71,29 +77,22 @@
       name: 'columns',
       type: 'ChooserColumn[]',
       note: 'Entries with key, header, and checked state. The eye resets to the seed entries.',
-      value: JSON.stringify(pgColumns, null, 2),
+      value: JSON.stringify(pgColumns.value, null, 2),
       onChange: (draft: string) => {
         const parsed = parseColumnsJson(draft)
-        if (parsed) {
-          pgColumns = parsed
-          pgColumnsEnabled = true
-        }
+        if (parsed) stage(pgColumns, parsed)
       },
       dialog: { valid: (draft: string) => parseColumnsJson(draft) != null, invalidMessage: 'Invalid columns JSON. Use an array of { key, header, checked? } objects.' },
-      toggle: resetToggle(
-        pgColumnsEnabled,
-        enabled => (pgColumnsEnabled = enabled),
-        () => (pgColumns = seedColumns()),
-      ),
-      sync: { kind: 'scriptJson', parseJson: parseColumnsValue, setJson: value => (pgColumns = value as typeof pgColumns) },
+      toggle: eyeResetToggle(pgColumns, () => (pgColumns.value = seedColumns())),
+      sync: { kind: 'scriptJson', parseJson: parseColumnsValue, setJson: value => (pgColumns.value = value as typeof pgColumns.value) },
     }),
     {
       name: 'resetAriaLabel',
       type: 'string',
       defaultValue: '—',
-      note: 'Accessible name and tooltip for the reset button.', editor: 'text', clearable: true, value: pgResetAriaLabel, onChange: value => { pgResetAriaLabel = value; pgResetAriaLabelOn = true; }, toggle: snippetToggle(pgResetAriaLabelOn, enabled => (pgResetAriaLabelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'resetLabel' } },
-    sizeField({ note: 'Trigger, reset, and option scale; numbers are icon-scale pixels interpolated between the steps.', value: pgSize, onChange: v => (pgSize = v), enabled: pgSizeOn, setEnabled: v => (pgSizeOn = v) }),
-    { name: 'triggerLabel', type: 'string', defaultValue: '—', note: 'Accessible name and tooltip for the trigger.', editor: 'text', clearable: true, value: pgTriggerLabel, onChange: value => { pgTriggerLabel = value; pgTriggerLabelOn = true; }, toggle: snippetToggle(pgTriggerLabelOn, enabled => (pgTriggerLabelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'chooserLabel' } },
+      note: 'Accessible name and tooltip for the reset button.', editor: 'text', clearable: true, ...eye(pgResetAriaLabel), onChange: value => stage(pgResetAriaLabel, value), toggle: eyeToggle(pgResetAriaLabel), sync: { kind: 'scopeText', scopeRef: 'resetLabel' } },
+    sizeField({ note: 'Trigger, reset, and option scale; numbers are icon-scale pixels interpolated between the steps.', ...eye(pgSize) }),
+    { name: 'triggerLabel', type: 'string', defaultValue: '—', note: 'Accessible name and tooltip for the trigger.', editor: 'text', clearable: true, ...eye(pgTriggerLabel), onChange: value => stage(pgTriggerLabel, value), toggle: eyeToggle(pgTriggerLabel), sync: { kind: 'scopeText', scopeRef: 'chooserLabel' } },
     { name: 'onReset', type: '() => void', defaultValue: '—', note: 'Fires when the reset button is pressed.' },
     {
       name: 'onToggle',
@@ -117,9 +116,9 @@
     sync={{ tag: 'ColumnChooser' }}
   >
     <ColumnChooser
-      triggerLabel={pgTriggerLabelOn && pgTriggerLabel ? pgTriggerLabel : CHOOSER_LABEL}
-      resetAriaLabel={pgResetAriaLabelOn && pgResetAriaLabel ? pgResetAriaLabel : CHOOSER_RESET_LABEL}
-      columns={pgColumns}
+      triggerLabel={applied(pgTriggerLabel) || CHOOSER_LABEL}
+      resetAriaLabel={applied(pgResetAriaLabel) || CHOOSER_RESET_LABEL}
+      columns={pgColumns.value}
       size={demoSize}
       onToggle={handleToggleColumn}
       onReset={handleResetColumns} />

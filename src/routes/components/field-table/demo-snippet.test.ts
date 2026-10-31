@@ -2,13 +2,21 @@ import { describe, expect, it } from 'vitest'
 import { extractScriptValue } from '$showcase/snippet-attributes'
 import { createSnippetComponent } from '$showcase/snippet-playground'
 import { splitLeadingScript } from '$showcase/snippet-source'
+import { staged } from '$showcase/staged'
 import {
   buildFieldTableSnippet,
   FIELD_TABLE_DEMO_ROWS,
   parseHeadersJson,
   parseHeadersValue,
+  type FieldTableHeaderLabels,
   type FieldTableSnippetState,
 } from './demo-snippet'
+
+// A headers pair with every key unset unless the case customizes it; the eye
+// starts on, matching the cleared form's applied overrides.
+function headerPair(overrides: Partial<FieldTableHeaderLabels> = {}, on = true) {
+  return staged({ prop: '', type: '', default: '', value: '', note: '', ...overrides }, on)
+}
 
 function state(overrides: Partial<FieldTableSnippetState> = {}): FieldTableSnippetState {
   return {
@@ -17,14 +25,8 @@ function state(overrides: Partial<FieldTableSnippetState> = {}): FieldTableSnipp
     size: '',
     active: '',
     notes: '',
-    propHeader: '',
-    typeHeader: '',
-    defaultHeader: '',
-    valueHeader: '',
-    noteHeader: '',
-    headersEnabled: true,
-    tableSize: '',
-    tableSizeOn: true,
+    headers: headerPair(),
+    tableSize: staged('', true),
     ...overrides,
   }
 }
@@ -73,7 +75,7 @@ describe('buildFieldTableSnippet', () => {
   })
 
   it('emits customized header keys as literals and seeds demo values', () => {
-    const source = buildFieldTableSnippet(state({ name: 'Ada', role: 'admin', propHeader: 'Field' }))
+    const source = buildFieldTableSnippet(state({ name: 'Ada', role: 'admin', headers: headerPair({ prop: 'Field' }) }))
     expect(source).toContain('let name = $state("Ada")')
     expect(source).toContain('let role = $state("admin")')
     expect(source).toContain('    prop: "Field",')
@@ -82,29 +84,29 @@ describe('buildFieldTableSnippet', () => {
   })
 
   it('escapes quotes in header literals', () => {
-    const source = buildFieldTableSnippet(state({ propHeader: 'Say "hi"' }))
+    const source = buildFieldTableSnippet(state({ headers: headerPair({ prop: 'Say "hi"' }) }))
     expect(source).toContain('    prop: "Say \\"hi\\"",')
   })
 
   it('omits the headers object while its eye toggle is off', () => {
-    const source = buildFieldTableSnippet(state({ propHeader: 'Field', headersEnabled: false }))
+    const source = buildFieldTableSnippet(state({ headers: headerPair({ prop: 'Field' }, false) }))
     expect(source).not.toContain('headers={{')
     expect(source).toContain('<FieldTable')
   })
 
   it('emits the table size as a string or an expression', () => {
-    expect(buildFieldTableSnippet(state({ tableSize: 'lg', tableSizeOn: true }))).toContain('  size="lg"')
-    expect(buildFieldTableSnippet(state({ tableSize: '14', tableSizeOn: true }))).toContain('  size={14}')
-    expect(buildFieldTableSnippet(state({ tableSize: 'huge', tableSizeOn: true }))).not.toMatch(/^\s*size=/m)
+    expect(buildFieldTableSnippet(state({ tableSize: staged('lg', true) }))).toContain('  size="lg"')
+    expect(buildFieldTableSnippet(state({ tableSize: staged('14', true) }))).toContain('  size={14}')
+    expect(buildFieldTableSnippet(state({ tableSize: staged('huge', true) }))).not.toMatch(/^\s*size=/m)
   })
 
   it('omits component defaults (the Value column prefills them)', () => {
-    const source = buildFieldTableSnippet(state({ tableSize: 'md', tableSizeOn: true }))
+    const source = buildFieldTableSnippet(state({ tableSize: staged('md', true) }))
     expect(source).not.toMatch(/^\s*size=/m)
   })
 
   it('omits the staged table size while its eye is off', () => {
-    expect(buildFieldTableSnippet(state({ tableSize: 'lg', tableSizeOn: false }))).not.toMatch(/^\s*size=/m)
+    expect(buildFieldTableSnippet(state({ tableSize: staged('lg') }))).not.toMatch(/^\s*size=/m)
   })
 
   it('compiles the generated snippet', { timeout: 30000 }, async () => {

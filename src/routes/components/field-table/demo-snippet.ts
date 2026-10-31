@@ -8,9 +8,8 @@
 // customized key renders as a literal.
 
 import type { FieldEditor, FieldOption } from '$lib/components/FieldTable.svelte'
-import { sizeAttributeLine } from '$showcase/size-input'
-
-export type TriState = '' | 'yes' | 'no'
+import { sizeAttrLine, type TriState } from '$showcase/snippet-build'
+import type { Staged } from '$showcase/staged'
 
 // One sample field's data-only facets, shared by the static demo and the
 // Show-code builder so the two can never drift. Each consumer supplies only
@@ -147,16 +146,10 @@ export interface FieldTableSnippetState {
   size: string
   active: TriState
   notes: string
-  propHeader: string
-  typeHeader: string
-  defaultHeader: string
-  valueHeader: string
-  noteHeader: string
   // The headers object applies only while its eye toggle is on, mirroring the
   // page (off omits the object, so each column keeps its default label).
-  headersEnabled: boolean
-  tableSize: string
-  tableSizeOn: boolean
+  headers: Staged<FieldTableHeaderLabels>
+  tableSize: Staged<string>
 }
 
 // A `headers` object entry: a scope ref while unset (the demo's localized
@@ -220,14 +213,8 @@ export function buildFieldTableSnippet({
   size,
   active,
   notes,
-  propHeader,
-  typeHeader,
-  defaultHeader,
-  valueHeader,
-  noteHeader,
-  headersEnabled,
+  headers,
   tableSize,
-  tableSizeOn,
 }: FieldTableSnippetState): string {
   return [
     '<script>',
@@ -244,15 +231,15 @@ export function buildFieldTableSnippet({
     '  ]}',
     // The table size prefills its component default in the Value column; the
     // builder omits the default so Show-code stays minimal.
-    ...(tableSizeOn && tableSize !== '' && tableSize !== 'md' ? sizeAttributeLine(tableSize, '  ') : []),
-    ...(headersEnabled
+    ...sizeAttrLine(tableSize, '  '),
+    ...(headers.on
       ? [
           '  headers={{',
-          headerEntry('prop', propHeader, 'propText'),
-          headerEntry('type', typeHeader, 'typeText'),
-          headerEntry('default', defaultHeader, 'defaultText'),
-          headerEntry('value', valueHeader, 'valueText'),
-          headerEntry('note', noteHeader, 'noteText'),
+          headerEntry('prop', headers.value.prop, 'propText'),
+          headerEntry('type', headers.value.type, 'typeText'),
+          headerEntry('default', headers.value.default, 'defaultText'),
+          headerEntry('value', headers.value.value, 'valueText'),
+          headerEntry('note', headers.value.note, 'noteText'),
           '  }}',
         ]
       : []),

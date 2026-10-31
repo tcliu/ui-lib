@@ -4,7 +4,8 @@
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$showcase/ShowcasePage.svelte'
   import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { enumField, sizeField, snippetToggle } from '$showcase/snippet-field'
+  import { enumField, sizeField } from '$showcase/snippet-field'
+  import { applied, eye, eyeToggle, stage, staged } from '$showcase/staged'
   import { ALL_VARIANTS, buildIconsSnippet, ICON_COMPONENTS, ICON_ENTRIES, iconClassFor, iconLabel, variantFor } from './demo-snippet'
   import { parseSizeValue } from '$showcase/size-input'
 
@@ -16,13 +17,10 @@
   // Reset restores the defaults below. `pgTint` is
   // demo-only chrome with no prop row, so it keeps a settings panel below.
   const INITIAL = {
-    size: 'md',
-    sizeOn: false,
+    size: staged('md'),
     tint: '',
-    className: '',
-    classNameOn: false,
-    variant: 'regular',
-    variantOn: false,
+    className: staged(''),
+    variant: staged('regular'),
   }
   let pg = $state(structuredClone(INITIAL))
 
@@ -40,16 +38,19 @@
     { value: 'text-amber-400', label: 'amber' },
     { value: 'text-rose-400', label: 'rose' },
   ]
-  const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
+  const demoSize = $derived.by(() => {
+    const value = applied(pg.size)
+    return value === undefined ? undefined : parseSizeValue(value)
+  })
   // The variant rides the glyphs that carry it; the rest keep their default.
-  const demoVariant = $derived(pg.variantOn ? pg.variant : undefined)
-  const galleryClass = $derived(iconClassFor(pg.tint, pg.classNameOn ? pg.className : ''))
+  const demoVariant = $derived(applied(pg.variant))
+  const galleryClass = $derived(iconClassFor(pg.tint, applied(pg.className) || ''))
 
   function clearPlayground() {
     pg = structuredClone(INITIAL)
   }
 
-  const code = $derived.by(() => buildIconsSnippet({ size: pg.size, sizeOn: pg.sizeOn, tint: pg.tint, className: pg.className, classNameOn: pg.classNameOn, variant: pg.variant, variantOn: pg.variantOn }))
+  const code = $derived.by(() => buildIconsSnippet({ size: pg.size, tint: pg.tint, className: pg.className, variant: pg.variant }))
 
   // The page owns the preview so the shell can host the code toggle (and the
   // playground Reset) in the sticky title row while it renders the demo and
@@ -77,15 +78,12 @@
       note: 'Color and extra classes; explicit size classes win over the size attributes.',
       editor: 'text',
       clearable: true,
-      value: pg.className,
-      onChange: value => {
-        pg.className = value
-        pg.classNameOn = true
-      },
-      toggle: snippetToggle(pg.classNameOn, enabled => (pg.classNameOn = enabled)),
+      ...eye(pg.className),
+      onChange: value => stage(pg.className, value),
+      toggle: eyeToggle(pg.className),
     },
-    sizeField({ note: 'Width/height attributes (12/16/20/24px for names, passthrough for numbers); composes with className.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v), options: sizeOptions }),
-    enumField({ name: 'variant', type: ALL_VARIANTS.map(v => `'${v}'`).join(' | '), defaultValue: "'regular'", note: 'The rendering the variant-capable glyphs take; the others keep their default.', options: variantOptions, value: pg.variant, onChange: v => (pg.variant = v), placeholder: 'regular', clearLabel: 'Clear variant', enabled: pg.variantOn, setEnabled: v => (pg.variantOn = v) }),
+    sizeField({ note: 'Width/height attributes (12/16/20/24px for names, passthrough for numbers); composes with className.', ...eye(pg.size), options: sizeOptions }),
+    enumField({ name: 'variant', type: ALL_VARIANTS.map(v => `'${v}'`).join(' | '), defaultValue: "'regular'", note: 'The rendering the variant-capable glyphs take; the others keep their default.', options: variantOptions, placeholder: 'regular', clearLabel: 'Clear variant', ...eye(pg.variant) }),
   ])
 
 </script>
@@ -105,20 +103,17 @@
     </FormField>
     <FormField label="Size">
       <SelectDropdown
-        activeValue={pg.size}
+        activeValue={pg.size.value}
         ariaLabel="Size"
         options={sizeOptions}
         filterable
         allowCustomValue
-        onSelect={value => {
-          pg.size = value
-          pg.sizeOn = true
-        }}
+        onSelect={value => stage(pg.size, value)}
         clearable
         clearLabel="Clear size"
         onClear={() => {
-          pg.size = 'md'
-          pg.sizeOn = false
+          pg.size.value = 'md'
+          pg.size.on = false
         }} />
     </FormField>
   </div>

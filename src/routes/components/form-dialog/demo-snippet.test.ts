@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createSnippetComponent } from '$showcase/snippet-playground'
+import { staged } from '$showcase/staged'
 import {
   buildEditActionsMarkup,
   buildEditBodyMarkup,
@@ -15,42 +16,24 @@ import {
 
 function state(overrides: Partial<FormDialogSnippetState> = {}): FormDialogSnippetState {
   return {
-    widthVariant: '',
-    widthVariantOn: true,
-    heightVariant: '',
-    heightVariantOn: true,
-    size: '',
-    sizeOn: true,
-    dirty: '',
-    dirtyOn: true,
-    confirmOnDismiss: '',
-    confirmOnDismissOn: true,
-    pending: '',
-    pendingOn: true,
-    saveDisabled: '',
-    saveDisabledOn: true,
-    children: '',
-    childrenEnabled: true,
-    actions: '',
-    actionsEnabled: false,
-    footer: '',
-    footerEnabled: false,
-    closeLabel: '',
-    closeLabelOn: true,
-    discardLabel: '',
-    discardLabelOn: true,
-    discardMessage: '',
-    discardMessageOn: true,
-    discardTitle: '',
-    discardTitleOn: true,
-    resetLabel: '',
-    resetLabelOn: true,
-    saveLabel: '',
-    saveLabelOn: true,
-    title: '',
-    titleOn: true,
-    header: '',
-    headerOn: false,
+    widthVariant: staged('', true),
+    heightVariant: staged('', true),
+    size: staged('', true),
+    dirty: staged('', true),
+    confirmOnDismiss: staged('', true),
+    pending: staged('', true),
+    saveDisabled: staged('', true),
+    children: staged('', true),
+    actions: staged('', false),
+    footer: staged('', false),
+    closeLabel: staged('', true),
+    discardLabel: staged('', true),
+    discardMessage: staged('', true),
+    discardTitle: staged('', true),
+    resetLabel: staged('', true),
+    saveLabel: staged('', true),
+    title: staged('', true),
+    header: staged('', false),
     ...overrides,
   }
 }
@@ -76,7 +59,7 @@ describe('buildFormDialogSnippet', () => {
   })
 
   it('emits the width variant and flags when set', () => {
-    const source = buildFormDialogSnippet(state({ widthVariant: 'lg', dirty: 'yes', pending: 'yes', saveDisabled: 'yes' }))
+    const source = buildFormDialogSnippet(state({ widthVariant: staged('lg', true), dirty: staged('yes', true), pending: staged('yes', true), saveDisabled: staged('yes', true) }))
     expect(source).toContain('widthVariant="lg"')
     expect(source).toContain('    dirty\n')
     expect(source).toContain('    pending\n')
@@ -84,7 +67,7 @@ describe('buildFormDialogSnippet', () => {
   })
 
   it('emits the height variant and size shorthand when set', () => {
-    const source = buildFormDialogSnippet(state({ heightVariant: 'xl', size: '4xl' }))
+    const source = buildFormDialogSnippet(state({ heightVariant: staged('xl', true), size: staged('4xl', true) }))
     expect(source).toContain('heightVariant="xl"')
     expect(source).toContain('size="4xl"')
     expect(source).not.toContain('widthVariant=')
@@ -92,7 +75,7 @@ describe('buildFormDialogSnippet', () => {
 
   it('omits component defaults (the Value column prefills them)', () => {
     const source = buildFormDialogSnippet(
-      state({ widthVariant: 'md', heightVariant: 'auto', dirty: 'no', pending: 'no', saveDisabled: 'no' }),
+      state({ widthVariant: staged('md', true), heightVariant: staged('auto', true), dirty: staged('no', true), pending: staged('no', true), saveDisabled: staged('no', true) }),
     )
     expect(source).not.toContain('widthVariant=')
     expect(source).not.toContain('heightVariant=')
@@ -104,12 +87,9 @@ describe('buildFormDialogSnippet', () => {
   it('omits sizing props while their eyes are off', () => {
     const source = buildFormDialogSnippet(
       state({
-        widthVariant: 'lg',
-        widthVariantOn: false,
-        heightVariant: 'xl',
-        heightVariantOn: false,
-        size: '4xl',
-        sizeOn: false,
+        widthVariant: staged('lg'),
+        heightVariant: staged('xl'),
+        size: staged('4xl'),
       }),
     )
     expect(source).not.toContain('widthVariant=')
@@ -119,19 +99,19 @@ describe('buildFormDialogSnippet', () => {
 
   it('emits the footer snippet while applied', () => {
     const on = buildFormDialogSnippet(
-      state({ footer: '<Button variant="primary" type="submit">Save it</Button>', footerEnabled: true }),
+      state({ footer: staged('<Button variant="primary" type="submit">Save it</Button>', true) }),
     )
     expect(on).toContain('{#snippet footer()}')
     expect(on).toContain('<Button variant="primary" type="submit">Save it</Button>')
 
     const off = buildFormDialogSnippet(
-      state({ footer: '<Button variant="primary" type="submit">Save it</Button>', footerEnabled: false }),
+      state({ footer: staged('<Button variant="primary" type="submit">Save it</Button>') }),
     )
     expect(off).not.toContain('{#snippet footer()}')
   })
 
   it('omits boolean flags while their eyes are off', () => {
-    const source = buildFormDialogSnippet(state({ dirty: 'yes', dirtyOn: false, pending: 'yes', pendingOn: false, saveDisabled: 'yes', saveDisabledOn: false, confirmOnDismiss: 'yes', confirmOnDismissOn: false }))
+    const source = buildFormDialogSnippet(state({ dirty: staged('yes'), pending: staged('yes'), saveDisabled: staged('yes'), confirmOnDismiss: staged('yes') }))
     expect(source).not.toContain('dirty')
     expect(source).not.toContain('pending')
     expect(source).not.toContain('saveDisabled')
@@ -139,31 +119,24 @@ describe('buildFormDialogSnippet', () => {
   })
 
   it('emits the confirm-on-dismiss flag when its eye is on', () => {
-    const on = buildFormDialogSnippet(state({ confirmOnDismiss: 'yes' }))
+    const on = buildFormDialogSnippet(state({ confirmOnDismiss: staged('yes', true) }))
     expect(on).toContain('confirmOnDismiss')
     expect(on).not.toContain('confirmOnDismiss={false}')
 
-    const off = buildFormDialogSnippet(state({ confirmOnDismiss: 'no' }))
+    const off = buildFormDialogSnippet(state({ confirmOnDismiss: staged('no', true) }))
     expect(off).not.toContain('confirmOnDismiss')
   })
 
   it('omits label literals while their eyes are off', () => {
     const source = buildFormDialogSnippet(
       state({
-        title: 'Rename',
-        titleOn: false,
-        closeLabel: 'Dismiss',
-        closeLabelOn: false,
-        saveLabel: 'Save it',
-        saveLabelOn: false,
-        resetLabel: 'Undo',
-        resetLabelOn: false,
-        discardTitle: 'Sure?',
-        discardTitleOn: false,
-        discardMessage: 'Lose it',
-        discardMessageOn: false,
-        discardLabel: 'Drop it',
-        discardLabelOn: false,
+        title: staged('Rename'),
+        closeLabel: staged('Dismiss'),
+        saveLabel: staged('Save it'),
+        resetLabel: staged('Undo'),
+        discardTitle: staged('Sure?'),
+        discardMessage: staged('Lose it'),
+        discardLabel: staged('Drop it'),
       }),
     )
     expect(source).toContain('title={dialogTitle}')
@@ -180,11 +153,11 @@ describe('buildFormDialogSnippet', () => {
   it('emits committed children verbatim and self-closes when children are off', () => {
     const set = buildFormDialogSnippet({
       ...state(),
-      children: '<TextInput bind:value={draft} type="number" ariaLabel="Count" />\n<span>note-123</span>',
+      children: staged('<TextInput bind:value={draft} type="number" ariaLabel="Count" />\n<span>note-123</span>', true),
     })
     expect(set).toContain('    <TextInput bind:value={draft} type="number" ariaLabel="Count" />')
     expect(set).toContain('    <span>note-123</span>')
-    const off = buildFormDialogSnippet(state({ childrenEnabled: false }))
+    const off = buildFormDialogSnippet(state({ children: staged('', false) }))
     expect(off).toContain('onClose={() => (open = false)} />')
     expect(off).not.toContain('TextInput')
     expect(off).not.toContain('</FormDialog>')
@@ -192,7 +165,7 @@ describe('buildFormDialogSnippet', () => {
 
   it('emits label literals when set', () => {
     const source = buildFormDialogSnippet(
-      state({ title: 'Rename "x"', closeLabel: 'Dismiss', saveLabel: 'Save it', resetLabel: 'Undo', discardTitle: 'Sure?', discardMessage: 'a & b', discardLabel: 'Drop it' }),
+      state({ title: staged('Rename "x"', true), closeLabel: staged('Dismiss', true), saveLabel: staged('Save it', true), resetLabel: staged('Undo', true), discardTitle: staged('Sure?', true), discardMessage: staged('a & b', true), discardLabel: staged('Drop it', true) }),
     )
     expect(source).toContain('title="Rename &quot;x&quot;"')
     expect(source).toContain('closeLabel="Dismiss"')
@@ -211,18 +184,18 @@ describe('buildFormDialogSnippet', () => {
 
   it('emits the actions snippet with the committed label while on', () => {
     const source = buildFormDialogSnippet(
-      state({ actions: '<Button variant="outline" type="button">Tidy</Button>', actionsEnabled: true }),
+      state({ actions: staged('<Button variant="outline" type="button">Tidy</Button>', true) }),
     )
     expect(source).toContain('    {#snippet actions()}')
     expect(source).toContain('JSON.stringify(JSON.parse(draft), null, 2)')
     expect(source).toContain('>Tidy</Button>')
-    const canonical = buildFormDialogSnippet(state({ actionsEnabled: true }))
+    const canonical = buildFormDialogSnippet(state({ actions: staged('', true) }))
     expect(canonical).toContain('>Format</Button>')
   })
 
   it('compiles the generated snippet with actions applied', { timeout: 30000 }, async () => {
     const source = buildFormDialogSnippet(
-      state({ actions: '<Button variant="outline" type="button">Tidy</Button>', actionsEnabled: true }),
+      state({ actions: staged('<Button variant="outline" type="button">Tidy</Button>', true) }),
     )
     const component = await createSnippetComponent(source, {
       open: true,
@@ -242,19 +215,19 @@ describe('buildFormDialogSnippet', () => {
 
   it('emits the header snippet with the committed line while on', () => {
     const source = buildFormDialogSnippet(
-      state({ header: '<Copyable text="$.user"><span>$.user</span></Copyable>', headerOn: true }),
+      state({ header: staged('<Copyable text="$.user"><span>$.user</span></Copyable>', true) }),
     )
     expect(source).toContain('    {#snippet header()}')
     expect(source).toContain('      <Copyable text="$.user"><span>$.user</span></Copyable>')
     const off = buildFormDialogSnippet(
-      state({ header: '<Copyable text="$.user"><span>$.user</span></Copyable>', headerOn: false }),
+      state({ header: staged('<Copyable text="$.user"><span>$.user</span></Copyable>') }),
     )
     expect(off).not.toContain('{#snippet header()}')
   })
 
   it('compiles the generated snippet with a header applied', { timeout: 30000 }, async () => {
     const source = buildFormDialogSnippet(
-      state({ header: '<Copyable text="$.user"><span>$.user</span></Copyable>', headerOn: true }),
+      state({ header: staged('<Copyable text="$.user"><span>$.user</span></Copyable>', true) }),
     )
     const component = await createSnippetComponent(source, {
       open: true,

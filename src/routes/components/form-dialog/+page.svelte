@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { flagOn } from '$showcase/snippet-build'
   import Button from '$lib/components/Button.svelte'
   import Copyable from '$lib/components/Copyable.svelte'
   import FormDialog from '$lib/components/FormDialog.svelte'
@@ -8,7 +7,9 @@
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$showcase/ShowcasePage.svelte'
   import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { enumField, textField, boolField, snippetDialog, snippetField, snippetToggle } from '$showcase/snippet-field'
+  import { type TriState } from '$showcase/snippet-build'
+  import { enumField, textField, boolField, snippetDialog, snippetField } from '$showcase/snippet-field'
+  import { applied, appliedFlag, eye, eyeFlag, eyeToggle, stage, staged } from '$showcase/staged'
   import { buildHeaderLine, parseHeaderMarkup } from '$showcase/snippet-header'
   import {
     buildEditActionsMarkup,
@@ -24,7 +25,6 @@
     parseEditFooterLabel,
     parseEditFooterMarkup,
     type EditBodySegment,
-    type TriState,
   } from './demo-snippet'
 
   const i18n = getI18nContext()
@@ -38,42 +38,24 @@
     open: false,
     draft: 'Editable text',
     saved: 'Editable text',
-    widthVariant: 'md',
-    widthVariantOn: false,
-    heightVariant: 'auto',
-    heightVariantOn: false,
-    size: '',
-    sizeOn: false,
-    dirty: 'no' as TriState,
-    dirtyOn: false,
-    confirmOnDismiss: 'no' as TriState,
-    confirmOnDismissOn: false,
-    pending: 'no' as TriState,
-    pendingOn: false,
-    saveDisabled: 'no' as TriState,
-    saveDisabledOn: false,
-    closeLabel: '',
-    closeLabelOn: false,
-    discardLabel: '',
-    discardLabelOn: false,
-    discardMessage: '',
-    discardMessageOn: false,
-    discardTitle: '',
-    discardTitleOn: false,
-    resetLabel: '',
-    resetLabelOn: false,
-    saveLabel: '',
-    saveLabelOn: false,
-    title: '',
-    titleOn: false,
-    header: '',
-    headerOn: false,
-    children: '',
-    childrenOn: true,
-    actions: '',
-    actionsOn: false,
-    footer: '',
-    footerOn: false,
+    widthVariant: staged('md'),
+    heightVariant: staged('auto'),
+    size: staged(''),
+    dirty: staged('no' as TriState),
+    confirmOnDismiss: staged('no' as TriState),
+    pending: staged('no' as TriState),
+    saveDisabled: staged('no' as TriState),
+    closeLabel: staged(''),
+    discardLabel: staged(''),
+    discardMessage: staged(''),
+    discardTitle: staged(''),
+    resetLabel: staged(''),
+    saveLabel: staged(''),
+    title: staged(''),
+    header: staged(''),
+    children: staged('', true),
+    actions: staged(''),
+    footer: staged(''),
   }
   let pg = $state(structuredClone(INITIAL))
   // Unset, each label renders the localized default (matching the seed's
@@ -87,53 +69,49 @@
   // customized, empty for the canonical Format button.
 
   const demoWidthVariant = $derived(
-    pg.widthVariantOn
-      ? ((pg.widthVariant || undefined) as
-        | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | '7xl' | 'fit' | 'wide'
-        | undefined)
-      : undefined,
+    (applied(pg.widthVariant) || undefined) as
+      | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | '7xl' | 'fit' | 'wide'
+      | undefined,
   )
   const demoHeightVariant = $derived(
-    pg.heightVariantOn
-      ? ((pg.heightVariant || undefined) as 'auto' | (typeof DIALOG_SIZE_VARIANTS)[number] | undefined)
-      : undefined,
+    (applied(pg.heightVariant) || undefined) as 'auto' | (typeof DIALOG_SIZE_VARIANTS)[number] | undefined,
   )
   const demoSize = $derived(
-    pg.sizeOn ? ((pg.size || undefined) as (typeof DIALOG_SIZE_VARIANTS)[number] | undefined) : undefined,
+    (applied(pg.size) || undefined) as (typeof DIALOG_SIZE_VARIANTS)[number] | undefined,
   )
-  const dirty = $derived(pg.dirtyOn ? (flagOn(pg.dirty) ?? false) : false)
-  const confirmOnDismiss = $derived(pg.confirmOnDismissOn ? flagOn(pg.confirmOnDismiss) : undefined)
-  const pending = $derived(pg.pendingOn ? flagOn(pg.pending) : undefined)
-  const saveDisabled = $derived(pg.saveDisabledOn ? flagOn(pg.saveDisabled) : undefined)
-  const demoTitle = $derived(pg.titleOn && pg.title ? pg.title : i18n.t('showcase.dialogTitle'))
+  const dirty = $derived(appliedFlag(pg.dirty) ?? false)
+  const confirmOnDismiss = $derived(appliedFlag(pg.confirmOnDismiss))
+  const pending = $derived(appliedFlag(pg.pending))
+  const saveDisabled = $derived(appliedFlag(pg.saveDisabled))
+  const demoTitle = $derived(applied(pg.title) || i18n.t('showcase.dialogTitle'))
   // Canonical header markup resolved from the title, matching the row seed
   // while unset.
   const canonicalHeader = $derived(buildHeaderLine({ text: demoTitle, inner: demoTitle }))
-  const headerMarkup = $derived(pg.header || canonicalHeader)
-  const headerContent = $derived(parseHeaderMarkup(pg.header) ?? { text: demoTitle, inner: demoTitle })
-  const demoCloseLabel = $derived(pg.closeLabelOn && pg.closeLabel ? pg.closeLabel : i18n.t('common.close'))
-  const demoSaveLabel = $derived(pg.saveLabelOn && pg.saveLabel ? pg.saveLabel : i18n.t('common.ok'))
-  const demoResetLabel = $derived(pg.resetLabelOn && pg.resetLabel ? pg.resetLabel : i18n.t('common.reset'))
-  const demoDiscardTitle = $derived(pg.discardTitleOn && pg.discardTitle ? pg.discardTitle : i18n.t('showcase.discardTitle'))
-  const demoDiscardMessage = $derived(pg.discardMessageOn && pg.discardMessage ? pg.discardMessage : i18n.t('showcase.discardMessage'))
-  const demoDiscardLabel = $derived(pg.discardLabelOn && pg.discardLabel ? pg.discardLabel : i18n.t('showcase.discard'))
+  const headerMarkup = $derived(pg.header.value || canonicalHeader)
+  const headerContent = $derived(parseHeaderMarkup(pg.header.value) ?? { text: demoTitle, inner: demoTitle })
+  const demoCloseLabel = $derived(applied(pg.closeLabel) || i18n.t('common.close'))
+  const demoSaveLabel = $derived(applied(pg.saveLabel) || i18n.t('common.ok'))
+  const demoResetLabel = $derived(applied(pg.resetLabel) || i18n.t('common.reset'))
+  const demoDiscardTitle = $derived(applied(pg.discardTitle) || i18n.t('showcase.discardTitle'))
+  const demoDiscardMessage = $derived(applied(pg.discardMessage) || i18n.t('showcase.discardMessage'))
+  const demoDiscardLabel = $derived(applied(pg.discardLabel) || i18n.t('showcase.discard'))
   const demoBodyLabel = $derived(i18n.t('showcase.dialogTitle'))
   // Custom markup renders as committed; unset, the canonical TextInput binds
   // the draft with the dialog title as its name. Stored drafts are always
   // valid, so the fallback only covers the empty state.
   const demoBodyChildren = $derived<EditBodySegment[]>(
-    parseEditBodySegments(pg.children || buildEditBodyMarkup({ type: '', label: '' })) ?? [
+    parseEditBodySegments(pg.children.value || buildEditBodyMarkup({ type: '', label: '' })) ?? [
       { kind: 'textinput', type: 'text', ariaLabel: { kind: 'scope' } },
     ],
   )
   // Committed actions markup is always valid, so the label resolves; the
   // fallback only covers direct calls with unvalidated text.
   const demoActionsLabel = $derived(
-    parseEditActionsLabel(pg.actions || buildEditActionsMarkup({ label: '' })) ?? 'Format',
+    parseEditActionsLabel(pg.actions.value || buildEditActionsMarkup({ label: '' })) ?? 'Format',
   )
   // The footer row replaces the built-in save/reset row with the caller's own
   // action row; the committed line carries the label only.
-  const demoFooterLabel = $derived(pg.footerOn ? (parseEditFooterLabel(pg.footer) ?? 'Save') : null)
+  const demoFooterLabel = $derived(pg.footer.on ? (parseEditFooterLabel(pg.footer.value) ?? 'Save') : null)
   const demoDraftValid = $derived.by(() => {
     try {
       JSON.parse(pg.draft)
@@ -152,7 +130,7 @@
   }
   // The children row edits the form body (demo data, so it has no single
   // prop). Committing the canonical TextInput resets to unset.
-  const bodySnippet = $derived(pg.children || buildEditBodyMarkup({ type: '', label: '' }))
+  const bodySnippet = $derived(pg.children.value || buildEditBodyMarkup({ type: '', label: '' }))
 
   const widthVariantOptions = [...DIALOG_SIZE_VARIANTS, 'fit', 'wide'].map(value => ({ value, label: value }))
   const heightVariantOptions = ['auto', ...DIALOG_SIZE_VARIANTS].map(value => ({ value, label: value }))
@@ -170,41 +148,23 @@
   const code = $derived.by(() =>
     buildFormDialogSnippet({
       widthVariant: pg.widthVariant,
-      widthVariantOn: pg.widthVariantOn,
       heightVariant: pg.heightVariant,
-      heightVariantOn: pg.heightVariantOn,
       size: pg.size,
-      sizeOn: pg.sizeOn,
       dirty: pg.dirty,
-      dirtyOn: pg.dirtyOn,
       confirmOnDismiss: pg.confirmOnDismiss,
-      confirmOnDismissOn: pg.confirmOnDismissOn,
       pending: pg.pending,
-      pendingOn: pg.pendingOn,
       saveDisabled: pg.saveDisabled,
-      saveDisabledOn: pg.saveDisabledOn,
       children: pg.children,
-      childrenEnabled: pg.childrenOn,
       actions: pg.actions,
-      actionsEnabled: pg.actionsOn,
       footer: pg.footer,
-      footerEnabled: pg.footerOn,
       closeLabel: pg.closeLabel,
-      closeLabelOn: pg.closeLabelOn,
       discardLabel: pg.discardLabel,
-      discardLabelOn: pg.discardLabelOn,
       discardMessage: pg.discardMessage,
-      discardMessageOn: pg.discardMessageOn,
       discardTitle: pg.discardTitle,
-      discardTitleOn: pg.discardTitleOn,
       resetLabel: pg.resetLabel,
-      resetLabelOn: pg.resetLabelOn,
       saveLabel: pg.saveLabel,
-      saveLabelOn: pg.saveLabelOn,
       title: pg.title,
-      titleOn: pg.titleOn,
       header: pg.header,
-      headerOn: pg.headerOn,
     }),
   )
 
@@ -217,34 +177,32 @@
     snippetField({
       name: 'actions',
       note: 'Extra footer buttons before OK; one outline Button line, committing applies it.',
-      value: pg.actions || buildEditActionsMarkup({ label: '' }),
+      value: pg.actions.value || buildEditActionsMarkup({ label: '' }),
       onChange: (draft: string) => {
         if (!parseEditActionsMarkup(draft)) return
         const normalized = normalizeEditActionsDraft(draft)
-        pg.actions = normalized === buildEditActionsMarkup({ label: '' }) ? '' : normalized
-        pg.actionsOn = true
+        stage(pg.actions, normalized === buildEditActionsMarkup({ label: '' }) ? '' : normalized)
       },
       dialog: snippetDialog(
         parseEditActionsMarkup,
         'Use a single <Button variant="outline" type="button">Label</Button> line.',
       ),
-      toggle: snippetToggle(pg.actionsOn, enabled => (pg.actionsOn = enabled)),
+      toggle: eyeToggle(pg.actions),
     }),
     snippetField({
       name: 'footer',
       note: 'Replaces the built-in save/reset row; one submit Button line, committing applies it.',
-      value: pg.footer || buildEditFooterMarkup({ label: '' }),
+      value: pg.footer.value || buildEditFooterMarkup({ label: '' }),
       onChange: (draft: string) => {
         if (!parseEditFooterMarkup(draft)) return
         const normalized = normalizeEditActionsDraft(draft)
-        pg.footer = normalized === buildEditFooterMarkup({ label: '' }) ? '' : normalized
-        pg.footerOn = true
+        stage(pg.footer, normalized === buildEditFooterMarkup({ label: '' }) ? '' : normalized)
       },
       dialog: snippetDialog(
         parseEditFooterMarkup,
         'Use a single <Button variant="primary" type="submit">Label</Button> line.',
       ),
-      toggle: snippetToggle(pg.footerOn, enabled => (pg.footerOn = enabled)),
+      toggle: eyeToggle(pg.footer),
     }),
     snippetField({
       name: 'children',
@@ -253,21 +211,20 @@
       onChange: (draft: string) => {
         if (!parseEditBodyMarkup(draft)) return
         const normalized = normalizeEditBodyDraft(draft)
-        pg.children = normalized === buildEditBodyMarkup({ type: '', label: '' }) ? '' : normalized
-        pg.childrenOn = true
+        stage(pg.children, normalized === buildEditBodyMarkup({ type: '', label: '' }) ? '' : normalized)
       },
       dialog: snippetDialog(
         parseEditBodyMarkup,
         'Use <TextInput bind:value={draft} … /> lines and well-formed HTML elements only — no {…} expressions, components, or event handlers.',
       ),
-      toggle: snippetToggle(pg.childrenOn, enabled => (pg.childrenOn = enabled)),
+      toggle: eyeToggle(pg.children),
     }),
-    textField({ name: 'closeLabel', type: 'string', defaultValue: '—', note: 'Accessible name for dismissals.', value: pg.closeLabel, onChange: v => (pg.closeLabel = v), clearable: true, enabled: pg.closeLabelOn, setEnabled: v => (pg.closeLabelOn = v) }),
-    boolField({ name: 'confirmOnDismiss', defaultValue: 'false', note: 'Makes the discard confirm’s dismissal perform the discard; off returns to the form.', value: pg.confirmOnDismiss, onChange: v => (pg.confirmOnDismiss = v as TriState), enabled: pg.confirmOnDismissOn, setEnabled: v => (pg.confirmOnDismissOn = v) }),
-    boolField({ name: 'dirty', defaultValue: 'false', note: 'Gates the discard prompt and Reset.', value: pg.dirty, onChange: v => (pg.dirty = v as TriState), enabled: pg.dirtyOn, setEnabled: v => (pg.dirtyOn = v) }),
-    textField({ name: 'discardLabel', type: 'string', defaultValue: '—', note: 'Discard-confirm button text.', value: pg.discardLabel, onChange: v => (pg.discardLabel = v), clearable: true, enabled: pg.discardLabelOn, setEnabled: v => (pg.discardLabelOn = v) }),
-    textField({ name: 'discardMessage', type: 'string', defaultValue: '—', note: 'Discard-confirm body.', value: pg.discardMessage, onChange: v => (pg.discardMessage = v), clearable: true, enabled: pg.discardMessageOn, setEnabled: v => (pg.discardMessageOn = v) }),
-    textField({ name: 'discardTitle', type: 'string', defaultValue: '—', note: 'Discard-confirm title.', value: pg.discardTitle, onChange: v => (pg.discardTitle = v), clearable: true, enabled: pg.discardTitleOn, setEnabled: v => (pg.discardTitleOn = v) }),
+    textField({ name: 'closeLabel', type: 'string', defaultValue: '—', note: 'Accessible name for dismissals.', clearable: true, ...eye(pg.closeLabel) }),
+    boolField({ name: 'confirmOnDismiss', defaultValue: 'false', note: 'Makes the discard confirm’s dismissal perform the discard; off returns to the form.', ...eyeFlag(pg.confirmOnDismiss) }),
+    boolField({ name: 'dirty', defaultValue: 'false', note: 'Gates the discard prompt and Reset.', ...eyeFlag(pg.dirty) }),
+    textField({ name: 'discardLabel', type: 'string', defaultValue: '—', note: 'Discard-confirm button text.', clearable: true, ...eye(pg.discardLabel) }),
+    textField({ name: 'discardMessage', type: 'string', defaultValue: '—', note: 'Discard-confirm body.', clearable: true, ...eye(pg.discardMessage) }),
+    textField({ name: 'discardTitle', type: 'string', defaultValue: '—', note: 'Discard-confirm title.', clearable: true, ...eye(pg.discardTitle) }),
     snippetField({
       name: 'header',
       note: 'Copyable title heading; one Copyable line, committing applies it. The plain title keeps rendering while off.',
@@ -276,23 +233,22 @@
         const parsed = parseHeaderMarkup(draft)
         if (!parsed) return
         const normalized = buildHeaderLine(parsed)
-        pg.header = normalized === canonicalHeader ? '' : normalized
-        pg.headerOn = true
+        stage(pg.header, normalized === canonicalHeader ? '' : normalized)
       },
       dialog: snippetDialog(
         parseHeaderMarkup,
         'Use a single <Copyable text="…"><span>…</span></Copyable> line with non-blank text and label.',
       ),
-      toggle: snippetToggle(pg.headerOn, enabled => (pg.headerOn = enabled)),
+      toggle: eyeToggle(pg.header),
     }),
-    enumField({ name: 'heightVariant', type: "'auto' | 'xs' | … | '7xl'", defaultValue: "'auto'", note: 'Panel height step; auto hugs the content.', options: heightVariantOptions, value: pg.heightVariant, onChange: v => (pg.heightVariant = v), placeholder: 'auto', clearLabel: 'Clear height', enabled: pg.heightVariantOn, setEnabled: v => (pg.heightVariantOn = v) }),
-    boolField({ name: 'pending', defaultValue: 'false', note: 'Disables Save/Reset while an operation runs.', value: pg.pending, onChange: v => (pg.pending = v as TriState), enabled: pg.pendingOn, setEnabled: v => (pg.pendingOn = v) }),
-    textField({ name: 'resetLabel', type: 'string?', defaultValue: '—', note: 'Reset button text; omit it to hide the button.', value: pg.resetLabel, onChange: v => (pg.resetLabel = v), clearable: true, enabled: pg.resetLabelOn, setEnabled: v => (pg.resetLabelOn = v) }),
-    boolField({ name: 'saveDisabled', defaultValue: 'false', note: 'Caller validity rules; ORed with pending.', value: pg.saveDisabled, onChange: v => (pg.saveDisabled = v as TriState), enabled: pg.saveDisabledOn, setEnabled: v => (pg.saveDisabledOn = v) }),
-    textField({ name: 'saveLabel', type: 'string', defaultValue: '—', note: 'Save button text.', value: pg.saveLabel, onChange: v => (pg.saveLabel = v), clearable: true, enabled: pg.saveLabelOn, setEnabled: v => (pg.saveLabelOn = v) }),
-    enumField({ name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | '7xl'", defaultValue: '—', note: 'Shorthand setting both width and height; an explicit variant wins.', options: sizeOptions, value: pg.size, onChange: v => (pg.size = v), clearLabel: 'Clear size', enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
-    textField({ name: 'title', type: 'string?', defaultValue: '—', note: 'Dialog heading.', value: pg.title, onChange: v => (pg.title = v), clearable: true, enabled: pg.titleOn, setEnabled: v => (pg.titleOn = v) }),
-    enumField({ name: 'widthVariant', type: "'xs' | … | '7xl' | 'fit' | 'wide'", defaultValue: "'md'", note: 'Panel width variant.', options: widthVariantOptions, value: pg.widthVariant, onChange: v => (pg.widthVariant = v), placeholder: 'md', clearLabel: 'Clear width', enabled: pg.widthVariantOn, setEnabled: v => (pg.widthVariantOn = v) }),
+    enumField({ name: 'heightVariant', type: "'auto' | 'xs' | … | '7xl'", defaultValue: "'auto'", note: 'Panel height step; auto hugs the content.', options: heightVariantOptions, placeholder: 'auto', clearLabel: 'Clear height', ...eye(pg.heightVariant) }),
+    boolField({ name: 'pending', defaultValue: 'false', note: 'Disables Save/Reset while an operation runs.', ...eyeFlag(pg.pending) }),
+    textField({ name: 'resetLabel', type: 'string?', defaultValue: '—', note: 'Reset button text; omit it to hide the button.', clearable: true, ...eye(pg.resetLabel) }),
+    boolField({ name: 'saveDisabled', defaultValue: 'false', note: 'Caller validity rules; ORed with pending.', ...eyeFlag(pg.saveDisabled) }),
+    textField({ name: 'saveLabel', type: 'string', defaultValue: '—', note: 'Save button text.', clearable: true, ...eye(pg.saveLabel) }),
+    enumField({ name: 'size', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | '7xl'", defaultValue: '—', note: 'Shorthand setting both width and height; an explicit variant wins.', options: sizeOptions, clearLabel: 'Clear size', ...eye(pg.size) }),
+    textField({ name: 'title', type: 'string?', defaultValue: '—', note: 'Dialog heading.', clearable: true, ...eye(pg.title) }),
+    enumField({ name: 'widthVariant', type: "'xs' | … | '7xl' | 'fit' | 'wide'", defaultValue: "'md'", note: 'Panel width variant.', options: widthVariantOptions, placeholder: 'md', clearLabel: 'Clear width', ...eye(pg.widthVariant) }),
     { name: 'onClose', type: '() => void', defaultValue: '—', note: 'Final close (direct when clean, after discard confirm).' },
     { name: 'onReset', type: '() => void', defaultValue: '—', note: 'Reset handler.' },
     { name: 'onSave', type: '() => void', defaultValue: '—', note: 'Save handler.' },
@@ -354,7 +310,7 @@
     {#if pg.open}
       <FormDialog
         title={demoTitle}
-        header={pg.headerOn ? dialogHeader : undefined}
+        header={pg.header.on ? dialogHeader : undefined}
         widthVariant={demoWidthVariant}
         heightVariant={demoHeightVariant}
         size={demoSize}
@@ -368,12 +324,12 @@
         {pending}
         {saveDisabled}
         {confirmOnDismiss}
-        actions={pg.actionsOn ? demoActions : undefined}
-        footer={pg.footerOn ? demoFooter : undefined}
+        actions={pg.actions.on ? demoActions : undefined}
+        footer={pg.footer.on ? demoFooter : undefined}
         onSave={handleSave}
         onReset={() => (pg.draft = pg.saved)}
         onClose={() => (pg.open = false)}
-        children={pg.childrenOn ? dialogChildren : undefined}>
+        children={pg.children.on ? dialogChildren : undefined}>
       </FormDialog>
     {/if}
   </ShowcasePage>

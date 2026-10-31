@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createSnippetComponent } from '$showcase/snippet-playground'
+import { staged } from '$showcase/staged'
 import {
   buildStructureTreeSnippet,
   DEFAULT_TREE_VALUE,
@@ -10,15 +11,11 @@ import {
 
 function state(overrides: Partial<StructureTreeSnippetState> = {}): StructureTreeSnippetState {
   return {
-    value: DEFAULT_TREE_VALUE,
-    editable: '',
-    editableOn: true,
-    containerRowClass: '',
-    containerRowClassOn: false,
-    leafRowClass: '',
-    leafRowClassOn: false,
-    size: 'md',
-    sizeOn: false,
+    value: staged(DEFAULT_TREE_VALUE, true),
+    editable: staged('', true),
+    containerRowClass: staged(''),
+    leafRowClass: staged(''),
+    size: staged('md'),
     ...overrides,
   }
 }
@@ -39,16 +36,16 @@ describe('buildStructureTreeSnippet', () => {
   })
 
   it('emits the editable flag false while No and omits it at the default', () => {
-    expect(buildStructureTreeSnippet(state({ editable: 'no' }))).toContain('editable={false}')
-    expect(buildStructureTreeSnippet(state({ editable: 'yes' }))).not.toMatch(/^\s*editable/m)
+    expect(buildStructureTreeSnippet(state({ editable: staged('no', true) }))).toContain('editable={false}')
+    expect(buildStructureTreeSnippet(state({ editable: staged('yes', true) }))).not.toMatch(/^\s*editable/m)
   })
 
   it('omits the staged editable flag while its eye is off', () => {
-    expect(buildStructureTreeSnippet(state({ editable: 'no', editableOn: false }))).not.toMatch(/^\s*editable/m)
+    expect(buildStructureTreeSnippet(state({ editable: staged('no') }))).not.toMatch(/^\s*editable/m)
   })
 
   it('omits component defaults (the Value column prefills them)', () => {
-    const source = buildStructureTreeSnippet(state({ editable: 'yes' }))
+    const source = buildStructureTreeSnippet(state({ editable: staged('yes', true) }))
     expect(source).not.toMatch(/^\s*editable/m)
   })
 
@@ -61,10 +58,8 @@ describe('buildStructureTreeSnippet', () => {
   it('emits the applied row classes and escapes them', () => {
     const source = buildStructureTreeSnippet(
       state({
-        containerRowClass: 'group flex gap-4',
-        containerRowClassOn: true,
-        leafRowClass: 'group flex gap-"3"&',
-        leafRowClassOn: true,
+        containerRowClass: staged('group flex gap-4', true),
+        leafRowClass: staged('group flex gap-"3"&', true),
       }),
     )
     expect(source).toContain('  containerRowClass="group flex gap-4"')
@@ -72,9 +67,9 @@ describe('buildStructureTreeSnippet', () => {
   })
 
   it('emits a non-default size and omits the md default', () => {
-    expect(buildStructureTreeSnippet(state({ size: 'lg', sizeOn: true }))).toContain('  size="lg"')
-    expect(buildStructureTreeSnippet(state({ size: 'md', sizeOn: true }))).not.toMatch(/^\s*size=/m)
-    expect(buildStructureTreeSnippet(state({ size: 'lg', sizeOn: false }))).not.toMatch(/^\s*size=/m)
+    expect(buildStructureTreeSnippet(state({ size: staged('lg', true) }))).toContain('  size="lg"')
+    expect(buildStructureTreeSnippet(state({ size: staged('md', true) }))).not.toMatch(/^\s*size=/m)
+    expect(buildStructureTreeSnippet(state({ size: staged('lg') }))).not.toMatch(/^\s*size=/m)
   })
 
   it('parses any JSON document as a tree value', () => {

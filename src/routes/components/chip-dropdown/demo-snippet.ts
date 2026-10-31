@@ -5,10 +5,15 @@
 // The resize harness is ShowcasePage-owned chrome (its `stage` prop), so the
 // snippet carries only the demo content the page authors inside that frame.
 
-import { escapeAttr } from '$showcase/snippet-build'
-import { sizeAttributeLine } from '$showcase/size-input'
-
-export type TriState = '' | 'yes' | 'no'
+import {
+  boolAttrLine,
+  enumAttrLine,
+  escapeAttr,
+  sizeAttrLine,
+  textAttrLine,
+  type TriState,
+} from '$showcase/snippet-build'
+import type { Staged } from '$showcase/staged'
 
 export const CHIP_STAGE_DEFAULT_WIDTH = 560
 export const CHIP_STAGE_MIN_WIDTH = 240
@@ -18,126 +23,66 @@ export const CHIP_STAGE_MIN_WIDTH = 240
 export const DEFAULT_CHIP_DROPDOWN_ARIA_LABEL = 'Set status'
 
 export interface ChipDropdownSnippetState {
-  label: string
-  labelOn: boolean
-  ariaLabel: string
-  ariaLabelOn: boolean
+  label: Staged<string>
+  ariaLabel: Staged<string>
   // Committed value, seeded as script-local state so the snippet text tracks
   // activeValue edits instead of hiding the value in scope.
-  value: string
-  valueOn: boolean
-  defaultValue: string
-  defaultValueOn: boolean
-  size: string
-  sizeOn: boolean
-  variant: string
-  variantOn: boolean
-  filterable: TriState
-  filterableOn: boolean
-  disabled: TriState
-  disabledOn: boolean
-  align: string
-  alignOn: boolean
-  filterPlaceholder: string
-  filterPlaceholderOn: boolean
-  filterLabel: string
-  filterLabelOn: boolean
-  buttonClass: string
-  buttonClassOn: boolean
-  emptyText: string
-  emptyTextOn: boolean
-  clearable: TriState
-  clearableOn: boolean
-  clearLabel: string
-  clearLabelOn: boolean
-  autoPlace: TriState
-  autoPlaceOn: boolean
-  panelClass: string
-  panelClassOn: boolean
+  value: Staged<string>
+  defaultValue: Staged<string>
+  size: Staged<string>
+  variant: Staged<string>
+  filterable: Staged<TriState>
+  disabled: Staged<TriState>
+  align: Staged<string>
+  filterPlaceholder: Staged<string>
+  filterLabel: Staged<string>
+  buttonClass: Staged<string>
+  emptyText: Staged<string>
+  clearable: Staged<TriState>
+  clearLabel: Staged<string>
+  autoPlace: Staged<TriState>
+  panelClass: Staged<string>
 }
 
-// A tri-state line: omitted while unset or at the component default, bare
-// while Yes, ={false} while No.
-function flagLine(name: string, value: TriState, indent: string, def: TriState = ''): string[] {
-  if (value === '' || value === def) {
-    return []
-  }
-  return [`${indent}${name}${value === 'yes' ? '' : '={false}'}`]
-}
-
-export function buildChipDropdownSnippet({
-  label,
-  labelOn,
-  ariaLabel,
-  ariaLabelOn,
-  value,
-  valueOn,
-  defaultValue,
-  defaultValueOn,
-  size,
-  sizeOn,
-  variant,
-  variantOn,
-  filterable,
-  filterableOn,
-  disabled,
-  disabledOn,
-  align,
-  alignOn,
-  filterPlaceholder,
-  filterPlaceholderOn,
-  filterLabel,
-  filterLabelOn,
-  buttonClass,
-  buttonClassOn,
-  emptyText,
-  emptyTextOn,
-  clearable,
-  clearableOn,
-  clearLabel,
-  clearLabelOn,
-  autoPlace,
-  autoPlaceOn,
-  panelClass,
-  panelClassOn,
-}: ChipDropdownSnippetState): string {
+export function buildChipDropdownSnippet(state: ChipDropdownSnippetState): string {
+  const { label, ariaLabel, value, defaultValue, size, variant, filterable, disabled, align, filterPlaceholder, filterLabel, buttonClass, emptyText, clearable, clearLabel, autoPlace, panelClass } = state
   // The frame is shell chrome, so the component sits at the snippet root with
   // its attributes one step in; the committed value is script-local state.
   const indent = '  '
   const attributes = [
     // A custom label renders as a literal while its eye is on; otherwise the
     // trigger derives its label from the committed value through the scope helper.
-    ...((labelOn && label)
-      ? [`${indent}label="${escapeAttr(label)}"`]
+    ...(label.on && label.value
+      ? [`${indent}label="${escapeAttr(label.value)}"`]
       : [`${indent}label={labelFor(options, value)}`]),
-    ...(valueOn ? [`${indent}activeValue={value}`] : []),
+    ...(value.on ? [`${indent}activeValue={value}`] : []),
     // Baseline the clear button compares against; the eye stages it.
-    ...(defaultValueOn && defaultValue ? [`${indent}defaultValue="${escapeAttr(defaultValue)}"`] : []),
+    ...textAttrLine('defaultValue', defaultValue, indent),
     // Enum rows prefill their component default in the Value column; the
     // builder omits the default so Show-code stays minimal.
-    ...(sizeOn && size !== '' && size !== 'md' ? sizeAttributeLine(size, indent) : []),
-    `${indent}ariaLabel="${escapeAttr(ariaLabelOn && ariaLabel ? ariaLabel : DEFAULT_CHIP_DROPDOWN_ARIA_LABEL)}"`,
+    ...sizeAttrLine(size, indent),
+    `${indent}ariaLabel="${escapeAttr(ariaLabel.on && ariaLabel.value ? ariaLabel.value : DEFAULT_CHIP_DROPDOWN_ARIA_LABEL)}"`,
     // Enum rows prefill their component default in the Value column; the
     // builder omits the default so Show-code stays minimal.
-    ...(variantOn && variant && variant !== 'violet' ? [`${indent}variant="${variant}"`] : []),
-    ...(filterableOn ? flagLine('filterable', filterable, indent, 'no') : []),
-    ...(disabledOn ? flagLine('disabled', disabled, indent, 'no') : []),
-    ...(alignOn && align && align !== 'left' ? [`${indent}align="${align}"`] : []),
-    ...(filterPlaceholderOn && filterPlaceholder ? [`${indent}filterPlaceholder="${escapeAttr(filterPlaceholder)}"`] : []),
-    ...(filterLabelOn && filterLabel ? [`${indent}filterLabel="${escapeAttr(filterLabel)}"`] : []),
-    ...(buttonClassOn && buttonClass ? [`${indent}buttonClass="${escapeAttr(buttonClass)}"`] : []),
-    ...(emptyTextOn && emptyText ? [`${indent}emptyText="${escapeAttr(emptyText)}"`] : []),
-    ...(clearableOn ? flagLine('clearable', clearable, indent, 'no') : []),
-    ...(clearLabelOn && clearLabel ? [`${indent}clearLabel="${escapeAttr(clearLabel)}"`] : []),
-    ...(autoPlaceOn ? flagLine('autoPlace', autoPlace, indent, 'yes') : []),
-    ...(panelClassOn && panelClass ? [`${indent}panelClass="${escapeAttr(panelClass)}"`] : []),
+    ...enumAttrLine('variant', variant, 'violet', indent),
+    ...boolAttrLine('filterable', filterable, 'no', indent),
+    ...boolAttrLine('disabled', disabled, 'no', indent),
+    ...enumAttrLine('align', align, 'left', indent),
+    ...textAttrLine('filterPlaceholder', filterPlaceholder, indent),
+    ...textAttrLine('filterLabel', filterLabel, indent),
+    ...textAttrLine('buttonClass', buttonClass, indent),
+    ...textAttrLine('emptyText', emptyText, indent),
+    ...boolAttrLine('clearable', clearable, 'no', indent),
+    ...textAttrLine('clearLabel', clearLabel, indent),
+    ...boolAttrLine('autoPlace', autoPlace, 'yes', indent),
+    ...textAttrLine('panelClass', panelClass, indent),
     `${indent}options={options}`,
     `${indent}onSelect={next => (value = next)} />`,
   ]
   return [
     '<script>',
     // JSON.stringify keeps the literal valid no matter what the value holds.
-    `${indent}let value = $state(${JSON.stringify(value)})`,
+    `${indent}let value = $state(${JSON.stringify(value.value)})`,
     '</script>',
     '<ChipDropdown',
     ...attributes,

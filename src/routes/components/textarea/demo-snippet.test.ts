@@ -2,29 +2,21 @@ import { describe, expect, it } from 'vitest'
 import { extractScriptValue } from '$showcase/snippet-attributes'
 import { createSnippetComponent } from '$showcase/snippet-playground'
 import { splitLeadingScript } from '$showcase/snippet-source'
+import { staged } from '$showcase/staged'
 import { buildTextAreaSnippet, type TextAreaSnippetState } from './demo-snippet'
 
 function state(overrides: Partial<TextAreaSnippetState> = {}): TextAreaSnippetState {
   return {
-    ariaLabel: '',
-    ariaLabelOn: true,
-    value: '',
-    placeholder: '',
-    placeholderOn: false,
-    rows: '',
-    rowsOn: true,
-    size: '',
-    sizeOn: false,
-    disabled: '',
-    disabledOn: true,
-    hideOutline: '',
-    hideOutlineOn: true,
-    readonly: '',
-    readonlyOn: true,
-    id: '',
-    idOn: false,
-    inputClass: '',
-    inputClassOn: false,
+    ariaLabel: staged('', true),
+    value: staged(''),
+    placeholder: staged(''),
+    rows: staged('', true),
+    size: staged(''),
+    disabled: staged('', true),
+    hideOutline: staged('', true),
+    readonly: staged('', true),
+    id: staged(''),
+    inputClass: staged(''),
     ...overrides,
   }
 }
@@ -43,7 +35,7 @@ describe('buildTextAreaSnippet', () => {
 
   it('emits placeholder, rows, size, flags, id, and inputClass', () => {
     const source = buildTextAreaSnippet(
-      state({ ariaLabel: 'Notes', ariaLabelOn: true, placeholder: 'Write…', placeholderOn: true, rows: '5', rowsOn: true, size: 'lg', sizeOn: true, disabled: 'yes', disabledOn: true, hideOutline: 'yes', hideOutlineOn: true, readonly: 'yes', readonlyOn: true, id: 'notes', idOn: true, inputClass: 'ml-2', inputClassOn: true }),
+      state({ ariaLabel: staged('Notes', true), placeholder: staged('Write…', true), rows: staged('5', true), size: staged('lg', true), disabled: staged('yes', true), hideOutline: staged('yes', true), readonly: staged('yes', true), id: staged('notes', true), inputClass: staged('ml-2', true) }),
     )
     expect(source).toContain('ariaLabel="Notes"')
     expect(source).toContain('placeholder="Write…"')
@@ -57,7 +49,7 @@ describe('buildTextAreaSnippet', () => {
   })
 
   it('omits component defaults (the Value column prefills them)', () => {
-    const source = buildTextAreaSnippet(state({ rows: '3', rowsOn: true, size: 'md', sizeOn: true, disabled: 'no', disabledOn: true, hideOutline: 'no', hideOutlineOn: true, readonly: 'no', readonlyOn: true }))
+    const source = buildTextAreaSnippet(state({ rows: staged('3', true), size: staged('md', true), disabled: staged('no', true), hideOutline: staged('no', true), readonly: staged('no', true) }))
     expect(source).not.toContain('rows=')
     expect(source).not.toMatch(/^\s*size=/m)
     expect(source).not.toContain('disabled')
@@ -66,17 +58,17 @@ describe('buildTextAreaSnippet', () => {
   })
 
   it('omits non-numeric rows', () => {
-    expect(buildTextAreaSnippet(state({ rows: 'tall' }))).not.toContain('rows=')
+    expect(buildTextAreaSnippet(state({ rows: staged('tall', true) }))).not.toContain('rows=')
   })
 
   it('omits staged label, rows, and flags while their eyes are off and emits them while on', () => {
-    const off = buildTextAreaSnippet(state({ ariaLabel: 'Notes', ariaLabelOn: false, rows: '5', rowsOn: false, disabled: 'yes', disabledOn: false, readonly: 'yes', readonlyOn: false }))
+    const off = buildTextAreaSnippet(state({ ariaLabel: staged('Notes'), rows: staged('5'), disabled: staged('yes'), readonly: staged('yes') }))
     expect(off).toContain('ariaLabel={applyLabel}')
     expect(off).not.toContain('ariaLabel="Notes"')
     expect(off).not.toContain('rows=')
     expect(off).not.toContain('disabled')
     expect(off).not.toContain('readonly')
-    const on = buildTextAreaSnippet(state({ ariaLabel: 'Notes', ariaLabelOn: true, rows: '5', rowsOn: true, disabled: 'yes', disabledOn: true, readonly: 'yes', readonlyOn: true }))
+    const on = buildTextAreaSnippet(state({ ariaLabel: staged('Notes', true), rows: staged('5', true), disabled: staged('yes', true), readonly: staged('yes', true) }))
     expect(on).toContain('ariaLabel="Notes"')
     expect(on).toContain('rows={5}')
     expect(on).toContain('  disabled\n')
@@ -84,30 +76,30 @@ describe('buildTextAreaSnippet', () => {
   })
 
   it('omits staged text attrs while the eye is off and emits them while on', () => {
-    const off = buildTextAreaSnippet(state({ placeholder: 'Write…', id: 'notes', inputClass: 'ml-2' }))
+    const off = buildTextAreaSnippet(state({ placeholder: staged('Write…'), id: staged('notes'), inputClass: staged('ml-2') }))
     expect(off).not.toContain('placeholder=')
     expect(off).not.toContain('id=')
     expect(off).not.toContain('inputClass=')
-    const on = buildTextAreaSnippet(state({ placeholder: 'Write…', placeholderOn: true, id: 'notes', idOn: true, inputClass: 'ml-2', inputClassOn: true }))
+    const on = buildTextAreaSnippet(state({ placeholder: staged('Write…', true), id: staged('notes', true), inputClass: staged('ml-2', true) }))
     expect(on).toContain('placeholder="Write…"')
     expect(on).toContain('id="notes"')
     expect(on).toContain('inputClass="ml-2"')
   })
 
   it('omits the staged size while its eye is off and emits it while on', () => {
-    const off = buildTextAreaSnippet(state({ size: 'lg' }))
+    const off = buildTextAreaSnippet(state({ size: staged('lg') }))
     expect(off).not.toMatch(/^\s*size=/m)
-    const on = buildTextAreaSnippet(state({ size: 'lg', sizeOn: true }))
+    const on = buildTextAreaSnippet(state({ size: staged('lg', true) }))
     expect(on).toContain('size="lg"')
   })
 
   it('round-trips a multiline value through script state', () => {
-    const source = buildTextAreaSnippet(state({ value: 'one\ntwo' }))
+    const source = buildTextAreaSnippet(state({ value: staged('one\ntwo') }))
     expect(extractScriptValue(splitLeadingScript(source).declarations, 'value')).toBe('one\ntwo')
   })
 
   it('escapes markup in the value so it cannot break the snippet', () => {
-    const source = buildTextAreaSnippet(state({ value: '</script><TextArea>' }))
+    const source = buildTextAreaSnippet(state({ value: staged('</script><TextArea>') }))
     expect(source).toContain('let value = $state("\\u003c/script>\\u003cTextArea>")')
     // The escaped literal reads back as the original text.
     expect(extractScriptValue(splitLeadingScript(source).declarations, 'value')).toBe('</script><TextArea>')
@@ -116,7 +108,7 @@ describe('buildTextAreaSnippet', () => {
   it('mounts the generated snippet with a bound textarea', { timeout: 30000 }, async () => {
     const { mount, unmount } = await import('svelte')
     const { flushSync } = await import('svelte')
-    const component = await createSnippetComponent(buildTextAreaSnippet(state({ value: 'one\ntwo' })), {
+    const component = await createSnippetComponent(buildTextAreaSnippet(state({ value: staged('one\ntwo') })), {
       applyLabel: 'Notes',
     })
     const target = document.createElement('div')

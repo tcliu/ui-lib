@@ -14,7 +14,8 @@
 // The frame chrome and sizing on the `Resizable` itself; `w-full` is what the
 // frame's own `maxWidth="parent"` measures against, and `overflow-hidden`
 // contains the demo without a scrollbar over the frame handles.
-import { escapeAttr, escapeRawLine } from '$showcase/snippet-build'
+import { enumAttrLine, escapeRawLine, textAttrLine } from '$showcase/snippet-build'
+import type { Staged } from '$showcase/staged'
 
 export const SHELL_STAGE_FRAME = 'w-full overflow-hidden rounded-lg border border-slate-800'
 export const SHELL_STAGE_DEFAULT_WIDTH = 840
@@ -97,51 +98,35 @@ export interface AppShellClassNamesJson {
 }
 
 export interface AppShellSnippetState {
-  mode: string
-  modeOn: boolean
-  className: string
-  classNameOn: boolean
-  closeLabel: string
-  closeLabelOn: boolean
-  classNames: AppShellClassNamesJson
+  mode: Staged<string>
+  className: Staged<string>
+  closeLabel: Staged<string>
   // The class-name map applies only while its eye toggle is on, mirroring the
   // page (off omits the object prop).
-  classNamesEnabled: boolean
-  left: AppShellPaneJson
-  right: AppShellPaneJson
+  classNames: Staged<AppShellClassNamesJson>
   // The pane configs apply only while their eye toggle is on, mirroring the
   // page (off omits the object prop, so the component default renders).
-  leftEnabled: boolean
-  rightEnabled: boolean
+  left: Staged<AppShellPaneJson>
+  right: Staged<AppShellPaneJson>
   // Raw HTML children markup committed from the Value column's dialog; empty
   // renders the canonical padded <p> with the localized `{bodyText}` default.
-  children: string
-  // The children and footer snippets are applied only while their eye toggle is
-  // on, mirroring the page.
-  childrenEnabled: boolean
-  headerEnabled: boolean
-  leftPane: string
-  // The left pane content applies only while its eye toggle is on, mirroring
-  // the page (off omits the prop).
-  leftPaneEnabled: boolean
-  rightPane: string
-  // The right pane content applies only while its eye toggle is on, mirroring
-  // the page (off omits the snippet, with the right config eye).
-  rightPaneEnabled: boolean
-  // Footer snippet markup (the whole block); `footerEnabled` gates whether it
-  // renders. A snippet prop, so the block lives in the snippet body, outside the
-  // tag attributes the sync scanner reads.
-  footer: string
-  footerEnabled: boolean
+  // Its eye gates whether the snippet is applied at all.
+  children: Staged<string>
+  // The header is fixed documentation markup, so its pair carries only the eye
+  // toggle that applies it.
+  header: Staged<string>
+  // The pane content texts apply only while their eye toggle is on, mirroring
+  // the page (off omits the prop); the texts are preserved while off.
+  leftPane: Staged<string>
+  rightPane: Staged<string>
+  // Footer snippet markup (the whole block); its eye gates whether it renders.
+  // A snippet prop, so the block lives in the snippet body, outside the tag
+  // attributes the sync scanner reads.
+  footer: Staged<string>
 }
 
 // Verbatim footer lines carry the user's labels, so `&` is escaped for
 // compilation (Svelte decodes it back), matching the static demo's literal text.
-
-// A string attribute line, omitted while unset.
-function textLine(name: string, value: string, indent: string): string[] {
-  return value ? [`${indent}${name}="${escapeAttr(value)}"`] : []
-}
 
 // One entry in an object-literal prop; null while unset so the component default
 // applies, exactly as the demo passes `undefined` for an unset field.
@@ -574,26 +559,16 @@ export function normalizeAppShellFooter(draft: string): string {
 
 export function buildAppShellSnippet({
   mode,
-  modeOn,
   className,
-  classNameOn,
   closeLabel,
-  closeLabelOn,
   classNames,
-  classNamesEnabled,
   left,
   right,
-  leftEnabled,
-  rightEnabled,
   children,
-  childrenEnabled,
-  headerEnabled,
+  header,
   leftPane,
-  leftPaneEnabled,
   rightPane,
-  rightPaneEnabled,
   footer,
-  footerEnabled,
 }: AppShellSnippetState): string {
   // The component sits at 2 spaces inside the frame; its attributes at 4.
   const componentIndent = '  '
@@ -604,29 +579,29 @@ export function buildAppShellSnippet({
     '</script>',
     ...shellStageOpenLines(''),
     `${componentIndent}<AppShell`,
-    ...(classNameOn && className ? textLine('className', className, attributeIndent) : []),
+    ...textAttrLine('className', className, attributeIndent),
     // The mode Value prefills the component default; the builder omits it so
     // Show-code stays minimal.
-    ...(modeOn && mode && mode !== 'auto' ? textLine('mode', mode, attributeIndent) : []),
-    ...(closeLabelOn && closeLabel ? textLine('closeLabel', closeLabel, attributeIndent) : []),
-    ...(classNamesEnabled
+    ...enumAttrLine('mode', mode, 'auto', attributeIndent),
+    ...textAttrLine('closeLabel', closeLabel, attributeIndent),
+    ...(classNames.on
       ? objectAttr(
           'classNames',
           [
-            stringEntry('header', classNames.header),
-            stringEntry('footer', classNames.footer),
-            stringEntry('pane', classNames.pane),
-            stringEntry('rightPane', classNames.rightPane),
-            stringEntry('main', classNames.main),
-            stringEntry('splitter', classNames.splitter),
+            stringEntry('header', classNames.value.header),
+            stringEntry('footer', classNames.value.footer),
+            stringEntry('pane', classNames.value.pane),
+            stringEntry('rightPane', classNames.value.rightPane),
+            stringEntry('main', classNames.value.main),
+            stringEntry('splitter', classNames.value.splitter),
           ],
           attributeIndent,
         )
       : []),
-    ...(leftEnabled ? objectAttr('left', paneEntries(left), attributeIndent) : []),
-    ...(rightEnabled ? objectAttr('right', paneEntries(right), attributeIndent) : []),
+    ...(left.on ? objectAttr('left', paneEntries(left.value), attributeIndent) : []),
+    ...(right.on ? objectAttr('right', paneEntries(right.value), attributeIndent) : []),
     `${componentIndent}>`,
-    ...(headerEnabled
+    ...(header.on
       ? [
           '    {#snippet header(api)}',
           '      {@const toggleLabel = api.open ? hideLabel : showLabel}',
@@ -637,32 +612,36 @@ export function buildAppShellSnippet({
           '    {/snippet}',
         ]
       : []),
-    ...(leftPaneEnabled
+    ...(leftPane.on
       ? [
           '    {#snippet leftPane()}',
           `      <span class="${SHELL_PANE_ITEM}">`,
           '        <MenuIcon className="shrink-0" />',
-          `        <span class="${SHELL_PANE_LABEL}">${textNode(leftPane, 'navLabel')}</span>`,
+          `        <span class="${SHELL_PANE_LABEL}">${textNode(leftPane.value, 'navLabel')}</span>`,
           '      </span>',
           '    {/snippet}',
         ]
       : []),
-    ...(right.open === true && rightEnabled && rightPaneEnabled
+    ...(right.value.open === true && right.on && rightPane.on
       ? [
           '    {#snippet rightPane()}',
-          `      <p class="px-3 py-2 text-sm text-slate-300">${textNode(rightPane, 'bodyText')}</p>`,
+          `      <p class="px-3 py-2 text-sm text-slate-300">${textNode(rightPane.value, 'bodyText')}</p>`,
           '    {/snippet}',
         ]
       : []),
-    ...(footerEnabled
-      ? ['    {#snippet footer()}', ...footer.split('\n').map(line => `      ${escapeRawLine(line)}`), '    {/snippet}']
+    ...(footer.on
+      ? [
+          '    {#snippet footer()}',
+          ...footer.value.split('\n').map(line => `      ${escapeRawLine(line)}`),
+          '    {/snippet}',
+        ]
       : []),
     // Committed children emit their HTML verbatim: the demo renders it through
     // `{@html}`, so entities pass through untouched. Unset renders the canonical
     // padded <p> reading the localized body text from scope.
-    ...(childrenEnabled
-      ? children
-        ? children.split('\n').map(line => `    ${line}`)
+    ...(children.on
+      ? children.value
+        ? children.value.split('\n').map(line => `    ${line}`)
         : [`    <p class="${SHELL_CHILDREN_CLASS}">{bodyText}</p>`]
       : []),
     `${componentIndent}</AppShell>`,

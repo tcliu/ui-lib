@@ -3,23 +3,19 @@
 // this, so the editor always shows the markup behind the demo above. The
 // paging interaction state (total, pageSize, currentPage) reads from scope,
 // so it has no sync write-back on the page.
-import { escapeAttr, escapeText } from '$showcase/snippet-build'
-import { sizeAttributeLine } from '$showcase/size-input'
+import { escapeAttr, escapeText, sizeAttrLine, textAttrLine } from '$showcase/snippet-build'
+import type { Staged } from '$showcase/staged'
 import type { PaginationLabels } from '$lib/components/pagination-labels'
 
 export interface PaginationSnippetState {
-  size: string
-  sizeOn: boolean
-  labels: PaginationLabels
+  size: Staged<string>
   // The labels map applies only while its eye toggle is on, mirroring the
   // page (off omits the object prop, so each field falls back to i18n).
-  labelsEnabled: boolean
+  labels: Staged<PaginationLabels>
   // The page-size choices read from scope; the eye omits the prop while off.
-  pageSizeOptions: number[]
-  pageSizeOptionsEnabled: boolean
-  className: string
-  classNameOn: boolean
-  trailing: string
+  pageSizeOptions: Staged<number[]>
+  className: Staged<string>
+  trailing: Staged<string>
 }
 
 export const STYLED_CLASS = 'rounded-lg border border-cyan-500/40 p-2'
@@ -101,16 +97,13 @@ export function parseLabelsJson(text: string): PaginationLabels | null {
 
 // Element text for the trailing span below.
 
-// A string attribute line, omitted while unset.
-function attrLine(name: string, value: string): string[] {
-  return value ? [`  ${name}="${escapeAttr(value)}"`] : []
-}
-
-// The labels object literal, omitting unset fields; absent while no override
-// is set, so the cleared form applies nothing.
-function labelsLine(labels: PaginationLabels): string[] {
-  const entries = LABEL_FIELDS.filter(field => labels[field]).map(
-    field => `${field}: "${escapeAttr(labels[field] as string)}"`,
+// The labels object literal, omitting unset fields (an applied empty label
+// stays, matching the demo); absent while its eye is off or no override is set,
+// so the cleared form applies nothing.
+function labelsLine(pair: Staged<PaginationLabels>): string[] {
+  if (!pair.on) return []
+  const entries = LABEL_FIELDS.filter(field => pair.value[field] !== undefined).map(
+    field => `${field}: "${escapeAttr(pair.value[field] as string)}"`,
   )
   return entries.length ? [`  labels={{ ${entries.join(', ')} }}`] : []
 }
@@ -118,11 +111,11 @@ function labelsLine(labels: PaginationLabels): string[] {
 // The page-size options attribute, reading the playground scope value; omitted
 // while the eye is off or the demo holds the defaults, so the cleared form
 // applies nothing.
-function pageSizeOptionsLine(pageSizeOptions: number[], enabled: boolean): string[] {
-  if (!enabled) return []
+function pageSizeOptionsLine(pair: Staged<number[]>): string[] {
+  if (!pair.on) return []
   if (
-    pageSizeOptions.length === DEFAULT_PAGE_SIZE_OPTIONS.length &&
-    pageSizeOptions.every((entry, index) => entry === DEFAULT_PAGE_SIZE_OPTIONS[index])
+    pair.value.length === DEFAULT_PAGE_SIZE_OPTIONS.length &&
+    pair.value.every((entry, index) => entry === DEFAULT_PAGE_SIZE_OPTIONS[index])
   ) {
     return []
   }
@@ -131,34 +124,30 @@ function pageSizeOptionsLine(pageSizeOptions: number[], enabled: boolean): strin
 
 export function buildPaginationSnippet({
   size,
-  sizeOn,
   labels,
-  labelsEnabled,
   pageSizeOptions,
-  pageSizeOptionsEnabled,
   className,
-  classNameOn,
   trailing,
 }: PaginationSnippetState): string {
-  const hasTrailing = trailing !== ''
+  const hasTrailing = trailing.on && trailing.value !== ''
   const lines = [
     '<Pagination',
     '  total={total}',
     '  pageSize={pageSize}',
     '  currentPage={currentPage}',
-    ...pageSizeOptionsLine(pageSizeOptions, pageSizeOptionsEnabled),
+    ...pageSizeOptionsLine(pageSizeOptions),
     // The size prefills its component default in the Value column; the
     // builder omits the default so Show-code stays minimal.
-    ...(sizeOn && size !== '' && size !== 'md' ? sizeAttributeLine(size) : []),
-    ...(labelsEnabled ? labelsLine(labels) : []),
-    ...(classNameOn ? attrLine('className', className) : []),
+    ...sizeAttrLine(size),
+    ...labelsLine(labels),
+    ...textAttrLine('className', className),
     ...(hasTrailing ? ['  trailing={trailing}'] : []),
     '  onPageChange={page => (currentPage = page)}',
     ...(hasTrailing
       ? [
           '  onPageSizeChange={handlePageSizeChange}>',
           '  {#snippet trailing()}',
-          `    <span>${escapeText(trailing)}</span>`,
+          `    <span>${escapeText(trailing.value)}</span>`,
           '  {/snippet}',
           '</Pagination>',
         ]

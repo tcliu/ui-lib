@@ -1,19 +1,19 @@
 <script lang="ts">
-  import { flagOn } from '$showcase/snippet-build'
   import ChipDropdown from '$lib/components/ChipDropdown.svelte'
   import { type SelectOption } from '$lib/components/SelectDropdown.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$showcase/ShowcasePage.svelte'
   import { parseOptionArrayJson } from '$showcase/option-json'
   import { parseSizeValue } from '$showcase/size-input'
-  import { enumField, textField, boolField, sizeField, jsonField, resetToggle, snippetToggle } from '$showcase/snippet-field'
+  import { enumField, textField, boolField, sizeField, jsonField } from '$showcase/snippet-field'
+  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/staged'
   import { type SyncableFieldConfig } from '$showcase/snippet-sync'
+  import { type TriState } from '$showcase/snippet-build'
   import {
     buildChipDropdownSnippet,
     CHIP_STAGE_DEFAULT_WIDTH,
     CHIP_STAGE_MIN_WIDTH,
     DEFAULT_CHIP_DROPDOWN_ARIA_LABEL,
-    type TriState,
   } from './demo-snippet'
 
   const i18n = getI18nContext()
@@ -31,42 +31,24 @@
   // the demo's accessible name. Options are committed state edited
   // through the JSON dialog below.
   const INITIAL = {
-    options: DEFAULT_OPTIONS,
-    optionsEnabled: true,
-    value: 'active',
-    valueOn: true,
-    defaultValue: '',
-    defaultValueOn: false,
-    label: '',
-    labelOn: false,
-    ariaLabel: DEFAULT_CHIP_DROPDOWN_ARIA_LABEL,
-    ariaLabelOn: true,
-    variant: 'violet',
-    variantOn: false,
-    filterable: 'no' as TriState,
-    filterableOn: false,
-    disabled: 'no' as TriState,
-    disabledOn: false,
-    align: 'left',
-    alignOn: false,
-    filterPlaceholder: 'Search...',
-    filterPlaceholderOn: false,
-    filterLabel: 'Search',
-    filterLabelOn: false,
-    buttonClass: '',
-    buttonClassOn: false,
-    emptyText: 'No options',
-    emptyTextOn: false,
-    clearable: 'no' as TriState,
-    clearableOn: false,
-    clearLabel: 'Clear selection',
-    clearLabelOn: false,
-    autoPlace: 'yes' as TriState,
-    autoPlaceOn: false,
-    panelClass: '',
-    panelClassOn: false,
-    size: 'md',
-    sizeOn: false,
+    options: staged(DEFAULT_OPTIONS, true),
+    value: staged('active', true),
+    defaultValue: staged(''),
+    label: staged(''),
+    ariaLabel: staged(DEFAULT_CHIP_DROPDOWN_ARIA_LABEL, true),
+    variant: staged('violet'),
+    filterable: staged('no' as TriState),
+    disabled: staged('no' as TriState),
+    align: staged('left'),
+    filterPlaceholder: staged('Search...'),
+    filterLabel: staged('Search'),
+    buttonClass: staged(''),
+    emptyText: staged('No options'),
+    clearable: staged('no' as TriState),
+    clearLabel: staged('Clear selection'),
+    autoPlace: staged('yes' as TriState),
+    panelClass: staged(''),
+    size: staged('md'),
     stageWidth: CHIP_STAGE_DEFAULT_WIDTH,
   }
   let pg = $state(structuredClone(INITIAL))
@@ -86,23 +68,24 @@
   }
 
   const demoVariant = $derived(
-    pg.variantOn
-      ? ((pg.variant || undefined) as 'sky' | 'violet' | 'amber' | 'fuchsia' | 'emerald' | undefined)
-      : undefined,
+    (applied(pg.variant) || undefined) as 'sky' | 'violet' | 'amber' | 'fuchsia' | 'emerald' | undefined,
   )
-  const filterable = $derived(pg.filterableOn ? flagOn(pg.filterable) : undefined)
-  const disabled = $derived(pg.disabledOn ? flagOn(pg.disabled) : undefined)
-  const clearable = $derived(pg.clearableOn ? flagOn(pg.clearable) : undefined)
-  const demoClearLabel = $derived(pg.clearLabelOn && pg.clearLabel ? pg.clearLabel : undefined)
-  const demoDefaultValue = $derived(pg.defaultValueOn && pg.defaultValue ? pg.defaultValue : undefined)
-  const autoPlace = $derived(pg.autoPlaceOn ? flagOn(pg.autoPlace) : undefined)
-  const demoAlign = $derived(pg.alignOn ? ((pg.align || undefined) as 'left' | 'right' | undefined) : undefined)
-  const demoButtonClass = $derived(pg.buttonClassOn && pg.buttonClass ? pg.buttonClass : undefined)
-  const demoFilterPlaceholder = $derived(pg.filterPlaceholderOn && pg.filterPlaceholder ? pg.filterPlaceholder : undefined)
-  const demoFilterLabel = $derived(pg.filterLabelOn && pg.filterLabel ? pg.filterLabel : undefined)
-  const demoEmptyText = $derived(pg.emptyTextOn && pg.emptyText ? pg.emptyText : undefined)
-  const demoPanelClass = $derived(pg.panelClassOn && pg.panelClass ? pg.panelClass : undefined)
-  const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
+  const filterable = $derived(appliedFlag(pg.filterable))
+  const disabled = $derived(appliedFlag(pg.disabled))
+  const clearable = $derived(appliedFlag(pg.clearable))
+  const demoClearLabel = $derived(applied(pg.clearLabel) || undefined)
+  const demoDefaultValue = $derived(applied(pg.defaultValue) || undefined)
+  const autoPlace = $derived(appliedFlag(pg.autoPlace))
+  const demoAlign = $derived((applied(pg.align) || undefined) as 'left' | 'right' | undefined)
+  const demoButtonClass = $derived(applied(pg.buttonClass) || undefined)
+  const demoFilterPlaceholder = $derived(applied(pg.filterPlaceholder) || undefined)
+  const demoFilterLabel = $derived(applied(pg.filterLabel) || undefined)
+  const demoEmptyText = $derived(applied(pg.emptyText) || undefined)
+  const demoPanelClass = $derived(applied(pg.panelClass) || undefined)
+  const demoSize = $derived.by(() => {
+    const value = applied(pg.size)
+    return value === undefined ? undefined : parseSizeValue(value)
+  })
 
   const variantOptions = ['sky', 'violet', 'amber', 'fuchsia', 'emerald'].map(value => ({ value, label: value }))
   const alignOptions = [
@@ -119,80 +102,58 @@
   const code = $derived.by(() =>
     buildChipDropdownSnippet({
       label: pg.label,
-      labelOn: pg.labelOn,
       ariaLabel: pg.ariaLabel,
-      ariaLabelOn: pg.ariaLabelOn,
       value: pg.value,
-      valueOn: pg.valueOn,
       defaultValue: pg.defaultValue,
-      defaultValueOn: pg.defaultValueOn,
       size: pg.size,
-      sizeOn: pg.sizeOn,
       variant: pg.variant,
-      variantOn: pg.variantOn,
       filterable: pg.filterable,
-      filterableOn: pg.filterableOn,
       disabled: pg.disabled,
-      disabledOn: pg.disabledOn,
       align: pg.align,
-      alignOn: pg.alignOn,
       filterPlaceholder: pg.filterPlaceholder,
-      filterPlaceholderOn: pg.filterPlaceholderOn,
       filterLabel: pg.filterLabel,
-      filterLabelOn: pg.filterLabelOn,
       buttonClass: pg.buttonClass,
-      buttonClassOn: pg.buttonClassOn,
       emptyText: pg.emptyText,
-      emptyTextOn: pg.emptyTextOn,
       clearable: pg.clearable,
-      clearableOn: pg.clearableOn,
       clearLabel: pg.clearLabel,
-      clearLabelOn: pg.clearLabelOn,
       autoPlace: pg.autoPlace,
-      autoPlaceOn: pg.autoPlaceOn,
       panelClass: pg.panelClass,
-      panelClassOn: pg.panelClassOn,
     }),
   )
 
   
   const fields: SyncableFieldConfig[] = $derived([
-    { name: 'activeValue', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Committed option value (not its label); marked in the panel.', editor: 'text', clearable: true, value: pg.value, onChange: value => { pg.value = value; pg.valueOn = true; }, toggle: snippetToggle(pg.valueOn, enabled => (pg.valueOn = enabled)), sync: { kind: 'script', attr: 'value', literalAttr: 'activeValue' } },
-    enumField({ name: 'align', type: "'left' | 'right'", defaultValue: "'left'", note: 'Panel edge anchored to the trigger.', options: alignOptions, value: pg.align, onChange: v => (pg.align = v), placeholder: 'left', clearLabel: 'Clear align', enabled: pg.alignOn, setEnabled: v => (pg.alignOn = v) }),
-    textField({ name: 'ariaLabel', type: 'string', defaultValue: '—', note: 'Accessible name for the trigger.', value: pg.ariaLabel, onChange: v => (pg.ariaLabel = v), clearable: true, enabled: pg.ariaLabelOn, setEnabled: v => (pg.ariaLabelOn = v) }),
-    boolField({ name: 'autoPlace', defaultValue: 'true', note: 'Flips the panel when crowded.', value: pg.autoPlace, onChange: v => (pg.autoPlace = v as TriState), enabled: pg.autoPlaceOn, setEnabled: v => (pg.autoPlaceOn = v) }),
-    textField({ name: 'buttonClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the trigger chip classes.', value: pg.buttonClass, onChange: v => (pg.buttonClass = v), clearable: true, enabled: pg.buttonClassOn, setEnabled: v => (pg.buttonClassOn = v) }),
-    textField({ name: 'clearLabel', type: 'string?', defaultValue: "'Clear selection'", note: 'Accessible name for the clear button.', value: pg.clearLabel, onChange: v => (pg.clearLabel = v), editorDefaultValue: 'Clear selection', clearable: true, placeholder: 'Clear selection', enabled: pg.clearLabelOn, setEnabled: v => (pg.clearLabelOn = v) }),
-    boolField({ name: 'clearable', defaultValue: 'false', note: 'Appends a cross button that selects the default value.', value: pg.clearable, onChange: v => (pg.clearable = v as TriState), enabled: pg.clearableOn, setEnabled: v => (pg.clearableOn = v) }),
-    textField({ name: 'defaultValue', type: 'string?', defaultValue: "''", note: 'Baseline the clear button compares against: the option value (not its label); the cross hides while the committed value matches it.', value: pg.defaultValue, onChange: v => (pg.defaultValue = v), editorDefaultValue: '', clearable: true, enabled: pg.defaultValueOn, setEnabled: v => (pg.defaultValueOn = v) }),
-    boolField({ name: 'disabled', defaultValue: 'false', note: 'Disables the trigger.', value: pg.disabled, onChange: v => (pg.disabled = v as TriState), enabled: pg.disabledOn, setEnabled: v => (pg.disabledOn = v) }),
-    textField({ name: 'emptyText', type: 'string?', defaultValue: '—', note: 'Shown when the filtered panel is empty; falls back to the localized label.', value: pg.emptyText, onChange: v => (pg.emptyText = v), clearable: true, enabled: pg.emptyTextOn, setEnabled: v => (pg.emptyTextOn = v) }),
-    textField({ name: 'filterPlaceholder', type: 'string?', defaultValue: '—', note: 'Search input placeholder; falls back to the localized label.', value: pg.filterPlaceholder, onChange: v => (pg.filterPlaceholder = v), clearable: true, enabled: pg.filterPlaceholderOn, setEnabled: v => (pg.filterPlaceholderOn = v) }),
-    textField({ name: 'filterLabel', type: 'string?', defaultValue: '—', note: 'Accessible name for the search input; falls back to the shared Search label.', value: pg.filterLabel, onChange: v => (pg.filterLabel = v), clearable: true, enabled: pg.filterLabelOn, setEnabled: v => (pg.filterLabelOn = v) }),
-    boolField({ name: 'filterable', defaultValue: 'false', note: 'Adds a search field to the panel.', value: pg.filterable, onChange: v => (pg.filterable = v as TriState), enabled: pg.filterableOn, setEnabled: v => (pg.filterableOn = v) }),
-    textField({ name: 'label', type: 'string', defaultValue: '—', note: 'Trigger chip text; usually the selected label.', value: pg.label, onChange: v => (pg.label = v), clearable: true, enabled: pg.labelOn, setEnabled: v => (pg.labelOn = v) }),
+    { name: 'activeValue', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Committed option value (not its label); marked in the panel.', editor: 'text', clearable: true, ...eye(pg.value), onChange: value => stage(pg.value, value), toggle: eyeToggle(pg.value), sync: { kind: 'script', attr: 'value', literalAttr: 'activeValue' } },
+    enumField({ name: 'align', type: "'left' | 'right'", defaultValue: "'left'", note: 'Panel edge anchored to the trigger.', options: alignOptions, placeholder: 'left', clearLabel: 'Clear align', ...eye(pg.align) }),
+    textField({ name: 'ariaLabel', type: 'string', defaultValue: '—', note: 'Accessible name for the trigger.', clearable: true, ...eye(pg.ariaLabel) }),
+    boolField({ name: 'autoPlace', defaultValue: 'true', note: 'Flips the panel when crowded.', ...eyeFlag(pg.autoPlace) }),
+    textField({ name: 'buttonClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the trigger chip classes.', clearable: true, ...eye(pg.buttonClass) }),
+    textField({ name: 'clearLabel', type: 'string?', defaultValue: "'Clear selection'", note: 'Accessible name for the clear button.', editorDefaultValue: 'Clear selection', clearable: true, placeholder: 'Clear selection', ...eye(pg.clearLabel) }),
+    boolField({ name: 'clearable', defaultValue: 'false', note: 'Appends a cross button that selects the default value.', ...eyeFlag(pg.clearable) }),
+    textField({ name: 'defaultValue', type: 'string?', defaultValue: "''", note: 'Baseline the clear button compares against: the option value (not its label); the cross hides while the committed value matches it.', editorDefaultValue: '', clearable: true, ...eye(pg.defaultValue) }),
+    boolField({ name: 'disabled', defaultValue: 'false', note: 'Disables the trigger.', ...eyeFlag(pg.disabled) }),
+    textField({ name: 'emptyText', type: 'string?', defaultValue: '—', note: 'Shown when the filtered panel is empty; falls back to the localized label.', clearable: true, ...eye(pg.emptyText) }),
+    textField({ name: 'filterPlaceholder', type: 'string?', defaultValue: '—', note: 'Search input placeholder; falls back to the localized label.', clearable: true, ...eye(pg.filterPlaceholder) }),
+    textField({ name: 'filterLabel', type: 'string?', defaultValue: '—', note: 'Accessible name for the search input; falls back to the shared Search label.', clearable: true, ...eye(pg.filterLabel) }),
+    boolField({ name: 'filterable', defaultValue: 'false', note: 'Adds a search field to the panel.', ...eyeFlag(pg.filterable) }),
+    textField({ name: 'label', type: 'string', defaultValue: '—', note: 'Trigger chip text; usually the selected label.', clearable: true, ...eye(pg.label) }),
     jsonField({
       name: 'options',
       type: '(string | { value: string; label?: string })[]',
       note: "Selectable chips; a bare string (or a missing label) displays as its own value. The eye resets to the default chips.",
-      value: JSON.stringify(pg.options, null, 2),
+      value: JSON.stringify(pg.options.value, null, 2),
       onChange: (draft: string) => {
         const parsed = parseOptionArrayJson(draft)
         if (parsed) {
-          pg.options = parsed
-          pg.optionsEnabled = true
+          stage(pg.options, parsed)
         }
       },
       dialog: { valid: (draft: string) => parseOptionArrayJson(draft) != null, invalidMessage: 'Invalid options JSON. Use an array of strings or { value, label? } objects.' },
-      toggle: resetToggle(
-        pg.optionsEnabled,
-        enabled => (pg.optionsEnabled = enabled),
-        () => (pg.options = DEFAULT_OPTIONS),
-      ),
+      toggle: eyeResetToggle(pg.options, () => (pg.options.value = DEFAULT_OPTIONS)),
     }),
-    textField({ name: 'panelClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the floating panel classes.', value: pg.panelClass, onChange: v => (pg.panelClass = v), clearable: true, enabled: pg.panelClassOn, setEnabled: v => (pg.panelClassOn = v) }),
-    sizeField({ note: 'Chip scale; numbers are icon-scale pixels interpolated between the steps.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
-    enumField({ name: 'variant', type: "'sky' | 'violet' | 'amber' | 'fuchsia' | 'emerald'", defaultValue: "'violet'", note: 'Chip color scheme.', options: variantOptions, value: pg.variant, onChange: v => (pg.variant = v), placeholder: 'violet', clearLabel: 'Clear variant', enabled: pg.variantOn, setEnabled: v => (pg.variantOn = v) }),
+    textField({ name: 'panelClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the floating panel classes.', clearable: true, ...eye(pg.panelClass) }),
+    sizeField({ note: 'Chip scale; numbers are icon-scale pixels interpolated between the steps.', ...eye(pg.size) }),
+    enumField({ name: 'variant', type: "'sky' | 'violet' | 'amber' | 'fuchsia' | 'emerald'", defaultValue: "'violet'", note: 'Chip color scheme.', options: variantOptions, placeholder: 'violet', clearLabel: 'Clear variant', ...eye(pg.variant) }),
     {
       name: 'onClear',
       type: '() => void',
@@ -215,18 +176,18 @@
     title="ChipDropdown"
     {code}
     onReset={clearPlayground}
-    scope={{ options: pg.options, labelFor }}
+    scope={{ options: pg.options.value, labelFor }}
     stage={{ minWidth: CHIP_STAGE_MIN_WIDTH }}
     bind:stageWidth={pg.stageWidth}
 
     sync={{ tag: 'ChipDropdown' }}
-    scopeRefresh={() => [pg.options]}
+    scopeRefresh={() => [pg.options.value]}
   >
     <ChipDropdown
-      label={pg.labelOn && pg.label ? pg.label : labelFor(pg.options, pg.value)}
-      activeValue={pg.valueOn && pg.value ? pg.value : undefined}
+      label={applied(pg.label) || labelFor(pg.options.value, pg.value.value)}
+      activeValue={applied(pg.value) || undefined}
       defaultValue={demoDefaultValue}
-      ariaLabel={pg.ariaLabelOn && pg.ariaLabel ? pg.ariaLabel : DEFAULT_CHIP_DROPDOWN_ARIA_LABEL}
+      ariaLabel={applied(pg.ariaLabel) || DEFAULT_CHIP_DROPDOWN_ARIA_LABEL}
       variant={demoVariant}
       size={demoSize}
       {filterable}
@@ -240,7 +201,7 @@
       emptyText={demoEmptyText}
       {autoPlace}
       panelClass={demoPanelClass}
-      options={pg.options}
-      onSelect={next => (pg.value = next)} />
-    <span class="text-sm text-slate-400">value: {pg.value}</span>
+      options={pg.options.value}
+      onSelect={next => (pg.value.value = next)} />
+    <span class="text-sm text-slate-400">value: {pg.value.value}</span>
   </ShowcasePage>

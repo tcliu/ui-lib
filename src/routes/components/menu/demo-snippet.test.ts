@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createSnippetComponent } from '$showcase/snippet-playground'
+import { staged } from '$showcase/staged'
 import {
   buildMenuSnippet,
   buildMenuIconMarkup,
@@ -14,39 +15,28 @@ import {
 
 function state(overrides: Partial<MenuSnippetState> = {}): MenuSnippetState {
   return {
-    align: '',
-    alignOn: true,
-    triggerLabel: '',
-    triggerLabelOn: true,
-    items: seedMenuItems(),
-    autoPlace: '',
-    autoPlaceOn: true,
-    id: '',
-    idOn: true,
-    triggerTooltip: '',
+    align: staged('', true),
+    triggerLabel: staged('', true),
+    items: staged(seedMenuItems(), true),
+    autoPlace: staged('', true),
+    id: staged('', true),
+    triggerTooltip: staged('', true),
     triggerTooltipAlign: '',
-    triggerTooltipEnabled: true,
-    itemRole: '',
-    itemRoleOn: true,
-    phoneSheetTitle: '',
-    phoneSheetTitleOn: true,
-    closeLabel: '',
-    closeLabelOn: true,
-    triggerClass: '',
-    triggerClassOn: false,
-    panelClass: 'w-44',
-    panelClassOn: true,
-    size: 'md',
-    sizeOn: false,
-    iconClass: '',
-    itemPrefix: '',
+    itemRole: staged('', true),
+    phoneSheetTitle: staged('', true),
+    closeLabel: staged('', true),
+    triggerClass: staged(''),
+    panelClass: staged('w-44', true),
+    size: staged('md'),
+    iconClass: staged(''),
+    itemPrefix: staged(''),
     ...overrides,
   }
 }
 
 describe('buildMenuSnippet', () => {
   it('emits content-only markup and omits unset overrides', () => {
-    const source = buildMenuSnippet(state({ triggerClass: '', panelClass: '' }))
+    const source = buildMenuSnippet(state({ triggerClass: staged(''), panelClass: staged('') }))
     // The resize harness is ShowcasePage-owned chrome, never in the snippet.
     expect(source).not.toContain('<Resizable')
     expect(source).not.toContain('stageWidth')
@@ -67,19 +57,16 @@ describe('buildMenuSnippet', () => {
   it('emits align and chrome overrides when set', () => {
     const source = buildMenuSnippet(
       state({
-        align: 'left',
-        alignOn: true,
-        triggerLabel: 'Options',
-        autoPlace: 'no',
-        id: 'row-actions',
-        triggerTooltip: 'More actions',
+        align: staged('left', true),
+        triggerLabel: staged('Options', true),
+        autoPlace: staged('no', true),
+        id: staged('row-actions', true),
+        triggerTooltip: staged('More actions', true),
         triggerTooltipAlign: 'left',
-        itemRole: 'menuitemradio',
-        itemRoleOn: true,
-        phoneSheetTitle: 'Actions',
-        closeLabel: 'Close',
-        triggerClass: 'text-cyan-300',
-        triggerClassOn: true,
+        itemRole: staged('menuitemradio', true),
+        phoneSheetTitle: staged('Actions', true),
+        closeLabel: staged('Close', true),
+        triggerClass: staged('text-cyan-300', true),
       }),
     )
     expect(source).toContain('align="left"')
@@ -96,16 +83,16 @@ describe('buildMenuSnippet', () => {
   })
 
   it('emits the trigger scale on the shared size axis and omits the default step', () => {
-    expect(buildMenuSnippet(state({ size: 'sm', sizeOn: true }))).toContain('size="sm"')
+    expect(buildMenuSnippet(state({ size: staged('sm', true) }))).toContain('size="sm"')
     // A pixel number renders as an expression.
-    expect(buildMenuSnippet(state({ size: '14', sizeOn: true }))).toContain('size={14}')
+    expect(buildMenuSnippet(state({ size: staged('14', true) }))).toContain('size={14}')
     // The default step and the staged (eye off) value both stay out.
-    expect(buildMenuSnippet(state({ size: 'md', sizeOn: true }))).not.toContain('size=')
-    expect(buildMenuSnippet(state({ size: 'sm', sizeOn: false }))).not.toContain('size=')
+    expect(buildMenuSnippet(state({ size: staged('md', true) }))).not.toContain('size=')
+    expect(buildMenuSnippet(state({ size: staged('sm') }))).not.toContain('size=')
   })
 
   it('omits component defaults (the Value column prefills them)', () => {
-    const source = buildMenuSnippet(state({ align: 'right', alignOn: true, autoPlace: 'yes', itemRole: 'menuitem', itemRoleOn: true }))
+    const source = buildMenuSnippet(state({ align: staged('right', true), autoPlace: staged('yes', true), itemRole: staged('menuitem', true) }))
     expect(source).not.toMatch(/^\s*align=/m)
     expect(source).not.toContain('autoPlace')
     expect(source).not.toContain('itemRole=')
@@ -113,14 +100,14 @@ describe('buildMenuSnippet', () => {
 
   it('omits staged flags while their eyes are off', () => {
     const off = buildMenuSnippet(
-      state({ autoPlace: 'no', autoPlaceOn: false }),
+      state({ autoPlace: staged('no') }),
     )
     expect(off).not.toContain('autoPlace')
   })
 
   it('falls back to the scope label and omits staged sheet text while their eyes are off', () => {
     const off = buildMenuSnippet(
-      state({ triggerLabel: 'Options', triggerLabelOn: false, phoneSheetTitle: 'Actions', phoneSheetTitleOn: false, closeLabel: 'Close', closeLabelOn: false }),
+      state({ triggerLabel: staged('Options'), phoneSheetTitle: staged('Actions'), closeLabel: staged('Close') }),
     )
     expect(off).not.toContain('ariaLabel="Options"')
     expect(off).toContain('ariaLabel={triggerLabel}')
@@ -130,7 +117,7 @@ describe('buildMenuSnippet', () => {
 
   it('omits staged dropdown props while their eyes are off', () => {
     const off = buildMenuSnippet(
-      state({ align: 'left', alignOn: false, itemRole: 'menuitemradio', itemRoleOn: false }),
+      state({ align: staged('left'), itemRole: staged('menuitemradio') }),
     )
     expect(off).not.toMatch(/^\s*align=/m)
     expect(off).not.toContain('itemRole=')
@@ -138,12 +125,12 @@ describe('buildMenuSnippet', () => {
 
   it('omits staged id and chrome classes while their eye is off and emits them while on', () => {
     const off = buildMenuSnippet(
-      state({ id: 'row-actions', idOn: false, triggerClass: 'text-cyan-300', triggerClassOn: false, panelClass: 'w-44', panelClassOn: false }),
+      state({ id: staged('row-actions'), triggerClass: staged('text-cyan-300'), panelClass: staged('w-44') }),
     )
     expect(off).not.toMatch(/^\s*id=/m)
     expect(off).not.toContain('triggerClass=')
     expect(off).not.toContain('panelClass=')
-    const on = buildMenuSnippet(state({ id: 'row-actions', triggerClass: 'text-cyan-300', triggerClassOn: true }))
+    const on = buildMenuSnippet(state({ id: staged('row-actions', true), triggerClass: staged('text-cyan-300', true) }))
     expect(on).toContain('id="row-actions"')
     expect(on).toContain('triggerClass="text-cyan-300"')
     expect(on).toContain('panelClass="w-44"')
@@ -151,14 +138,14 @@ describe('buildMenuSnippet', () => {
 
   it('omits the tooltip object while its eye toggle is off', () => {
     const source = buildMenuSnippet(
-      state({ triggerTooltip: 'More actions', triggerTooltipAlign: 'left', triggerTooltipEnabled: false }),
+      state({ triggerTooltip: staged('More actions'), triggerTooltipAlign: 'left' }),
     )
     expect(source).not.toContain('triggerTooltip=')
   })
 
   it('emits edited items as script-local JSON', () => {
     const source = buildMenuSnippet(
-      state({ items: [{ id: 'rename', label: 'Rename' }, { id: 'remove', label: 'Remove', disabled: true }] }),
+      state({ items: staged([{ id: 'rename', label: 'Rename' }, { id: 'remove', label: 'Remove', disabled: true }]) }),
     )
     expect(source).toContain('"id": "rename"')
     expect(source).toContain('"label": "Rename"')
@@ -166,12 +153,12 @@ describe('buildMenuSnippet', () => {
   })
 
   it('emits item labels as valid JSON strings', () => {
-    const source = buildMenuSnippet(state({ items: [{ id: 'hi', label: 'Say "hi"' }] }))
+    const source = buildMenuSnippet(state({ items: staged([{ id: 'hi', label: 'Say "hi"' }]) }))
     expect(source).toContain('"label": "Say \\"hi\\""')
   })
 
   it('emits the icon class and item prefix when set', () => {
-    const source = buildMenuSnippet(state({ iconClass: 'h-5 w-5', itemPrefix: '#' }))
+    const source = buildMenuSnippet(state({ iconClass: staged('h-5 w-5'), itemPrefix: staged('#') }))
     expect(source).toContain('<KebabIcon className="h-5 w-5" />')
     expect(source).toContain('<span>#{item.label}</span>')
   })

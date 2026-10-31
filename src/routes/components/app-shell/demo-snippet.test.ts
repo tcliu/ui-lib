@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createSnippetComponent } from '$showcase/snippet-playground'
+import { staged } from '$showcase/staged'
 import {
   SHELL_CHILDREN_CLASS,
   SHELL_PANE_ITEM,
@@ -28,27 +29,17 @@ import {
 } from './demo-snippet'
 
 const unset: AppShellSnippetState = {
-  mode: '',
-  modeOn: true,
-  className: '',
-  classNameOn: false,
-  closeLabel: '',
-  closeLabelOn: false,
-  classNames: {},
-  classNamesEnabled: true,
-  left: {},
-  right: {},
-  leftEnabled: true,
-  rightEnabled: true,
-  children: '',
-  childrenEnabled: true,
-  headerEnabled: true,
-  leftPane: '',
-  leftPaneEnabled: true,
-  rightPane: '',
-  rightPaneEnabled: true,
-  footer: '',
-  footerEnabled: false,
+  mode: staged(''),
+  className: staged(''),
+  closeLabel: staged(''),
+  classNames: staged({}, true),
+  left: staged({}, true),
+  right: staged({}, true),
+  children: staged('', true),
+  header: staged('', true),
+  leftPane: staged('', true),
+  rightPane: staged('', true),
+  footer: staged(''),
 }
 
 describe('buildAppShellSnippet', () => {
@@ -82,7 +73,7 @@ describe('buildAppShellSnippet', () => {
   it('emits the left pane config object with its open and collapse state', () => {
     const source = buildAppShellSnippet({
       ...unset,
-      left: { open: false, collapseMode: 'rail' },
+      left: staged({ open: false, collapseMode: 'rail' as const }, true),
     })
     expect(source).toContain('left={{')
     expect(source).toContain('open: false')
@@ -90,12 +81,12 @@ describe('buildAppShellSnippet', () => {
   })
 
   it('emits the drawer mode override', () => {
-    const source = buildAppShellSnippet({ ...unset, mode: 'floating', modeOn: true })
+    const source = buildAppShellSnippet({ ...unset, mode: staged('floating', true) })
     expect(source).toContain('mode="floating"')
   })
 
   it('omits the staged mode while its eye is off', () => {
-    const source = buildAppShellSnippet({ ...unset, mode: 'floating', modeOn: false })
+    const source = buildAppShellSnippet({ ...unset, mode: staged('floating') })
     const tag = source.slice(source.indexOf('<AppShell'), source.indexOf('>', source.indexOf('<AppShell')))
     expect(tag).not.toContain('mode=')
   })
@@ -103,10 +94,8 @@ describe('buildAppShellSnippet', () => {
   it('omits component defaults (the Value column prefills them)', () => {
     const source = buildAppShellSnippet({
       ...unset,
-      mode: 'auto',
-      modeOn: true,
-      className: 'flex h-full min-h-0 flex-col bg-slate-950 text-slate-100',
-      classNameOn: false,
+      mode: staged('auto', true),
+      className: staged('flex h-full min-h-0 flex-col bg-slate-950 text-slate-100'),
     })
     const tag = source.slice(source.indexOf('<AppShell'), source.indexOf('>', source.indexOf('<AppShell')))
     expect(tag).not.toContain('mode=')
@@ -116,8 +105,8 @@ describe('buildAppShellSnippet', () => {
   it('emits numeric pane widths as entries in each config object', () => {
     const source = buildAppShellSnippet({
       ...unset,
-      left: { size: 300, min: 160 },
-      right: { size: 320 },
+      left: staged({ size: 300, min: 160 }, true),
+      right: staged({ size: 320 }, true),
     })
     expect(source).toContain('size: 300')
     expect(source).toContain('min: 160')
@@ -125,7 +114,7 @@ describe('buildAppShellSnippet', () => {
   })
 
   it('omits an empty pane config instead of emitting an empty object', () => {
-    const source = buildAppShellSnippet({ ...unset, left: {}, right: { size: 320 } })
+    const source = buildAppShellSnippet({ ...unset, left: staged({}, true), right: staged({ size: 320 }, true) })
     expect(source).not.toContain('left={{')
     expect(source).toContain('right={{')
   })
@@ -133,12 +122,9 @@ describe('buildAppShellSnippet', () => {
   it('omits a pane config while its eye toggle is off', () => {
     const source = buildAppShellSnippet({
       ...unset,
-      classNames: { main: 'custom-main' },
-      classNamesEnabled: false,
-      left: { open: false, size: 300 },
-      leftEnabled: false,
-      right: { open: true },
-      rightEnabled: false,
+      classNames: staged({ main: 'custom-main' }),
+      left: staged({ open: false, size: 300 }),
+      right: staged({ open: true }),
     })
     expect(source).not.toContain('classNames={{')
     expect(source).not.toContain('left={{')
@@ -147,19 +133,19 @@ describe('buildAppShellSnippet', () => {
   })
 
   it('omits the left pane content while its eye toggle is off', () => {
-    const source = buildAppShellSnippet({ ...unset, leftPane: 'Nav', leftPaneEnabled: false })
+    const source = buildAppShellSnippet({ ...unset, leftPane: staged('Nav') })
     expect(source).not.toContain('{#snippet leftPane()}')
     expect(source).toContain('<AppShell')
   })
 
   it('omits the header block while its eye toggle is off', () => {
-    const source = buildAppShellSnippet({ ...unset, headerEnabled: false })
+    const source = buildAppShellSnippet({ ...unset, header: staged('') })
     expect(source).not.toContain('{#snippet header(api)}')
     expect(source).toContain('<AppShell')
   })
 
   it('omits the right pane snippet while its eye toggle is off', () => {
-    const source = buildAppShellSnippet({ ...unset, right: { open: true }, rightPaneEnabled: false })
+    const source = buildAppShellSnippet({ ...unset, right: staged({ open: true }, true), rightPane: staged('') })
     expect(source).toContain('right={{')
     expect(source).not.toContain('{#snippet rightPane()}')
   })
@@ -167,10 +153,9 @@ describe('buildAppShellSnippet', () => {
   it('emits label and class overrides as literals', () => {
     const source = buildAppShellSnippet({
       ...unset,
-      className: 'custom-shell',
-      classNameOn: true,
-      classNames: { main: 'custom-main' },
-      left: { storageKey: 'shell', resizeLabel: 'Resize' },
+      className: staged('custom-shell', true),
+      classNames: staged({ main: 'custom-main' }, true),
+      left: staged({ storageKey: 'shell', resizeLabel: 'Resize' }, true),
     })
     expect(source).toContain('className="custom-shell"')
     expect(source).toContain('classNames={{')
@@ -180,22 +165,20 @@ describe('buildAppShellSnippet', () => {
   })
 
   it('omits staged text props while the eye is off and emits them while on', () => {
-    const staged = buildAppShellSnippet({ ...unset, className: 'custom-shell', closeLabel: 'Close' })
-    expect(staged).not.toContain('\n    className=')
-    expect(staged).not.toContain('\n    closeLabel=')
+    const parked = buildAppShellSnippet({ ...unset, className: staged('custom-shell'), closeLabel: staged('Close') })
+    expect(parked).not.toContain('\n    className=')
+    expect(parked).not.toContain('\n    closeLabel=')
     const applied = buildAppShellSnippet({
       ...unset,
-      className: 'custom-shell',
-      classNameOn: true,
-      closeLabel: 'Close',
-      closeLabelOn: true,
+      className: staged('custom-shell', true),
+      closeLabel: staged('Close', true),
     })
     expect(applied).toContain('\n    className="custom-shell"')
     expect(applied).toContain('\n    closeLabel="Close"')
   })
 
   it('emits the right pane config object with its open state', () => {
-    const source = buildAppShellSnippet({ ...unset, right: { open: true } })
+    const source = buildAppShellSnippet({ ...unset, right: staged({ open: true }, true) })
     expect(source).toContain('right={{')
     expect(source).toContain('open: true')
     expect(source).toContain('{#snippet rightPane()}')
@@ -205,8 +188,7 @@ describe('buildAppShellSnippet', () => {
   it('emits the footer snippet only while it is applied', () => {
     const applied = buildAppShellSnippet({
       ...unset,
-      footerEnabled: true,
-      footer: appShellFooterMarkup('Nav', 'Title'),
+      footer: staged(appShellFooterMarkup('Nav', 'Title'), true),
     })
     expect(applied).toContain('{#snippet footer()}')
     // The footer reproduces the static demo's row wrapper and both labels.
@@ -214,13 +196,13 @@ describe('buildAppShellSnippet', () => {
     expect(applied).toContain('<span class="text-xs text-slate-400">Nav</span>')
     expect(applied).toContain('<span class="text-xs text-slate-400">Title</span>')
     // The same markup with the eye toggle off renders no footer.
-    expect(buildAppShellSnippet({ ...unset, footer: appShellFooterMarkup('Nav', 'Title') })).not.toContain(
+    expect(buildAppShellSnippet({ ...unset, footer: staged(appShellFooterMarkup('Nav', 'Title')) })).not.toContain(
       '{#snippet footer()}',
     )
   })
 
   it('omits the children block while the eye toggle is off', () => {
-    const source = buildAppShellSnippet({ ...unset, childrenEnabled: false })
+    const source = buildAppShellSnippet({ ...unset, children: staged('') })
     expect(source).not.toContain(`<p class="${SHELL_CHILDREN_CLASS}">`)
   })
 
@@ -248,8 +230,8 @@ describe('buildAppShellSnippet', () => {
 
     const custom = buildAppShellSnippet({
       ...unset,
-      children: '<div class="grid gap-2"><p>Body copy</p></div>',
-      leftPane: 'Nav',
+      children: staged('<div class="grid gap-2"><p>Body copy</p></div>', true),
+      leftPane: staged('Nav', true),
     })
     expect(custom).toContain('<div class="grid gap-2"><p>Body copy</p></div>')
     expect(custom).toContain('>{"Nav"}</span>')
@@ -259,7 +241,7 @@ describe('buildAppShellSnippet', () => {
   it('emits committed children markup verbatim, entities and all', () => {
     const source = buildAppShellSnippet({
       ...unset,
-      children: '<p title="a &amp; b">Fish &amp; Chips</p>',
+      children: staged('<p title="a &amp; b">Fish &amp; Chips</p>', true),
     })
     expect(source).toContain('<p title="a &amp; b">Fish &amp; Chips</p>')
   })
@@ -473,7 +455,7 @@ describe('app-shell children snippet compilation', () => {
   it('compiles a committed free-form children block with entities', { timeout: 30000 }, async () => {
     const source = buildAppShellSnippet({
       ...unset,
-      children: '<div class="grid gap-2"><p>Fish &amp; Chips</p><img src="x" /></div>',
+      children: staged('<div class="grid gap-2"><p>Fish &amp; Chips</p><img src="x" /></div>', true),
     })
     expect(typeof (await createSnippetComponent(source, scope))).toBe('function')
   })
@@ -481,11 +463,10 @@ describe('app-shell children snippet compilation', () => {
   it('compiles a seed carrying the pane config and class-name objects', { timeout: 30000 }, async () => {
     const source = buildAppShellSnippet({
       ...unset,
-      mode: 'floating',
-      modeOn: true,
-      classNames: { main: 'custom-main' },
-      left: { open: false, size: 300, collapseMode: 'rail' },
-      right: { open: true, size: 320 },
+      mode: staged('floating', true),
+      classNames: staged({ main: 'custom-main' }, true),
+      left: staged({ open: false, size: 300, collapseMode: 'rail' as const }, true),
+      right: staged({ open: true, size: 320 }, true),
     })
     expect(typeof (await createSnippetComponent(source, scope))).toBe('function')
   })

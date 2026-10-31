@@ -5,14 +5,9 @@
 // Single-quoted lines throughout: backticks and ${} inside them stay literal,
 // so no escaping.
 
-import { escapeAttr, escapeText } from '$showcase/snippet-build'
-import { sizeAttributeLine } from '$showcase/size-input'
+import { boolAttrLine, escapeText, sizeAttrLine, textAttrLine, type TriState } from '$showcase/snippet-build'
 import { stageStaticCloseLines, stageStaticOpenLines } from '$showcase/resizable-stage'
-
-// A string attribute line, omitted while unset.
-function textLine(name: string, value: string): string[] {
-  return value ? [`      ${name}="${escapeAttr(value)}"`] : []
-}
+import type { Staged } from '$showcase/staged'
 
 // Validate unknown data into a search-key list (every entry a string).
 // Returns null for anything else, so the dialog and parse-back apply only
@@ -152,137 +147,78 @@ export function parseRowsJson(text: string): DemoRow[] | null {
   }
 }
 
-// Curated playground option: unset or the component default renders the
-// default, Yes/No force the value. Options start at the default, so the
-// cleared form applies no overrides.
-export type TriState = '' | 'yes' | 'no'
-
 export interface DataTableSnippetState {
-  rows: DemoRow[]
-  showSearch: TriState
-  showSearchOn: boolean
-  showPagination: TriState
-  showPaginationOn: boolean
-  selectable: TriState
-  selectableOn: boolean
-  dense: TriState
-  denseOn: boolean
-  resizable: TriState
-  resizableOn: boolean
-  loading: TriState
-  loadingOn: boolean
-  fillHeight: TriState
-  fillHeightOn: boolean
-  bodyScroll: TriState
-  bodyScrollOn: boolean
-  placeholder: string
-  placeholderOn: boolean
-  emptyMessage: string
-  emptyMessageOn: boolean
+  rows: Staged<DemoRow[]>
+  showSearch: Staged<TriState>
+  showPagination: Staged<TriState>
+  selectable: Staged<TriState>
+  dense: Staged<TriState>
+  resizable: Staged<TriState>
+  loading: Staged<TriState>
+  fillHeight: Staged<TriState>
+  bodyScroll: Staged<TriState>
+  placeholder: Staged<string>
+  emptyMessage: Staged<string>
   trailing: string
-  searchAriaLabel: string
-  searchAriaLabelOn: boolean
-  searchKeys: string[] | null
+  searchAriaLabel: Staged<string>
   // Eye toggle for the optional search-keys list: off omits the prop and its
   // seed (the committed list stays in the dialog).
-  searchKeysEnabled: boolean
-  chooserLabel: string
-  chooserLabelOn: boolean
-  chooserResetLabel: string
-  chooserResetLabelOn: boolean
-  selectAllAriaLabel: string
-  selectAllAriaLabelOn: boolean
-  allSelected: TriState
-  allSelectedOn: boolean
-  someSelected: TriState
-  someSelectedOn: boolean
-  containerClassName: string
-  containerClassNameOn: boolean
-  tableClassName: string
-  tableClassNameOn: boolean
-  storageKey: string
-  storageKeyOn: boolean
-  resetWidthsSignal: string
-  resetWidthsSignalOn: boolean
-  size: string
-  sizeOn: boolean
+  searchKeys: Staged<string[] | null>
+  chooserLabel: Staged<string>
+  chooserResetLabel: Staged<string>
+  selectAllAriaLabel: Staged<string>
+  allSelected: Staged<TriState>
+  someSelected: Staged<TriState>
+  containerClassName: Staged<string>
+  tableClassName: Staged<string>
+  storageKey: Staged<string>
+  resetWidthsSignal: Staged<string>
+  size: Staged<string>
 }
 
 // Element text for the trailing span below.
 
-// A tri-state line: omitted while unset or at the component default, bare
-// while Yes, ={false} while No.
-// Indented for the DataTable props inside the resizable stage.
-function flagLine(name: string, value: TriState, def: TriState = ''): string[] {
-  if (value === '' || value === def) {
-    return []
-  }
-  return [`      ${name}${value === 'yes' ? '' : '={false}'}`]
-}
-
 export function buildDataTableSnippet({
   rows,
   showSearch,
-  showSearchOn,
   showPagination,
-  showPaginationOn,
   selectable,
-  selectableOn,
   dense,
-  denseOn,
   resizable,
-  resizableOn,
   loading,
-  loadingOn,
   fillHeight,
-  fillHeightOn,
   bodyScroll,
-  bodyScrollOn,
   placeholder,
-  placeholderOn,
   emptyMessage,
-  emptyMessageOn,
   trailing,
   searchAriaLabel,
-  searchAriaLabelOn,
   searchKeys,
-  searchKeysEnabled,
   chooserLabel,
-  chooserLabelOn,
   chooserResetLabel,
-  chooserResetLabelOn,
   selectAllAriaLabel,
-  selectAllAriaLabelOn,
   allSelected,
-  allSelectedOn,
   someSelected,
-  someSelectedOn,
   containerClassName,
-  containerClassNameOn,
   tableClassName,
-  tableClassNameOn,
   storageKey,
-  storageKeyOn,
   resetWidthsSignal,
-  resetWidthsSignalOn,
   size,
-  sizeOn,
 }: DataTableSnippetState): string {
-  const paneClass = fillHeightOn && fillHeight === 'yes' ? TABLE_STAGE_PANE_FILL : TABLE_STAGE_PANE
+  const paneClass = fillHeight.on && fillHeight.value === 'yes' ? TABLE_STAGE_PANE_FILL : TABLE_STAGE_PANE
   // A rising widths-reset signal: emitted only while a positive integer, so
   // the cleared form applies no overrides.
-  const resetSignal = Number.parseInt(resetWidthsSignal, 10)
+  const resetSignal = Number.parseInt(resetWidthsSignal.value, 10)
   const lines = [
     '<script>',
     '  const rows = [',
-    ...rows.map(row => `    { id: '${row.id}', name: '${row.name}', status: '${row.status}' },`),
+    ...rows.value.map(row => `    { id: '${row.id}', name: '${row.name}', status: '${row.status}' },`),
     '  ]',
     '  const columns = [',
     "    { key: 'id', header: 'ID', cell: idCell },",
     "    { key: 'name', header: 'Name', sortable: true, searchable: true, cell: nameCell },",
     "    { key: 'status', header: 'Status', searchable: true, cell: statusCell },",
     '  ]',
-    ...(searchKeys && searchKeysEnabled ? [`  let searchKeys = $state(${JSON.stringify(searchKeys)});`] : []),
+    ...(searchKeys.value && searchKeys.on ? [`  let searchKeys = $state(${JSON.stringify(searchKeys.value)});`] : []),
     '</script>',
     '{#snippet nameCell(row)}',
     '  <strong class="font-medium text-slate-100">{row.name}</strong>',
@@ -305,21 +241,21 @@ export function buildDataTableSnippet({
     '      rows={visibleRows(rows, pgQuery, pgSortKey, pgSortDirection, pgPage, demoPageSize)}',
     '      columns={columns.filter(column => !hidden.has(column.key))}',
     '      rowId={row => row.id}',
-    ...(showSearchOn && showSearch === 'no'
+    ...(showSearch.on && showSearch.value === 'no'
       ? []
       : [
-          ...(searchAriaLabelOn && searchAriaLabel ? textLine('searchAriaLabel', searchAriaLabel) : []),
+          ...textAttrLine('searchAriaLabel', searchAriaLabel, '      '),
           '      bind:searchValue={pgQuery}',
-          ...(searchKeys && searchKeysEnabled ? ['      searchKeys={searchKeys}'] : []),
+          ...(searchKeys.value && searchKeys.on ? ['      searchKeys={searchKeys}'] : []),
           '      onSearchInput={handleSearchInput}',
         ]),
-    ...(showSearchOn ? flagLine('showSearch', showSearch, 'yes') : []),
-    ...(placeholderOn && placeholder ? [`      searchPlaceholder="${escapeAttr(placeholder)}"`] : []),
-    ...(emptyMessageOn && emptyMessage ? [`      emptyMessage="${escapeAttr(emptyMessage)}"`] : []),
-    ...(showPaginationOn ? flagLine('showPagination', showPagination) : []),
+    ...boolAttrLine('showSearch', showSearch, 'yes', '      '),
+    ...textAttrLine('searchPlaceholder', placeholder, '      '),
+    ...textAttrLine('emptyMessage', emptyMessage, '      '),
+    ...boolAttrLine('showPagination', showPagination, '', '      '),
     '      chooserColumns={columns.map(column => ({ key: column.key, header: column.header, checked: !hidden.has(column.key) }))}',
-    ...(chooserLabelOn && chooserLabel ? textLine('chooserLabel', chooserLabel) : []),
-    ...(chooserResetLabelOn && chooserResetLabel ? textLine('chooserResetLabel', chooserResetLabel) : []),
+    ...textAttrLine('chooserLabel', chooserLabel, '      '),
+    ...textAttrLine('chooserResetLabel', chooserResetLabel, '      '),
     '      onToggleColumn={handleToggleColumn}',
     '      onResetColumns={handleResetColumns}',
     '      bind:sortKey={pgSortKey}',
@@ -332,39 +268,39 @@ export function buildDataTableSnippet({
     '        onPageSizeChange: handlePageSizeChange,',
     ...(trailing ? ['        trailing: tableTrailing,'] : []),
     '      }}',
-    ...(selectableOn ? flagLine('selectable', selectable, 'no') : []),
-    ...(selectableOn && selectable === 'yes'
+    ...boolAttrLine('selectable', selectable, 'no', '      '),
+    ...(selectable.on && selectable.value === 'yes'
       ? [
           '      selectedIds={pgSelected}',
           '      onToggleSelection={(id, checked) => (pgSelected = toggleSelection(pgSelected, id, checked))}',
           '      onToggleAll={() => (pgSelected = toggleAllSelected(pgSelected, rows.map(row => row.id)))}',
-          ...(allSelectedOn
-            ? allSelected === ''
+          ...(allSelected.on
+            ? allSelected.value === ''
               ? ['      allSelected={pgSelected.size > 0 && pgSelected.size === rows.length}']
-              : flagLine('allSelected', allSelected)
+              : boolAttrLine('allSelected', allSelected, '', '      ')
             : []),
-          ...(someSelectedOn
-            ? someSelected === ''
+          ...(someSelected.on
+            ? someSelected.value === ''
               ? ['      someSelected={pgSelected.size > 0 && pgSelected.size < rows.length}']
-              : flagLine('someSelected', someSelected)
+              : boolAttrLine('someSelected', someSelected, '', '      ')
             : []),
-          ...(selectAllAriaLabelOn && selectAllAriaLabel ? textLine('selectAllAriaLabel', selectAllAriaLabel) : []),
+          ...textAttrLine('selectAllAriaLabel', selectAllAriaLabel, '      '),
           '      rowSelectAriaLabel={row => `Select ${row.name}`}',
         ]
       : []),
-    ...(denseOn ? flagLine('dense', dense, 'no') : []),
-    ...(fillHeightOn ? flagLine('fillHeight', fillHeight, 'no') : []),
-    ...(bodyScrollOn ? flagLine('bodyScroll', bodyScroll, 'no') : []),
-    ...(resizableOn ? flagLine('resizable', resizable, 'no') : []),
-    ...(resizableOn && resizable === 'yes' ? ['      resizeAriaLabel={column => `Resize ${column.header}`}'] : []),
-    ...(loadingOn ? flagLine('loading', loading, 'no') : []),
-    ...(containerClassNameOn && containerClassName ? textLine('containerClassName', containerClassName) : []),
-    ...(tableClassNameOn && tableClassName ? textLine('tableClassName', tableClassName) : []),
-    ...(storageKeyOn && storageKey ? textLine('storageKey', storageKey) : []),
+    ...boolAttrLine('dense', dense, 'no', '      '),
+    ...boolAttrLine('fillHeight', fillHeight, 'no', '      '),
+    ...boolAttrLine('bodyScroll', bodyScroll, 'no', '      '),
+    ...boolAttrLine('resizable', resizable, 'no', '      '),
+    ...(resizable.on && resizable.value === 'yes' ? ['      resizeAriaLabel={column => `Resize ${column.header}`}'] : []),
+    ...boolAttrLine('loading', loading, 'no', '      '),
+    ...textAttrLine('containerClassName', containerClassName, '      '),
+    ...textAttrLine('tableClassName', tableClassName, '      '),
+    ...textAttrLine('storageKey', storageKey, '      '),
     // The size row prefills its component default in the Value column; the
     // builder omits the default so Show-code stays minimal.
-    ...(sizeOn && size !== '' && size !== 'md' ? sizeAttributeLine(size, '      ') : []),
-    ...(resetWidthsSignalOn && Number.isInteger(resetSignal) && resetSignal > 0 ? [`      resetWidthsSignal={${resetSignal}}`] : []),
+    ...sizeAttrLine(size, '      '),
+    ...(resetWidthsSignal.on && Number.isInteger(resetSignal) && resetSignal > 0 ? [`      resetWidthsSignal={${resetSignal}}`] : []),
     '    />',
     ...stageStaticCloseLines(''),
   ]

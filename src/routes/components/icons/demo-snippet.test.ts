@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { VARIANT_LADDERS } from '$lib/icons/icon-variants'
 import { createSnippetComponent } from '$showcase/snippet-playground'
+import { staged } from '$showcase/staged'
 import {
   ALL_VARIANTS,
   buildIconsSnippet,
@@ -14,7 +15,7 @@ import {
   variantsFor,
 } from './demo-snippet'
 
-const BARE = { size: '', sizeOn: true, tint: '', className: '', classNameOn: true, variant: '', variantOn: false }
+const BARE = { size: staged('', true), tint: '', className: staged('', true), variant: staged('') }
 
 describe('buildIconsSnippet', () => {
   it('compiles the gallery seed through the playground preamble', { timeout: 30000 }, async () => {
@@ -31,19 +32,19 @@ describe('buildIconsSnippet', () => {
   })
 
   it('applies the chosen size and tint', () => {
-    const source = buildIconsSnippet({ ...BARE, size: 'lg', tint: 'text-cyan-400' })
+    const source = buildIconsSnippet({ ...BARE, size: staged('lg', true), tint: 'text-cyan-400' })
     expect(source).toContain('<CheckIcon size="lg" className="text-cyan-400" />Check')
   })
 
   it('emits a numeric size as an expression and omits invalid sizes', () => {
-    const numeric = buildIconsSnippet({ ...BARE, size: '14' })
+    const numeric = buildIconsSnippet({ ...BARE, size: staged('14', true) })
     expect(numeric).toContain('<CheckIcon size={14} />Check')
-    const invalid = buildIconsSnippet({ ...BARE, size: 'huge' })
+    const invalid = buildIconsSnippet({ ...BARE, size: staged('huge', true) })
     expect(invalid).not.toContain('size=')
   })
 
   it('omits component defaults (the Value column prefills them)', () => {
-    const source = buildIconsSnippet({ ...BARE, size: 'md' })
+    const source = buildIconsSnippet({ ...BARE, size: staged('md', true) })
     for (const entry of ICON_ENTRIES) {
       expect(source).toContain(`<${entry.name}Icon />${iconLabel(entry)}`)
     }
@@ -51,12 +52,12 @@ describe('buildIconsSnippet', () => {
   })
 
   it('appends a custom className', () => {
-    const source = buildIconsSnippet({ ...BARE, className: 'shrink-0' })
+    const source = buildIconsSnippet({ ...BARE, className: staged('shrink-0', true) })
     expect(source).toContain('<CheckIcon className="shrink-0" />Check')
   })
 
   it('applies the variant to the glyphs that carry it', () => {
-    const source = buildIconsSnippet({ ...BARE, variant: 'bold', variantOn: true })
+    const source = buildIconsSnippet({ ...BARE, variant: staged('bold', true) })
     expect(source).toContain('<ChevronUpIcon variant="bold" />ChevronUp')
     expect(source).toContain('<DoubleChevronLeftIcon variant="bold" />DoubleChevronLeft')
     expect(source).toContain('<CheckIcon />Check')
@@ -65,27 +66,27 @@ describe('buildIconsSnippet', () => {
   })
 
   it('applies each registered variant to the glyphs that carry it', () => {
-    const heavy = buildIconsSnippet({ ...BARE, variant: 'heavy', variantOn: true })
+    const heavy = buildIconsSnippet({ ...BARE, variant: staged('heavy', true) })
     expect(heavy).toContain('<DoubleChevronLeftIcon variant="heavy" />DoubleChevronLeft')
     expect(heavy).not.toContain('<ChevronUpIcon variant="heavy" />ChevronUp')
 
-    const compact = buildIconsSnippet({ ...BARE, variant: 'compact', variantOn: true })
+    const compact = buildIconsSnippet({ ...BARE, variant: staged('compact', true) })
     expect(compact).toContain('<CopyIcon variant="compact" />Copy')
     expect(compact).not.toContain('<ChevronUpIcon variant="compact" />ChevronUp')
 
-    const solid = buildIconsSnippet({ ...BARE, variant: 'solid', variantOn: true })
+    const solid = buildIconsSnippet({ ...BARE, variant: staged('solid', true) })
     expect(solid).toContain('<EditIcon variant="solid" />Edit')
     expect(solid).not.toContain('<ChevronUpIcon variant="solid" />ChevronUp')
 
-    const rows = buildIconsSnippet({ ...BARE, variant: 'rows', variantOn: true })
+    const rows = buildIconsSnippet({ ...BARE, variant: staged('rows', true) })
     expect(rows).toContain('<DeleteIcon variant="rows" />Delete')
     expect(rows).not.toContain('<TableIcon variant="rows" />Table')
 
-    const columns = buildIconsSnippet({ ...BARE, variant: 'columns', variantOn: true })
+    const columns = buildIconsSnippet({ ...BARE, variant: staged('columns', true) })
     expect(columns).toContain('<DeleteIcon variant="columns" />Delete')
     expect(columns).not.toContain('<TableIcon variant="columns" />Table')
 
-    const insertRowAbove = buildIconsSnippet({ ...BARE, variant: 'insertRowAbove', variantOn: true })
+    const insertRowAbove = buildIconsSnippet({ ...BARE, variant: staged('insertRowAbove', true) })
     expect(insertRowAbove).toContain('<TableIcon variant="insertRowAbove" />Table')
     expect(insertRowAbove).not.toContain('<DeleteIcon variant="insertRowAbove" />Delete')
   })
@@ -96,17 +97,17 @@ describe('buildIconsSnippet', () => {
   })
 
   it('omits the variant while its eye is off', () => {
-    const off = buildIconsSnippet({ ...BARE, variant: 'bold', variantOn: false })
+    const off = buildIconsSnippet({ ...BARE, variant: staged('bold') })
     expect(off).not.toContain('variant=')
   })
 
   it('omits the staged size while its eye is off', () => {
-    const source = buildIconsSnippet({ ...BARE, size: 'lg', sizeOn: false })
+    const source = buildIconsSnippet({ ...BARE, size: staged('lg') })
     expect(source).not.toContain('size=')
   })
 
   it('omits the staged className while its eye is off but keeps the tint', () => {
-    const source = buildIconsSnippet({ ...BARE, tint: 'text-cyan-400', className: 'shrink-0', classNameOn: false })
+    const source = buildIconsSnippet({ ...BARE, tint: 'text-cyan-400', className: staged('shrink-0') })
     expect(source).toContain('<CheckIcon className="text-cyan-400" />Check')
     expect(source).not.toContain('shrink-0')
   })

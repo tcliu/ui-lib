@@ -7,10 +7,17 @@
 // The resize harness is ShowcasePage-owned chrome (its `stage` prop), so the
 // snippet carries only the demo content the page authors inside that frame.
 
-import { escapeAttr, escapeText, unescapeAttr } from '$showcase/snippet-build'
-import { sizeAttributeLine } from '$showcase/size-input'
-
-export type TriState = '' | 'yes' | 'no'
+import {
+  boolAttrLine,
+  enumAttrLine,
+  escapeAttr,
+  escapeText,
+  sizeAttrLine,
+  textAttrLine,
+  unescapeAttr,
+  type TriState,
+} from '$showcase/snippet-build'
+import type { Staged } from '$showcase/staged'
 
 export const MENU_STAGE_CONTENT = 'flex items-center gap-4'
 export const MENU_STAGE_DEFAULT_WIDTH = 560
@@ -69,34 +76,23 @@ export function parseMenuItemsJson(text: string): MenuDemoItem[] | null {
 }
 
 export interface MenuSnippetState {
-  align: string
-  alignOn: boolean
-  triggerLabel: string
-  triggerLabelOn: boolean
-  items: MenuDemoItem[]
-  autoPlace: TriState
-  autoPlaceOn: boolean
-  id: string
-  idOn: boolean
-  triggerTooltip: string
-  triggerTooltipAlign: string
+  align: Staged<string>
+  triggerLabel: Staged<string>
+  items: Staged<MenuDemoItem[]>
+  autoPlace: Staged<TriState>
+  id: Staged<string>
   // The tooltip object applies only while its eye toggle is on, mirroring the
   // page (off omits the object prop).
-  triggerTooltipEnabled: boolean
-  itemRole: string
-  itemRoleOn: boolean
-  phoneSheetTitle: string
-  phoneSheetTitleOn: boolean
-  closeLabel: string
-  closeLabelOn: boolean
-  triggerClass: string
-  triggerClassOn: boolean
-  panelClass: string
-  panelClassOn: boolean
-  size: string
-  sizeOn: boolean
-  iconClass: string
-  itemPrefix: string
+  triggerTooltip: Staged<string>
+  triggerTooltipAlign: string
+  itemRole: Staged<string>
+  phoneSheetTitle: Staged<string>
+  closeLabel: Staged<string>
+  triggerClass: Staged<string>
+  panelClass: Staged<string>
+  size: Staged<string>
+  iconClass: Staged<string>
+  itemPrefix: Staged<string>
 }
 
 // Canonical icon markup: the kebab glyph in a caller class; the class is the
@@ -121,20 +117,6 @@ export function parseMenuIconMarkup(draft: string): string | null {
 }
 
 // Element text for the item prefix below.
-
-// A tri-state line: omitted while unset or at the component default, bare
-// while Yes, ={false} while No.
-function flagLine(name: string, value: TriState, indent: string, def: TriState = ''): string[] {
-  if (value === '' || value === def) {
-    return []
-  }
-  return [`${indent}${name}${value === 'yes' ? '' : '={false}'}`]
-}
-
-// A string attribute line, omitted while unset.
-function textLine(name: string, value: string, indent: string): string[] {
-  return value ? [`${indent}${name}="${escapeAttr(value)}"`] : []
-}
 
 // The tooltip align choices the trigger tooltip accepts.
 export const TOOLTIP_ALIGNS = ['center', 'left', 'right'] as const
@@ -172,39 +154,28 @@ export function parseTriggerTooltipJson(text: string): { text: string; align?: s
   }
 }
 
-// The object-valued trigger tooltip: omitted while its text is unset; align
-// folds in as an optional key.
-function tooltipLine(text: string, align: string, indent: string): string[] {
-  if (!text) return []
+// The object-valued trigger tooltip: omitted while its eye is off or its text
+// is unset; align folds in as an optional key.
+function tooltipLine(pair: Staged<string>, align: string, indent: string): string[] {
+  if (!pair.on || !pair.value) return []
   const alignPart = align ? `, align: "${escapeAttr(align)}"` : ''
-  return [`${indent}triggerTooltip={{ text: "${escapeAttr(text)}"${alignPart} }}`]
+  return [`${indent}triggerTooltip={{ text: "${escapeAttr(pair.value)}"${alignPart} }}`]
 }
 
 export function buildMenuSnippet({
   align,
-  alignOn,
   triggerLabel,
-  triggerLabelOn,
   items,
   autoPlace,
-  autoPlaceOn,
   id,
-  idOn,
   triggerTooltip,
   triggerTooltipAlign,
-  triggerTooltipEnabled,
   itemRole,
-  itemRoleOn,
   phoneSheetTitle,
-  phoneSheetTitleOn,
   closeLabel,
-  closeLabelOn,
   triggerClass,
-  triggerClassOn,
   panelClass,
-  panelClassOn,
   size,
-  sizeOn,
   iconClass,
   itemPrefix,
 }: MenuSnippetState): string {
@@ -213,7 +184,7 @@ export function buildMenuSnippet({
   const indent = '  '
   // Pretty JSON reindented under the state line, so the seeded list stays
   // readable and editable in place.
-  const itemsJson = JSON.stringify(items, null, 2)
+  const itemsJson = JSON.stringify(items.value, null, 2)
     .split('\n')
     .map((line, index) => (index === 0 ? line : `  ${line}`))
     .join('\n')
@@ -226,31 +197,31 @@ export function buildMenuSnippet({
     `${indent}items={items}`,
     `${indent}itemKey={item => item.id}`,
     `${indent}onSelect={index => (lastAction = items[index].label)}`,
-    ...(triggerLabelOn && triggerLabel
-      ? [`${indent}ariaLabel="${escapeAttr(triggerLabel)}"`]
+    ...(triggerLabel.on && triggerLabel.value
+      ? [`${indent}ariaLabel="${escapeAttr(triggerLabel.value)}"`]
       : [`${indent}ariaLabel={triggerLabel}`]),
-    ...(alignOn && align && align !== 'right' ? [`${indent}align="${align}"`] : []),
-    ...(autoPlaceOn ? flagLine('autoPlace', autoPlace, indent, 'yes') : []),
-    ...(idOn && id ? textLine('id', id, indent) : []),
-    ...(triggerTooltipEnabled ? tooltipLine(triggerTooltip, triggerTooltipAlign, indent) : []),
-    ...(triggerClassOn && triggerClass ? textLine('triggerClass', triggerClass, indent) : []),
-    ...(panelClassOn && panelClass ? textLine('panelClass', panelClass, indent) : []),
-    // The trigger's scale rides the shared size axis; the default step is
-    // omitted so Show-code stays minimal.
-    ...(sizeOn && size && size !== 'md' ? sizeAttributeLine(size, indent) : []),
     // Enum rows prefill their component default in the Value column; the
     // builder omits the default so Show-code stays minimal.
-    ...(itemRoleOn && itemRole && itemRole !== 'menuitem' ? textLine('itemRole', itemRole, indent) : []),
-    ...(phoneSheetTitleOn ? textLine('phoneSheetTitle', phoneSheetTitle, indent) : []),
-    ...(closeLabelOn ? textLine('closeLabel', closeLabel, indent) : []),
+    ...enumAttrLine('align', align, 'right', indent),
+    ...boolAttrLine('autoPlace', autoPlace, 'yes', indent),
+    ...textAttrLine('id', id, indent),
+    ...tooltipLine(triggerTooltip, triggerTooltipAlign, indent),
+    ...textAttrLine('triggerClass', triggerClass, indent),
+    ...textAttrLine('panelClass', panelClass, indent),
+    // The trigger's scale rides the shared size axis; the default step is
+    // omitted so Show-code stays minimal.
+    ...sizeAttrLine(size, indent),
+    ...enumAttrLine('itemRole', itemRole, 'menuitem', indent),
+    ...textAttrLine('phoneSheetTitle', phoneSheetTitle, indent),
+    ...textAttrLine('closeLabel', closeLabel, indent),
     `${indent}itemClass={menuItemClass}`,
     `${indent}itemLabel={item => item.label}`,
     `${indent}itemDisabled={item => item.disabled ?? false}>`,
     `${indent}{#snippet icon()}`,
-    `${indent}  ${buildMenuIconMarkup(iconClass)}`,
+    `${indent}  ${buildMenuIconMarkup(iconClass.value)}`,
     `${indent}{/snippet}`,
     `${indent}{#snippet item(item)}`,
-    `${indent}  <span>${escapeText(itemPrefix)}{item.label}</span>`,
+    `${indent}  <span>${escapeText(itemPrefix.value)}{item.label}</span>`,
     `${indent}{/snippet}`,
     '</Menu>',
     `<span class="text-sm text-slate-400">last action: {lastAction || '—'}</span>`,

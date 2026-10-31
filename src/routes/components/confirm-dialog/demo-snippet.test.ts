@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
+import { staged } from '$showcase/staged'
+import { type TriState } from '$showcase/snippet-build'
 import { buildConfirmDialogSnippet } from './demo-snippet'
 
 describe('buildConfirmDialogSnippet', () => {
-  const unset = { widthVariant: '', widthVariantOn: true, heightVariant: '', heightVariantOn: true, size: '', sizeOn: true, accent: '', accentOn: true, pending: '', pendingOn: true, confirmOnDismiss: '', confirmOnDismissOn: true, className: '', classNameOn: false, closeLabel: '', closeLabelOn: false, confirmLabel: '', confirmLabelOn: true, message: '', messageOn: true, title: '', titleOn: true, buttonSize: '', buttonSizeOn: true } as const
+  const unset = { widthVariant: staged('', true), heightVariant: staged('', true), size: staged('', true), accent: staged('', true), pending: staged('' as TriState, true), confirmOnDismiss: staged('' as TriState, true), className: staged('', false), closeLabel: staged('', false), confirmLabel: staged('', true), message: staged('', true), title: staged('', true), buttonSize: staged('', true) } as const
 
   it('omits every override while unset', () => {
     const source = buildConfirmDialogSnippet({ ...unset })
@@ -24,30 +26,18 @@ describe('buildConfirmDialogSnippet', () => {
 
   it('emits each curated override when set', () => {
     const source = buildConfirmDialogSnippet({
-      widthVariant: 'lg',
-      widthVariantOn: true,
-      heightVariant: '2xl',
-      heightVariantOn: true,
-      size: 'xl',
-      sizeOn: true,
-      accent: 'amber',
-      accentOn: true,
-      pending: 'yes',
-      pendingOn: true,
-      confirmOnDismiss: 'yes',
-      confirmOnDismissOn: true,
-      className: 'panel-x',
-      classNameOn: true,
-      closeLabel: 'Dismiss',
-      closeLabelOn: true,
-      confirmLabel: 'Delete it',
-      confirmLabelOn: true,
-      message: 'Gone <forever> & ever',
-      messageOn: true,
-      title: 'Say "bye"',
-      titleOn: true,
-      buttonSize: 'lg',
-      buttonSizeOn: true,
+      widthVariant: staged('lg', true),
+      heightVariant: staged('2xl', true),
+      size: staged('xl', true),
+      accent: staged('amber', true),
+      pending: staged('yes', true),
+      confirmOnDismiss: staged('yes', true),
+      className: staged('panel-x', true),
+      closeLabel: staged('Dismiss', true),
+      confirmLabel: staged('Delete it', true),
+      message: staged('Gone <forever> & ever', true),
+      title: staged('Say "bye"', true),
+      buttonSize: staged('lg', true),
     })
     expect(source).toContain('widthVariant="lg"')
     expect(source).toContain('heightVariant="2xl"')
@@ -66,12 +56,12 @@ describe('buildConfirmDialogSnippet', () => {
   it('omits component defaults (the Value column prefills them)', () => {
     const source = buildConfirmDialogSnippet({
       ...unset,
-      widthVariant: 'md',
-      heightVariant: 'auto',
-      accent: 'rose',
-      pending: 'no',
-      confirmOnDismiss: 'no',
-      buttonSize: 'md',
+      widthVariant: staged('md', true),
+      heightVariant: staged('auto', true),
+      accent: staged('rose', true),
+      pending: staged('no', true),
+      confirmOnDismiss: staged('no', true),
+      buttonSize: staged('md', true),
     })
     expect(source).not.toContain('widthVariant=')
     expect(source).not.toContain('heightVariant=')
@@ -82,16 +72,16 @@ describe('buildConfirmDialogSnippet', () => {
   })
 
   it('omits staged text props while their eye is off and emits them when on', () => {
-    const off = buildConfirmDialogSnippet({ ...unset, className: 'panel-x', closeLabel: 'Dismiss' })
+    const off = buildConfirmDialogSnippet({ ...unset, className: staged('panel-x'), closeLabel: staged('Dismiss') })
     expect(off).toContain('closeLabel={closeLabel}')
     expect(off).not.toContain('className=')
-    const on = buildConfirmDialogSnippet({ ...unset, className: 'panel-x', classNameOn: true, closeLabel: 'Dismiss', closeLabelOn: true })
+    const on = buildConfirmDialogSnippet({ ...unset, className: staged('panel-x', true), closeLabel: staged('Dismiss', true) })
     expect(on).toContain('closeLabel="Dismiss"')
     expect(on).toContain('className="panel-x"')
   })
 
   it('omits boolean flags while their eyes are off', () => {
-    const source = buildConfirmDialogSnippet({ ...unset, pending: 'yes', pendingOn: false, confirmOnDismiss: 'yes', confirmOnDismissOn: false })
+    const source = buildConfirmDialogSnippet({ ...unset, pending: staged('yes', false), confirmOnDismiss: staged('yes', false) })
     expect(source).not.toContain('pending')
     expect(source).not.toContain('confirmOnDismiss')
   })
@@ -99,12 +89,9 @@ describe('buildConfirmDialogSnippet', () => {
   it('omits text props while their eyes are off', () => {
     const source = buildConfirmDialogSnippet({
       ...unset,
-      confirmLabel: 'Delete it',
-      confirmLabelOn: false,
-      message: 'Gone',
-      messageOn: false,
-      title: 'Bye',
-      titleOn: false,
+      confirmLabel: staged('Delete it', false),
+      message: staged('Gone', false),
+      title: staged('Bye', false),
     })
     expect(source).toContain('title={discardTitle}')
     expect(source).toContain('message={discardMessage}')
@@ -117,12 +104,9 @@ describe('buildConfirmDialogSnippet', () => {
   it('omits sizing props while their eyes are off', () => {
     const source = buildConfirmDialogSnippet({
       ...unset,
-      widthVariant: 'lg',
-      widthVariantOn: false,
-      heightVariant: '2xl',
-      heightVariantOn: false,
-      size: 'xl',
-      sizeOn: false,
+      widthVariant: staged('lg', false),
+      heightVariant: staged('2xl', false),
+      size: staged('xl', false),
     })
     expect(source).not.toContain('widthVariant=')
     expect(source).not.toContain('heightVariant=')
@@ -132,10 +116,8 @@ describe('buildConfirmDialogSnippet', () => {
   it('omits accent and button size while their eyes are off', () => {
     const source = buildConfirmDialogSnippet({
       ...unset,
-      accent: 'amber',
-      accentOn: false,
-      buttonSize: 'lg',
-      buttonSizeOn: false,
+      accent: staged('amber', false),
+      buttonSize: staged('lg', false),
     })
     expect(source).not.toContain('    accent=')
     expect(source).not.toMatch(/^\s*buttonSize=/m)

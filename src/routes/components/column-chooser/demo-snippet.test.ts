@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createSnippetComponent } from '$showcase/snippet-playground'
+import { staged } from '$showcase/staged'
 import {
   buildColumnChooserSnippet,
   CHOOSER_LABEL,
@@ -11,7 +12,7 @@ import {
 } from './demo-snippet'
 
 function state(overrides: Partial<ColumnChooserSnippetState> = {}): ColumnChooserSnippetState {
-  return { triggerLabel: '', triggerLabelOn: true, resetAriaLabel: '', resetAriaLabelOn: true, columns: seedColumns(), size: '', sizeOn: true, ...overrides }
+  return { triggerLabel: staged('', true), resetAriaLabel: staged('', true), columns: staged(seedColumns(), true), size: staged('', true), ...overrides }
 }
 
 describe('buildColumnChooserSnippet', () => {
@@ -36,14 +37,14 @@ describe('buildColumnChooserSnippet', () => {
   })
 
   it('bakes custom labels in as literals', () => {
-    const source = buildColumnChooserSnippet(state({ triggerLabel: 'Team columns', resetAriaLabel: 'Show all' }))
+    const source = buildColumnChooserSnippet(state({ triggerLabel: staged('Team columns', true), resetAriaLabel: staged('Show all', true) }))
     expect(source).toContain('triggerLabel="Team columns"')
     expect(source).toContain('resetAriaLabel="Show all"')
   })
 
   it('omits staged labels while their eye is off', () => {
     const source = buildColumnChooserSnippet(
-      state({ triggerLabel: 'Team columns', triggerLabelOn: false, resetAriaLabel: 'Show all', resetAriaLabelOn: false }),
+      state({ triggerLabel: staged('Team columns'), resetAriaLabel: staged('Show all') }),
     )
     expect(source).toContain('triggerLabel={chooserLabel}')
     expect(source).toContain('resetAriaLabel={resetLabel}')
@@ -51,22 +52,22 @@ describe('buildColumnChooserSnippet', () => {
     expect(source).not.toContain('Show all')
   })
   it('escapes quotes in a custom label', () => {
-    const source = buildColumnChooserSnippet(state({ triggerLabel: 'A "quoted" label' }))
+    const source = buildColumnChooserSnippet(state({ triggerLabel: staged('A "quoted" label', true) }))
     expect(source).toContain('triggerLabel="A &quot;quoted&quot; label"')
   })
 
   it('emits a named size as a string and a numeric size as an expression', () => {
-    expect(buildColumnChooserSnippet(state({ size: 'lg', sizeOn: true }))).toContain('size="lg"')
-    expect(buildColumnChooserSnippet(state({ size: '14', sizeOn: true }))).toContain('size={14}')
-    expect(buildColumnChooserSnippet(state({ size: 'huge', sizeOn: true }))).not.toMatch(/^\s*size=/m)
+    expect(buildColumnChooserSnippet(state({ size: staged('lg', true) }))).toContain('size="lg"')
+    expect(buildColumnChooserSnippet(state({ size: staged('14', true) }))).toContain('size={14}')
+    expect(buildColumnChooserSnippet(state({ size: staged('huge', true) }))).not.toMatch(/^\s*size=/m)
   })
 
   it('omits the component size default (the Value column prefills it)', () => {
-    expect(buildColumnChooserSnippet(state({ size: 'md', sizeOn: true }))).not.toMatch(/^\s*size=/m)
+    expect(buildColumnChooserSnippet(state({ size: staged('md', true) }))).not.toMatch(/^\s*size=/m)
   })
 
   it('omits the staged size while its eye is off', () => {
-    expect(buildColumnChooserSnippet(state({ size: 'lg', sizeOn: false }))).not.toMatch(/^\s*size=/m)
+    expect(buildColumnChooserSnippet(state({ size: staged('lg') }))).not.toMatch(/^\s*size=/m)
   })
 
   it('seeds fresh checked entries per call', () => {

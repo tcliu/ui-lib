@@ -2,9 +2,10 @@
   import BarChart from '$lib/components/BarChart.svelte'
   import ShowcasePage from '$showcase/ShowcasePage.svelte'
   import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { flagOn, type TriState } from '$showcase/snippet-build'
-  import { boolField, jsonField, resetToggle, sizeField, snippetToggle, textField } from '$showcase/snippet-field'
+  import { type TriState } from '$showcase/snippet-build'
+  import { boolField, jsonField, sizeField, textField } from '$showcase/snippet-field'
   import { parseSizeValue } from '$showcase/size-input'
+  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/staged'
   import { barHeight, buildBarChartSnippet, DEMO_COLUMNS, parseColumnsJson, parseColumnsValue } from './demo-snippet'
 
   // Customizer playground state. Every curated option starts at the component
@@ -12,40 +13,34 @@
   // overrides and Show-code omits the defaults. Clearing a Value unsets it;
   // Reset restores the defaults below.
   const INITIAL = {
-    columns: DEMO_COLUMNS,
-    columnsOn: true,
-    size: 'md',
-    sizeOn: false,
-    height: '',
-    heightOn: false,
-    legend: 'yes' as TriState,
-    legendOn: false,
-    ariaLabel: 'Daily activity',
-    ariaLabelOn: true,
-    className: '',
-    classNameOn: false,
+    // The chart requires `columns`, so its eye resets to the demo data instead
+    // of omitting the prop.
+    columns: staged(DEMO_COLUMNS, true),
+    size: staged('md'),
+    height: staged(''),
+    legend: staged('yes' as TriState),
+    ariaLabel: staged('Daily activity', true),
+    className: staged(''),
   }
   let pg = $state(structuredClone(INITIAL))
 
-  const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
-  const demoHeight = $derived(barHeight(pg.height, pg.heightOn))
-  const demoLegend = $derived(pg.legendOn ? flagOn(pg.legend) : undefined)
-  const demoAriaLabel = $derived(pg.ariaLabelOn && pg.ariaLabel ? pg.ariaLabel : undefined)
-  const demoClassName = $derived(pg.classNameOn && pg.className ? pg.className : undefined)
+  const demoSize = $derived.by(() => {
+    const value = applied(pg.size)
+    return value === undefined ? undefined : parseSizeValue(value)
+  })
+  const demoHeight = $derived(barHeight(pg.height.value, pg.height.on))
+  const demoLegend = $derived(appliedFlag(pg.legend))
+  const demoAriaLabel = $derived(applied(pg.ariaLabel) || undefined)
+  const demoClassName = $derived(applied(pg.className) || undefined)
 
   const code = $derived(
     buildBarChartSnippet({
       columns: pg.columns,
       size: pg.size,
-      sizeOn: pg.sizeOn,
       height: pg.height,
-      heightOn: pg.heightOn,
       legend: pg.legend,
-      legendOn: pg.legendOn,
       ariaLabel: pg.ariaLabel,
-      ariaLabelOn: pg.ariaLabelOn,
       className: pg.className,
-      classNameOn: pg.classNameOn,
     }),
   )
 
@@ -57,30 +52,27 @@
   // props (A–Z). The chart requires `columns`, so its eye resets to the demo
   // data instead of omitting the prop.
   const fields: SyncableFieldConfig[] = $derived([
-    textField({ name: 'ariaLabel', type: 'string?', defaultValue: '—', note: 'Accessible name for the chart image.', value: pg.ariaLabel, onChange: v => (pg.ariaLabel = v), clearable: true, enabled: pg.ariaLabelOn, setEnabled: v => (pg.ariaLabelOn = v) }),
-    textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes on the chart root.', value: pg.className, onChange: v => (pg.className = v), editorDefaultValue: '', clearable: true, enabled: pg.classNameOn, setEnabled: v => (pg.classNameOn = v) }),
+    textField({ name: 'ariaLabel', type: 'string?', defaultValue: '—', note: 'Accessible name for the chart image.', clearable: true, ...eye(pg.ariaLabel) }),
+    textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes on the chart root.', editorDefaultValue: '', clearable: true, ...eye(pg.className) }),
     jsonField({
       name: 'columns',
       type: 'ChartColumn[]',
       note: 'Series data: each column has a label and its segments (a segment label feeds the legend, a column tip the tooltip). The eye resets to the demo columns.',
-      value: JSON.stringify(pg.columns, null, 2),
+      value: JSON.stringify(pg.columns.value, null, 2),
       onChange: (draft: string) => {
         const parsed = parseColumnsJson(draft)
-        if (parsed) {
-          pg.columns = parsed
-          pg.columnsOn = true
-        }
+        if (parsed) stage(pg.columns, parsed)
       },
       dialog: {
         valid: (draft: string) => parseColumnsJson(draft) != null,
         invalidMessage: 'Invalid columns JSON. Use an array of { label, segments: [{ value, tone?, label? }], tip? } objects.',
       },
-      toggle: resetToggle(pg.columnsOn, enabled => (pg.columnsOn = enabled), () => (pg.columns = structuredClone(DEMO_COLUMNS))),
-      sync: { kind: 'scriptJson', parseJson: parseColumnsValue, setJson: value => (pg.columns = value as typeof pg.columns) },
+      toggle: eyeResetToggle(pg.columns, () => (pg.columns.value = structuredClone(DEMO_COLUMNS))),
+      sync: { kind: 'scriptJson', parseJson: parseColumnsValue, setJson: value => (pg.columns.value = value as typeof pg.columns.value) },
     }),
-    { name: 'height', type: 'number | string?', defaultValue: '—', note: 'Plot-box height override; a number is px, a string is used verbatim.', editor: 'number', clearable: true, value: pg.height, onChange: value => { pg.height = value; pg.heightOn = true; }, toggle: snippetToggle(pg.heightOn, enabled => (pg.heightOn = enabled)), sync: { kind: 'number', pattern: /^\d+$/ } },
-    boolField({ name: 'legend', defaultValue: 'true', note: 'Render the legend when a segment carries a label.', value: pg.legend, onChange: v => (pg.legend = v as TriState), enabled: pg.legendOn, setEnabled: v => (pg.legendOn = v) }),
-    sizeField({ note: 'Chart scale; the plot, columns, axis, and legend all follow it.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
+    { name: 'height', type: 'number | string?', defaultValue: '—', note: 'Plot-box height override; a number is px, a string is used verbatim.', editor: 'number', clearable: true, ...eye(pg.height), onChange: value => stage(pg.height, value), toggle: eyeToggle(pg.height), sync: { kind: 'number', pattern: /^\d+$/ } },
+    boolField({ name: 'legend', defaultValue: 'true', note: 'Render the legend when a segment carries a label.', ...eyeFlag(pg.legend) }),
+    sizeField({ note: 'Chart scale; the plot, columns, axis, and legend all follow it.', ...eye(pg.size) }),
     { name: 'format', type: '(value: number) => string', defaultValue: 'String', note: 'Legend total formatter; the demo uses the default.' },
   ])
 </script>
@@ -88,7 +80,7 @@
 <ShowcasePage {fields} title="BarChart" {code} onReset={clearPlayground} sync={{ tag: 'BarChart' }}>
   <div class="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 p-4">
     <BarChart
-      columns={pg.columns}
+      columns={pg.columns.value}
       size={demoSize}
       height={demoHeight}
       legend={demoLegend}

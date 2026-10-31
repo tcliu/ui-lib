@@ -7,7 +7,8 @@
   import ShowcasePage from '$showcase/ShowcasePage.svelte'
   import { parseSizeValue } from '$showcase/size-input'
   import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { enumField, textField, sizeField, snippetDialog, snippetField, snippetToggle } from '$showcase/snippet-field'
+  import { enumField, textField, sizeField, snippetDialog, snippetField } from '$showcase/snippet-field'
+  import { applied, eye, eyeToggle, stage, staged } from '$showcase/staged'
   import { buildButtonsSnippet, buttonsChildrenSnippet, normalizeButtonsDraft, parseButtonsList, type ButtonsChildSegment } from './demo-snippet'
 
   const i18n = getI18nContext()
@@ -19,17 +20,15 @@
   // buttons are demo data edited through the children dialog below: raw
   // markup while customized, empty for the canonical pair.
   const INITIAL = {
-    align: 'left',
-    alignOn: false,
-    className: '',
-    classNameOn: false,
-    size: 'md',
-    sizeOn: false,
+    align: staged('left'),
+    className: staged(''),
+    size: staged('md'),
     // The size every button in the row takes (demo data: the buttons are the
     // page's own markup, so the size rides them, not the row).
     buttonSize: 'md',
-    children: '',
-    childrenEnabled: true,
+    // The laid-out buttons are demo data: the pair carries the committed
+    // markup and its eye whether the children snippet applies.
+    children: staged('', true),
   }
   let pg = $state(structuredClone(INITIAL))
 
@@ -47,9 +46,12 @@
     { value: 'xl', label: 'xl' },
   ]
 
-  const demoAlign = $derived(pg.alignOn ? ((pg.align || undefined) as 'left' | 'center' | 'right' | undefined) : undefined)
-  const demoClassName = $derived(pg.classNameOn && pg.className ? pg.className : undefined)
-  const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
+  const demoAlign = $derived((applied(pg.align) || undefined) as 'left' | 'center' | 'right' | undefined)
+  const demoClassName = $derived(applied(pg.className) || undefined)
+  const demoSize = $derived.by(() => {
+    const value = applied(pg.size)
+    return value === undefined ? undefined : parseSizeValue(value)
+  })
   const demoButtonSize = $derived(pg.buttonSize ? parseSizeValue(pg.buttonSize) : undefined)
   const okLabel = $derived(i18n.t('common.ok'))
   const cancelLabel = $derived(i18n.t('common.cancel'))
@@ -57,7 +59,7 @@
   // localized defaults from scope. Stored drafts are always valid, so the
   // fallback only covers the empty state.
   const demoButtons = $derived<ButtonsChildSegment[]>(
-    parseButtonsList(pg.children) ?? [
+    parseButtonsList(pg.children.value) ?? [
       { kind: 'button', variant: 'primary', label: okLabel },
       { kind: 'button', variant: 'outline', label: cancelLabel },
     ],
@@ -68,20 +70,20 @@
   // the edit icon seeds the draft from the live markup and only commits on OK.
   // Committing the canonical pair resets to unset, so defaults keep flowing
   // from scope (e.g. on locale change).
-  const childrenSnippet = $derived(pg.children || buttonsChildrenSnippet(okLabel, cancelLabel))
+  const childrenSnippet = $derived(pg.children.value || buttonsChildrenSnippet(okLabel, cancelLabel))
 
   function clearPlayground() {
     pg = structuredClone(INITIAL)
   }
 
   const code = $derived.by(() =>
-    buildButtonsSnippet({ align: pg.align, alignOn: pg.alignOn, className: pg.className, classNameOn: pg.classNameOn, size: pg.size, sizeOn: pg.sizeOn, buttonSize: pg.buttonSize, children: pg.children, childrenEnabled: pg.childrenEnabled }),
+    buildButtonsSnippet({ align: pg.align, className: pg.className, size: pg.size, buttonSize: pg.buttonSize, children: pg.children }),
   )
 
   
   // Editable rows first (A–Z).
   const fields: SyncableFieldConfig[] = $derived([
-    enumField({ name: 'align', type: "'left' | 'center' | 'right'", defaultValue: "'left'", note: 'Horizontal alignment of the default row.', options: alignOptions, value: pg.align, onChange: v => (pg.align = v), placeholder: 'left', clearLabel: 'Clear align', enabled: pg.alignOn, setEnabled: v => (pg.alignOn = v) }),
+    enumField({ name: 'align', type: "'left' | 'center' | 'right'", defaultValue: "'left'", note: 'Horizontal alignment of the default row.', options: alignOptions, placeholder: 'left', clearLabel: 'Clear align', ...eye(pg.align) }),
     snippetField({
       name: 'children',
       note: 'Buttons to lay out; committing applies it.',
@@ -89,14 +91,13 @@
       onChange: (draft: string) => {
         if (!parseButtonsList(draft)) return
         const normalized = normalizeButtonsDraft(draft)
-        pg.children = normalized === buttonsChildrenSnippet(okLabel, cancelLabel) ? '' : normalized
-        pg.childrenEnabled = true
+        stage(pg.children, normalized === buttonsChildrenSnippet(okLabel, cancelLabel) ? '' : normalized)
       },
       dialog: snippetDialog(parseButtonsList, 'Use valid <Button> markup, e.g. <Button variant="primary">OK</Button>.'),
-      toggle: snippetToggle(pg.childrenEnabled, enabled => (pg.childrenEnabled = enabled)),
+      toggle: eyeToggle(pg.children),
     }),
-    textField({ name: 'className', type: 'string?', defaultValue: '—', note: 'Replaces the default layout classes (align is ignored).', value: pg.className, onChange: v => (pg.className = v), clearable: true, enabled: pg.classNameOn, setEnabled: v => (pg.classNameOn = v) }),
-    sizeField({ note: 'Row scale; the gap between the buttons follows it, and numbers are pixels.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
+    textField({ name: 'className', type: 'string?', defaultValue: '—', note: 'Replaces the default layout classes (align is ignored).', clearable: true, ...eye(pg.className) }),
+    sizeField({ note: 'Row scale; the gap between the buttons follows it, and numbers are pixels.', ...eye(pg.size) }),
   ])
 
   // The seed reads both labels from scope while unset, which reseeding never
@@ -120,15 +121,14 @@
         filterable
         allowCustomValue
         onSelect={value => {
-          pg.size = value
-          pg.sizeOn = true
+          stage(pg.size, value)
           pg.buttonSize = value
         }}
         clearable
         clearLabel="Clear size"
         onClear={() => {
-          pg.size = 'md'
-          pg.sizeOn = false
+          pg.size.value = 'md'
+          pg.size.on = false
           pg.buttonSize = 'md'
         }} />
     </FormField>
@@ -146,5 +146,5 @@
     sync={{ tag: 'Buttons' }}
     scopeRefresh={() => [okLabel, cancelLabel]}
   >
-    <Buttons align={demoClassName ? undefined : demoAlign} size={demoClassName ? undefined : demoSize} className={demoClassName} children={pg.childrenEnabled ? buttonsChildren : undefined} />
+    <Buttons align={demoClassName ? undefined : demoAlign} size={demoClassName ? undefined : demoSize} className={demoClassName} children={pg.children.on ? buttonsChildren : undefined} />
   </ShowcasePage>

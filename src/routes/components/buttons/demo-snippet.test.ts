@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createSnippetComponent } from '$showcase/snippet-playground'
+import { staged } from '$showcase/staged'
 import { buildButtonsSnippet, buttonsChildrenSnippet, normalizeButtonsDraft, parseButtonsList, type ButtonsSnippetState } from './demo-snippet'
 
 // A layout-preset class the builder only passes through, used to check the
@@ -8,15 +9,11 @@ const STACKED_CLASS = 'flex flex-col items-start gap-1'
 
 function state(overrides: Partial<ButtonsSnippetState> = {}): ButtonsSnippetState {
   return {
-    align: '',
-    alignOn: true,
-    className: '',
-    classNameOn: false,
-    size: 'md',
-    sizeOn: false,
+    align: staged('', true),
+    className: staged(''),
+    size: staged('md'),
     buttonSize: 'md',
-    children: '',
-    childrenEnabled: true,
+    children: staged('', true),
     ...overrides,
   }
 }
@@ -30,61 +27,61 @@ describe('buildButtonsSnippet', () => {
   })
 
   it('emits an empty layout while the children toggle is off', () => {
-    const source = buildButtonsSnippet(state({ childrenEnabled: false }))
+    const source = buildButtonsSnippet(state({ children: staged('', false) }))
     expect(source).toBe('<Buttons>\n</Buttons>')
     expect(source).not.toContain('{okLabel}')
   })
 
   it('emits the chosen align', () => {
-    const source = buildButtonsSnippet(state({ align: 'center' }))
+    const source = buildButtonsSnippet(state({ align: staged('center', true) }))
     expect(source).toContain('<Buttons align="center">')
   })
 
   it('omits component defaults (the Value column prefills them)', () => {
-    const source = buildButtonsSnippet(state({ align: 'left' }))
+    const source = buildButtonsSnippet(state({ align: staged('left', true) }))
     expect(source).toContain('<Buttons>')
     expect(source).not.toContain('align=')
   })
 
   it('omits the staged align while its eye is off', () => {
-    const source = buildButtonsSnippet(state({ align: 'center', alignOn: false }))
+    const source = buildButtonsSnippet(state({ align: staged('center') }))
     expect(source).not.toContain('align=')
   })
 
   it('drops align when className takes over', () => {
-    const source = buildButtonsSnippet(state({ align: 'center', className: STACKED_CLASS, classNameOn: true }))
+    const source = buildButtonsSnippet(state({ align: staged('center', true), className: staged(STACKED_CLASS, true) }))
     expect(source).not.toContain('align=')
     expect(source).toContain(`className="${STACKED_CLASS}"`)
   })
 
   it('emits the stacked class override', () => {
-    const source = buildButtonsSnippet(state({ className: STACKED_CLASS, classNameOn: true }))
+    const source = buildButtonsSnippet(state({ className: staged(STACKED_CLASS, true) }))
     expect(source).toContain('className="flex flex-col items-start gap-1"')
   })
 
   it('emits the chosen size', () => {
-    const source = buildButtonsSnippet(state({ size: 'lg', sizeOn: true }))
+    const source = buildButtonsSnippet(state({ size: staged('lg', true) }))
     expect(source).toContain('<Buttons size="lg">')
   })
 
   it('emits a numeric size as an expression', () => {
-    const source = buildButtonsSnippet(state({ size: '20', sizeOn: true }))
+    const source = buildButtonsSnippet(state({ size: staged('20', true) }))
     expect(source).toContain('<Buttons size={20}>')
   })
 
   it('omits the default size (the Value column prefills it)', () => {
-    const source = buildButtonsSnippet(state({ size: 'md', sizeOn: true }))
+    const source = buildButtonsSnippet(state({ size: staged('md', true) }))
     expect(source).toContain('<Buttons>')
     expect(source).not.toContain('size=')
   })
 
   it('omits the staged size while its eye is off', () => {
-    const source = buildButtonsSnippet(state({ size: 'lg', sizeOn: false }))
+    const source = buildButtonsSnippet(state({ size: staged('lg') }))
     expect(source).not.toContain('size=')
   })
 
   it('drops the size when className takes over', () => {
-    const source = buildButtonsSnippet(state({ size: 'lg', sizeOn: true, className: STACKED_CLASS, classNameOn: true }))
+    const source = buildButtonsSnippet(state({ size: staged('lg', true), className: staged(STACKED_CLASS, true) }))
     expect(source).not.toContain('size=')
     expect(source).toContain(`className="${STACKED_CLASS}"`)
   })
@@ -108,22 +105,22 @@ describe('buildButtonsSnippet', () => {
 
   it('injects the button size into custom children', () => {
     const source = buildButtonsSnippet(
-      state({ buttonSize: 'lg', children: '<Button variant="primary">Create</Button>\n<Button>Reset</Button>' }),
+      state({ buttonSize: 'lg', children: staged('<Button variant="primary">Create</Button>\n<Button>Reset</Button>', true) }),
     )
     expect(source).toContain('<Button size="lg" variant="primary">Create</Button>')
     expect(source).toContain('<Button size="lg">Reset</Button>')
   })
 
   it('leaves custom children untouched without a button size', () => {
-    const source = buildButtonsSnippet(state({ buttonSize: '', children: '<Button variant="primary">Create</Button>' }))
+    const source = buildButtonsSnippet(state({ buttonSize: '', children: staged('<Button variant="primary">Create</Button>', true) }))
     expect(source).toContain('<Button variant="primary">Create</Button>')
   })
 
   it('stages the className override until applied', () => {
-    const staged = buildButtonsSnippet(state({ align: 'center', className: STACKED_CLASS }))
-    expect(staged).toContain('<Buttons align="center">')
-    expect(staged).not.toContain('className=')
-    const applied = buildButtonsSnippet(state({ align: 'center', className: STACKED_CLASS, classNameOn: true }))
+    const parked = buildButtonsSnippet(state({ align: staged('center', true), className: staged(STACKED_CLASS) }))
+    expect(parked).toContain('<Buttons align="center">')
+    expect(parked).not.toContain('className=')
+    const applied = buildButtonsSnippet(state({ align: staged('center', true), className: staged(STACKED_CLASS, true) }))
     expect(applied).not.toContain('align=')
     expect(applied).toContain(`className="${STACKED_CLASS}"`)
   })
@@ -137,7 +134,7 @@ describe('buildButtonsSnippet', () => {
 
   it('emits customized children verbatim', () => {
     const source = buildButtonsSnippet(
-      state({ children: '<Button variant="primary">Create</Button>\n<Button variant="danger">Delete</Button>' }),
+      state({ children: staged('<Button variant="primary">Create</Button>\n<Button variant="danger">Delete</Button>', true) }),
     )
     expect(source).toContain('<Button variant="primary">Create</Button>')
     expect(source).toContain('<Button variant="danger">Delete</Button>')
@@ -145,7 +142,7 @@ describe('buildButtonsSnippet', () => {
   })
 
   it('escapes ampersands in verbatim labels so the seed compiles', () => {
-    const source = buildButtonsSnippet(state({ children: '<Button>Fish & Chips</Button>' }))
+    const source = buildButtonsSnippet(state({ children: staged('<Button>Fish & Chips</Button>', true) }))
     expect(source).toContain('<Button>Fish &amp; Chips</Button>')
   })
 
@@ -160,7 +157,7 @@ describe('buildButtonsSnippet', () => {
   it('compiles the generated snippet with customized children', { timeout: 30000 }, async () => {
     const component = await createSnippetComponent(
       buildButtonsSnippet(
-        state({ children: '<Button variant="primary">Create</Button>\n<Button>Fish & Chips</Button>' }),
+        state({ children: staged('<Button variant="primary">Create</Button>\n<Button>Fish & Chips</Button>', true) }),
       ),
       {
         okLabel: 'OK',

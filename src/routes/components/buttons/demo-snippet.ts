@@ -2,29 +2,26 @@
 // playground form state: the section regenerates the editor text from this, so
 // the editor always shows the markup behind the demo above.
 
-import { escapeRawLine } from '$showcase/snippet-build'
+import { escapeAttr, escapeRawLine } from '$showcase/snippet-build'
 import { sizeAttributeFragment } from '$showcase/size-input'
+import type { Staged } from '$showcase/staged'
 
 export type ButtonsButtonVariant = 'primary' | 'secondary' | 'danger' | 'outline' | 'ghost'
 
 const BUTTON_VARIANTS: readonly string[] = ['primary', 'secondary', 'danger', 'outline', 'ghost']
 
 export interface ButtonsSnippetState {
-  align: string
-  alignOn: boolean
-  className: string
-  classNameOn: boolean
+  align: Staged<string>
+  className: Staged<string>
   // The row's scale (a step name or a pixel number); empty is the `md` default.
-  size: string
-  sizeOn: boolean
+  size: Staged<string>
   // The size every button in the row takes (demo data: the buttons are the
   // page's own markup, so the size rides them, not the row).
   buttonSize: string
   // Raw children markup committed from the row's code dialog; empty renders
-  // the canonical pair below.
-  children: string
-  // The eye toggle off means the children snippet is not applied.
-  childrenEnabled: boolean
+  // the canonical pair below. Its eye off means the children snippet is not
+  // applied.
+  children: Staged<string>
 }
 
 export type ButtonsHtmlTag = 'div' | 'span' | 'p'
@@ -117,14 +114,14 @@ function withButtonSize(children: string, sizeAttr: string): string {
   return children.replace(/<Button(?=[\s>])/g, `<Button${sizeAttr}`)
 }
 
-export function buildButtonsSnippet({ align, alignOn, className, classNameOn, size, sizeOn, buttonSize, children, childrenEnabled }: ButtonsSnippetState): string {
+export function buildButtonsSnippet({ align, className, size, buttonSize, children }: ButtonsSnippetState): string {
   // A custom className replaces the default row, so align is omitted with it.
-  const appliedClassName = classNameOn && className ? className : ''
+  const appliedClassName = className.on && className.value ? className.value : ''
   const attrs = [
-    ...(!appliedClassName && alignOn && align && align !== 'left' ? [` align="${align}"`] : []),
+    ...(!appliedClassName && align.on && align.value && align.value !== 'left' ? [` align="${escapeAttr(align.value)}"`] : []),
     // The size drives the row's gap, which the custom className replaces too.
-    ...(!appliedClassName && sizeOn && size !== '' && size !== 'md' ? [sizeAttributeFragment(size)] : []),
-    ...(appliedClassName ? [` className="${appliedClassName}"`] : []),
+    ...(!appliedClassName && size.on && size.value !== '' && size.value !== 'md' ? [sizeAttributeFragment(size.value)] : []),
+    ...(appliedClassName ? [` className="${escapeAttr(appliedClassName)}"`] : []),
   ].join('')
   // The buttons' own size is a separate knob: it rides each button, and the
   // `md` default is left implicit (a button at its default carries no size).
@@ -133,10 +130,10 @@ export function buildButtonsSnippet({ align, alignOn, className, classNameOn, si
   // Otherwise custom children emit verbatim; unset, the pair reads the localized
   // defaults from scope. `buildSource` drops the same-named scope key once
   // the snippet declares it, so a local value wins.
-  const childLines = !childrenEnabled
+  const childLines = !children.on
     ? []
-    : children
-      ? withButtonSize(children, buttonSizeAttr)
+    : children.value
+      ? withButtonSize(children.value, buttonSizeAttr)
           .split('\n')
           .map(line => (line ? `  ${escapeRawLine(line)}` : line))
       : [

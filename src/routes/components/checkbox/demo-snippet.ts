@@ -2,71 +2,37 @@
 // the playground form state: the section regenerates the editor text from
 // this, so the editor always shows the markup behind the demo above.
 
-import { escapeAttr } from '$showcase/snippet-build'
-import { sizeAttributeLine } from '$showcase/size-input'
-export type TriState = '' | 'yes' | 'no'
+import { boolAttrLine, escapeAttr, sizeAttrLine, textAttrLine, type TriState } from '$showcase/snippet-build'
+import type { Staged } from '$showcase/staged'
 
 export interface CheckboxSnippetState {
-  label: string
-  labelOn: boolean
-  size: string
-  sizeOn: boolean
-  disabled: TriState
-  disabledOn: boolean
-  indeterminate: TriState
-  indeterminateOn: boolean
-  wrapperClass: string
-  wrapperClassOn: boolean
-  ariaLabel: string
-  ariaLabelOn: boolean
-  name: string
-  nameOn: boolean
-  stopPropagation: TriState
-  stopPropagationOn: boolean
+  label: Staged<string>
+  size: Staged<string>
+  disabled: Staged<TriState>
+  indeterminate: Staged<TriState>
+  wrapperClass: Staged<string>
+  ariaLabel: Staged<string>
+  name: Staged<string>
+  stopPropagation: Staged<TriState>
 }
 
 export const STYLED_WRAPPER = 'rounded-md border border-slate-700 px-3 py-2'
 
-// A tri-state line: omitted while unset or at the component default, bare
-// while Yes, ={false} while No.
-function flagLine(name: string, value: TriState, def: TriState = ''): string[] {
-  if (value === '' || value === def) {
-    return []
-  }
-  return [`  ${name}${value === 'yes' ? '' : '={false}'}`]
-}
-
-export function buildCheckboxSnippet({
-  label,
-  labelOn,
-  size,
-  sizeOn,
-  disabled,
-  disabledOn,
-  indeterminate,
-  indeterminateOn,
-  wrapperClass,
-  wrapperClassOn,
-  ariaLabel,
-  ariaLabelOn,
-  name,
-  nameOn,
-  stopPropagation,
-  stopPropagationOn,
-}: CheckboxSnippetState): string {
+export function buildCheckboxSnippet(state: CheckboxSnippetState): string {
+  const { label, size, disabled, indeterminate, wrapperClass, ariaLabel, name, stopPropagation } = state
   const lines = [
     '<Checkbox',
     '  bind:checked={checked}',
-    ...(labelOn && label ? [`  label="${escapeAttr(label)}"`] : ['  label={applyLabel}']),
-    ...(ariaLabelOn && ariaLabel ? [`  ariaLabel="${escapeAttr(ariaLabel)}"`] : []),
-    ...(nameOn && name ? [`  name="${escapeAttr(name)}"`] : []),
+    ...(label.on && label.value ? [`  label="${escapeAttr(label.value)}"`] : ['  label={applyLabel}']),
+    ...textAttrLine('ariaLabel', ariaLabel),
+    ...textAttrLine('name', name),
     // Enum rows prefill their component default in the Value column; the
     // builder omits the default so Show-code stays minimal.
-    ...(sizeOn && size !== '' && size !== 'md' ? sizeAttributeLine(size) : []),
-    ...(disabledOn ? flagLine('disabled', disabled, 'no') : []),
-    ...(indeterminateOn ? flagLine('indeterminate', indeterminate, 'no') : []),
-    ...(stopPropagationOn ? flagLine('stopPropagation', stopPropagation, 'yes') : []),
-    ...(wrapperClassOn && wrapperClass ? [`  wrapperClass="${escapeAttr(wrapperClass)}"`] : []),
+    ...sizeAttrLine(size),
+    ...boolAttrLine('disabled', disabled, 'no'),
+    ...boolAttrLine('indeterminate', indeterminate, 'no'),
+    ...boolAttrLine('stopPropagation', stopPropagation, 'yes'),
+    ...textAttrLine('wrapperClass', wrapperClass),
     '  onChange={checked => (lastChange = String(checked))} />',
     '<p class="text-sm text-slate-400">checked: {checked}, lastChange: {lastChange}</p>',
   ]

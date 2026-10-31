@@ -4,103 +4,63 @@
 // Single-quoted lines throughout: backticks and ${} inside them stay literal,
 // so no escaping.
 
-import { escapeAttr } from '$showcase/snippet-build'
-import { sizeAttributeLine } from '$showcase/size-input'
-
-export type TriState = '' | 'yes' | 'no'
+import { boolAttrLine, enumAttrLine, escapeAttr, sizeAttrLine, textAttrLine, type TriState } from '$showcase/snippet-build'
+import type { Staged } from '$showcase/staged'
 
 export interface ConfirmDialogSnippetState {
-  widthVariant: string
-  widthVariantOn: boolean
-  heightVariant: string
-  heightVariantOn: boolean
+  widthVariant: Staged<string>
+  heightVariant: Staged<string>
   // Panel footprint shorthand (`size` on BaseDialog).
-  size: string
-  sizeOn: boolean
-  accent: string
-  accentOn: boolean
-  pending: TriState
-  pendingOn: boolean
-  confirmOnDismiss: TriState
-  confirmOnDismissOn: boolean
-  className: string
-  classNameOn: boolean
-  closeLabel: string
-  closeLabelOn: boolean
-  confirmLabel: string
-  confirmLabelOn: boolean
-  message: string
-  messageOn: boolean
-  title: string
-  titleOn: boolean
+  size: Staged<string>
+  accent: Staged<string>
+  pending: Staged<TriState>
+  confirmOnDismiss: Staged<TriState>
+  className: Staged<string>
+  closeLabel: Staged<string>
+  confirmLabel: Staged<string>
+  message: Staged<string>
+  title: Staged<string>
   // The confirm button's scale, distinct from the panel `size`.
-  buttonSize: string
-  buttonSizeOn: boolean
-}
-
-// A string attribute line for an optional prop: omitted while unset.
-function optionalTextLine(name: string, value: string): string[] {
-  return value ? [`    ${name}="${escapeAttr(value)}"`] : []
+  buttonSize: Staged<string>
 }
 
 // A string attribute line for a required prop: a scope ref stands in while
 // unset, so the localized default renders without pinning English text.
-function requiredTextLine(name: string, value: string, scopeRef: string): string[] {
-  return value ? [`    ${name}="${escapeAttr(value)}"`] : [`    ${name}={${scopeRef}}`]
-}
-
-// A tri-state line: omitted while unset or at the component default, bare
-// while Yes, ={false} while No.
-function flagLine(name: string, value: TriState, def: TriState = ''): string[] {
-  if (value === '' || value === def) {
-    return []
-  }
-  return [`    ${name}${value === 'yes' ? '' : '={false}'}`]
+function requiredTextLine(name: string, pair: Staged<string>, scopeRef: string): string[] {
+  return pair.on && pair.value ? [`    ${name}="${escapeAttr(pair.value)}"`] : [`    ${name}={${scopeRef}}`]
 }
 
 export function buildConfirmDialogSnippet({
   widthVariant,
-  widthVariantOn,
   heightVariant,
-  heightVariantOn,
   size,
-  sizeOn,
   accent,
-  accentOn,
   pending,
-  pendingOn,
   confirmOnDismiss,
-  confirmOnDismissOn,
   className,
-  classNameOn,
   closeLabel,
-  closeLabelOn,
   confirmLabel,
-  confirmLabelOn,
   message,
-  messageOn,
   title,
-  titleOn,
   buttonSize,
-  buttonSizeOn,
 }: ConfirmDialogSnippetState): string {
   return [
     '<Button variant="primary" accent="rose" onClick={() => (open = true)}>{openLabel}</Button>',
     '',
     '{#if open}',
     '  <ConfirmDialog',
-    ...requiredTextLine('title', titleOn && title ? title : '', 'discardTitle'),
-    ...requiredTextLine('message', messageOn && message ? message : '', 'discardMessage'),
-    ...requiredTextLine('confirmLabel', confirmLabelOn && confirmLabel ? confirmLabel : '', 'discardLabel'),
-    ...requiredTextLine('closeLabel', closeLabelOn ? closeLabel : '', 'closeLabel'),
-    ...optionalTextLine('className', classNameOn ? className : ''),
-    ...(widthVariantOn && widthVariant && widthVariant !== 'md' ? [`    widthVariant="${widthVariant}"`] : []),
-    ...(heightVariantOn && heightVariant && heightVariant !== 'auto' ? [`    heightVariant="${heightVariant}"`] : []),
-    ...(sizeOn ? optionalTextLine('size', size) : []),
-    ...(accentOn && accent && accent !== 'rose' ? [`    accent="${accent}"`] : []),
-    ...(pendingOn ? flagLine('pending', pending, 'no') : []),
-    ...(buttonSizeOn && buttonSize !== '' && buttonSize !== 'md' ? sizeAttributeLine(buttonSize, '    ', 'buttonSize') : []),
-    ...(confirmOnDismissOn ? flagLine('confirmOnDismiss', confirmOnDismiss, 'no') : []),
+    ...requiredTextLine('title', title, 'discardTitle'),
+    ...requiredTextLine('message', message, 'discardMessage'),
+    ...requiredTextLine('confirmLabel', confirmLabel, 'discardLabel'),
+    ...requiredTextLine('closeLabel', closeLabel, 'closeLabel'),
+    ...textAttrLine('className', className, '    '),
+    ...enumAttrLine('widthVariant', widthVariant, 'md', '    '),
+    ...enumAttrLine('heightVariant', heightVariant, 'auto', '    '),
+    ...textAttrLine('size', size, '    '),
+    ...enumAttrLine('accent', accent, 'rose', '    '),
+    ...boolAttrLine('pending', pending, 'no', '    '),
+    ...sizeAttrLine(buttonSize, '    ', 'md', 'buttonSize'),
+    ...boolAttrLine('confirmOnDismiss', confirmOnDismiss, 'no', '    '),
     "    onConfirm={() => { result = 'confirmed'; open = false }}",
     "    onCancel={() => { result = 'cancelled'; open = false }} />",
     '{/if}',

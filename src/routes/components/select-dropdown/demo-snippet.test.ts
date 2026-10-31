@@ -1,41 +1,26 @@
 import { describe, expect, it } from 'vitest'
 import { createSnippetComponent } from '$showcase/snippet-playground'
+import { staged } from '$showcase/staged'
 import { buildSelectDropdownSnippet, type SelectDropdownSnippetState } from './demo-snippet'
 
 function state(overrides: Partial<SelectDropdownSnippetState> = {}): SelectDropdownSnippetState {
   return {
-    ariaLabel: 'default',
-    ariaLabelOn: true,
-    buttonLabel: '',
-    buttonLabelOn: true,
-    value: 'two',
-    valueOn: true,
-    defaultValue: '',
-    defaultValueOn: true,
-    size: '',
-    sizeOn: true,
-    filterable: '',
-    filterableOn: true,
-    allowCustomValue: '',
-    allowCustomValueOn: true,
-    buttonClass: '',
-    buttonClassOn: true,
-    controlClass: '',
-    controlClassOn: true,
-    optionClass: '',
-    optionClassOn: true,
-    emptyLabel: '',
-    emptyLabelOn: true,
-    clearable: '',
-    clearableOn: true,
-    clearLabel: '',
-    clearLabelOn: true,
-    align: '',
-    alignOn: true,
-    autoPlace: '',
-    autoPlaceOn: true,
-    panelClass: '',
-    panelClassOn: true,
+    ariaLabel: staged('default', true),
+    buttonLabel: staged('', true),
+    value: staged('two', true),
+    defaultValue: staged('', true),
+    size: staged('', true),
+    filterable: staged('', true),
+    allowCustomValue: staged('', true),
+    buttonClass: staged('', true),
+    controlClass: staged('', true),
+    optionClass: staged('', true),
+    emptyLabel: staged('', true),
+    clearable: staged('', true),
+    clearLabel: staged('', true),
+    align: staged('', true),
+    autoPlace: staged('', true),
+    panelClass: staged('', true),
     ...overrides,
   }
 }
@@ -57,20 +42,18 @@ describe('buildSelectDropdownSnippet', () => {
   it('emits size, flags, text overrides, and align while set', () => {
     const source = buildSelectDropdownSnippet(
       state({
-        size: 'lg',
-        sizeOn: true,
-        filterable: 'yes',
-        allowCustomValue: 'yes',
-        buttonClass: 'w-40',
-        controlClass: 'w-40',
-        optionClass: 'italic',
-        emptyLabel: 'None',
-        clearable: 'yes',
-        clearLabel: 'Clear it',
-        align: 'right',
-        alignOn: true,
-        autoPlace: 'no',
-        panelClass: 'shadow-lg',
+        size: staged('lg', true),
+        filterable: staged('yes', true),
+        allowCustomValue: staged('yes', true),
+        buttonClass: staged('w-40', true),
+        controlClass: staged('w-40', true),
+        optionClass: staged('italic', true),
+        emptyLabel: staged('None', true),
+        clearable: staged('yes', true),
+        clearLabel: staged('Clear it', true),
+        align: staged('right', true),
+        autoPlace: staged('no', true),
+        panelClass: staged('shadow-lg', true),
       }),
     )
     expect(source).toContain('size="lg"')
@@ -90,14 +73,12 @@ describe('buildSelectDropdownSnippet', () => {
   it('omits component defaults (the Value column prefills them)', () => {
     const source = buildSelectDropdownSnippet(
       state({
-        size: 'md',
-        sizeOn: true,
-        filterable: 'no',
-        allowCustomValue: 'no',
-        clearable: 'no',
-        align: 'left',
-        alignOn: true,
-        autoPlace: 'yes',
+        size: staged('md', true),
+        filterable: staged('no', true),
+        allowCustomValue: staged('no', true),
+        clearable: staged('no', true),
+        align: staged('left', true),
+        autoPlace: staged('yes', true),
       }),
     )
     expect(source).not.toMatch(/^\s*size=/m)
@@ -109,14 +90,12 @@ describe('buildSelectDropdownSnippet', () => {
   })
 
   it('emits a numeric size as an expression and omits invalid sizes', () => {
-    expect(buildSelectDropdownSnippet(state({ size: '14', sizeOn: true }))).toContain('size={14}')
-    expect(buildSelectDropdownSnippet(state({ size: 'huge' }))).not.toMatch(/^\s*size=/m)
+    expect(buildSelectDropdownSnippet(state({ size: staged('14', true) }))).toContain('size={14}')
+    expect(buildSelectDropdownSnippet(state({ size: staged('huge', true) }))).not.toMatch(/^\s*size=/m)
   })
 
   it('omits staged dropdown props while their eyes are off', () => {
-    const off = buildSelectDropdownSnippet(
-      state({ size: 'lg', sizeOn: false, align: 'right', alignOn: false }),
-    )
+    const off = buildSelectDropdownSnippet(state({ size: staged('lg'), align: staged('right') }))
     expect(off).not.toMatch(/^\s*size=/m)
     expect(off).not.toContain('align=')
   })
@@ -124,19 +103,19 @@ describe('buildSelectDropdownSnippet', () => {
   it('emits a custom buttonLabel literal and omits it while unset', () => {
     const unset = buildSelectDropdownSnippet(state())
     expect(unset).not.toContain('buttonLabel')
-    const custom = buildSelectDropdownSnippet(state({ buttonLabel: 'Pick one' }))
+    const custom = buildSelectDropdownSnippet(state({ buttonLabel: staged('Pick one', true) }))
     expect(custom).toContain('buttonLabel="Pick one"')
   })
 
   it('omits eye-gated overrides while their toggle is off and emits them while on', () => {
     const off = buildSelectDropdownSnippet(
-      state({ ariaLabel: 'Custom', ariaLabelOn: false, buttonClass: 'w-40', buttonClassOn: false, defaultValue: 'two', defaultValueOn: false }),
+      state({ ariaLabel: staged('Custom'), buttonClass: staged('w-40'), defaultValue: staged('two') }),
     )
     expect(off).not.toContain('ariaLabel=')
     expect(off).not.toContain('buttonClass=')
     expect(off).not.toContain('defaultValue=')
     const on = buildSelectDropdownSnippet(
-      state({ ariaLabel: 'Custom', ariaLabelOn: true, buttonClass: 'w-40', buttonClassOn: true, defaultValue: 'two', defaultValueOn: true }),
+      state({ ariaLabel: staged('Custom', true), buttonClass: staged('w-40', true), defaultValue: staged('two', true) }),
     )
     expect(on).toContain('ariaLabel="Custom"')
     expect(on).toContain('buttonClass="w-40"')
@@ -145,7 +124,7 @@ describe('buildSelectDropdownSnippet', () => {
 
   it('omits staged flags while their eyes are off', () => {
     const off = buildSelectDropdownSnippet(
-      state({ filterable: 'yes', filterableOn: false, allowCustomValue: 'yes', allowCustomValueOn: false, clearable: 'yes', clearableOn: false, autoPlace: 'no', autoPlaceOn: false }),
+      state({ filterable: staged('yes'), allowCustomValue: staged('yes'), clearable: staged('yes'), autoPlace: staged('no') }),
     )
     expect(off).not.toContain('filterable')
     expect(off).not.toContain('allowCustomValue')
@@ -154,17 +133,17 @@ describe('buildSelectDropdownSnippet', () => {
   })
 
   it('omits the committed value while its eye is off', () => {
-    const off = buildSelectDropdownSnippet(state({ value: 'three', valueOn: false }))
+    const off = buildSelectDropdownSnippet(state({ value: staged('three') }))
     expect(off).not.toContain('activeValue=')
     expect(off).toContain('let value = $state("three")')
-    const on = buildSelectDropdownSnippet(state({ value: 'three', valueOn: true }))
+    const on = buildSelectDropdownSnippet(state({ value: staged('three', true) }))
     expect(on).toContain('activeValue={value}')
   })
 
   it('seeds the committed value as script-local state', () => {
-    const source = buildSelectDropdownSnippet(state({ value: 'three' }))
+    const source = buildSelectDropdownSnippet(state({ value: staged('three', true) }))
     expect(source).toContain('let value = $state("three")')
-    const quoted = buildSelectDropdownSnippet(state({ value: 'a"b' }))
+    const quoted = buildSelectDropdownSnippet(state({ value: staged('a"b', true) }))
     expect(quoted).toContain('let value = $state("a\\"b")')
   })
 

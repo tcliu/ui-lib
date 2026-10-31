@@ -1,35 +1,24 @@
 import { describe, expect, it } from 'vitest'
 import { createSnippetComponent } from '$showcase/snippet-playground'
+import { staged } from '$showcase/staged'
 import { buildTagInputSnippet, parseTagListJson, parseTagListValue, type TagInputSnippetState } from './demo-snippet'
 
 function state(overrides: Partial<TagInputSnippetState> = {}): TagInputSnippetState {
   return {
-    value: ['svelte', 'kit'],
-    valueEnabled: true,
-    options: ['svelte', 'kit', 'icons'],
-    optionsEnabled: true,
-    defaultValue: [],
-    defaultValueOn: false,
-    clearable: '',
-    clearableOn: true,
-    clearLabel: '',
-    clearLabelOn: true,
-    clearPlacement: '',
-    clearPlacementOn: true,
-    placeholder: '',
-    placeholderOn: true,
-    size: '',
-    sizeOn: true,
-    palette: '',
-    paletteOn: true,
-    disabled: '',
-    disabledOn: true,
-    id: '',
-    idOn: true,
-    chipClass: '',
-    chipClassOn: true,
-    chip: '',
-    option: '',
+    value: staged(['svelte', 'kit'], true),
+    options: staged(['svelte', 'kit', 'icons'], true),
+    defaultValue: staged([]),
+    clearable: staged('', true),
+    clearLabel: staged('', true),
+    clearPlacement: staged('', true),
+    placeholder: staged('', true),
+    size: staged('', true),
+    palette: staged('', true),
+    disabled: staged('', true),
+    id: staged('', true),
+    chipClass: staged('', true),
+    chip: staged(''),
+    option: staged(''),
     ...overrides,
   }
 }
@@ -60,7 +49,7 @@ describe('buildTagInputSnippet', () => {
 
   it('omits staged dropdown props while their eyes are off', () => {
     const off = buildTagInputSnippet(
-      state({ size: 'lg', sizeOn: false, palette: 'alt', paletteOn: false, clearPlacement: 'inside', clearPlacementOn: false }),
+      state({ size: staged('lg'), palette: staged('alt'), clearPlacement: staged('inside') }),
     )
     expect(off).not.toMatch(/^\s*size=/m)
     expect(off).not.toContain('palette=')
@@ -68,18 +57,18 @@ describe('buildTagInputSnippet', () => {
   })
 
   it('omits eye-gated overrides while their toggle is off and emits them while on', () => {
-    const off = buildTagInputSnippet(state({ placeholder: 'Pick', placeholderOn: false, defaultValue: ['svelte'], clearLabel: 'Clear it', clearLabelOn: false }))
+    const off = buildTagInputSnippet(state({ placeholder: staged('Pick'), defaultValue: staged(['svelte']), clearLabel: staged('Clear it') }))
     expect(off).not.toContain('placeholder=')
     expect(off).not.toContain('defaultValue')
     expect(off).not.toContain('clearLabel=')
-    const on = buildTagInputSnippet(state({ placeholder: 'Pick', placeholderOn: true, defaultValue: ['svelte'], defaultValueOn: true, clearLabel: 'Clear it' }))
+    const on = buildTagInputSnippet(state({ placeholder: staged('Pick', true), defaultValue: staged(['svelte'], true), clearLabel: staged('Clear it', true) }))
     expect(on).toContain('placeholder="Pick"')
     expect(on).toContain('let defaultValue = $state(["svelte"]);')
     expect(on).toContain('defaultValue={defaultValue}')
     expect(on).toContain('clearLabel="Clear it"')
   })
   it('omits component defaults (the Value column prefills them)', () => {
-    const source = buildTagInputSnippet(state({ size: 'md', sizeOn: true, disabled: 'no', clearable: 'no', clearPlacement: 'auto', clearPlacementOn: true }))
+    const source = buildTagInputSnippet(state({ size: staged('md', true), disabled: staged('no', true), clearable: staged('no', true), clearPlacement: staged('auto', true) }))
     expect(source).not.toMatch(/^\s*size=/m)
     expect(source).not.toContain('disabled')
     expect(source).not.toContain('clearable')
@@ -88,7 +77,7 @@ describe('buildTagInputSnippet', () => {
 
   it('emits the palette override, the disabled flag, and the passthrough props', () => {
     const source = buildTagInputSnippet(
-      state({ placeholder: 'Pick', palette: 'alt', paletteOn: true, disabled: 'yes', id: 'tags', chipClass: 'chip-x' }),
+      state({ placeholder: staged('Pick', true), palette: staged('alt', true), disabled: staged('yes', true), id: staged('tags', true), chipClass: staged('chip-x', true) }),
     )
     expect(source).toContain('placeholder="Pick"')
     expect(source).toContain('palette={altPalette}')
@@ -98,13 +87,13 @@ describe('buildTagInputSnippet', () => {
   })
 
   it('emits a named size as a string and omits it while unset', () => {
-    expect(buildTagInputSnippet(state({ size: 'lg', sizeOn: true }))).toContain('size="lg"')
+    expect(buildTagInputSnippet(state({ size: staged('lg', true) }))).toContain('size="lg"')
     expect(buildTagInputSnippet(state())).not.toMatch(/^\s*size=/m)
   })
 
   it('emits a numeric size as an expression and omits invalid sizes', () => {
-    expect(buildTagInputSnippet(state({ size: '14', sizeOn: true }))).toContain('size={14}')
-    expect(buildTagInputSnippet(state({ size: 'huge' }))).not.toMatch(/^\s*size=/m)
+    expect(buildTagInputSnippet(state({ size: staged('14', true) }))).toContain('size={14}')
+    expect(buildTagInputSnippet(state({ size: staged('huge', true) }))).not.toMatch(/^\s*size=/m)
   })
 
   it('omits the chip and option renderers while unset and emits them when set', () => {
@@ -113,7 +102,7 @@ describe('buildTagInputSnippet', () => {
     expect(unset).not.toContain('option={option}')
     expect(unset).not.toContain('{#snippet chip(')
     expect(unset).toContain('onChange={next => (value = next)} />')
-    const set = buildTagInputSnippet(state({ chip: '#', option: '»' }))
+    const set = buildTagInputSnippet(state({ chip: staged('#', true), option: staged('»', true) }))
     expect(set).toContain('chip={chip}')
     expect(set).toContain('option={option}')
     expect(set).toContain('{#snippet chip(tag, remove)}')
@@ -127,20 +116,20 @@ describe('buildTagInputSnippet', () => {
 
   it('emits the clearable flag while set', () => {
     expect(buildTagInputSnippet(state())).not.toContain('clearable')
-    const source = buildTagInputSnippet(state({ clearable: 'yes', clearLabel: 'Clear it', clearPlacement: 'inside', clearPlacementOn: true }))
+    const source = buildTagInputSnippet(state({ clearable: staged('yes', true), clearLabel: staged('Clear it', true), clearPlacement: staged('inside', true) }))
     expect(source).toContain('  clearable\n')
     expect(source).toContain('clearLabel="Clear it"')
     expect(source).toContain('clearPlacement="inside"')
   })
 
   it('omits staged flag props while their eyes are off', () => {
-    const off = buildTagInputSnippet(state({ disabled: 'yes', disabledOn: false, clearable: 'yes', clearableOn: false }))
+    const off = buildTagInputSnippet(state({ disabled: staged('yes'), clearable: staged('yes') }))
     expect(off).not.toContain('disabled')
     expect(off).not.toContain('clearable')
   })
 
   it('omits the tag lists while their eye toggle is off', () => {
-    const source = buildTagInputSnippet(state({ valueEnabled: false, optionsEnabled: false }))
+    const source = buildTagInputSnippet(state({ value: staged(['svelte', 'kit']), options: staged(['svelte', 'kit', 'icons']) }))
     expect(source).not.toContain('let value')
     expect(source).not.toContain('value={value}')
     expect(source).not.toContain('const options')
@@ -151,7 +140,7 @@ describe('buildTagInputSnippet', () => {
   })
 
   it('escapes renderer prefix text', () => {
-    expect(buildTagInputSnippet(state({ chip: 'a & <b>' }))).toContain('<span>a &amp; &lt;b&gt;{tag}')
+    expect(buildTagInputSnippet(state({ chip: staged('a & <b>', true) }))).toContain('<span>a &amp; &lt;b&gt;{tag}')
   })
 
   it('parses tag-list editor drafts', () => {

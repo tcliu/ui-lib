@@ -6,8 +6,8 @@
 //
 // The resize harness is ShowcasePage-owned chrome (its `stage` prop), so the
 // snippet carries only the demo content the page authors inside that frame.
-import { escapeAttr } from '$showcase/snippet-build'
-import { sizeAttributeLine } from '$showcase/size-input'
+import { escapeAttr, sizeAttrLine } from '$showcase/snippet-build'
+import type { Staged } from '$showcase/staged'
 import type { ChooserColumn } from '$lib/components/ColumnChooser.svelte'
 
 export const COLUMNS_STAGE_DEFAULT_WIDTH = 560
@@ -71,22 +71,19 @@ export function parseColumnsJson(text: string): ChooserColumn[] | null {
 }
 
 export interface ColumnChooserSnippetState {
-  triggerLabel: string
-  triggerLabelOn: boolean
-  resetAriaLabel: string
-  resetAriaLabelOn: boolean
-  columns: ChooserColumn[]
-  size: string
-  sizeOn: boolean
+  triggerLabel: Staged<string>
+  resetAriaLabel: Staged<string>
+  columns: Staged<ChooserColumn[]>
+  size: Staged<string>
 }
 
-export function buildColumnChooserSnippet({ triggerLabel, triggerLabelOn, resetAriaLabel, resetAriaLabelOn, columns, size, sizeOn }: ColumnChooserSnippetState): string {
+export function buildColumnChooserSnippet({ triggerLabel, resetAriaLabel, columns, size }: ColumnChooserSnippetState): string {
   // The frame is shell chrome, so the component sits at the snippet root with
   // its attributes one step in.
   const indent = '  '
   // Pretty JSON reindented under the state line, so the seeded list stays
   // readable and editable in place.
-  const columnsJson = JSON.stringify(columns, null, 2)
+  const columnsJson = JSON.stringify(columns.value, null, 2)
     .split('\n')
     .map((line, index) => (index === 0 ? line : `  ${line}`))
     .join('\n')
@@ -101,14 +98,14 @@ export function buildColumnChooserSnippet({ triggerLabel, triggerLabelOn, resetA
     '  }',
     '</script>',
     '<ColumnChooser',
-    triggerLabelOn && triggerLabel ? `${indent}triggerLabel="${escapeAttr(triggerLabel)}"` : `${indent}triggerLabel={chooserLabel}`,
-    resetAriaLabelOn && resetAriaLabel
-      ? `${indent}resetAriaLabel="${escapeAttr(resetAriaLabel)}"`
+    triggerLabel.on && triggerLabel.value ? `${indent}triggerLabel="${escapeAttr(triggerLabel.value)}"` : `${indent}triggerLabel={chooserLabel}`,
+    resetAriaLabel.on && resetAriaLabel.value
+      ? `${indent}resetAriaLabel="${escapeAttr(resetAriaLabel.value)}"`
       : `${indent}resetAriaLabel={resetLabel}`,
     `${indent}columns={columns}`,
     // The size prefills its component default in the Value column; the
     // builder omits the default so Show-code stays minimal.
-    ...(sizeOn && size !== '' && size !== 'md' ? sizeAttributeLine(size, indent) : []),
+    ...sizeAttrLine(size, indent),
     `${indent}onToggle={handleToggleColumn}`,
     `${indent}onReset={handleResetColumns} />`,
     '<span class="text-sm text-slate-400">hidden: {columns.filter(column => !column.checked).length}</span>',

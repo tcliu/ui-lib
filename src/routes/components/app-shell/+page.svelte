@@ -7,7 +7,8 @@
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$showcase/ShowcasePage.svelte'
   import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { enumField, textField, jsonField, snippetDialog, snippetField, snippetToggle } from '$showcase/snippet-field'
+  import { applied, eye, eyeToggle, stage, staged } from '$showcase/staged'
+  import { enumField, textField, jsonField, snippetDialog, snippetField } from '$showcase/snippet-field'
   import {
     APP_SHELL_HEADER_MARKUP,
     appShellChildrenMarkup,
@@ -45,50 +46,38 @@
   // Customizer playground state. Every curated option starts at the
   // component default (the Value column shows it), so the cleared form
   // applies no overrides and Show-code omits the defaults. Clearing a Value
-  // unsets it; Reset restores the defaults below. The pane
-  // configs are plain-data objects behind JSON dialogs; the right-pane snippet
-  // rides on the right config's open flag and the footer snippet on the footer
-  // row, so no separate demo-data panel is needed; stage size is interaction
-  // state.
-  let pgMode = $state('auto')
-  let pgModeOn = $state(false)
+  // unsets it; Reset restores the defaults below. Each curated prop is one
+  // `Staged` pair (its committed value plus its eye flag), so the demo, the
+  // props table, and Show-code read the same state. The pane configs are
+  // plain-data objects behind JSON dialogs; the right-pane snippet rides on
+  // the right config's open flag and the footer snippet on the footer row, so
+  // no separate demo-data panel is needed; stage size is interaction state.
+  let pgMode = $state(staged('auto'))
   // The serializable pane configs. Empty renders the component default, so the
   // cleared form applies no overrides; the callbacks in `AppShellPaneConfig`
-  // ride the demo objects below, never the editor text.
-  let pgLeft = $state<AppShellPaneJson>({})
-  let pgRight = $state<AppShellPaneJson>({})
-  // The pane configs apply only while their eye toggle is on (both on, so the
-  // cleared form renders the current demo).
-  let pgLeftEnabled = $state(true)
-  let pgRightEnabled = $state(true)
+  // ride the demo objects below, never the editor text. Both start applied, so
+  // the cleared form renders the current demo.
+  let pgLeft = $state(staged<AppShellPaneJson>({}, true))
+  let pgRight = $state(staged<AppShellPaneJson>({}, true))
   // The locale-resolved default; the eye stages the customization (off, so
   // the component default renders).
-  let pgCloseLabel = $state(i18n.t('appShell.closePane'))
-  let pgCloseLabelOn = $state(false)
+  let pgCloseLabel = $state(staged(i18n.t('appShell.closePane')))
   // The shell frame default; the eye stages the customization (off, so the
   // component default renders).
   const DEFAULT_SHELL_CLASS = 'flex h-full min-h-0 flex-col bg-slate-950 text-slate-100'
-  let pgClassName = $state('flex h-full min-h-0 flex-col bg-slate-950 text-slate-100')
-  let pgClassNameOn = $state(false)
-  // Extra region classes as a plain-data object behind a JSON dialog; the eye
-  // applies the map (on, so the cleared form renders the current demo).
-  let pgClassNames = $state<AppShellClassNamesJson>({})
-  let pgClassNamesEnabled = $state(true)
-  let pgFooter = $state('')
+  let pgClassName = $state(staged(DEFAULT_SHELL_CLASS))
+  // Extra region classes as a plain-data object behind a JSON dialog; an empty
+  // map is the component default, so the eye starts off.
+  let pgClassNames = $state(staged<AppShellClassNamesJson>({}))
   // Content-snippet text. Empty renders the localized default from scope, so
-  // the cleared form applies no overrides; `pgFooter` holds the committed
-  // footer markup (the footer row's eye toggle applies it).
-  let pgChildren = $state('')
-  let pgChildrenEnabled = $state(true)
-  let pgFooterEnabled = $state(false)
-  let pgLeftPane = $state('')
-  let pgRightPane = $state('')
-  // The pane contents apply only while their eye toggle is on (both on, so
-  // the cleared form renders the current demo); the texts are preserved while
-  // off. The header is fixed documentation markup with the same eye.
-  let pgLeftPaneEnabled = $state(true)
-  let pgRightPaneEnabled = $state(true)
-  let pgHeaderEnabled = $state(true)
+  // the cleared form applies no overrides; the footer's eye starts off and the
+  // rest on, so the cleared form renders the current demo.
+  let pgChildren = $state(staged('', true))
+  let pgFooter = $state(staged(''))
+  let pgLeftPane = $state(staged('', true))
+  let pgRightPane = $state(staged('', true))
+  // The header is fixed documentation markup with the same eye.
+  let pgHeader = $state(staged(APP_SHELL_HEADER_MARKUP, true))
   // Stage size is interaction state, not a curated option; Reset restores it.
   let pgStageWidth = $state(SHELL_STAGE_DEFAULT_WIDTH)
   let pgStageHeight = $state(SHELL_STAGE_DEFAULT_HEIGHT)
@@ -99,48 +88,46 @@
     { value: 'floating', label: 'floating' },
   ]
 
-  const demoMode = $derived(pgModeOn ? ((pgMode || undefined) as 'auto' | 'docked' | 'floating' | undefined) : undefined)
+  const demoMode = $derived((applied(pgMode) || undefined) as 'auto' | 'docked' | 'floating' | undefined)
   // Unset renders the component default: the right pane stays shut until its
   // config opens it (which also applies its snippet below).
-  const demoRightOpen = $derived(pgRight.open ?? false)
-  const demoChildrenMarkup = $derived(pgChildren || appShellChildrenMarkup(i18n.t('showcase.intro')))
-  const demoLeftPaneLabel = $derived(pgLeftPane || i18n.t('showcase.components'))
-  const demoRightPaneText = $derived(pgRightPane || i18n.t('showcase.intro'))
+  const demoRightOpen = $derived(pgRight.value.open ?? false)
+  const demoChildrenMarkup = $derived(pgChildren.value || appShellChildrenMarkup(i18n.t('showcase.intro')))
+  const demoLeftPaneLabel = $derived(pgLeftPane.value || i18n.t('showcase.components'))
+  const demoRightPaneText = $derived(pgRightPane.value || i18n.t('showcase.intro'))
   // children/footer seed their markup dialogs: children seeds the canonical
   // padded <p> (or the committed free-form markup), footer seeds the committed
   // markup (or the canonical block when hidden, so the dialog opens on real
   // markup). `footerParsed` drives the demo's footer, which renders only while
-  // `pgFooter` is set.
-  // The footer dialog seeds the committed markup, or the canonical block when
-  // unset; `footerParsed` drives the demo, which renders only while the footer
-  // is applied.
+  // the footer pair is applied.
   const footerSnippet = $derived(
-    pgFooter || appShellFooterMarkup(i18n.t('showcase.components'), i18n.t('showcase.title')),
+    pgFooter.value || appShellFooterMarkup(i18n.t('showcase.components'), i18n.t('showcase.title')),
   )
   const footerParsed = $derived(parseAppShellFooter(footerSnippet))
 
   function clearPlayground(): void {
-    pgMode = 'auto'
-    pgModeOn = false
-    pgLeft = {}
-    pgRight = {}
-    pgLeftEnabled = true
-    pgRightEnabled = true
-    pgCloseLabel = i18n.t('appShell.closePane')
-    pgCloseLabelOn = false
-    pgClassName = 'flex h-full min-h-0 flex-col bg-slate-950 text-slate-100'
-    pgClassNameOn = false
-    pgClassNames = {}
-    pgClassNamesEnabled = true
-    pgFooter = ''
-    pgChildren = ''
-    pgChildrenEnabled = true
-    pgFooterEnabled = false
-    pgLeftPane = ''
-    pgRightPane = ''
-    pgLeftPaneEnabled = true
-    pgRightPaneEnabled = true
-    pgHeaderEnabled = true
+    pgMode.value = 'auto'
+    pgMode.on = false
+    pgLeft.value = {}
+    pgLeft.on = true
+    pgRight.value = {}
+    pgRight.on = true
+    pgCloseLabel.value = i18n.t('appShell.closePane')
+    pgCloseLabel.on = false
+    pgClassName.value = DEFAULT_SHELL_CLASS
+    pgClassName.on = false
+    pgClassNames.value = {}
+    pgClassNames.on = false
+    pgChildren.value = ''
+    pgChildren.on = true
+    pgFooter.value = ''
+    pgFooter.on = false
+    pgLeftPane.value = ''
+    pgLeftPane.on = true
+    pgRightPane.value = ''
+    pgRightPane.on = true
+    pgHeader.value = APP_SHELL_HEADER_MARKUP
+    pgHeader.on = true
     pgStageWidth = SHELL_STAGE_DEFAULT_WIDTH
     pgStageHeight = SHELL_STAGE_DEFAULT_HEIGHT
   }
@@ -151,50 +138,43 @@
   // drawer's own open/size back into the JSON state, keeping the dialog seed
   // and the snippet behind the header toggles and splitter drags.
   const demoLeft = $derived({
-    ...pgLeft,
+    ...pgLeft.value,
     onOpenChange: (open: boolean) => {
-      pgLeft = { ...pgLeft, open }
+      pgLeft.value = { ...pgLeft.value, open }
     },
     onSizeChange: (size: number) => {
-      pgLeft = { ...pgLeft, size }
+      pgLeft.value = { ...pgLeft.value, size }
     },
   })
   const demoRight = $derived({
-    ...pgRight,
+    ...pgRight.value,
     onOpenChange: (open: boolean) => {
-      pgRight = { ...pgRight, open }
+      pgRight.value = { ...pgRight.value, open }
     },
     onSizeChange: (size: number) => {
-      pgRight = { ...pgRight, size }
+      pgRight.value = { ...pgRight.value, size }
     },
   })
-  const demoClassNames = $derived({ ...pgClassNames })
 
-  const code = $derived.by(() =>
-    buildAppShellSnippet({
+  const code = $derived.by(() => {
+    // The footer row's committed markup falls back to the canonical block,
+    // whose labels the page resolves (Show-code emits them literally, not as
+    // scope refs), so the builder reads the resolved text behind the row's eye.
+    const footer = { value: footerSnippet, on: pgFooter.on }
+    return buildAppShellSnippet({
       mode: pgMode,
-      modeOn: pgModeOn,
       className: pgClassName,
-      classNameOn: pgClassNameOn,
       closeLabel: pgCloseLabel,
-      closeLabelOn: pgCloseLabelOn,
       classNames: pgClassNames,
-      classNamesEnabled: pgClassNamesEnabled,
       left: pgLeft,
       right: pgRight,
-      leftEnabled: pgLeftEnabled,
-      rightEnabled: pgRightEnabled,
       children: pgChildren,
-      childrenEnabled: pgChildrenEnabled,
       leftPane: pgLeftPane,
-      leftPaneEnabled: pgLeftPaneEnabled,
-      headerEnabled: pgHeaderEnabled,
+      header: pgHeader,
       rightPane: pgRightPane,
-      rightPaneEnabled: pgRightPaneEnabled,
-      footer: footerSnippet,
-      footerEnabled: pgFooterEnabled,
-    }),
-  )
+      footer,
+    })
+  })
 
   
   // children/footer are Snippet props: their rows open a markup dialog instead
@@ -215,30 +195,26 @@
       onChange: (draft: string) => {
         const markup = parseAppShellChildren(draft)
         if (markup === null) return
-        pgChildren = markup === appShellChildrenMarkup(i18n.t('showcase.intro')) ? '' : markup
-        pgChildrenEnabled = true
+        stage(pgChildren, markup === appShellChildrenMarkup(i18n.t('showcase.intro')) ? '' : markup)
       },
       dialog: snippetDialog(
         parseAppShellChildren,
         'Use well-formed HTML elements only — no {…} expressions, components, <script>/<style>, or event-handler attributes.',
       ),
-      toggle: snippetToggle(pgChildrenEnabled, enabled => (pgChildrenEnabled = enabled)),
+      toggle: eyeToggle(pgChildren),
     }),
     {
       name: 'className',
       type: 'string?',
       defaultValue: "'flex h-full min-h-0 flex-col bg-slate-950 text-slate-100'",
-      editorDefaultValue: 'flex h-full min-h-0 flex-col bg-slate-950 text-slate-100',
+      editorDefaultValue: DEFAULT_SHELL_CLASS,
       note: 'Replaces the shell frame classes; unset, the component default renders inside the sized demo stage.',
       editor: 'text',
       clearable: true,
-      value: pgClassName,
-      onChange: value => {
-        pgClassName = value
-        pgClassNameOn = true
-      },
-      toggle: snippetToggle(pgClassNameOn, enabled => (pgClassNameOn = enabled)),
-      placeholder: 'flex h-full min-h-0 flex-col bg-slate-950 text-slate-100',
+      ...eye(pgClassName),
+      onChange: value => stage(pgClassName, value),
+      toggle: eyeToggle(pgClassName),
+      placeholder: DEFAULT_SHELL_CLASS,
       sync: {
         kind: 'custom',
         // Absent resolves to the current Value text so compiling (e.g.
@@ -247,12 +223,12 @@
         // text and the eye alone.
         read: attrs => {
           if (!attrs) return undefined
-          if (!attrs.has('className')) return pgClassName
+          if (!attrs.has('className')) return pgClassName.value
           const attr = attrs.get('className')!
           return attr.kind === 'string' ? attr.value : undefined
         },
         set: value => {
-          pgClassName = value === DEFAULT_SHELL_CLASS ? '' : value
+          pgClassName.value = value === DEFAULT_SHELL_CLASS ? '' : value
         },
       },
     },
@@ -260,16 +236,16 @@
       name: 'classNames',
       type: '{ header?: string; footer?: string; pane?: string; rightPane?: string; main?: string; splitter?: string }',
       note: 'Extra classes for the shell regions as JSON (unset stays null for the built-in classes); the eye applies the map.',
-      value: classNamesJsonText(pgClassNames),
+      value: classNamesJsonText(pgClassNames.value),
       onChange: (draft: string) => {
         const parsed = parseClassNamesJson(draft)
-        if (parsed) pgClassNames = parsed
+        if (parsed) stage(pgClassNames, parsed)
       },
       dialog: snippetDialog(
         parseClassNamesJson,
         'Invalid class-names JSON. Use an object with optional header/footer/pane/rightPane/main/splitter strings.',
       ),
-      toggle: snippetToggle(pgClassNamesEnabled, enabled => (pgClassNamesEnabled = enabled)),
+      toggle: eyeToggle(pgClassNames),
       sync: {
         kind: 'custom',
         read: attrs => {
@@ -277,7 +253,7 @@
           // An absent attribute leaves the playground alone (resolving to the
           // current state): unapplying the eye omits the prop from the seed
           // without resetting the committed JSON behind it.
-          if (!attrs.has('classNames')) return classNamesJsonText(pgClassNames)
+          if (!attrs.has('classNames')) return classNamesJsonText(pgClassNames.value)
           const attr = attrs.get('classNames')!
           if (attr.kind !== 'expression') return undefined
           const parsed = parseClassNamesExpression(attr.value)
@@ -285,44 +261,43 @@
         },
       },
     }),
-    textField({ name: 'closeLabel', type: 'string?', defaultValue: "i18n 'appShell.closePane'", note: 'Floating backdrop aria label override.', value: pgCloseLabel, onChange: v => (pgCloseLabel = v), clearable: true, enabled: pgCloseLabelOn, setEnabled: v => (pgCloseLabelOn = v) }),
+    textField({ name: 'closeLabel', type: 'string?', defaultValue: "i18n 'appShell.closePane'", note: 'Floating backdrop aria label override.', clearable: true, ...eye(pgCloseLabel) }),
     snippetField({
       name: 'footer',
       note: 'Footer block; committing applies it, and the dialog edits its markup.',
       value: footerSnippet,
       onChange: (draft: string) => {
         if (parseAppShellFooter(draft)) {
-          pgFooter = normalizeAppShellFooter(draft)
-          pgFooterEnabled = true
+          stage(pgFooter, normalizeAppShellFooter(draft))
         }
       },
       dialog: snippetDialog(parseAppShellFooter, 'Use the footer <div> with two text <span>s.'),
-      toggle: snippetToggle(pgFooterEnabled, enabled => (pgFooterEnabled = enabled)),
+      toggle: eyeToggle(pgFooter),
     }),
     snippetField({
       type: 'Snippet<[AppShellHeaderApi]>',
       name: 'header',
       note: 'Header content; the fixed toggle-plus-title shape below documents the api callbacks (open, rightOpen, toggleLeft, toggleRight). The eye applies the header.',
-      value: APP_SHELL_HEADER_MARKUP,
+      value: pgHeader.value,
       onChange: () => {
-        pgHeaderEnabled = true
+        pgHeader.on = true
       },
-      toggle: snippetToggle(pgHeaderEnabled, enabled => (pgHeaderEnabled = enabled)),
+      toggle: eyeToggle(pgHeader),
     }),
     jsonField({
       name: 'left',
       type: 'AppShellPaneConfig',
       note: 'Left pane config as JSON: open, size, collapseMode, geometry, storageKey, and labels (unset stays null for the component default). The open/size callbacks ride the demo object internally; the eye applies the prop.',
-      value: paneJsonText(pgLeft),
+      value: paneJsonText(pgLeft.value),
       onChange: (draft: string) => {
         const parsed = parsePaneJson(draft)
-        if (parsed) pgLeft = parsed
+        if (parsed) stage(pgLeft, parsed)
       },
       dialog: snippetDialog(
         parsePaneJson,
         'Invalid pane JSON. Use an object with optional open (boolean), size/railWidth/min/max/defaultSize (numbers), collapseMode ("hide" or "rail"), and storageKey/resizeLabel/paneLabel (strings).',
       ),
-      toggle: snippetToggle(pgLeftEnabled, enabled => (pgLeftEnabled = enabled)),
+      toggle: eyeToggle(pgLeft),
       sync: {
         kind: 'custom',
         read: attrs => {
@@ -330,7 +305,7 @@
           // An absent attribute leaves the playground alone (resolving to the
           // current state): unapplying the eye omits the prop from the seed
           // without resetting the committed JSON behind it.
-          if (!attrs.has('left')) return paneJsonText(pgLeft)
+          if (!attrs.has('left')) return paneJsonText(pgLeft.value)
           const attr = attrs.get('left')!
           if (attr.kind !== 'expression') return undefined
           const parsed = parsePaneExpression(attr.value)
@@ -345,30 +320,29 @@
       onChange: (draft: string) => {
         const text = parseAppShellLeftPane(draft)
         if (text === null) return
-        pgLeftPane = text === i18n.t('showcase.components') ? '' : text
-        pgLeftPaneEnabled = true
+        stage(pgLeftPane, text === i18n.t('showcase.components') ? '' : text)
       },
       dialog: snippetDialog(
         parseAppShellLeftPane,
         `Use the caller row with <MenuIcon> and the <span class="${SHELL_PANE_LABEL}"> label.`,
       ),
-      toggle: snippetToggle(pgLeftPaneEnabled, enabled => (pgLeftPaneEnabled = enabled)),
+      toggle: eyeToggle(pgLeftPane),
     }),
-    enumField({ name: 'mode', type: "'auto' | 'docked' | 'floating'", defaultValue: "'auto'", note: 'Auto docks beside content while the shell container is wide and floats above it when narrow (measured on the shell, not the viewport). Pinned docked stays an in-flow row at every width; rail panes float as an open-or-closed overlay below the breakpoint.', options: modeOptions, value: pgMode, onChange: v => (pgMode = v), placeholder: 'auto', clearLabel: 'Clear mode', enabled: pgModeOn, setEnabled: v => (pgModeOn = v) }),
+    enumField({ name: 'mode', type: "'auto' | 'docked' | 'floating'", defaultValue: "'auto'", note: 'Auto docks beside content while the shell container is wide and floats above it when narrow (measured on the shell, not the viewport). Pinned docked stays an in-flow row at every width; rail panes float as an open-or-closed overlay below the breakpoint.', options: modeOptions, placeholder: 'auto', clearLabel: 'Clear mode', ...eye(pgMode) }),
     jsonField({
       name: 'right',
       type: 'AppShellPaneConfig',
       note: 'Right pane config as JSON: open, size, collapseMode, geometry, storageKey, and labels (unset stays null for the component default). Opening it applies the right-pane snippet; callbacks ride the demo object internally, and the eye applies the prop.',
-      value: paneJsonText(pgRight),
+      value: paneJsonText(pgRight.value),
       onChange: (draft: string) => {
         const parsed = parsePaneJson(draft)
-        if (parsed) pgRight = parsed
+        if (parsed) stage(pgRight, parsed)
       },
       dialog: snippetDialog(
         parsePaneJson,
         'Invalid pane JSON. Use an object with optional open (boolean), size/railWidth/min/max/defaultSize (numbers), collapseMode ("hide" or "rail"), and storageKey/resizeLabel/paneLabel (strings).',
       ),
-      toggle: snippetToggle(pgRightEnabled, enabled => (pgRightEnabled = enabled)),
+      toggle: eyeToggle(pgRight),
       sync: {
         kind: 'custom',
         read: attrs => {
@@ -376,7 +350,7 @@
           // An absent attribute leaves the playground alone (resolving to the
           // current state): unapplying the eye omits the prop from the seed
           // without resetting the committed JSON behind it.
-          if (!attrs.has('right')) return paneJsonText(pgRight)
+          if (!attrs.has('right')) return paneJsonText(pgRight.value)
           const attr = attrs.get('right')!
           if (attr.kind !== 'expression') return undefined
           const parsed = parsePaneExpression(attr.value)
@@ -391,11 +365,10 @@
       onChange: (draft: string) => {
         const text = parseAppShellRightPane(draft)
         if (text === null) return
-        pgRightPane = text === i18n.t('showcase.intro') ? '' : text
-        pgRightPaneEnabled = true
+        stage(pgRightPane, text === i18n.t('showcase.intro') ? '' : text)
       },
       dialog: snippetDialog(parseAppShellRightPane, 'Use <p class="px-3 py-2 text-sm text-slate-300">…</p>.'),
-      toggle: snippetToggle(pgRightPaneEnabled, enabled => (pgRightPaneEnabled = enabled)),
+      toggle: eyeToggle(pgRightPane),
     }),
     {
       name: 'onLayoutModeChange',
@@ -483,16 +456,16 @@
       pgStageHeight = nextHeight
     }}>
     <AppShell
-      className={pgClassNameOn && pgClassName ? pgClassName : undefined}
+      className={applied(pgClassName) || undefined}
       mode={demoMode}
-      closeLabel={pgCloseLabelOn && pgCloseLabel ? pgCloseLabel : undefined}
-      classNames={pgClassNamesEnabled ? demoClassNames : undefined}
-      left={pgLeftEnabled ? demoLeft : undefined}
-      right={pgRightEnabled ? demoRight : undefined}
-      leftPane={pgLeftPaneEnabled ? leftPaneContent : undefined}
-      rightPane={pgRightEnabled && pgRightPaneEnabled && demoRightOpen ? rightPaneContent : undefined}
-      footer={pgFooterEnabled ? footerContent : undefined}
-      header={pgHeaderEnabled ? headerContent : undefined}
-      children={pgChildrenEnabled ? shellChildren : undefined} />
+      closeLabel={applied(pgCloseLabel) || undefined}
+      classNames={applied(pgClassNames)}
+      left={pgLeft.on ? demoLeft : undefined}
+      right={pgRight.on ? demoRight : undefined}
+      leftPane={pgLeftPane.on ? leftPaneContent : undefined}
+      rightPane={pgRight.on && pgRightPane.on && demoRightOpen ? rightPaneContent : undefined}
+      footer={pgFooter.on ? footerContent : undefined}
+      header={pgHeader.on ? headerContent : undefined}
+      children={pgChildren.on ? shellChildren : undefined} />
   </Resizable>
 </ShowcasePage>

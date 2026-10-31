@@ -4,7 +4,8 @@
 // $state in the snippet (seeded from scope) so the live instance is resizable,
 // matching the static demo.
 
-import { escapeAttr, unescapeAttr } from '$showcase/snippet-build'
+import { escapeAttr, textAttrLine, unescapeAttr } from '$showcase/snippet-build'
+import type { Staged } from '$showcase/staged'
 
 export const RESIZABLE_DEFAULT_WIDTH = 320
 export const RESIZABLE_DEFAULT_HEIGHT = 240
@@ -23,17 +24,14 @@ export const RESIZABLE_CONTENT =
 export const RESIZABLE_SCROLLPORT = 'max-h-96 w-full overflow-auto pr-4 pb-4 [scrollbar-gutter:stable]'
 
 export interface ResizableSnippetState {
-  minWidth: string
-  minWidthOn: boolean
-  minHeight: string
-  minHeightOn: boolean
-  maxWidth: string
-  maxWidthOn: boolean
-  maxHeight: string
-  maxHeightOn: boolean
-  contentClass: string
-  className: string
-  classNameOn: boolean
+  minWidth: Staged<string>
+  minHeight: Staged<string>
+  maxWidth: Staged<string>
+  maxHeight: Staged<string>
+  // The content div's class; the eye resets it to the default, so it always
+  // renders and only the class varies.
+  contentClass: Staged<string>
+  className: Staged<string>
 }
 
 // A playground bound: empty or non-numeric text means unset, so the cleared
@@ -57,27 +55,24 @@ export function parseMaxBound(text: string): number | 'parent' | null {
   return parseBound(text)
 }
 
-function boundLine(name: string, text: string, def = ''): string[] {
-  if (text === '' || text === def) {
+// A staged minimum bound line: omitted while its eye is off, its text is
+// empty, or it resolves to the component default (`0`).
+function boundLine(name: string, pair: Staged<string>, def = ''): string[] {
+  if (!pair.on || pair.value === '' || pair.value === def) {
     return []
   }
-  const parsed = parseBound(text)
+  const parsed = parseBound(pair.value)
   return parsed === null ? [] : [`  ${name}={${parsed}}`]
 }
 
-function maxBoundLine(name: string, text: string): string[] {
-  if (text === '') {
+// A staged maximum bound line, keeping the `parent` keyword as a string.
+function maxBoundLine(name: string, pair: Staged<string>): string[] {
+  if (!pair.on || pair.value === '') {
     return []
   }
-  const parsed = parseMaxBound(text)
+  const parsed = parseMaxBound(pair.value)
   if (parsed === null) return []
   return parsed === 'parent' ? [`  ${name}="parent"`] : [`  ${name}={${parsed}}`]
-}
-
-// A string attribute line for an optional prop: omitted while unset, so the
-// locale default (labels) or empty default (className) renders.
-function textLine(name: string, value: string): string[] {
-  return value ? [`    ${name}="${escapeAttr(value)}"`] : []
 }
 
 // Canonical content markup: the size-label div in a caller class; the class
@@ -97,7 +92,7 @@ export function parseResizableChildrenMarkup(draft: string): string | null {
   return unescapeAttr(match[1] ?? '')
 }
 
-export function buildResizableSnippet({ minWidth, minWidthOn, minHeight, minHeightOn, maxWidth, maxWidthOn, maxHeight, maxHeightOn, contentClass, className, classNameOn }: ResizableSnippetState): string {
+export function buildResizableSnippet({ minWidth, minHeight, maxWidth, maxHeight, contentClass, className }: ResizableSnippetState): string {
   return [
     '<script>',
     '  let width = $state(initialWidth)',
@@ -110,13 +105,13 @@ export function buildResizableSnippet({ minWidth, minWidthOn, minHeight, minHeig
     '    onResize={(nextWidth, nextHeight) => { width = nextWidth; height = nextHeight; }}',
     // The minimum Values prefill the component default (`0`); the builder
     // omits the default so Show-code stays minimal.
-    ...(minWidthOn ? boundLine('minWidth', minWidth, '0') : []).map(line => `  ${line}`),
-    ...(minHeightOn ? boundLine('minHeight', minHeight, '0') : []).map(line => `  ${line}`),
-    ...(maxWidthOn ? maxBoundLine('maxWidth', maxWidth) : []).map(line => `  ${line}`),
-    ...(maxHeightOn ? maxBoundLine('maxHeight', maxHeight) : []).map(line => `  ${line}`),
-    ...(classNameOn ? textLine('className', className) : []),
+    ...boundLine('minWidth', minWidth, '0').map(line => `  ${line}`),
+    ...boundLine('minHeight', minHeight, '0').map(line => `  ${line}`),
+    ...maxBoundLine('maxWidth', maxWidth).map(line => `  ${line}`),
+    ...maxBoundLine('maxHeight', maxHeight).map(line => `  ${line}`),
+    ...textAttrLine('className', className, '    '),
     '  >',
-    `    <div class="${escapeAttr(contentClass || RESIZABLE_CONTENT)}">{contentLabel}</div>`,
+    `    <div class="${escapeAttr(contentClass.value || RESIZABLE_CONTENT)}">{contentLabel}</div>`,
     '  </Resizable>',
     '</div>',
   ].join('\n')

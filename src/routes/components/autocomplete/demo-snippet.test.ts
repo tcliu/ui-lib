@@ -1,32 +1,22 @@
 import { describe, expect, it } from 'vitest'
 import { createSnippetComponent } from '$showcase/snippet-playground'
+import { staged } from '$showcase/staged'
 import { buildAutoCompleteSnippet, type AutoCompleteSnippetState } from './demo-snippet'
 
 function state(overrides: Partial<AutoCompleteSnippetState> = {}): AutoCompleteSnippetState {
   return {
-    ariaLabel: 'default',
-    ariaLabelOn: true,
-    value: 'Two',
-    size: '',
-    sizeOn: true,
-    placeholder: '',
-    placeholderOn: true,
-    disabled: '',
-    disabledOn: true,
-    clearable: '',
-    clearableOn: true,
-    clearLabel: '',
-    clearLabelOn: true,
-    clearPlacement: '',
-    clearPlacementOn: true,
-    defaultValue: '',
-    defaultValueOn: true,
-    align: '',
-    alignOn: true,
-    autoPlace: '',
-    autoPlaceOn: true,
-    panelClass: '',
-    panelClassOn: true,
+    ariaLabel: staged('default', true),
+    value: staged('Two'),
+    size: staged('', true),
+    placeholder: staged('', true),
+    disabled: staged('', true),
+    clearable: staged('', true),
+    clearLabel: staged('', true),
+    clearPlacement: staged('', true),
+    defaultValue: staged('', true),
+    align: staged('', true),
+    autoPlace: staged('', true),
+    panelClass: staged('', true),
     ...overrides,
   }
 }
@@ -52,14 +42,12 @@ describe('buildAutoCompleteSnippet', () => {
   it('emits size, flags, and text overrides while set', () => {
     const source = buildAutoCompleteSnippet(
       state({
-        size: 'lg',
-        sizeOn: true,
-        placeholder: 'Pick a country',
-        disabled: 'yes',
-        align: 'right',
-        alignOn: true,
-        autoPlace: 'no',
-        panelClass: 'shadow-lg',
+        size: staged('lg', true),
+        placeholder: staged('Pick a country', true),
+        disabled: staged('yes', true),
+        align: staged('right', true),
+        autoPlace: staged('no', true),
+        panelClass: staged('shadow-lg', true),
       }),
     )
     expect(source).toContain('size="lg"')
@@ -74,7 +62,7 @@ describe('buildAutoCompleteSnippet', () => {
     expect(buildAutoCompleteSnippet(state())).not.toContain('clearable')
     expect(buildAutoCompleteSnippet(state())).not.toContain('defaultValue=')
     const source = buildAutoCompleteSnippet(
-      state({ clearable: 'yes', clearLabel: 'Clear choice', clearPlacement: 'outside', clearPlacementOn: true, defaultValue: 'Two', defaultValueOn: true }),
+      state({ clearable: staged('yes', true), clearLabel: staged('Clear choice', true), clearPlacement: staged('outside', true), defaultValue: staged('Two', true) }),
     )
     expect(source).toContain('  clearable\n')
     expect(source).toContain('clearLabel="Clear choice"')
@@ -83,22 +71,19 @@ describe('buildAutoCompleteSnippet', () => {
   })
 
   it('emits a numeric size as an expression and omits invalid sizes', () => {
-    expect(buildAutoCompleteSnippet(state({ size: '14', sizeOn: true }))).toContain('size={14}')
-    expect(buildAutoCompleteSnippet(state({ size: 'huge' }))).not.toMatch(/^\s*size=/m)
+    expect(buildAutoCompleteSnippet(state({ size: staged('14', true) }))).toContain('size={14}')
+    expect(buildAutoCompleteSnippet(state({ size: staged('huge', true) }))).not.toMatch(/^\s*size=/m)
   })
 
   it('omits component defaults (the Value column prefills them)', () => {
     const source = buildAutoCompleteSnippet(
       state({
-        size: 'md',
-        sizeOn: true,
-        disabled: 'no',
-        align: 'left',
-        alignOn: true,
-        autoPlace: 'yes',
-        clearable: 'no',
-        clearPlacement: 'auto',
-        clearPlacementOn: true,
+        size: staged('md', true),
+        disabled: staged('no', true),
+        align: staged('left', true),
+        autoPlace: staged('yes', true),
+        clearable: staged('no', true),
+        clearPlacement: staged('auto', true),
       }),
     )
     expect(source).not.toMatch(/^\s*size=/m)
@@ -111,7 +96,7 @@ describe('buildAutoCompleteSnippet', () => {
 
   it('omits staged dropdown props while their eyes are off', () => {
     const off = buildAutoCompleteSnippet(
-      state({ size: 'lg', sizeOn: false, align: 'right', alignOn: false, clearPlacement: 'outside', clearPlacementOn: false }),
+      state({ size: staged('lg'), align: staged('right'), clearPlacement: staged('outside') }),
     )
     expect(off).not.toMatch(/^\s*size=/m)
     expect(off).not.toContain('align=')
@@ -120,7 +105,7 @@ describe('buildAutoCompleteSnippet', () => {
 
   it('omits staged flag props while their eyes are off', () => {
     const off = buildAutoCompleteSnippet(
-      state({ disabled: 'yes', disabledOn: false, clearable: 'yes', clearableOn: false, autoPlace: 'no', autoPlaceOn: false }),
+      state({ disabled: staged('yes'), clearable: staged('yes'), autoPlace: staged('no') }),
     )
     expect(off).not.toContain('disabled')
     expect(off).not.toContain('clearable')
@@ -128,15 +113,15 @@ describe('buildAutoCompleteSnippet', () => {
   })
 
   it('seeds the bound value as script-local state', () => {
-    const source = buildAutoCompleteSnippet(state({ value: 'Three' }))
+    const source = buildAutoCompleteSnippet(state({ value: staged('Three') }))
     expect(source).toContain('let value = $state("Three")')
-    const quoted = buildAutoCompleteSnippet(state({ value: 'a"b' }))
+    const quoted = buildAutoCompleteSnippet(state({ value: staged('a"b') }))
     expect(quoted).toContain('let value = $state("a\\"b")')
   })
 
   it('omits staged text overrides while their eye is off and emits them while on', () => {
     const off = buildAutoCompleteSnippet(
-      state({ ariaLabel: 'Search', ariaLabelOn: false, placeholder: 'Pick one', placeholderOn: false, clearLabel: 'Clear', clearLabelOn: false, panelClass: 'shadow-lg', panelClassOn: false, defaultValue: 'Two', defaultValueOn: false }),
+      state({ ariaLabel: staged('Search'), placeholder: staged('Pick one'), clearLabel: staged('Clear'), panelClass: staged('shadow-lg'), defaultValue: staged('Two') }),
     )
     expect(off).not.toContain('ariaLabel=')
     expect(off).not.toContain('placeholder=')
@@ -144,7 +129,7 @@ describe('buildAutoCompleteSnippet', () => {
     expect(off).not.toContain('panelClass=')
     expect(off).not.toContain('defaultValue=')
     const on = buildAutoCompleteSnippet(
-      state({ placeholder: 'Pick one', clearLabel: 'Clear', panelClass: 'shadow-lg', defaultValue: 'Two', defaultValueOn: true }),
+      state({ placeholder: staged('Pick one', true), clearLabel: staged('Clear', true), panelClass: staged('shadow-lg', true), defaultValue: staged('Two', true) }),
     )
     expect(on).toContain('ariaLabel="default"')
     expect(on).toContain('placeholder="Pick one"')

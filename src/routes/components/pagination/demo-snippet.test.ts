@@ -1,16 +1,13 @@
 import { describe, expect, it } from 'vitest'
+import { staged } from '$showcase/staged'
 import { CUSTOM_LABELS, DEFAULT_PAGE_SIZE_OPTIONS, STYLED_CLASS, buildPaginationSnippet, parseLabelsJson, parseLabelsValue, parsePageSizeOptionsJson, parsePageSizeOptionsValue } from './demo-snippet'
 
 const base = {
-  size: '',
-  sizeOn: true,
-  labels: {},
-  labelsEnabled: true,
-  pageSizeOptions: [...DEFAULT_PAGE_SIZE_OPTIONS],
-  pageSizeOptionsEnabled: false,
-  className: '',
-  classNameOn: true,
-  trailing: '',
+  size: staged('', true),
+  labels: staged({}, true),
+  pageSizeOptions: staged([...DEFAULT_PAGE_SIZE_OPTIONS]),
+  className: staged('', true),
+  trailing: staged(''),
 }
 
 describe('buildPaginationSnippet', () => {
@@ -26,21 +23,17 @@ describe('buildPaginationSnippet', () => {
   })
 
   it('omits the labels map while its eye toggle is off', () => {
-    const source = buildPaginationSnippet({ ...base, labels: { previous: 'Back' }, labelsEnabled: false })
+    const source = buildPaginationSnippet({ ...base, labels: staged({ previous: 'Back' }) })
     expect(source).not.toContain('labels=')
   })
 
   it('emits size, the labels object, and the styled wrapper', () => {
     const source = buildPaginationSnippet({
-      size: 'lg',
-      sizeOn: true,
-      labels: { ...CUSTOM_LABELS },
-      labelsEnabled: true,
-      pageSizeOptions: [...DEFAULT_PAGE_SIZE_OPTIONS],
-      pageSizeOptionsEnabled: false,
-      className: STYLED_CLASS,
-      classNameOn: true,
-      trailing: '',
+      ...base,
+      size: staged('lg', true),
+      labels: staged({ ...CUSTOM_LABELS }, true),
+      pageSizeOptions: staged([...DEFAULT_PAGE_SIZE_OPTIONS]),
+      className: staged(STYLED_CLASS, true),
     })
     expect(source).toContain('size="lg"')
     expect(source).toContain(
@@ -50,17 +43,17 @@ describe('buildPaginationSnippet', () => {
   })
 
   it('omits the staged size while its eye is off', () => {
-    expect(buildPaginationSnippet({ ...base, size: 'lg', sizeOn: false })).not.toContain('size=')
+    expect(buildPaginationSnippet({ ...base, size: staged('lg') })).not.toContain('size=')
   })
 
   it('emits only the label fields that are set, in declaration order', () => {
-    const source = buildPaginationSnippet({ ...base, labels: { nav: 'Results', previous: 'Back' } })
+    const source = buildPaginationSnippet({ ...base, labels: staged({ nav: 'Results', previous: 'Back' }, true) })
     expect(source).toContain('labels={{ previous: "Back", nav: "Results" }}')
     expect(source).not.toContain('next:')
   })
 
   it('escapes quotes in a label value', () => {
-    const source = buildPaginationSnippet({ ...base, labels: { previous: 'Go "back"' } })
+    const source = buildPaginationSnippet({ ...base, labels: staged({ previous: 'Go "back"' }, true) })
     expect(source).toContain('labels={{ previous: "Go &quot;back&quot;" }}')
   })
 
@@ -76,12 +69,12 @@ describe('buildPaginationSnippet', () => {
   })
 
   it('emits a numeric size as an expression and omits invalid sizes', () => {
-    expect(buildPaginationSnippet({ ...base, size: '14' })).toContain('size={14}')
-    expect(buildPaginationSnippet({ ...base, size: 'huge' })).not.toContain('size=')
+    expect(buildPaginationSnippet({ ...base, size: staged('14', true) })).toContain('size={14}')
+    expect(buildPaginationSnippet({ ...base, size: staged('huge', true) })).not.toContain('size=')
   })
 
   it('omits component defaults (the Value column prefills them)', () => {
-    const source = buildPaginationSnippet({ ...base, size: 'md' })
+    const source = buildPaginationSnippet({ ...base, size: staged('md', true) })
     expect(source).not.toContain('size=')
   })
 
@@ -89,7 +82,7 @@ describe('buildPaginationSnippet', () => {
     const unset = buildPaginationSnippet(base)
     expect(unset).not.toContain('trailing=')
     expect(unset).toContain('onPageSizeChange={handlePageSizeChange} />')
-    const set = buildPaginationSnippet({ ...base, trailing: '1–200' })
+    const set = buildPaginationSnippet({ ...base, trailing: staged('1–200', true) })
     expect(set).toContain('trailing={trailing}')
     expect(set).toContain('{#snippet trailing()}')
     expect(set).toContain('<span>1–200</span>')
@@ -97,14 +90,14 @@ describe('buildPaginationSnippet', () => {
   })
 
   it('omits the staged className while its eye is off and emits it when on', () => {
-    expect(buildPaginationSnippet({ ...base, className: STYLED_CLASS, classNameOn: false })).not.toContain('className=')
-    expect(buildPaginationSnippet({ ...base, className: STYLED_CLASS, classNameOn: true })).toContain(
+    expect(buildPaginationSnippet({ ...base, className: staged(STYLED_CLASS) })).not.toContain('className=')
+    expect(buildPaginationSnippet({ ...base, className: staged(STYLED_CLASS, true) })).toContain(
       'className="rounded-lg border border-cyan-500/40 p-2"',
     )
   })
 
   it('escapes trailing text', () => {
-    const source = buildPaginationSnippet({ ...base, trailing: 'a & <b>' })
+    const source = buildPaginationSnippet({ ...base, trailing: staged('a & <b>', true) })
     expect(source).toContain('<span>a &amp; &lt;b&gt;</span>')
   })
 
@@ -113,14 +106,13 @@ describe('buildPaginationSnippet', () => {
     expect(
       buildPaginationSnippet({
         ...base,
-        pageSizeOptions: [...DEFAULT_PAGE_SIZE_OPTIONS],
-        pageSizeOptionsEnabled: true,
+        pageSizeOptions: staged([...DEFAULT_PAGE_SIZE_OPTIONS], true),
       }),
     ).not.toContain('pageSizeOptions=')
   })
 
   it('emits pageSizeOptions from scope when enabled with custom choices', () => {
-    const source = buildPaginationSnippet({ ...base, pageSizeOptions: [5, 15, 30], pageSizeOptionsEnabled: true })
+    const source = buildPaginationSnippet({ ...base, pageSizeOptions: staged([5, 15, 30], true) })
     expect(source).toContain('pageSizeOptions={pageSizeOptions}')
   })
 

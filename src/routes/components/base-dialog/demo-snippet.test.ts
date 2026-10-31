@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { staged } from '$showcase/staged'
 import {
   DISMISS_HANDLER,
   STYLED_PANEL,
@@ -18,22 +19,14 @@ const defaultChildren = buildBaseBodyLines({
 
 function state(overrides: Partial<BaseDialogSnippetState> = {}): BaseDialogSnippetState {
   return {
-    widthVariant: '',
-    widthVariantOn: true,
-    heightVariant: '',
-    heightVariantOn: true,
-    size: '',
-    sizeOn: true,
-    className: '',
-    classNameOn: true,
-    children: defaultChildren,
-    childrenOn: true,
-    title: '',
-    titleOn: true,
-    closeLabel: '',
-    closeLabelOn: true,
-    header: '',
-    headerOn: false,
+    widthVariant: staged('', true),
+    heightVariant: staged('', true),
+    size: staged('', true),
+    className: staged('', true),
+    children: staged(defaultChildren, true),
+    title: staged('', true),
+    closeLabel: staged('', true),
+    header: staged('', false),
     ...overrides,
   }
 }
@@ -58,9 +51,9 @@ describe('buildBaseDialogSnippet', () => {
   it('emits width/height variants and styled classes', () => {
     const source = buildBaseDialogSnippet(
       state({
-        widthVariant: 'xl',
-        heightVariant: '2xl',
-        className: STYLED_PANEL,
+        widthVariant: staged('xl', true),
+        heightVariant: staged('2xl', true),
+        className: staged(STYLED_PANEL, true),
       }),
     )
     expect(source).toContain('title={dialogTitle}')
@@ -70,14 +63,14 @@ describe('buildBaseDialogSnippet', () => {
   })
 
   it('emits the size shorthand when set', () => {
-    const source = buildBaseDialogSnippet(state({ size: '4xl' }))
+    const source = buildBaseDialogSnippet(state({ size: staged('4xl', true) }))
     expect(source).toContain('size="4xl"')
     expect(source).not.toContain('widthVariant=')
     expect(source).not.toContain('heightVariant=')
   })
 
   it('omits component defaults (the Value column prefills them)', () => {
-    const source = buildBaseDialogSnippet(state({ widthVariant: 'md', heightVariant: 'auto' }))
+    const source = buildBaseDialogSnippet(state({ widthVariant: staged('md', true), heightVariant: staged('auto', true) }))
     expect(source).not.toContain('widthVariant=')
     expect(source).not.toContain('heightVariant=')
   })
@@ -85,12 +78,9 @@ describe('buildBaseDialogSnippet', () => {
   it('omits sizing props while their eyes are off', () => {
     const source = buildBaseDialogSnippet(
       state({
-        widthVariant: 'xl',
-        widthVariantOn: false,
-        heightVariant: '2xl',
-        heightVariantOn: false,
-        size: '4xl',
-        sizeOn: false,
+        widthVariant: staged('xl', false),
+        heightVariant: staged('2xl', false),
+        size: staged('4xl', false),
       }),
     )
     expect(source).not.toContain('widthVariant=')
@@ -99,7 +89,7 @@ describe('buildBaseDialogSnippet', () => {
   })
 
   it('omits the body and self-closes when children are off', () => {
-    const source = buildBaseDialogSnippet(state({ children: '', childrenOn: false }))
+    const source = buildBaseDialogSnippet(state({ children: staged('') }))
     expect(source).toContain('onCancel={() => (open = false)} />')
     expect(source).not.toContain('Dialog body content.')
     expect(source).not.toContain('</BaseDialog>')
@@ -108,10 +98,13 @@ describe('buildBaseDialogSnippet', () => {
   it('emits custom handlers verbatim and escapes text', () => {
     const source = buildBaseDialogSnippet(
       state({
-        children: buildBaseBodyLines({
-          body: 'Fish & chips',
-          buttons: [{ variant: 'primary', label: 'Go & see', onClick: "() => alert('hi')" }],
-        }),
+        children: staged(
+          buildBaseBodyLines({
+            body: 'Fish & chips',
+            buttons: [{ variant: 'primary', label: 'Go & see', onClick: "() => alert('hi')" }],
+          }),
+          true,
+        ),
       }),
     )
     expect(source).toContain('<p>Fish &amp; chips</p>')
@@ -150,7 +143,7 @@ describe('buildBaseDialogSnippet', () => {
 
   it('emits the title and close labels when set', () => {
     const source = buildBaseDialogSnippet(
-      state({ title: 'Say "hi"', closeLabel: 'Dismiss' }),
+      state({ title: staged('Say "hi"', true), closeLabel: staged('Dismiss', true) }),
     )
     expect(source).toContain('title="Say &quot;hi&quot;"')
     expect(source).toContain('closeLabel="Dismiss"')
@@ -158,13 +151,13 @@ describe('buildBaseDialogSnippet', () => {
 
   it('omits staged text props while their eye is off and emits them when on', () => {
     const off = buildBaseDialogSnippet(
-      state({ className: STYLED_PANEL, classNameOn: false, title: 'Hi', titleOn: false, closeLabel: 'Dismiss', closeLabelOn: false }),
+      state({ className: staged(STYLED_PANEL, false), title: staged('Hi', false), closeLabel: staged('Dismiss', false) }),
     )
     expect(off).toContain('title={dialogTitle}')
     expect(off).not.toContain('closeLabel=')
     expect(off).not.toContain('    className=')
     const on = buildBaseDialogSnippet(
-      state({ className: STYLED_PANEL, title: 'Hi', closeLabel: 'Dismiss' }),
+      state({ className: staged(STYLED_PANEL, true), title: staged('Hi', true), closeLabel: staged('Dismiss', true) }),
     )
     expect(on).toContain('title="Hi"')
     expect(on).toContain('closeLabel="Dismiss"')
@@ -174,8 +167,7 @@ describe('buildBaseDialogSnippet', () => {
   it('emits the header snippet while applied', () => {
     const source = buildBaseDialogSnippet(
       state({
-        header: '<Copyable text="$.user"><span>$.user</span></Copyable>',
-        headerOn: true,
+        header: staged('<Copyable text="$.user"><span>$.user</span></Copyable>', true),
       }),
     )
     expect(source).toContain('    {#snippet header()}')
@@ -187,10 +179,8 @@ describe('buildBaseDialogSnippet', () => {
   it('keeps the dialog open with slots applied while children are off', () => {
     const source = buildBaseDialogSnippet(
       state({
-        children: '',
-        childrenOn: false,
-        header: '<Copyable text="t"><span>t</span></Copyable>',
-        headerOn: true,
+        children: staged(''),
+        header: staged('<Copyable text="t"><span>t</span></Copyable>', true),
       }),
     )
     expect(source).toContain('onCancel={() => (open = false)}>')
@@ -201,8 +191,7 @@ describe('buildBaseDialogSnippet', () => {
   it('omits the header snippet while its eye is off', () => {
     const source = buildBaseDialogSnippet(
       state({
-        header: '<Copyable text="t"><span>t</span></Copyable>',
-        headerOn: false,
+        header: staged('<Copyable text="t"><span>t</span></Copyable>', false),
       }),
     )
     expect(source).not.toContain('{#snippet header()}')

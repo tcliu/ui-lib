@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { staged } from '$showcase/staged'
 import {
   STYLED_CLASS,
   buildFormFieldChildrenMarkup,
@@ -11,18 +12,12 @@ import {
 
 function state(overrides: Partial<FormFieldSnippetState> = {}): FormFieldSnippetState {
   return {
-    label: '',
-    labelOn: false,
-    htmlFor: '',
-    htmlForOn: false,
-    className: '',
-    classNameOn: true,
-    layout: '',
-    layoutOn: true,
-    size: '',
-    sizeOn: false,
-    children: '',
-    childrenEnabled: true,
+    label: staged(''),
+    htmlFor: staged(''),
+    className: staged('', true),
+    layout: staged('', true),
+    size: staged(''),
+    children: staged('', true),
     ...overrides,
   }
 }
@@ -39,75 +34,72 @@ describe('buildFormFieldSnippet', () => {
 
   it('emits label, htmlFor, and input id when set', () => {
     const source = buildFormFieldSnippet(state({
-      label: 'Name',
-      labelOn: true,
-      htmlFor: 'demo',
-      htmlForOn: true,
+      label: staged('Name', true),
+      htmlFor: staged('demo', true),
     }))
     expect(source).toContain('<FormField label="Name" htmlFor="demo">')
     expect(source).toContain('  <TextInput bind:value id="demo" />')
   })
 
   it('emits the inline layout', () => {
-    const source = buildFormFieldSnippet(state({ layout: 'inline', layoutOn: true }))
+    const source = buildFormFieldSnippet(state({ layout: staged('inline', true) }))
     expect(source).toContain('<FormField label={defaultLabel} layout="inline">')
   })
 
   it('omits component defaults (the Value column prefills them)', () => {
-    const source = buildFormFieldSnippet(state({ layout: 'stacked', layoutOn: true }))
+    const source = buildFormFieldSnippet(state({ layout: staged('stacked', true) }))
     expect(source).not.toContain('layout=')
   })
 
   it('emits the styled wrapper class', () => {
-    const source = buildFormFieldSnippet(state({ className: STYLED_CLASS, classNameOn: true }))
+    const source = buildFormFieldSnippet(state({ className: staged(STYLED_CLASS, true) }))
     expect(source).toContain('className="rounded-md border border-cyan-500/40 p-3"')
   })
 
   it('omits the staged layout while its eye is off', () => {
-    const source = buildFormFieldSnippet(state({ layout: 'inline', layoutOn: false }))
+    const source = buildFormFieldSnippet(state({ layout: staged('inline') }))
     expect(source).not.toContain('layout=')
   })
 
   it('omits className while its eye toggle is off and emits it while on', () => {
-    const off = buildFormFieldSnippet(state({ className: 'mt-2', classNameOn: false }))
+    const off = buildFormFieldSnippet(state({ className: staged('mt-2') }))
     expect(off).not.toContain('className=')
-    const on = buildFormFieldSnippet(state({ className: 'mt-2', classNameOn: true }))
+    const on = buildFormFieldSnippet(state({ className: staged('mt-2', true) }))
     expect(on).toContain('className="mt-2"')
   })
 
   it('emits a non-default size and omits the md default', () => {
-    expect(buildFormFieldSnippet(state({ size: 'lg', sizeOn: true }))).toContain(' size="lg"')
-    expect(buildFormFieldSnippet(state({ size: '18', sizeOn: true }))).toContain(' size={18}')
-    expect(buildFormFieldSnippet(state({ size: 'md', sizeOn: true }))).not.toContain('size=')
-    expect(buildFormFieldSnippet(state({ size: 'lg', sizeOn: false }))).not.toContain('size=')
+    expect(buildFormFieldSnippet(state({ size: staged('lg', true) }))).toContain(' size="lg"')
+    expect(buildFormFieldSnippet(state({ size: staged('18', true) }))).toContain(' size={18}')
+    expect(buildFormFieldSnippet(state({ size: staged('md', true) }))).not.toContain('size=')
+    expect(buildFormFieldSnippet(state({ size: staged('lg') }))).not.toContain('size=')
   })
 
   it('emits a hand-typed className', () => {
-    const source = buildFormFieldSnippet(state({ className: 'mt-2', classNameOn: true }))
+    const source = buildFormFieldSnippet(state({ className: staged('mt-2', true) }))
     expect(source).toContain('className="mt-2"')
   })
 
   it('escapes quotes in the label', () => {
-    const source = buildFormFieldSnippet(state({ label: 'Say "hi"', labelOn: true }))
+    const source = buildFormFieldSnippet(state({ label: staged('Say "hi"', true) }))
     expect(source).toContain('label="Say &quot;hi&quot;"')
   })
 
   it('omits the control when children is off', () => {
-    const source = buildFormFieldSnippet(state({ childrenEnabled: false }))
+    const source = buildFormFieldSnippet(state({ children: staged('', false) }))
     expect(source).toBe('<FormField label={defaultLabel}></FormField>')
   })
 
   it('emits committed children verbatim', () => {
     const source = buildFormFieldSnippet(state({
-      children: '<TextInput bind:value id="demo-id" />\n<span>note-123</span>',
-      childrenEnabled: true,
+      children: staged('<TextInput bind:value id="demo-id" />\n<span>note-123</span>', true),
     }))
     expect(source).toContain('  <TextInput bind:value id="demo-id" />')
     expect(source).toContain('  <span>note-123</span>')
   })
 
   it('omits staged label and htmlFor while their eyes are off and keeps the fallbacks', () => {
-    const off = buildFormFieldSnippet(state({ label: 'Name', labelOn: false, htmlFor: 'demo', htmlForOn: false }))
+    const off = buildFormFieldSnippet(state({ label: staged('Name'), htmlFor: staged('demo') }))
     expect(off).not.toContain('label="Name"')
     expect(off).not.toContain('htmlFor="demo"')
     expect(off).not.toContain('id="demo"')

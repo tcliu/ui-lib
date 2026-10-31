@@ -2,33 +2,31 @@
 // playground form state: the section regenerates the editor text from this, so
 // the editor always shows the markup behind the demo above.
 
-import { escapeAttr } from '$showcase/snippet-build'
-import { sizeAttributeLine } from '$showcase/size-input'
+import { enumAttrLine, escapeAttr, sizeAttrLine, textAttrLine } from '$showcase/snippet-build'
+import type { Staged } from '$showcase/staged'
 export interface ToastSnippetState {
-  message: string
-  messageOn: boolean
-  toastType: string
-  toastTypeOn: boolean
-  position: string
-  positionOn: boolean
-  size: string
-  sizeOn: boolean
+  message: Staged<string>
+  toastType: Staged<string>
+  position: Staged<string>
+  size: Staged<string>
   action: string
-  closeLabel: string
-  closeLabelOn: boolean
+  closeLabel: Staged<string>
 }
 
-export function buildToastSnippet({ message, messageOn, toastType, toastTypeOn, position, positionOn, size, sizeOn, action, closeLabel, closeLabelOn }: ToastSnippetState): string {
+export function buildToastSnippet({ message, toastType, position, size, action, closeLabel }: ToastSnippetState): string {
+  // Unset, each text prop falls back to the scope value the demo reads.
+  const messageAttr = textAttrLine('message', message, '    ')
+  const closeLabelAttr = textAttrLine('closeLabel', closeLabel, '    ')
   const lines = [
     '<Button variant="primary" onClick={() => (open = true)}>{showLabel}</Button>',
     '',
     '{#if open}',
     '  <Toast',
-    ...(messageOn && message ? [`    message="${escapeAttr(message)}"`] : ['    message={defaultMessage}']),
-    ...(closeLabelOn && closeLabel ? [`    closeLabel="${escapeAttr(closeLabel)}"`] : ['    closeLabel={closeLabel}']),
-    ...(toastTypeOn && toastType && toastType !== 'info' ? [`    type="${toastType}"`] : []),
-    ...(positionOn && position && position !== 'bottom-right' ? [`    position="${position}"`] : []),
-    ...(sizeOn && size !== '' && size !== 'md' ? sizeAttributeLine(size, '    ') : []),
+    ...(messageAttr.length ? messageAttr : ['    message={defaultMessage}']),
+    ...(closeLabelAttr.length ? closeLabelAttr : ['    closeLabel={closeLabel}']),
+    ...enumAttrLine('type', toastType, 'info', '    '),
+    ...enumAttrLine('position', position, 'bottom-right', '    '),
+    ...sizeAttrLine(size, '    '),
     ...(action ? [`    action={{ label: "${escapeAttr(action)}", onClick: () => (actionTaken = actionLabel) }}`] : []),
     '    onClose={() => (open = false)} />',
     '{/if}',

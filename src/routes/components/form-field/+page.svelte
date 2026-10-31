@@ -5,7 +5,8 @@
   import ShowcasePage from '$showcase/ShowcasePage.svelte'
   import { parseSizeValue } from '$showcase/size-input'
   import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { enumField, textField, sizeField, snippetDialog, snippetField, snippetToggle } from '$showcase/snippet-field'
+  import { enumField, textField, sizeField, snippetDialog, snippetField } from '$showcase/snippet-field'
+  import { applied, eye, eyeToggle, stage, staged } from '$showcase/staged'
   import {
     buildFormFieldChildrenMarkup,
     buildFormFieldSnippet,
@@ -27,40 +28,41 @@
   // the seed when off.
   const INITIAL = {
     value: '',
-    label: 'Default',
-    labelOn: true,
-    htmlFor: '',
-    htmlForOn: false,
-    className: '',
-    classNameOn: false,
-    layout: 'stacked',
-    layoutOn: false,
-    size: 'md',
-    sizeOn: false,
-    children: '',
-    childrenOn: true,
+    label: staged('Default', true),
+    htmlFor: staged(''),
+    className: staged(''),
+    layout: staged('stacked'),
+    size: staged('md'),
+    // The laid-out children are demo data: the pair carries the committed
+    // markup and its eye whether the snippet applies.
+    children: staged('', true),
   }
   let pg = $state(structuredClone(INITIAL))
 
   const layoutOptions = [{ value: 'inline', label: 'Inline' }]
 
-  const demoLabel = $derived(pg.labelOn && pg.label ? pg.label : i18n.t('showcase.default'))
-  const demoHtmlFor = $derived(pg.htmlForOn && pg.htmlFor ? pg.htmlFor : undefined)
-  const demoClassName = $derived(pg.classNameOn && pg.className ? pg.className : undefined)
-  const demoLayout = $derived(pg.layoutOn && pg.layout === 'inline' ? 'inline' : undefined)
-  const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
+  const demoLabel = $derived(applied(pg.label) || i18n.t('showcase.default'))
+  const demoHtmlFor = $derived(applied(pg.htmlFor) || undefined)
+  // The canonical child's id follows the htmlFor row while it applies.
+  const htmlForId = $derived(demoHtmlFor ?? '')
+  const demoClassName = $derived(applied(pg.className) || undefined)
+  const demoLayout = $derived(applied(pg.layout) === 'inline' ? 'inline' : undefined)
+  const demoSize = $derived.by(() => {
+    const value = applied(pg.size)
+    return value === undefined ? undefined : parseSizeValue(value)
+  })
   // Custom markup renders as committed; unset, the canonical TextInput reads
   // the dynamic id. Stored drafts are always valid, so the fallback only
   // covers the empty state.
   const demoChildren = $derived<FormFieldChildSegment[]>(
-    parseFormFieldChildSegments(pg.children || buildFormFieldChildrenMarkup({ htmlFor: pg.htmlForOn && pg.htmlFor ? pg.htmlFor : '' })) ?? [
-      { kind: 'textinput', id: pg.htmlForOn && pg.htmlFor ? pg.htmlFor : '' },
+    parseFormFieldChildSegments(pg.children.value || buildFormFieldChildrenMarkup({ htmlFor: htmlForId })) ?? [
+      { kind: 'textinput', id: htmlForId },
     ],
   )
   // The children row edits the markup under the label (demo data, so it has
   // no single prop). Committing the canonical TextInput resets to unset, so
   // the id keeps flowing from the htmlFor row.
-  const childrenSnippet = $derived(pg.children || buildFormFieldChildrenMarkup({ htmlFor: pg.htmlForOn && pg.htmlFor ? pg.htmlFor : '' }))
+  const childrenSnippet = $derived(pg.children.value || buildFormFieldChildrenMarkup({ htmlFor: htmlForId }))
 
   function clearPlayground() {
     pg = structuredClone(INITIAL)
@@ -69,17 +71,11 @@
   const code = $derived.by(() =>
     buildFormFieldSnippet({
       label: pg.label,
-      labelOn: pg.labelOn,
       htmlFor: pg.htmlFor,
-      htmlForOn: pg.htmlForOn,
       className: pg.className,
-      classNameOn: pg.classNameOn,
       layout: pg.layout,
-      layoutOn: pg.layoutOn,
       size: pg.size,
-      sizeOn: pg.sizeOn,
       children: pg.children,
-      childrenEnabled: pg.childrenOn,
     }),
   )
 
@@ -99,20 +95,19 @@
       onChange: (draft: string) => {
         if (!parseFormFieldChildrenMarkup(draft)) return
         const normalized = normalizeFormFieldChildrenDraft(draft)
-        pg.children = normalized === buildFormFieldChildrenMarkup({ htmlFor: pg.htmlForOn && pg.htmlFor ? pg.htmlFor : '' }) ? '' : normalized
-        pg.childrenOn = true
+        stage(pg.children, normalized === buildFormFieldChildrenMarkup({ htmlFor: htmlForId }) ? '' : normalized)
       },
       dialog: snippetDialog(
         parseFormFieldChildrenMarkup,
         'Use <TextInput bind:value ... /> lines and well-formed HTML elements only — no {…} expressions, components, or event handlers.',
       ),
-      toggle: snippetToggle(pg.childrenOn, enabled => (pg.childrenOn = enabled)),
+      toggle: eyeToggle(pg.children),
     }),
-    textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes for the field wrapper.', value: pg.className, onChange: v => (pg.className = v), editorDefaultValue: '', clearable: true, enabled: pg.classNameOn, setEnabled: v => (pg.classNameOn = v) }),
-    textField({ name: 'htmlFor', type: 'string?', defaultValue: '—', note: 'Associates the label with a control id.', value: pg.htmlFor, onChange: v => (pg.htmlFor = v), clearable: true, enabled: pg.htmlForOn, setEnabled: v => (pg.htmlForOn = v) }),
-    { name: 'label', type: 'string', defaultValue: '—', note: 'Visible field label.', editor: 'text', clearable: true, value: pg.label, onChange: value => { pg.label = value; pg.labelOn = true; }, toggle: snippetToggle(pg.labelOn, enabled => (pg.labelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'defaultLabel' } },
-    enumField({ name: 'layout', type: "'stacked' | 'inline'", defaultValue: "'stacked'", note: 'Stacked puts the label above the control; inline puts it in the size-scaled inline column beside it (6rem at md).', options: layoutOptions, value: pg.layout, onChange: v => (pg.layout = v), placeholder: 'stacked', clearLabel: 'Clear layout', enabled: pg.layoutOn, setEnabled: v => (pg.layoutOn = v) }),
-    sizeField({ note: 'Control scale; numbers are icon-scale pixels. Scales the label, gaps, and inline label column.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
+    textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes for the field wrapper.', editorDefaultValue: '', clearable: true, ...eye(pg.className) }),
+    textField({ name: 'htmlFor', type: 'string?', defaultValue: '—', note: 'Associates the label with a control id.', clearable: true, ...eye(pg.htmlFor) }),
+    { name: 'label', type: 'string', defaultValue: '—', note: 'Visible field label.', editor: 'text', clearable: true, ...eye(pg.label), onChange: value => stage(pg.label, value), toggle: eyeToggle(pg.label), sync: { kind: 'scopeText', scopeRef: 'defaultLabel' } },
+    enumField({ name: 'layout', type: "'stacked' | 'inline'", defaultValue: "'stacked'", note: 'Stacked puts the label above the control; inline puts it in the size-scaled inline column beside it (6rem at md).', options: layoutOptions, placeholder: 'stacked', clearLabel: 'Clear layout', ...eye(pg.layout) }),
+    sizeField({ note: 'Control scale; numbers are icon-scale pixels. Scales the label, gaps, and inline label column.', ...eye(pg.size) }),
   ])
 
   // With an unset label the demo reads the localized default from scope, which
@@ -139,7 +134,7 @@
 
     sync={{ tag: 'FormField' }}
     scopeRefresh={() => [demoLabel]}
-    scopeRefreshWhen={() => !(pg.labelOn && pg.label)}
+    scopeRefreshWhen={() => !applied(pg.label)}
   >
     <FormField
       label={demoLabel}
@@ -147,5 +142,5 @@
       className={demoClassName}
       layout={demoLayout}
       size={demoSize}
-      children={pg.childrenOn ? fieldChildren : undefined} />
+      children={pg.children.on ? fieldChildren : undefined} />
   </ShowcasePage>

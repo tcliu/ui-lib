@@ -1,12 +1,13 @@
 <script lang="ts">
-  import { flagOn } from '$showcase/snippet-build'
   import Chip from '$lib/components/Chip.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$showcase/ShowcasePage.svelte'
   import { parseSizeValue } from '$showcase/size-input'
   import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { textField, boolField, sizeField, snippetToggle } from '$showcase/snippet-field'
-  import { DEFAULT_CHIP_CLASS, buildChipSnippet, type TriState } from './demo-snippet'
+  import { textField, boolField, sizeField } from '$showcase/snippet-field'
+  import { applied, appliedFlag, eye, eyeFlag, eyeToggle, stage, staged } from '$showcase/staged'
+  import { type TriState } from '$showcase/snippet-build'
+  import { DEFAULT_CHIP_CLASS, buildChipSnippet } from './demo-snippet'
 
   const i18n = getI18nContext()
 
@@ -16,42 +17,35 @@
   // unsets it; Reset restores the defaults below. `pgRemoved` is interaction
   // state.
   const INITIAL = {
-    label: 'Default',
-    labelOn: true,
-    chipClass: '',
-    chipClassOn: false,
-    size: 'md',
-    sizeOn: false,
-    removable: 'no' as TriState,
-    removableOn: false,
+    label: staged('Default', true),
+    chipClass: staged(''),
+    size: staged('md'),
+    removable: staged('no' as TriState),
     removed: false,
-    ariaLabel: '',
-    ariaLabelOn: false,
-    disabled: 'no' as TriState,
-    disabledOn: false,
-    removeButtonClass: '',
-    removeButtonClassOn: false,
-    removeButtonStyle: '',
-    removeButtonStyleOn: false,
-    style: '',
-    styleOn: false,
-    tooltip: '',
-    tooltipOn: false,
+    ariaLabel: staged(''),
+    disabled: staged('no' as TriState),
+    removeButtonClass: staged(''),
+    removeButtonStyle: staged(''),
+    style: staged(''),
+    tooltip: staged(''),
   }
   let pg = $state(structuredClone(INITIAL))
 
-  const demoLabel = $derived(pg.labelOn && pg.label ? pg.label : i18n.t('showcase.default'))
-  const demoChipClass = $derived(pg.chipClassOn && pg.chipClass ? pg.chipClass : DEFAULT_CHIP_CLASS)
-  const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
-  const disabled = $derived(pg.disabledOn ? flagOn(pg.disabled) : undefined)
+  const demoLabel = $derived(applied(pg.label) || i18n.t('showcase.default'))
+  const demoChipClass = $derived(applied(pg.chipClass) || DEFAULT_CHIP_CLASS)
+  const demoSize = $derived.by(() => {
+    const value = applied(pg.size)
+    return value === undefined ? undefined : parseSizeValue(value)
+  })
+  const disabled = $derived(appliedFlag(pg.disabled))
   // The removable mode is a prop, so the Value cell drives it; turning it on
   // restores a chip the demo already removed.
-  const removable = $derived(pg.removableOn && pg.removable === 'yes')
-  const demoAriaLabel = $derived(pg.ariaLabelOn && pg.ariaLabel ? pg.ariaLabel : undefined)
-  const demoRemoveButtonClass = $derived(pg.removeButtonClassOn && pg.removeButtonClass ? pg.removeButtonClass : undefined)
-  const demoRemoveButtonStyle = $derived(pg.removeButtonStyleOn && pg.removeButtonStyle ? pg.removeButtonStyle : undefined)
-  const demoStyle = $derived(pg.styleOn && pg.style ? pg.style : undefined)
-  const demoTooltip = $derived(pg.tooltipOn && pg.tooltip ? pg.tooltip : undefined)
+  const removable = $derived(appliedFlag(pg.removable) === true)
+  const demoAriaLabel = $derived(applied(pg.ariaLabel) || undefined)
+  const demoRemoveButtonClass = $derived(applied(pg.removeButtonClass) || undefined)
+  const demoRemoveButtonStyle = $derived(applied(pg.removeButtonStyle) || undefined)
+  const demoStyle = $derived(applied(pg.style) || undefined)
+  const demoTooltip = $derived(applied(pg.tooltip) || undefined)
 
   function clearPlayground() {
     pg = structuredClone(INITIAL)
@@ -60,25 +54,15 @@
   const code = $derived.by(() =>
     buildChipSnippet({
       label: pg.label,
-      labelOn: pg.labelOn,
       chipClass: pg.chipClass,
-      chipClassOn: pg.chipClassOn,
       size: pg.size,
-      sizeOn: pg.sizeOn,
       removable: pg.removable,
-      removableOn: pg.removableOn,
       removeLabel: pg.ariaLabel,
-      removeLabelOn: pg.ariaLabelOn,
       disabled: pg.disabled,
-      disabledOn: pg.disabledOn,
       removeButtonClass: pg.removeButtonClass,
-      removeButtonClassOn: pg.removeButtonClassOn,
       removeButtonStyle: pg.removeButtonStyle,
-      removeButtonStyleOn: pg.removeButtonStyleOn,
       style: pg.style,
-      styleOn: pg.styleOn,
       tooltip: pg.tooltip,
-      tooltipOn: pg.tooltipOn,
     }),
   )
 
@@ -86,16 +70,16 @@
   // `chipClass` is always emitted (falling back to the default), so the
   // default literal maps back to unset.
   const fields: SyncableFieldConfig[] = $derived([
-    { name: 'chipClass', type: 'string', defaultValue: '—', note: 'Color and shape classes.', editor: 'text', clearable: true, value: pg.chipClass, onChange: value => { pg.chipClass = value; pg.chipClassOn = true; }, toggle: snippetToggle(pg.chipClassOn, enabled => (pg.chipClassOn = enabled)), sync: { kind: 'text', unsetValues: [DEFAULT_CHIP_CLASS] } },
-    boolField({ name: 'disabled', defaultValue: 'false', note: 'Disables the remove button. Applies in removable mode.', value: pg.disabled, onChange: v => (pg.disabled = v as TriState), enabled: pg.disabledOn, setEnabled: v => (pg.disabledOn = v) }),
-    { name: 'label', type: 'string', defaultValue: '—', note: 'Pill text.', editor: 'text', clearable: true, value: pg.label, onChange: value => { pg.label = value; pg.labelOn = true; }, toggle: snippetToggle(pg.labelOn, enabled => (pg.labelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'defaultLabel' } },
-    textField({ name: 'removeButtonClass', type: 'string?', defaultValue: "''", note: 'Extra classes for the remove button. Applies in removable mode.', value: pg.removeButtonClass, onChange: v => (pg.removeButtonClass = v), editorDefaultValue: '', clearable: true, enabled: pg.removeButtonClassOn, setEnabled: v => (pg.removeButtonClassOn = v) }),
-    textField({ name: 'removeButtonStyle', type: 'string?', defaultValue: "''", note: 'Inline style for the remove button. Applies in removable mode.', value: pg.removeButtonStyle, onChange: v => (pg.removeButtonStyle = v), editorDefaultValue: '', clearable: true, enabled: pg.removeButtonStyleOn, setEnabled: v => (pg.removeButtonStyleOn = v) }),
-    textField({ name: 'removeLabel', type: 'string?', defaultValue: 'locale', note: 'Accessible name for the remove button. Applies in removable mode.', value: pg.ariaLabel, onChange: v => (pg.ariaLabel = v), clearable: true, enabled: pg.ariaLabelOn, setEnabled: v => (pg.ariaLabelOn = v) }),
-    boolField({ name: 'removable', defaultValue: 'false', note: 'Offers a remove cross next to the label; `onRemove` is the handler.', value: pg.removable, onChange: v => { pg.removable = v as TriState; pg.removableOn = true; if (v === 'yes') pg.removed = false }, enabled: pg.removableOn, setEnabled: v => (pg.removableOn = v) }),
-    sizeField({ note: 'Control scale; numbers are icon-scale pixels. Chip owns its size-scaled padding, font, and line.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
-    textField({ name: 'style', type: 'string?', defaultValue: "''", note: 'Inline style for the pill.', value: pg.style, onChange: v => (pg.style = v), editorDefaultValue: '', clearable: true, enabled: pg.styleOn, setEnabled: v => (pg.styleOn = v) }),
-    textField({ name: 'tooltip', type: 'string?', defaultValue: '—', note: 'Tooltip text for the pill.', value: pg.tooltip, onChange: v => (pg.tooltip = v), clearable: true, enabled: pg.tooltipOn, setEnabled: v => (pg.tooltipOn = v) }),
+    { name: 'chipClass', type: 'string', defaultValue: '—', note: 'Color and shape classes.', editor: 'text', clearable: true, ...eye(pg.chipClass), onChange: value => stage(pg.chipClass, value), toggle: eyeToggle(pg.chipClass), sync: { kind: 'text', unsetValues: [DEFAULT_CHIP_CLASS] } },
+    boolField({ name: 'disabled', defaultValue: 'false', note: 'Disables the remove button. Applies in removable mode.', ...eyeFlag(pg.disabled) }),
+    { name: 'label', type: 'string', defaultValue: '—', note: 'Pill text.', editor: 'text', clearable: true, ...eye(pg.label), onChange: value => stage(pg.label, value), toggle: eyeToggle(pg.label), sync: { kind: 'scopeText', scopeRef: 'defaultLabel' } },
+    textField({ name: 'removeButtonClass', type: 'string?', defaultValue: "''", note: 'Extra classes for the remove button. Applies in removable mode.', editorDefaultValue: '', clearable: true, ...eye(pg.removeButtonClass) }),
+    textField({ name: 'removeButtonStyle', type: 'string?', defaultValue: "''", note: 'Inline style for the remove button. Applies in removable mode.', editorDefaultValue: '', clearable: true, ...eye(pg.removeButtonStyle) }),
+    textField({ name: 'removeLabel', type: 'string?', defaultValue: 'locale', note: 'Accessible name for the remove button. Applies in removable mode.', clearable: true, ...eye(pg.ariaLabel) }),
+    boolField({ name: 'removable', defaultValue: 'false', note: 'Offers a remove cross next to the label; `onRemove` is the handler.', ...eyeFlag(pg.removable), onChange: v => { stage(pg.removable, v as TriState); if (v === 'yes') pg.removed = false } }),
+    sizeField({ note: 'Control scale; numbers are icon-scale pixels. Chip owns its size-scaled padding, font, and line.', ...eye(pg.size) }),
+    textField({ name: 'style', type: 'string?', defaultValue: "''", note: 'Inline style for the pill.', editorDefaultValue: '', clearable: true, ...eye(pg.style) }),
+    textField({ name: 'tooltip', type: 'string?', defaultValue: '—', note: 'Tooltip text for the pill.', clearable: true, ...eye(pg.tooltip) }),
     { name: 'onRemove', type: '() => void', defaultValue: '—', note: 'Handler for the remove affordance; the cross renders when the chip is removable.' },
   ])
 
@@ -113,7 +97,7 @@
 
     sync={{ tag: 'Chip' }}
     scopeRefresh={() => [demoLabel]}
-    scopeRefreshWhen={() => pg.label === ''}
+    scopeRefreshWhen={() => pg.label.value === ''}
   >
     {#if removable}
       {#if !pg.removed}

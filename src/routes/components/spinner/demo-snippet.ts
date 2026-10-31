@@ -2,19 +2,18 @@
 // playground form state: the section regenerates the editor text from this, so
 // the editor always shows the markup behind the demo above.
 
-import { sizeAttributeFragment } from '$showcase/size-input'
+import { sizeAttrLine, textAttrLine } from '$showcase/snippet-build'
+import type { Staged } from '$showcase/staged'
+
 export interface SpinnerSnippetState {
-  size: string
-  sizeOn: boolean
-  tint: string
-  tintOn: boolean
+  size: Staged<string>
+  tint: Staged<string>
 }
 
-export function buildSpinnerSnippet({ size, sizeOn, tint, tintOn }: SpinnerSnippetState): string {
-  // The size Value prefills the component default; the builder omits it so
-  // Show-code stays minimal.
-  const sizeFragment = sizeOn && size !== '' && size !== 'md' ? sizeAttributeFragment(size) : ''
-  const attrs = [sizeFragment, ...(tintOn && tint ? [` className="${tint}"`] : [])].join('')
+export function buildSpinnerSnippet({ size, tint }: SpinnerSnippetState): string {
+  // The attributes share the tag's one line, so each helper's single-space
+  // indent doubles as the inline separator.
+  const attrs = [...sizeAttrLine(size, ' '), ...textAttrLine('className', tint, ' ')].join('')
   return [
     '<span class="inline-flex items-center gap-2 text-sm text-slate-300">',
     `  <Spinner${attrs} /> {reloadLabel}`,

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { STAGE_PANE, STAGE_ROW } from '$showcase/resizable-stage'
+import { staged } from '$showcase/staged'
 import {
   buildDataTableSnippet,
   parseChooserColumnsJson,
@@ -14,55 +15,33 @@ import {
 } from './demo-snippet'
 
 const base: DataTableSnippetState = {
-  rows: [
+  rows: staged([
     { id: 'p1', name: 'Catalog', status: 'Active' },
     { id: 'p2', name: 'Editor', status: 'Draft' },
-  ],
-  showSearch: '',
-  showSearchOn: true,
-  showPagination: '',
-  showPaginationOn: true,
-  selectable: '',
-  selectableOn: true,
-  dense: '',
-  denseOn: true,
-  resizable: '',
-  resizableOn: true,
-  loading: '',
-  loadingOn: true,
-  fillHeight: '',
-  fillHeightOn: true,
-  bodyScroll: '',
-  bodyScrollOn: true,
-  placeholder: '',
-  placeholderOn: false,
-  emptyMessage: '',
-  emptyMessageOn: false,
+  ], true),
+  showSearch: staged('', true),
+  showPagination: staged('', true),
+  selectable: staged('', true),
+  dense: staged('', true),
+  resizable: staged('', true),
+  loading: staged('', true),
+  fillHeight: staged('', true),
+  bodyScroll: staged('', true),
+  placeholder: staged(''),
+  emptyMessage: staged(''),
   trailing: '',
-  searchAriaLabel: '',
-  searchAriaLabelOn: false,
-  searchKeys: null,
-  searchKeysEnabled: true,
-  chooserLabel: '',
-  chooserLabelOn: false,
-  chooserResetLabel: '',
-  chooserResetLabelOn: false,
-  selectAllAriaLabel: '',
-  selectAllAriaLabelOn: false,
-  allSelected: '',
-  allSelectedOn: true,
-  someSelected: '',
-  someSelectedOn: true,
-  containerClassName: '',
-  containerClassNameOn: false,
-  tableClassName: '',
-  tableClassNameOn: false,
-  storageKey: '',
-  storageKeyOn: false,
-  resetWidthsSignal: '',
-  resetWidthsSignalOn: true,
-  size: '',
-  sizeOn: true,
+  searchAriaLabel: staged(''),
+  searchKeys: staged(null, true),
+  chooserLabel: staged(''),
+  chooserResetLabel: staged(''),
+  selectAllAriaLabel: staged(''),
+  allSelected: staged('', true),
+  someSelected: staged('', true),
+  containerClassName: staged(''),
+  tableClassName: staged(''),
+  storageKey: staged(''),
+  resetWidthsSignal: staged('', true),
+  size: staged('', true),
 }
 
 describe('buildDataTableSnippet', () => {
@@ -120,21 +99,21 @@ describe('buildDataTableSnippet', () => {
   })
 
   it('emits the loading flag when set', () => {
-    const source = buildDataTableSnippet({ ...base, loading: 'yes' })
+    const source = buildDataTableSnippet({ ...base, loading: staged('yes', true) })
     expect(source).toContain('\n      loading\n')
   })
 
   it('emits a named size as a string and a numeric size as an expression', () => {
-    expect(buildDataTableSnippet({ ...base, size: 'lg', sizeOn: true })).toContain('size="lg"')
-    expect(buildDataTableSnippet({ ...base, size: '14', sizeOn: true })).toContain('size={14}')
-    expect(buildDataTableSnippet({ ...base, size: 'huge', sizeOn: true })).not.toMatch(/^\s*size=/m)
+    expect(buildDataTableSnippet({ ...base, size: staged('lg', true) })).toContain('size="lg"')
+    expect(buildDataTableSnippet({ ...base, size: staged('14', true) })).toContain('size={14}')
+    expect(buildDataTableSnippet({ ...base, size: staged('huge', true) })).not.toMatch(/^\s*size=/m)
   })
 
   it('adds selection wiring only while selectable', () => {
-    const source = buildDataTableSnippet({ ...base, selectable: 'yes' })
+    const source = buildDataTableSnippet({ ...base, selectable: staged('yes', true) })
     expect(source).toContain('\n      selectable\n')
     expect(source).toContain('selectedIds={pgSelected}')
-    const explicit = buildDataTableSnippet({ ...base, selectable: 'no' })
+    const explicit = buildDataTableSnippet({ ...base, selectable: staged('no', true) })
     expect(explicit).not.toContain('selectable')
     expect(explicit).not.toContain('selectedIds=')
   })
@@ -142,15 +121,14 @@ describe('buildDataTableSnippet', () => {
   it('omits component defaults (the Value column prefills them)', () => {
     const source = buildDataTableSnippet({
       ...base,
-      showSearch: 'yes',
-      selectable: 'no',
-      dense: 'no',
-      resizable: 'no',
-      loading: 'no',
-      fillHeight: 'no',
-      bodyScroll: 'no',
-      size: 'md',
-      sizeOn: true,
+      showSearch: staged('yes', true),
+      selectable: staged('no', true),
+      dense: staged('no', true),
+      resizable: staged('no', true),
+      loading: staged('no', true),
+      fillHeight: staged('no', true),
+      bodyScroll: staged('no', true),
+      size: staged('md', true),
     })
     for (const flag of [
       'showSearch',
@@ -167,7 +145,7 @@ describe('buildDataTableSnippet', () => {
   })
 
   it('emits ={false} for a default-true flag when cleared', () => {
-    expect(buildDataTableSnippet({ ...base, showSearch: 'no' })).toContain('showSearch={false}')
+    expect(buildDataTableSnippet({ ...base, showSearch: staged('no', true) })).toContain('showSearch={false}')
   })
 
   it('wraps the table in the handle-less static stage the page renders', () => {
@@ -183,18 +161,18 @@ describe('buildDataTableSnippet', () => {
     expect(off).not.toContain('\n      fillHeight')
     expect(off).toContain(`<div class="${STAGE_PANE} ${TABLE_STAGE_PANE}"`)
 
-    const on = buildDataTableSnippet({ ...base, fillHeight: 'yes' })
+    const on = buildDataTableSnippet({ ...base, fillHeight: staged('yes', true) })
     expect(on).toContain('\n      fillHeight\n')
     expect(on).toContain(`<div class="${STAGE_PANE} ${TABLE_STAGE_PANE_FILL}"`)
   })
 
   it('emits the bodyScroll flag when set', () => {
-    const source = buildDataTableSnippet({ ...base, bodyScroll: 'yes' })
+    const source = buildDataTableSnippet({ ...base, bodyScroll: staged('yes', true) })
     expect(source).toContain('\n      bodyScroll\n')
   })
 
   it('escapes placeholder quotes for the attribute', () => {
-    const source = buildDataTableSnippet({ ...base, placeholder: 'Find "rows"', placeholderOn: true })
+    const source = buildDataTableSnippet({ ...base, placeholder: staged('Find "rows"', true) })
     expect(source).toContain('searchPlaceholder="Find &quot;rows&quot;"')
   })
 
@@ -213,21 +191,14 @@ describe('buildDataTableSnippet', () => {
     }
     const set = buildDataTableSnippet({
       ...base,
-      selectable: 'yes',
-      searchAriaLabel: 'Find rows',
-      searchAriaLabelOn: true,
-      chooserLabel: 'Columns',
-      chooserLabelOn: true,
-      chooserResetLabel: 'Reset',
-      chooserResetLabelOn: true,
-      selectAllAriaLabel: 'Select all',
-      selectAllAriaLabelOn: true,
-      containerClassName: 'custom-wrap',
-      containerClassNameOn: true,
-      tableClassName: 'min-w-[40rem]',
-      tableClassNameOn: true,
-      storageKey: 'demo-widths',
-      storageKeyOn: true,
+      selectable: staged('yes', true),
+      searchAriaLabel: staged('Find rows', true),
+      chooserLabel: staged('Columns', true),
+      chooserResetLabel: staged('Reset', true),
+      selectAllAriaLabel: staged('Select all', true),
+      containerClassName: staged('custom-wrap', true),
+      tableClassName: staged('min-w-[40rem]', true),
+      storageKey: staged('demo-widths', true),
     })
     expect(set).toContain('searchAriaLabel="Find rows"')
     expect(set).toContain('chooserLabel="Columns"')
@@ -239,33 +210,31 @@ describe('buildDataTableSnippet', () => {
   })
 
   it('omits staged text props while the eye is off and emits them while on', () => {
-    const staged = buildDataTableSnippet({ ...base, chooserLabel: 'Columns', storageKey: 'demo-widths' })
-    expect(staged).not.toContain('chooserLabel=')
-    expect(staged).not.toContain('storageKey=')
-    const applied = buildDataTableSnippet({
+    const off = buildDataTableSnippet({ ...base, chooserLabel: staged('Columns'), storageKey: staged('demo-widths') })
+    expect(off).not.toContain('chooserLabel=')
+    expect(off).not.toContain('storageKey=')
+    const on = buildDataTableSnippet({
       ...base,
-      chooserLabel: 'Columns',
-      chooserLabelOn: true,
-      storageKey: 'demo-widths',
-      storageKeyOn: true,
+      chooserLabel: staged('Columns', true),
+      storageKey: staged('demo-widths', true),
     })
-    expect(applied).toContain('chooserLabel="Columns"')
-    expect(applied).toContain('storageKey="demo-widths"')
+    expect(on).toContain('chooserLabel="Columns"')
+    expect(on).toContain('storageKey="demo-widths"')
   })
 
   it('omits the staged size while its eye is off', () => {
-    expect(buildDataTableSnippet({ ...base, size: 'lg', sizeOn: false })).not.toMatch(/^\s*size=/m)
+    expect(buildDataTableSnippet({ ...base, size: staged('lg') })).not.toMatch(/^\s*size=/m)
   })
 
   it('seeds searchKeys as script-local state only while set', () => {
     expect(buildDataTableSnippet(base)).not.toContain('searchKeys')
-    const set = buildDataTableSnippet({ ...base, searchKeys: ['name', 'status'] })
+    const set = buildDataTableSnippet({ ...base, searchKeys: staged(['name', 'status'], true) })
     expect(set).toContain('let searchKeys = $state(["name","status"]);')
     expect(set).toContain('searchKeys={searchKeys}')
   })
 
   it('omits searchKeys while its eye is off, keeping the committed list', () => {
-    const source = buildDataTableSnippet({ ...base, searchKeys: ['name', 'status'], searchKeysEnabled: false })
+    const source = buildDataTableSnippet({ ...base, searchKeys: staged(['name', 'status']) })
     expect(source).not.toContain('searchKeys')
   })
 
@@ -292,10 +261,10 @@ describe('buildDataTableSnippet', () => {
   })
 
   it('keeps scope selection expressions until an override forces a literal', () => {
-    const scoped = buildDataTableSnippet({ ...base, selectable: 'yes' })
+    const scoped = buildDataTableSnippet({ ...base, selectable: staged('yes', true) })
     expect(scoped).toContain('allSelected={pgSelected.size > 0 && pgSelected.size === rows.length}')
     expect(scoped).toContain('someSelected={pgSelected.size > 0 && pgSelected.size < rows.length}')
-    const forced = buildDataTableSnippet({ ...base, selectable: 'yes', allSelected: 'yes', someSelected: 'no' })
+    const forced = buildDataTableSnippet({ ...base, selectable: staged('yes', true), allSelected: staged('yes', true), someSelected: staged('no', true) })
     expect(forced).toContain('\n      allSelected\n')
     expect(forced).toContain('someSelected={false}')
     expect(forced).not.toContain('pgSelected.size')
@@ -304,26 +273,16 @@ describe('buildDataTableSnippet', () => {
   it('omits staged boolean flags while their eye is off', () => {
     const source = buildDataTableSnippet({
       ...base,
-      showSearch: 'no',
-      showSearchOn: false,
-      dense: 'yes',
-      denseOn: false,
-      loading: 'yes',
-      loadingOn: false,
-      selectable: 'yes',
-      selectableOn: false,
-      allSelected: 'yes',
-      allSelectedOn: false,
-      someSelected: 'yes',
-      someSelectedOn: false,
-      resizable: 'yes',
-      resizableOn: false,
-      fillHeight: 'yes',
-      fillHeightOn: false,
-      bodyScroll: 'yes',
-      bodyScrollOn: false,
-      showPagination: 'yes',
-      showPaginationOn: false,
+      showSearch: staged('no'),
+      dense: staged('yes'),
+      loading: staged('yes'),
+      selectable: staged('yes'),
+      allSelected: staged('yes'),
+      someSelected: staged('yes'),
+      resizable: staged('yes'),
+      fillHeight: staged('yes'),
+      bodyScroll: staged('yes'),
+      showPagination: staged('yes'),
     })
     for (const flag of [
       'showSearch',
@@ -344,17 +303,17 @@ describe('buildDataTableSnippet', () => {
   })
 
   it('omits the widths-reset signal while its eye is off', () => {
-    const source = buildDataTableSnippet({ ...base, resetWidthsSignal: '2', resetWidthsSignalOn: false })
+    const source = buildDataTableSnippet({ ...base, resetWidthsSignal: staged('2') })
     expect(source).not.toContain('resetWidthsSignal=')
-    expect(buildDataTableSnippet({ ...base, resetWidthsSignal: '2', resetWidthsSignalOn: true })).toContain(
+    expect(buildDataTableSnippet({ ...base, resetWidthsSignal: staged('2', true) })).toContain(
       'resetWidthsSignal={2}',
     )
   })
   it('emits the widths-reset signal only while a positive integer', () => {
     expect(buildDataTableSnippet(base)).not.toContain('resetWidthsSignal=')
-    expect(buildDataTableSnippet({ ...base, resetWidthsSignal: '0' })).not.toContain('resetWidthsSignal=')
-    expect(buildDataTableSnippet({ ...base, resetWidthsSignal: 'nope' })).not.toContain('resetWidthsSignal=')
-    expect(buildDataTableSnippet({ ...base, resetWidthsSignal: '2' })).toContain('resetWidthsSignal={2}')
+    expect(buildDataTableSnippet({ ...base, resetWidthsSignal: staged('0', true) })).not.toContain('resetWidthsSignal=')
+    expect(buildDataTableSnippet({ ...base, resetWidthsSignal: staged('nope', true) })).not.toContain('resetWidthsSignal=')
+    expect(buildDataTableSnippet({ ...base, resetWidthsSignal: staged('2', true) })).toContain('resetWidthsSignal={2}')
   })
 
   it('validates chooser drafts against the canonical columns', () => {

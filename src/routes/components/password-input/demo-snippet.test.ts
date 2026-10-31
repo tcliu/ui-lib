@@ -1,40 +1,26 @@
 import { describe, expect, it } from 'vitest'
 import { createSnippetComponent } from '$showcase/snippet-playground'
+import { staged } from '$showcase/staged'
 import { buildPasswordInputSnippet, type PasswordInputSnippetState } from './demo-snippet'
 
 function state(overrides: Partial<PasswordInputSnippetState> = {}): PasswordInputSnippetState {
   return {
-    value: '',
-    placeholder: '',
-    placeholderOn: false,
-    showLabel: '',
-    showLabelOn: false,
-    hideLabel: '',
-    hideLabelOn: false,
-    size: '',
-    sizeOn: true,
-    disabled: '',
-    disabledOn: true,
-    hideOutline: '',
-    hideOutlineOn: true,
-    required: '',
-    requiredOn: true,
-    clearable: '',
-    clearableOn: true,
-    clearLabel: '',
-    clearLabelOn: false,
-    clearPlacement: '',
-    clearPlacementOn: true,
-    defaultValue: '',
-    defaultValueOn: false,
-    className: '',
-    classNameOn: false,
-    autocomplete: '',
-    autocompleteOn: false,
-    id: '',
-    idOn: false,
-    name: '',
-    nameOn: false,
+    value: staged(''),
+    placeholder: staged(''),
+    showLabel: staged(''),
+    hideLabel: staged(''),
+    size: staged('', true),
+    disabled: staged('', true),
+    hideOutline: staged('', true),
+    required: staged('', true),
+    clearable: staged('', true),
+    clearLabel: staged(''),
+    clearPlacement: staged('', true),
+    defaultValue: staged(''),
+    className: staged(''),
+    autocomplete: staged(''),
+    id: staged(''),
+    name: staged(''),
     ...overrides,
   }
 }
@@ -57,23 +43,16 @@ describe('buildPasswordInputSnippet', () => {
   it('emits custom labels, flags, and className', () => {
     const source = buildPasswordInputSnippet(
       state({
-        placeholder: 'Secret',
-        placeholderOn: true,
-        showLabel: 'Show secret',
-        showLabelOn: true,
-        hideLabel: 'Hide secret',
-        hideLabelOn: true,
-        disabled: 'yes',
-        hideOutline: 'yes',
-        required: 'yes',
-        className: 'w-64',
-        classNameOn: true,
-        autocomplete: 'new-password',
-        autocompleteOn: true,
-        id: 'pwd',
-        idOn: true,
-        name: 'pwd',
-        nameOn: true,
+        placeholder: staged('Secret', true),
+        showLabel: staged('Show secret', true),
+        hideLabel: staged('Hide secret', true),
+        disabled: staged('yes', true),
+        hideOutline: staged('yes', true),
+        required: staged('yes', true),
+        className: staged('w-64', true),
+        autocomplete: staged('new-password', true),
+        id: staged('pwd', true),
+        name: staged('pwd', true),
       }),
     )
     expect(source).toContain('placeholder="Secret"')
@@ -92,7 +71,7 @@ describe('buildPasswordInputSnippet', () => {
     expect(buildPasswordInputSnippet(state())).not.toContain('clearable')
     expect(buildPasswordInputSnippet(state())).not.toContain('defaultValue=')
     const source = buildPasswordInputSnippet(
-      state({ clearable: 'yes', clearLabel: 'Clear password', clearLabelOn: true, clearPlacement: 'outside', defaultValue: 'secret', defaultValueOn: true }),
+      state({ clearable: staged('yes', true), clearLabel: staged('Clear password', true), clearPlacement: staged('outside', true), defaultValue: staged('secret', true) }),
     )
     expect(source).toContain('  clearable\n')
     expect(source).toContain('clearLabel="Clear password"')
@@ -101,14 +80,14 @@ describe('buildPasswordInputSnippet', () => {
   })
 
   it('emits a named and a numeric size, and omits invalid sizes', () => {
-    expect(buildPasswordInputSnippet(state({ size: 'lg' }))).toContain('size="lg"')
-    expect(buildPasswordInputSnippet(state({ size: '14' }))).toContain('size={14}')
-    expect(buildPasswordInputSnippet(state({ size: 'huge' }))).not.toContain('size=')
+    expect(buildPasswordInputSnippet(state({ size: staged('lg', true) }))).toContain('size="lg"')
+    expect(buildPasswordInputSnippet(state({ size: staged('14', true) }))).toContain('size={14}')
+    expect(buildPasswordInputSnippet(state({ size: staged('huge', true) }))).not.toContain('size=')
   })
 
   it('omits component defaults (the Value column prefills them)', () => {
     const source = buildPasswordInputSnippet(
-      state({ size: 'md', disabled: 'no', hideOutline: 'no', required: 'no', clearable: 'no', clearPlacement: 'auto' }),
+      state({ size: staged('md', true), disabled: staged('no', true), hideOutline: staged('no', true), required: staged('no', true), clearable: staged('no', true), clearPlacement: staged('auto', true) }),
     )
     expect(source).not.toContain('size=')
     expect(source).not.toContain('disabled')
@@ -120,7 +99,7 @@ describe('buildPasswordInputSnippet', () => {
 
   it('omits eye-gated booleans while their toggles are off', () => {
     const off = buildPasswordInputSnippet(
-      state({ disabled: 'yes', disabledOn: false, hideOutline: 'yes', hideOutlineOn: false, required: 'yes', requiredOn: false, clearable: 'yes', clearableOn: false }),
+      state({ disabled: staged('yes'), hideOutline: staged('yes'), required: staged('yes'), clearable: staged('yes') }),
     )
     expect(off).not.toContain('disabled')
     expect(off).not.toContain('hideOutline')
@@ -135,59 +114,27 @@ describe('buildPasswordInputSnippet', () => {
   })
 
   it('omits staged text props while the eye is off and emits them while on', () => {
-    const staged = buildPasswordInputSnippet(state({ showLabel: 'Show secret', id: 'pwd', defaultValue: 'secret' }))
-    expect(staged).not.toContain('showLabel=')
-    expect(staged).not.toContain('id=')
-    expect(staged).not.toContain('defaultValue=')
-    expect(staged).toContain('placeholder="Password"')
-    const applied = buildPasswordInputSnippet(
-      state({ showLabel: 'Show secret', showLabelOn: true, id: 'pwd', idOn: true, defaultValue: 'secret', defaultValueOn: true }),
+    const off = buildPasswordInputSnippet(state({ showLabel: staged('Show secret'), id: staged('pwd'), defaultValue: staged('secret') }))
+    expect(off).not.toContain('showLabel=')
+    expect(off).not.toContain('id=')
+    expect(off).not.toContain('defaultValue=')
+    expect(off).toContain('placeholder="Password"')
+    const on = buildPasswordInputSnippet(
+      state({ showLabel: staged('Show secret', true), id: staged('pwd', true), defaultValue: staged('secret', true) }),
     )
-    expect(applied).toContain('showLabel="Show secret"')
-    expect(applied).toContain('id="pwd"')
-    expect(applied).toContain('defaultValue="secret"')
+    expect(on).toContain('showLabel="Show secret"')
+    expect(on).toContain('id="pwd"')
+    expect(on).toContain('defaultValue="secret"')
   })
 
   it('omits the size line when the key is absent', () => {
-    const { value, placeholder, showLabel, hideLabel, disabled, required, clearable, clearLabel, clearPlacement, clearPlacementOn, defaultValue, className, autocomplete, id, name } = state()
-    const source = buildPasswordInputSnippet({
-      value,
-      placeholder,
-      placeholderOn: false,
-      showLabel,
-      showLabelOn: false,
-      hideLabel,
-      hideLabelOn: false,
-      disabled,
-      disabledOn: true,
-      hideOutline: '',
-      hideOutlineOn: false,
-      required,
-      requiredOn: true,
-      clearable,
-      clearableOn: true,
-      clearLabel,
-      clearLabelOn: false,
-      clearPlacement,
-      clearPlacementOn,
-      defaultValue,
-      defaultValueOn: false,
-      className,
-      classNameOn: false,
-      autocomplete,
-      autocompleteOn: false,
-      id,
-      idOn: false,
-      name,
-      nameOn: false,
-      sizeOn: false,
-    })
+    const source = buildPasswordInputSnippet({ ...state(), size: undefined })
     expect(source).not.toContain('size=')
   })
 
   it('omits staged dropdown props while their eyes are off', () => {
     const off = buildPasswordInputSnippet(
-      state({ size: 'lg', sizeOn: false, clearPlacement: 'outside', clearPlacementOn: false }),
+      state({ size: staged('lg'), clearPlacement: staged('outside') }),
     )
     expect(off).not.toContain('size=')
     expect(off).not.toContain('clearPlacement=')

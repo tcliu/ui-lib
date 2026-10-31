@@ -1,50 +1,31 @@
 import { describe, expect, it } from 'vitest'
 import { createSnippetComponent } from '$showcase/snippet-playground'
+import { staged } from '$showcase/staged'
 import { buildNumberInputSnippet, type NumberInputSnippetState } from './demo-snippet'
 
 function state(overrides: Partial<NumberInputSnippetState> = {}): NumberInputSnippetState {
   return {
-    value: '5',
-    ariaLabel: '',
-    ariaLabelOn: true,
-    caretAtEnd: '',
-    caretAtEndOn: true,
-    min: '',
-    minOn: true,
-    max: '',
-    maxOn: true,
-    step: '',
-    stepOn: true,
-    placeholder: '',
-    placeholderOn: true,
-    size: '',
-    sizeOn: true,
-    variant: '',
-    variantOn: true,
-    disabled: '',
-    disabledOn: true,
-    hideOutline: '',
-    hideOutlineOn: true,
-    showControls: '',
-    showControlsOn: true,
-    clearable: '',
-    clearableOn: true,
-    clearLabel: '',
-    clearLabelOn: true,
-    clearPlacement: '',
-    clearPlacementOn: true,
-    defaultValue: '',
-    defaultValueOn: true,
-    decrementLabel: '',
-    decrementLabelOn: true,
-    incrementLabel: '',
-    incrementLabelOn: true,
-    id: '',
-    idOn: true,
-    inputStyle: '',
-    inputStyleOn: true,
-    className: '',
-    classNameOn: true,
+    value: staged('5'),
+    ariaLabel: staged('', true),
+    caretAtEnd: staged('', true),
+    min: staged('', true),
+    max: staged('', true),
+    step: staged('', true),
+    placeholder: staged('', true),
+    size: staged('', true),
+    variant: staged('', true),
+    disabled: staged('', true),
+    hideOutline: staged('', true),
+    showControls: staged('', true),
+    clearable: staged('', true),
+    clearLabel: staged('', true),
+    clearPlacement: staged('', true),
+    defaultValue: staged('', true),
+    decrementLabel: staged('', true),
+    incrementLabel: staged('', true),
+    id: staged('', true),
+    inputStyle: staged('', true),
+    className: staged('', true),
     ...overrides,
   }
 }
@@ -68,19 +49,19 @@ describe('buildNumberInputSnippet', () => {
   it('emits bounds, placeholder, disabled, and the stepless treatment', () => {
     const source = buildNumberInputSnippet(
       state({
-        ariaLabel: 'Quantity',
-        min: '0',
-        max: '10',
-        step: '0.5',
-        placeholder: '0',
-        disabled: 'yes',
-        showControls: 'no',
-        hideOutline: 'yes',
-        decrementLabel: 'Down',
-        incrementLabel: 'Up',
-        id: 'qty',
-        inputStyle: 'width:6rem',
-        className: 'w-24',
+        ariaLabel: staged('Quantity', true),
+        min: staged('0', true),
+        max: staged('10', true),
+        step: staged('0.5', true),
+        placeholder: staged('0', true),
+        disabled: staged('yes', true),
+        showControls: staged('no', true),
+        hideOutline: staged('yes', true),
+        decrementLabel: staged('Down', true),
+        incrementLabel: staged('Up', true),
+        id: staged('qty', true),
+        inputStyle: staged('width:6rem', true),
+        className: staged('w-24', true),
       }),
     )
     expect(source).toContain('ariaLabel="Quantity"')
@@ -102,7 +83,7 @@ describe('buildNumberInputSnippet', () => {
     expect(buildNumberInputSnippet(state())).not.toContain('clearable')
     expect(buildNumberInputSnippet(state())).not.toContain('defaultValue=')
     const source = buildNumberInputSnippet(
-      state({ clearable: 'yes', clearLabel: 'Clear quantity', clearPlacement: 'outside', defaultValue: '5', defaultValueOn: true }),
+      state({ clearable: staged('yes', true), clearLabel: staged('Clear quantity', true), clearPlacement: staged('outside', true), defaultValue: staged('5', true) }),
     )
     expect(source).toContain('  clearable\n')
     expect(source).toContain('clearLabel="Clear quantity"')
@@ -112,7 +93,7 @@ describe('buildNumberInputSnippet', () => {
 
   it('omits eye-gated booleans while their toggles are off', () => {
     const off = buildNumberInputSnippet(
-      state({ disabled: 'yes', disabledOn: false, showControls: 'no', showControlsOn: false, clearable: 'yes', clearableOn: false }),
+      state({ disabled: staged('yes'), showControls: staged('no'), clearable: staged('yes') }),
     )
     expect(off).not.toContain('disabled')
     expect(off).not.toContain('showControls')
@@ -121,7 +102,7 @@ describe('buildNumberInputSnippet', () => {
 
   it('omits eye-gated numbers while their toggles are off', () => {
     const off = buildNumberInputSnippet(
-      state({ min: '0', minOn: false, max: '10', maxOn: false, step: '0.5', stepOn: false }),
+      state({ min: staged('0'), max: staged('10'), step: staged('0.5') }),
     )
     expect(off).not.toContain('min=')
     expect(off).not.toContain('max=')
@@ -129,37 +110,37 @@ describe('buildNumberInputSnippet', () => {
   })
 
   it('omits the eye-gated ariaLabel while its toggle is off', () => {
-    const off = buildNumberInputSnippet(state({ ariaLabel: 'Quantity', ariaLabelOn: false }))
+    const off = buildNumberInputSnippet(state({ ariaLabel: staged('Quantity') }))
     expect(off).toContain('ariaLabel={applyLabel}')
     expect(off).not.toContain('ariaLabel="Quantity"')
   })
 
   it('omits eye-gated overrides while their toggle is off and emits them while on', () => {
-    const off = buildNumberInputSnippet(state({ decrementLabel: 'Down', decrementLabelOn: false }))
+    const off = buildNumberInputSnippet(state({ decrementLabel: staged('Down') }))
     expect(off).not.toContain('decrementLabel=')
-    const on = buildNumberInputSnippet(state({ decrementLabel: 'Down', decrementLabelOn: true }))
+    const on = buildNumberInputSnippet(state({ decrementLabel: staged('Down', true) }))
     expect(on).toContain('decrementLabel="Down"')
-    const defaultOff = buildNumberInputSnippet(state({ defaultValue: '5', defaultValueOn: false }))
+    const defaultOff = buildNumberInputSnippet(state({ defaultValue: staged('5') }))
     expect(defaultOff).not.toContain('defaultValue=')
   })
 
   it('omits staged dropdown props while their eyes are off', () => {
     const off = buildNumberInputSnippet(
-      state({ size: 'lg', sizeOn: false, clearPlacement: 'outside', clearPlacementOn: false }),
+      state({ size: staged('lg'), clearPlacement: staged('outside') }),
     )
     expect(off).not.toContain('size=')
     expect(off).not.toContain('clearPlacement=')
   })
 
   it('emits a named and a numeric size, and omits invalid sizes', () => {
-    expect(buildNumberInputSnippet(state({ size: 'lg' }))).toContain('size="lg"')
-    expect(buildNumberInputSnippet(state({ size: '14' }))).toContain('size={14}')
-    expect(buildNumberInputSnippet(state({ size: 'huge' }))).not.toContain('size=')
+    expect(buildNumberInputSnippet(state({ size: staged('lg', true) }))).toContain('size="lg"')
+    expect(buildNumberInputSnippet(state({ size: staged('14', true) }))).toContain('size={14}')
+    expect(buildNumberInputSnippet(state({ size: staged('huge', true) }))).not.toContain('size=')
   })
 
   it('omits component defaults (the Value column prefills them)', () => {
     const source = buildNumberInputSnippet(
-      state({ step: '1', size: 'md', disabled: 'no', showControls: 'yes', hideOutline: 'no', variant: 'bordered', clearable: 'no', clearPlacement: 'auto' }),
+      state({ step: staged('1', true), size: staged('md', true), disabled: staged('no', true), showControls: staged('yes', true), hideOutline: staged('no', true), variant: staged('bordered', true), clearable: staged('no', true), clearPlacement: staged('auto', true) }),
     )
     expect(source).not.toContain('step=')
     expect(source).not.toContain('size=')
@@ -172,30 +153,30 @@ describe('buildNumberInputSnippet', () => {
   })
 
   it('ignores non-numeric bounds', () => {
-    const source = buildNumberInputSnippet(state({ min: 'abc' }))
+    const source = buildNumberInputSnippet(state({ min: staged('abc', true) }))
     expect(source).not.toContain('min=')
   })
 
   it('emits caretAtEnd only while it is set and differing from the default', () => {
     expect(buildNumberInputSnippet(state())).not.toContain('caretAtEnd')
-    expect(buildNumberInputSnippet(state({ caretAtEnd: 'yes' }))).toContain('  caretAtEnd\n')
-    expect(buildNumberInputSnippet(state({ caretAtEnd: 'no' }))).not.toContain('caretAtEnd')
-    expect(buildNumberInputSnippet(state({ caretAtEnd: 'yes', caretAtEndOn: false }))).not.toContain(
+    expect(buildNumberInputSnippet(state({ caretAtEnd: staged('yes', true) }))).toContain('  caretAtEnd\n')
+    expect(buildNumberInputSnippet(state({ caretAtEnd: staged('no', true) }))).not.toContain('caretAtEnd')
+    expect(buildNumberInputSnippet(state({ caretAtEnd: staged('yes') }))).not.toContain(
       'caretAtEnd',
     )
   })
 
   it('emits hideOutline and a non-default variant only while set', () => {
     expect(buildNumberInputSnippet(state())).not.toContain('hideOutline')
-    expect(buildNumberInputSnippet(state({ hideOutline: 'yes' }))).toContain('  hideOutline\n')
-    expect(buildNumberInputSnippet(state({ hideOutline: 'no' }))).not.toContain('hideOutline')
-    expect(buildNumberInputSnippet(state({ hideOutline: 'yes', hideOutlineOn: false }))).not.toContain(
+    expect(buildNumberInputSnippet(state({ hideOutline: staged('yes', true) }))).toContain('  hideOutline\n')
+    expect(buildNumberInputSnippet(state({ hideOutline: staged('no', true) }))).not.toContain('hideOutline')
+    expect(buildNumberInputSnippet(state({ hideOutline: staged('yes') }))).not.toContain(
       'hideOutline',
     )
     expect(buildNumberInputSnippet(state())).not.toContain('variant=')
-    expect(buildNumberInputSnippet(state({ variant: 'embedded' }))).toContain('variant="embedded"')
-    expect(buildNumberInputSnippet(state({ variant: 'bordered' }))).not.toContain('variant=')
-    expect(buildNumberInputSnippet(state({ variant: 'embedded', variantOn: false }))).not.toContain(
+    expect(buildNumberInputSnippet(state({ variant: staged('embedded', true) }))).toContain('variant="embedded"')
+    expect(buildNumberInputSnippet(state({ variant: staged('bordered', true) }))).not.toContain('variant=')
+    expect(buildNumberInputSnippet(state({ variant: staged('embedded') }))).not.toContain(
       'variant=',
     )
   })

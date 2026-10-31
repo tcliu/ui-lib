@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { STAGE_PANE, STAGE_ROW } from '$showcase/resizable-stage'
-import { SPLITTER_MAIN, SPLITTER_PANE, SPLITTER_WRAPPER, buildSplitterSnippet, parseSplitterBound, splitterPreset } from './demo-snippet'
+import { staged } from '$showcase/staged'
+import { SPLITTER_MAIN, SPLITTER_PANE, SPLITTER_WRAPPER, buildSplitterSnippet, parseSplitterBound, splitterPreset, type SplitterSnippetState } from './demo-snippet'
 
-const unset = { orientation: '', orientationOn: true, unit: '', unitOn: true, ariaLabel: '', ariaLabelOn: true, className: '', classNameOn: true, lineClass: '', lineClassOn: true, invert: '', invertOn: true, min: '', minOn: true, max: '', maxOn: true } as const
+const unset: SplitterSnippetState = { orientation: staged('', true), unit: staged('', true), ariaLabel: staged('', true), className: staged('', true), lineClass: staged('', true), invert: staged(''), min: staged('', true), max: staged('', true) }
 
 describe('buildSplitterSnippet', () => {
   it('renders the bounded stage while unset', () => {
@@ -34,7 +35,7 @@ describe('buildSplitterSnippet', () => {
   })
 
   it('emits a horizontal split with the top/bottom preset', () => {
-    const source = buildSplitterSnippet({ ...unset, orientation: 'horizontal', orientationOn: true })
+    const source = buildSplitterSnippet({ ...unset, orientation: staged('horizontal', true) })
     expect(source).toContain(`<div class="${SPLITTER_WRAPPER} flex-col">`)
     expect(source).toContain('orientation="horizontal"')
     expect(source).toContain('min={80}')
@@ -43,7 +44,7 @@ describe('buildSplitterSnippet', () => {
   })
 
   it('emits the percent preset', () => {
-    const source = buildSplitterSnippet({ ...unset, unit: '%', unitOn: true })
+    const source = buildSplitterSnippet({ ...unset, unit: staged('%', true) })
     expect(source).toContain('unit="%"')
     expect(source).toContain('min={20}')
     expect(source).toContain('max={80}')
@@ -51,13 +52,13 @@ describe('buildSplitterSnippet', () => {
   })
 
   it('omits staged orientation and unit while their eyes are off', () => {
-    const source = buildSplitterSnippet({ ...unset, orientation: 'horizontal', orientationOn: false, unit: '%', unitOn: false })
+    const source = buildSplitterSnippet({ ...unset, orientation: staged('horizontal'), unit: staged('%') })
     expect(source).not.toContain('orientation=')
     expect(source).not.toContain('unit="%"')
   })
 
   it('escapes the aria label', () => {
-    const source = buildSplitterSnippet({ ...unset, ariaLabel: 'Resize "panel"' })
+    const source = buildSplitterSnippet({ ...unset, ariaLabel: staged('Resize "panel"', true) })
     expect(source).toContain('ariaLabel="Resize &quot;panel&quot;"')
   })
 
@@ -83,23 +84,23 @@ describe('buildSplitterSnippet', () => {
   })
 
   it('emits class and line classes when set', () => {
-    const source = buildSplitterSnippet({ ...unset, className: 'handle-x', lineClass: 'line-y' })
+    const source = buildSplitterSnippet({ ...unset, className: staged('handle-x', true), lineClass: staged('line-y', true) })
     expect(source).toContain('className="handle-x"')
     expect(source).toContain('lineClass="line-y"')
   })
 
   it('escapes class names', () => {
-    const source = buildSplitterSnippet({ ...unset, className: 'a"b' })
+    const source = buildSplitterSnippet({ ...unset, className: staged('a"b', true) })
     expect(source).toContain('className="a&quot;b"')
   })
 
   it('emits the invert flag tri-state', () => {
-    expect(buildSplitterSnippet({ ...unset, invert: 'yes' })).toContain('\n        invert\n')
-    expect(buildSplitterSnippet({ ...unset, invert: '' })).not.toContain('invert')
+    expect(buildSplitterSnippet({ ...unset, invert: staged('yes', true) })).toContain('\n        invert\n')
+    expect(buildSplitterSnippet({ ...unset, invert: staged('') })).not.toContain('invert')
   })
 
   it('omits component defaults (the Value column prefills them)', () => {
-    const source = buildSplitterSnippet({ ...unset, orientation: 'vertical', orientationOn: true, unit: 'px', unitOn: true, invert: 'no' })
+    const source = buildSplitterSnippet({ ...unset, orientation: staged('vertical', true), unit: staged('px', true), invert: staged('no', true) })
     expect(source).not.toContain('orientation=')
     expect(source).not.toContain('unit=')
     expect(source).not.toContain('invert')
@@ -115,41 +116,41 @@ describe('buildSplitterSnippet', () => {
   })
 
   it('emits bound overrides when set', () => {
-    const source = buildSplitterSnippet({ ...unset, min: '100', max: '400' })
+    const source = buildSplitterSnippet({ ...unset, min: staged('100', true), max: staged('400', true) })
     expect(source).toContain('min={100}')
     expect(source).toContain('max={400}')
   })
 
   it('ignores invalid bounds and keeps the preset', () => {
-    const source = buildSplitterSnippet({ ...unset, min: 'wide', max: '-40' })
+    const source = buildSplitterSnippet({ ...unset, min: staged('wide', true), max: staged('-40', true) })
     expect(source).toContain('min={120}')
     expect(source).toContain('max={320}')
   })
 
   it('omits the staged invert while its eye is off and emits it when on', () => {
-    expect(buildSplitterSnippet({ ...unset, invert: 'yes', invertOn: false })).not.toContain('invert')
-    expect(buildSplitterSnippet({ ...unset, invert: 'yes', invertOn: true })).toContain('\n        invert\n')
+    expect(buildSplitterSnippet({ ...unset, invert: staged('yes') })).not.toContain('invert')
+    expect(buildSplitterSnippet({ ...unset, invert: staged('yes', true) })).toContain('\n        invert\n')
   })
 
   it('omits the staged bounds while their eyes are off', () => {
-    const source = buildSplitterSnippet({ ...unset, min: '100', minOn: false, max: '400', maxOn: false })
+    const source = buildSplitterSnippet({ ...unset, min: staged('100'), max: staged('400') })
     expect(source).not.toContain('min=')
     expect(source).not.toContain('max=')
   })
 
   it('omits the staged labels while their eyes are off and emits them when on', () => {
-    const off = buildSplitterSnippet({ ...unset, ariaLabel: 'Resize', ariaLabelOn: false, className: 'handle-x', classNameOn: false, lineClass: 'line-y', lineClassOn: false })
+    const off = buildSplitterSnippet({ ...unset, ariaLabel: staged('Resize'), className: staged('handle-x'), lineClass: staged('line-y') })
     expect(off).not.toContain('ariaLabel=')
     expect(off).not.toContain('className=')
     expect(off).not.toContain('lineClass=')
-    const on = buildSplitterSnippet({ ...unset, ariaLabel: 'Resize', ariaLabelOn: true, className: 'handle-x', classNameOn: true, lineClass: 'line-y', lineClassOn: true })
+    const on = buildSplitterSnippet({ ...unset, ariaLabel: staged('Resize', true), className: staged('handle-x', true), lineClass: staged('line-y', true) })
     expect(on).toContain('ariaLabel="Resize"')
     expect(on).toContain('className="handle-x"')
     expect(on).toContain('lineClass="line-y"')
   })
 
   it('keeps the divider value scope-driven', () => {
-    const source = buildSplitterSnippet({ ...unset, min: '100', max: '400' })
+    const source = buildSplitterSnippet({ ...unset, min: staged('100', true), max: staged('400', true) })
     expect(source).toContain('value={split}')
     expect(source).not.toContain('value={100}')
   })
@@ -170,7 +171,7 @@ describe('parseSplitterBound', () => {
   })
 
   it('emits bounds as numeric expressions the number sync reads back', () => {
-    const source = buildSplitterSnippet({ ...unset, min: '100', max: '400' })
+    const source = buildSplitterSnippet({ ...unset, min: staged('100', true), max: staged('400', true) })
     expect(source).toMatch(/min=\{\d+\}/)
     expect(source).toMatch(/max=\{\d+\}/)
   })

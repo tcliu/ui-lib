@@ -2,61 +2,48 @@
 // the playground form state: the section regenerates the editor text from
 // this, so the editor always shows the markup behind the demo above.
 
-import { escapeAttr, escapeRawLine, unescapeAttr } from '$showcase/snippet-build'
+import {
+  boolAttrLine,
+  enumAttrLine,
+  escapeAttr,
+  escapeRawLine,
+  textAttrLine,
+  unescapeAttr,
+  type TriState,
+} from '$showcase/snippet-build'
 import { isBasicHtmlMarkup } from '$showcase/snippet-html'
 import { buildHeaderLine, parseHeaderMarkup } from '$showcase/snippet-header'
-
-export type TriState = '' | 'yes' | 'no'
+import type { Staged } from '$showcase/staged'
 
 export interface FormDialogSnippetState {
-  widthVariant: string
-  widthVariantOn: boolean
-  heightVariant: string
-  heightVariantOn: boolean
-  size: string
-  sizeOn: boolean
-  dirty: TriState
-  dirtyOn: boolean
-  confirmOnDismiss: TriState
-  confirmOnDismissOn: boolean
-  pending: TriState
-  pendingOn: boolean
-  saveDisabled: TriState
-  saveDisabledOn: boolean
+  widthVariant: Staged<string>
+  heightVariant: Staged<string>
+  size: Staged<string>
+  dirty: Staged<TriState>
+  confirmOnDismiss: Staged<TriState>
+  pending: Staged<TriState>
+  saveDisabled: Staged<TriState>
   // Raw body markup committed from the row's code dialog; empty renders the
-  // canonical TextInput below.
-  children: string
-  // The eye toggle off means the body snippet is not applied.
-  childrenEnabled: boolean
+  // canonical TextInput below. Its eye off means the body snippet is not
+  // applied.
+  children: Staged<string>
   // Raw actions markup committed from the row's code dialog; empty renders the
-  // canonical Format button below.
-  actions: string
-  // The eye toggle off means no actions snippet is applied.
-  actionsEnabled: boolean
+  // canonical Format button below. Its eye off means no actions snippet is
+  // applied.
+  actions: Staged<string>
   // Raw footer markup committed from the row's code dialog; empty renders the
-  // built-in save/reset row.
-  footer: string
-  // The eye toggle off means the built-in row is used.
-  footerEnabled: boolean
-  closeLabel: string
-  closeLabelOn: boolean
-  discardLabel: string
-  discardLabelOn: boolean
-  discardMessage: string
-  discardMessageOn: boolean
-  discardTitle: string
-  discardTitleOn: boolean
-  resetLabel: string
-  resetLabelOn: boolean
-  saveLabel: string
-  saveLabelOn: boolean
-  title: string
-  titleOn: boolean
+  // built-in save/reset row. Its eye off means the built-in row is used.
+  footer: Staged<string>
+  closeLabel: Staged<string>
+  discardLabel: Staged<string>
+  discardMessage: Staged<string>
+  discardTitle: Staged<string>
+  resetLabel: Staged<string>
+  saveLabel: Staged<string>
+  title: Staged<string>
   // Raw header markup committed from the row's code dialog; empty renders the
-  // title fallback below.
-  header: string
-  // The eye toggle off means no header snippet is applied.
-  headerOn: boolean
+  // title fallback below. Its eye off means no header snippet is applied.
+  header: Staged<string>
 }
 
 export interface EditBodyState {
@@ -230,15 +217,6 @@ export function parseEditFooterMarkup(draft: string): string | null {
   return parseEditFooterLabel(normalized) === null ? null : normalized
 }
 
-// A tri-state line: omitted while unset or at the component default, bare
-// while Yes, ={false} while No.
-function flagLine(name: string, value: TriState, def: TriState = ''): string[] {
-  if (value === '' || value === def) {
-    return []
-  }
-  return [`    ${name}${value === 'yes' ? '' : '={false}'}`]
-}
-
 // Verbatim body lines carry the user's literal text, so `&` is escaped for
 // compilation; `<`/`{` cannot appear (validation rejects them).
 
@@ -250,41 +228,23 @@ function escapeActionsLabel(label: string): string {
 
 export function buildFormDialogSnippet({
   widthVariant,
-  widthVariantOn,
   heightVariant,
-  heightVariantOn,
   size,
-  sizeOn,
   dirty,
-  dirtyOn,
   confirmOnDismiss,
-  confirmOnDismissOn,
   pending,
-  pendingOn,
   saveDisabled,
-  saveDisabledOn,
   children,
-  childrenEnabled,
   actions,
-  actionsEnabled,
   footer,
-  footerEnabled,
   closeLabel,
-  closeLabelOn,
   discardLabel,
-  discardLabelOn,
   discardMessage,
-  discardMessageOn,
   discardTitle,
-  discardTitleOn,
   resetLabel,
-  resetLabelOn,
   saveLabel,
-  saveLabelOn,
   title,
-  titleOn,
   header,
-  headerOn,
 }: FormDialogSnippetState): string {
   // The body sits at 4 spaces, matching the dialog. Unset labels read the
   // localized defaults from scope, so customized text rides literals while the
@@ -292,15 +252,15 @@ export function buildFormDialogSnippet({
   // applied; otherwise custom markup emits verbatim, unset the canonical
   // TextInput.
   const bodyIndent = '    '
-  const childLines = !childrenEnabled
+  const childLines = !children.on
     ? []
-    : children
-      ? children.split('\n').map(line => (line ? `${bodyIndent}${escapeRawLine(line)}` : line))
+    : children.value
+      ? children.value.split('\n').map(line => (line ? `${bodyIndent}${escapeRawLine(line)}` : line))
       : [`${bodyIndent}${buildEditBodyMarkup({ type: '', label: '' })}`]
   // The actions snippet sits first inside the dialog so its buttons land
   // before OK. The committed line carries the label only; the formatting
   // handler is fixed, matching the static demo's Format button.
-  const actionLabel = actionsEnabled ? (parseEditActionsLabel(actions) ?? 'Format') : null
+  const actionLabel = actions.on ? (parseEditActionsLabel(actions.value) ?? 'Format') : null
   const actionLines =
     actionLabel === null
       ? []
@@ -313,41 +273,44 @@ export function buildFormDialogSnippet({
   // compiles the same Copyable title the static demo renders; the committed
   // line emits verbatim (validation at commit guarantees the shape).
   const headerLines =
-    headerOn && header
-      ? ['    {#snippet header()}', `      ${escapeActionsLabel(header)}`, '    {/snippet}']
+    header.on && header.value
+      ? ['    {#snippet header()}', `      ${escapeActionsLabel(header.value)}`, '    {/snippet}']
       : []
   // The footer snippet replaces the built-in save/reset row; it renders inside
   // the form, so a submit button in it submits the form.
-  const footerLabel = footerEnabled ? (parseEditFooterLabel(footer) ?? 'Save') : null
+  const footerLabel = footer.on ? (parseEditFooterLabel(footer.value) ?? 'Save') : null
   const footerLines =
     footerLabel === null
       ? []
       : [
           `${bodyIndent}{#snippet footer()}`,
-          `${bodyIndent}  ${footer.split('\n').map(line => (line ? `    ${escapeRawLine(line)}` : line)).join('\n')}`,
+          `${bodyIndent}  ${footer.value.split('\n').map(line => (line ? `    ${escapeRawLine(line)}` : line)).join('\n')}`,
           `${bodyIndent}{/snippet}`,
         ]
-  const labelLine = (name: string, value: string, scopeRef: string, on: boolean): string =>
-    value && on ? `${bodyIndent}${name}="${escapeAttr(value)}"` : `${bodyIndent}${name}={${scopeRef}}`
+  const labelLine = (name: string, pair: Staged<string>, scopeRef: string): string =>
+    pair.on && pair.value ? `${bodyIndent}${name}="${escapeAttr(pair.value)}"` : `${bodyIndent}${name}={${scopeRef}}`
   return [
     '<Button variant="primary" onClick={() => (open = true)}>{openDialogLabel}</Button>',
     '',
     '{#if open}',
     '  <FormDialog',
-    labelLine('title', title, 'dialogTitle', titleOn),
-    labelLine('closeLabel', closeLabel, 'closeLabel', closeLabelOn),
-    labelLine('saveLabel', saveLabel, 'okLabel', saveLabelOn),
-    labelLine('resetLabel', resetLabel, 'resetLabel', resetLabelOn),
-    labelLine('discardTitle', discardTitle, 'discardTitle', discardTitleOn),
-    labelLine('discardMessage', discardMessage, 'discardMessage', discardMessageOn),
-    labelLine('discardLabel', discardLabel, 'discardLabel', discardLabelOn),
-    ...(widthVariantOn && widthVariant && widthVariant !== 'md' ? [`    widthVariant="${widthVariant}"`] : []),
-    ...(heightVariantOn && heightVariant && heightVariant !== 'auto' ? [`    heightVariant="${heightVariant}"`] : []),
-    ...(sizeOn && size ? [`    size="${size}"`] : []),
-    ...(dirtyOn ? flagLine('dirty', dirty, 'no') : []),
-    ...(confirmOnDismissOn ? flagLine('confirmOnDismiss', confirmOnDismiss, 'no') : []),
-    ...(pendingOn ? flagLine('pending', pending, 'no') : []),
-    ...(saveDisabledOn ? flagLine('saveDisabled', saveDisabled, 'no') : []),
+    labelLine('title', title, 'dialogTitle'),
+    labelLine('closeLabel', closeLabel, 'closeLabel'),
+    labelLine('saveLabel', saveLabel, 'okLabel'),
+    labelLine('resetLabel', resetLabel, 'resetLabel'),
+    labelLine('discardTitle', discardTitle, 'discardTitle'),
+    labelLine('discardMessage', discardMessage, 'discardMessage'),
+    labelLine('discardLabel', discardLabel, 'discardLabel'),
+    ...enumAttrLine('widthVariant', widthVariant, 'md', '    '),
+    ...enumAttrLine('heightVariant', heightVariant, 'auto', '    '),
+    // The dialog's footprint steps run past the shared size axis (`2xl`–`7xl`),
+    // which `sizeAttrLine` drops as unparsable, so the shorthand stays a text
+    // attribute.
+    ...textAttrLine('size', size, '    '),
+    ...boolAttrLine('dirty', dirty, 'no', '    '),
+    ...boolAttrLine('confirmOnDismiss', confirmOnDismiss, 'no', '    '),
+    ...boolAttrLine('pending', pending, 'no', '    '),
+    ...boolAttrLine('saveDisabled', saveDisabled, 'no', '    '),
     '    onSave={() => (open = false)}',
     '    onReset={() => (draft = saved)}',
     ...(childLines.length > 0 || actionLines.length > 0 || headerLines.length > 0 || footerLines.length > 0

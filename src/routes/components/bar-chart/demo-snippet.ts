@@ -5,8 +5,8 @@
 // tracks Value edits instead of hiding the entries in scope, and the Value cell
 // can parse an edited list back out of the script block.
 
-import { escapeAttr, type TriState } from '$showcase/snippet-build'
-import { sizeAttributeLine } from '$showcase/size-input'
+import { boolAttrLine, sizeAttrLine, textAttrLine, type TriState } from '$showcase/snippet-build'
+import type { Staged } from '$showcase/staged'
 import { CHART_TONES, type ChartTone } from '$lib/components/chart-tones'
 import type { ChartColumn, ChartSegment } from '$lib/components/BarChart.svelte'
 
@@ -116,26 +116,14 @@ export function parseColumnsJson(text: string): ChartColumn[] | null {
 }
 
 export interface BarChartSnippetState {
-  columns: ChartColumn[]
-  size: string
-  sizeOn: boolean
-  height: string
-  heightOn: boolean
-  legend: TriState
-  legendOn: boolean
-  ariaLabel: string
-  ariaLabelOn: boolean
-  className: string
-  classNameOn: boolean
-}
-
-// A tri-state line: omitted while unset or at the component default, `={false}`
-// while No.
-function flagLine(name: string, value: TriState, indent: number, def: TriState = ''): string[] {
-  if (value === '' || value === def) {
-    return []
-  }
-  return [`${' '.repeat(indent)}${name}${value === 'yes' ? '' : '={false}'}`]
+  // Required series data: the eye resets to the demo columns instead of
+  // omitting it, so the value always applies and `on` only tracks the row.
+  columns: Staged<ChartColumn[]>
+  size: Staged<string>
+  height: Staged<string>
+  legend: Staged<TriState>
+  ariaLabel: Staged<string>
+  className: Staged<string>
 }
 
 // A height value: only a positive integer is a usable plot height; anything
@@ -151,27 +139,22 @@ export function barHeight(value: string, enabled: boolean): number | undefined {
 
 // A height line: omitted while the eye is off or the value is not a positive
 // integer (the demo falls back to the size-derived plot height).
-function heightLine(value: string, enabled: boolean): string[] {
-  const parsed = barHeight(value, enabled)
+function heightLine(pair: Staged<string>): string[] {
+  const parsed = barHeight(pair.value, pair.on)
   return parsed === undefined ? [] : [`    height={${parsed}}`]
 }
 
 export function buildBarChartSnippet({
   columns,
   size,
-  sizeOn,
   height,
-  heightOn,
   legend,
-  legendOn,
   ariaLabel,
-  ariaLabelOn,
   className,
-  classNameOn,
 }: BarChartSnippetState): string {
   // Pretty JSON reindented under the state line: readable in place, and valid
   // JSON so the Value cell's script parse-back sees the same entries.
-  const columnsJson = JSON.stringify(columns, null, 2)
+  const columnsJson = JSON.stringify(columns.value, null, 2)
     .split('\n')
     .map((line, index) => (index === 0 ? line : `  ${line}`))
     .join('\n')
@@ -182,11 +165,11 @@ export function buildBarChartSnippet({
     '<div class="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 p-4">',
     '  <BarChart',
     '    columns={columns}',
-    ...(sizeOn && size !== '' && size !== 'md' ? sizeAttributeLine(size, '    ') : []),
-    ...heightLine(height, heightOn),
-    ...(legendOn ? flagLine('legend', legend, 4, 'yes') : []),
-    ...(ariaLabelOn && ariaLabel ? [`    ariaLabel="${escapeAttr(ariaLabel)}"`] : []),
-    ...(classNameOn && className ? [`    className="${escapeAttr(className)}"`] : []),
+    ...sizeAttrLine(size, '    '),
+    ...heightLine(height),
+    ...boolAttrLine('legend', legend, 'yes', '    '),
+    ...textAttrLine('ariaLabel', ariaLabel, '    '),
+    ...textAttrLine('className', className, '    '),
     '  />',
     '</div>',
   ]

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { flagOn } from '$showcase/snippet-build'
   import StructureTree from '$lib/components/StructureTree.svelte'
   import {
     DEFAULT_CONTAINER_ROW_CLASS,
@@ -8,14 +7,15 @@
   import { isContainer, renameKeyAtPath, setAtPath } from '$lib/components/structure-value'
   import ShowcasePage from '$showcase/ShowcasePage.svelte'
   import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { boolField, jsonField, resetToggle, sizeField, snippetToggle } from '$showcase/snippet-field'
+  import { boolField, jsonField, sizeField } from '$showcase/snippet-field'
+  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/staged'
   import { parseSizeValue } from '$showcase/size-input'
+  import { type TriState } from '$showcase/snippet-build'
   import {
     buildStructureTreeSnippet,
     DEFAULT_TREE_VALUE,
     parseTreeValueJson,
     readTreeValueSeed,
-    type TriState,
   } from './demo-snippet'
 
   // Fresh copy so the demo never mutates the shared default.
@@ -28,42 +28,40 @@
   // default (the Value column shows it), so the cleared form applies no
   // overrides and Show-code omits the defaults. Clearing a Value unsets it;
   // Reset restores the defaults below.
+  // The component requires a tree value, so its eye resets to the default
+  // instead of omitting; committing re-applies.
   const INITIAL = {
-    value: freshValue() as unknown,
-    valueEnabled: true,
-    editable: 'yes' as TriState,
-    editableOn: false,
-    containerRowClass: '',
-    containerRowClassOn: false,
-    leafRowClass: '',
-    leafRowClassOn: false,
-    size: 'md',
-    sizeOn: false,
+    value: staged(freshValue() as unknown, true),
+    editable: staged('yes' as TriState),
+    containerRowClass: staged(''),
+    leafRowClass: staged(''),
+    size: staged('md'),
   }
   let pg = $state(structuredClone(INITIAL))
-  // The component requires a tree value, so the eye resets to the default
-  // instead of omitting; committing re-applies.
   // Row class overrides start unset (the built-ins render); non-empty text
   // applies live, clearing restores the built-ins. The eye stages the
   // customization without losing text. The Value column seeds from the
   // built-ins below.
 
-  const editable = $derived(pg.editableOn ? flagOn(pg.editable) : undefined)
-  const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
+  const editable = $derived(appliedFlag(pg.editable))
+  const demoSize = $derived.by(() => {
+    const value = applied(pg.size)
+    return value === undefined ? undefined : parseSizeValue(value)
+  })
 
   function handleNodeChange(path: string[], next: unknown): void {
-    if (!isContainer(pg.value)) return
-    pg.value = setAtPath(pg.value, path, next)
+    if (!isContainer(pg.value.value)) return
+    pg.value.value = setAtPath(pg.value.value, path, next)
   }
 
   function handleRenameKey(parentPath: string[], oldKey: string, newKey: string): void {
-    if (!isContainer(pg.value)) return
-    pg.value = renameKeyAtPath(pg.value, parentPath, oldKey, newKey)
+    if (!isContainer(pg.value.value)) return
+    pg.value.value = renameKeyAtPath(pg.value.value, parentPath, oldKey, newKey)
   }
 
   function commitValueDraft(draft: string): void {
     const parsed = parseTreeValueJson(draft)
-    if (parsed !== undefined) pg.value = parsed
+    if (parsed !== undefined) pg.value.value = parsed
   }
 
   function clearPlayground() {
@@ -74,13 +72,9 @@
     buildStructureTreeSnippet({
       value: pg.value,
       editable: pg.editable,
-      editableOn: pg.editableOn,
       containerRowClass: pg.containerRowClass,
-      containerRowClassOn: pg.containerRowClassOn,
       leafRowClass: pg.leafRowClass,
-      leafRowClassOn: pg.leafRowClassOn,
       size: pg.size,
-      sizeOn: pg.sizeOn,
     }),
   )
 
@@ -96,28 +90,28 @@
       note: 'Replaces the tunable container header row classes; the Value shows the built-ins, edit from there. Clearing restores the built-ins.',
       editor: 'text',
       clearable: true,
-      value: pg.containerRowClass || DEFAULT_CONTAINER_ROW_CLASS,
-      onChange: value => {
-        pg.containerRowClass = value === DEFAULT_CONTAINER_ROW_CLASS ? '' : value
-        pg.containerRowClassOn = true
-      },
-      toggle: snippetToggle(pg.containerRowClassOn, enabled => (pg.containerRowClassOn = enabled)),
+      ...eye(pg.containerRowClass),
+      // The Value shows the built-ins until the override is set, so the eye
+      // gates the raw committed text while this cell resolves the fallback.
+      value: pg.containerRowClass.value || DEFAULT_CONTAINER_ROW_CLASS,
+      onChange: value => stage(pg.containerRowClass, value === DEFAULT_CONTAINER_ROW_CLASS ? '' : value),
+      toggle: eyeToggle(pg.containerRowClass),
       sync: {
         kind: 'custom',
         read: attrs => {
           if (!attrs) return undefined
           // Absent resolves to the current Value text so seed edits elsewhere
           // never reset committed text.
-          if (!attrs.has('containerRowClass')) return pg.containerRowClass || DEFAULT_CONTAINER_ROW_CLASS
+          if (!attrs.has('containerRowClass')) return pg.containerRowClass.value || DEFAULT_CONTAINER_ROW_CLASS
           const attr = attrs.get('containerRowClass')!
           return attr.kind === 'string' ? attr.value : undefined
         },
         set: value => {
-          pg.containerRowClass = value === DEFAULT_CONTAINER_ROW_CLASS ? '' : value
+          pg.containerRowClass.value = value === DEFAULT_CONTAINER_ROW_CLASS ? '' : value
         },
       },
     },
-    boolField({ name: 'editable', defaultValue: 'true', note: 'Gates leaf editing and key renames; the callbacks stay wired either way.', value: pg.editable, onChange: v => (pg.editable = v as TriState), enabled: pg.editableOn, setEnabled: v => (pg.editableOn = v) }),
+    boolField({ name: 'editable', defaultValue: 'true', note: 'Gates leaf editing and key renames; the callbacks stay wired either way.', ...eyeFlag(pg.editable) }),
     {
       name: 'leafRowClass',
       type: 'string?',
@@ -125,41 +119,37 @@
       note: 'Replaces the tunable leaf row classes; the Value shows the built-ins, edit from there. Clearing restores the built-ins.',
       editor: 'text',
       clearable: true,
-      value: pg.leafRowClass || DEFAULT_LEAF_ROW_CLASS,
-      onChange: value => {
-        pg.leafRowClass = value === DEFAULT_LEAF_ROW_CLASS ? '' : value
-        pg.leafRowClassOn = true
-      },
-      toggle: snippetToggle(pg.leafRowClassOn, enabled => (pg.leafRowClassOn = enabled)),
+      ...eye(pg.leafRowClass),
+      // The Value shows the built-ins until the override is set, so the eye
+      // gates the raw committed text while this cell resolves the fallback.
+      value: pg.leafRowClass.value || DEFAULT_LEAF_ROW_CLASS,
+      onChange: value => stage(pg.leafRowClass, value === DEFAULT_LEAF_ROW_CLASS ? '' : value),
+      toggle: eyeToggle(pg.leafRowClass),
       sync: {
         kind: 'custom',
         read: attrs => {
           if (!attrs) return undefined
-          if (!attrs.has('leafRowClass')) return pg.leafRowClass || DEFAULT_LEAF_ROW_CLASS
+          if (!attrs.has('leafRowClass')) return pg.leafRowClass.value || DEFAULT_LEAF_ROW_CLASS
           const attr = attrs.get('leafRowClass')!
           return attr.kind === 'string' ? attr.value : undefined
         },
         set: value => {
-          pg.leafRowClass = value === DEFAULT_LEAF_ROW_CLASS ? '' : value
+          pg.leafRowClass.value = value === DEFAULT_LEAF_ROW_CLASS ? '' : value
         },
       },
     },
-    sizeField({ note: 'Control scale; the tree text and its edit/copy controls follow it.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
+    sizeField({ note: 'Control scale; the tree text and its edit/copy controls follow it.', ...eye(pg.size) }),
     jsonField({
       name: 'value',
       type: 'unknown',
       note: 'Tree data; any JSON document renders as nested nodes. The eye resets to the default tree.',
-      value: JSON.stringify(pg.value, null, 2) ?? 'null',
+      value: JSON.stringify(pg.value.value, null, 2) ?? 'null',
       onChange: (draft: string) => {
-        commitValueDraft(draft)
-        if (parseTreeValueJson(draft) !== undefined) pg.valueEnabled = true
+        const parsed = parseTreeValueJson(draft)
+        if (parsed !== undefined) stage(pg.value, parsed)
       },
       dialog: { valid: (draft: string) => parseTreeValueJson(draft) !== undefined, invalidMessage: 'Invalid value JSON. Use any JSON document.', title: 'Edit value' },
-      toggle: resetToggle(
-        pg.valueEnabled,
-        enabled => (pg.valueEnabled = enabled),
-        () => (pg.value = freshValue()),
-      ),
+      toggle: eyeResetToggle(pg.value, () => (pg.value.value = freshValue())),
       sync: { kind: 'custom', read: (_attrs, declarations) => readTreeValueSeed(declarations), set: commitValueDraft },
     }),
     { name: 'onChange', type: '(path: string[], newValue: unknown) => void', defaultValue: '—', note: 'Called with the path and the parsed replacement when a leaf edit commits.' },
@@ -178,11 +168,11 @@
     scope={{}}
   >
     <StructureTree
-      value={pg.value}
+      value={pg.value.value}
       onChange={handleNodeChange}
       onRenameKey={handleRenameKey}
       {editable}
       size={demoSize}
-      containerRowClass={pg.containerRowClassOn && pg.containerRowClass ? pg.containerRowClass : undefined}
-      leafRowClass={pg.leafRowClassOn && pg.leafRowClass ? pg.leafRowClass : undefined} />
+      containerRowClass={applied(pg.containerRowClass) || undefined}
+      leafRowClass={applied(pg.leafRowClass) || undefined} />
 </ShowcasePage>

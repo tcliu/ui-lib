@@ -1,43 +1,27 @@
 import { describe, expect, it } from 'vitest'
 import { createSnippetComponent } from '$showcase/snippet-playground'
+import { staged } from '$showcase/staged'
 import { buildChipDropdownSnippet, DEFAULT_CHIP_DROPDOWN_ARIA_LABEL, type ChipDropdownSnippetState } from './demo-snippet'
 
 function state(overrides: Partial<ChipDropdownSnippetState> = {}): ChipDropdownSnippetState {
   return {
-    label: '',
-    labelOn: true,
-    ariaLabel: 'Set status',
-    ariaLabelOn: true,
-    value: 'active',
-    valueOn: true,
-    defaultValue: '',
-    defaultValueOn: true,
-    size: 'md',
-    sizeOn: false,
-    variant: '',
-    variantOn: true,
-    filterable: '',
-    filterableOn: true,
-    disabled: '',
-    disabledOn: true,
-    align: '',
-    alignOn: true,
-    filterPlaceholder: '',
-    filterPlaceholderOn: true,
-    filterLabel: '',
-    filterLabelOn: true,
-    buttonClass: '',
-    buttonClassOn: true,
-    emptyText: '',
-    emptyTextOn: true,
-    clearable: '',
-    clearableOn: true,
-    clearLabel: '',
-    clearLabelOn: true,
-    autoPlace: '',
-    autoPlaceOn: true,
-    panelClass: '',
-    panelClassOn: true,
+    label: staged('', true),
+    ariaLabel: staged('Set status', true),
+    value: staged('active', true),
+    defaultValue: staged('', true),
+    size: staged('md'),
+    variant: staged('', true),
+    filterable: staged('', true),
+    disabled: staged('', true),
+    align: staged('', true),
+    filterPlaceholder: staged('', true),
+    filterLabel: staged('', true),
+    buttonClass: staged('', true),
+    emptyText: staged('', true),
+    clearable: staged('', true),
+    clearLabel: staged('', true),
+    autoPlace: staged('', true),
+    panelClass: staged('', true),
     ...overrides,
   }
 }
@@ -61,22 +45,20 @@ describe('buildChipDropdownSnippet', () => {
   it('emits a custom label literal and the curated overrides while set', () => {
     const source = buildChipDropdownSnippet(
       state({
-        label: 'Status',
-        ariaLabel: 'Pick a status',
-        variant: 'emerald',
-        variantOn: true,
-        filterable: 'yes',
-        disabled: 'yes',
-        align: 'right',
-        alignOn: true,
-        filterPlaceholder: 'Find a status',
-        filterLabel: 'Find a status',
-        buttonClass: 'w-40',
-        emptyText: 'Nothing here',
-        clearable: 'yes',
-        clearLabel: 'Clear it',
-        autoPlace: 'no',
-        panelClass: 'shadow-lg',
+        label: staged('Status', true),
+        ariaLabel: staged('Pick a status', true),
+        variant: staged('emerald', true),
+        filterable: staged('yes', true),
+        disabled: staged('yes', true),
+        align: staged('right', true),
+        filterPlaceholder: staged('Find a status', true),
+        filterLabel: staged('Find a status', true),
+        buttonClass: staged('w-40', true),
+        emptyText: staged('Nothing here', true),
+        clearable: staged('yes', true),
+        clearLabel: staged('Clear it', true),
+        autoPlace: staged('no', true),
+        panelClass: staged('shadow-lg', true),
       }),
     )
     expect(source).toContain('label="Status"')
@@ -99,14 +81,12 @@ describe('buildChipDropdownSnippet', () => {
   it('omits component defaults (the Value column prefills them)', () => {
     const source = buildChipDropdownSnippet(
       state({
-        variant: 'violet',
-        variantOn: true,
-        filterable: 'no',
-        disabled: 'no',
-        align: 'left',
-        alignOn: true,
-        clearable: 'no',
-        autoPlace: 'yes',
+        variant: staged('violet', true),
+        filterable: staged('no', true),
+        disabled: staged('no', true),
+        align: staged('left', true),
+        clearable: staged('no', true),
+        autoPlace: staged('yes', true),
       }),
     )
     expect(source).not.toContain('variant=')
@@ -119,7 +99,7 @@ describe('buildChipDropdownSnippet', () => {
 
   it('omits staged dropdown props while their eyes are off', () => {
     const off = buildChipDropdownSnippet(
-      state({ variant: 'emerald', variantOn: false, align: 'right', alignOn: false }),
+      state({ variant: staged('emerald'), align: staged('right') }),
     )
     expect(off).not.toContain('variant=')
     expect(off).not.toContain('align=')
@@ -127,7 +107,7 @@ describe('buildChipDropdownSnippet', () => {
 
   it('omits staged flags while their eyes are off', () => {
     const off = buildChipDropdownSnippet(
-      state({ filterable: 'yes', filterableOn: false, disabled: 'yes', disabledOn: false, clearable: 'yes', clearableOn: false, autoPlace: 'no', autoPlaceOn: false }),
+      state({ filterable: staged('yes'), disabled: staged('yes'), clearable: staged('yes'), autoPlace: staged('no') }),
     )
     expect(off).not.toContain('filterable')
     expect(off).not.toContain('disabled')
@@ -137,7 +117,7 @@ describe('buildChipDropdownSnippet', () => {
 
   it('falls back to the derived label, seed aria label, and no committed value while their eyes are off', () => {
     const off = buildChipDropdownSnippet(
-      state({ label: 'Status', labelOn: false, ariaLabel: 'Pick a status', ariaLabelOn: false, value: 'paused', valueOn: false }),
+      state({ label: staged('Status'), ariaLabel: staged('Pick a status'), value: staged('paused') }),
     )
     expect(off).not.toContain('label="Status"')
     expect(off).toContain('label={labelFor(options, value)}')
@@ -148,31 +128,31 @@ describe('buildChipDropdownSnippet', () => {
   })
 
   it('escapes quotes in free text', () => {
-    const source = buildChipDropdownSnippet(state({ filterPlaceholder: 'Say "hi"' }))
+    const source = buildChipDropdownSnippet(state({ filterPlaceholder: staged('Say "hi"', true) }))
     expect(source).toContain('filterPlaceholder="Say &quot;hi&quot;"')
   })
 
   it('omits eye-gated overrides while their toggle is off and emits them while on', () => {
-    const off = buildChipDropdownSnippet(state({ buttonClass: 'w-40', buttonClassOn: false, defaultValue: 'active', defaultValueOn: false, clearLabel: 'Clear it', clearLabelOn: false }))
+    const off = buildChipDropdownSnippet(state({ buttonClass: staged('w-40'), defaultValue: staged('active'), clearLabel: staged('Clear it') }))
     expect(off).not.toContain('buttonClass=')
     expect(off).not.toContain('defaultValue=')
     expect(off).not.toContain('clearLabel=')
-    const on = buildChipDropdownSnippet(state({ buttonClass: 'w-40', buttonClassOn: true, defaultValue: 'active', defaultValueOn: true, clearLabel: 'Clear it', clearLabelOn: true }))
+    const on = buildChipDropdownSnippet(state({ buttonClass: staged('w-40', true), defaultValue: staged('active', true), clearLabel: staged('Clear it', true) }))
     expect(on).toContain('buttonClass="w-40"')
     expect(on).toContain('defaultValue="active"')
     expect(on).toContain('clearLabel="Clear it"')
   })
 
   it('emits a non-default size and omits the md default', () => {
-    expect(buildChipDropdownSnippet(state({ size: 'lg', sizeOn: true }))).toContain('size="lg"')
-    expect(buildChipDropdownSnippet(state({ size: '24', sizeOn: true }))).toContain('size={24}')
+    expect(buildChipDropdownSnippet(state({ size: staged('lg', true) }))).toContain('size="lg"')
+    expect(buildChipDropdownSnippet(state({ size: staged('24', true) }))).toContain('size={24}')
     // The `md` default and an eye-off override both emit nothing.
-    expect(buildChipDropdownSnippet(state({ size: 'md', sizeOn: true }))).not.toContain('size')
-    expect(buildChipDropdownSnippet(state({ size: 'lg', sizeOn: false }))).not.toContain('size')
+    expect(buildChipDropdownSnippet(state({ size: staged('md', true) }))).not.toContain('size')
+    expect(buildChipDropdownSnippet(state({ size: staged('lg') }))).not.toContain('size')
   })
 
   it('seeds the committed value as script-local state', () => {
-    const source = buildChipDropdownSnippet(state({ value: 'paused' }))
+    const source = buildChipDropdownSnippet(state({ value: staged('paused', true) }))
     expect(source).toContain('let value = $state("paused")')
   })
 

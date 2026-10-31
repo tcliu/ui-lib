@@ -11,32 +11,21 @@
 
 import { DEFAULT_DATE_FORMAT } from '$lib/components/date-input-core'
 import { DATE_STAGE_CONTENT } from '$showcase/date-stage'
-import { escapeAttr, type TriState } from '$showcase/snippet-build'
+import { boolAttrLine, escapeAttr, type TriState } from '$showcase/snippet-build'
 import { sizeAttributeFragment } from '$showcase/size-input'
+import type { Staged } from '$showcase/staged'
 
 export interface DateInputSnippetState {
-  value: string
-  from: string
-  to: string
-  range: TriState
-  time: TriState
-  format: string
-  formatOn: boolean
-  placeholder: string
-  placeholderOn: boolean
-  closeOnSelect: TriState
-  highlightRange: TriState
-  size: string
-  sizeOn: boolean
-}
-
-// A tri-state flag on its own line: bare while Yes, `={false}` while No, and
-// omitted while unset, so only a real override shows up.
-function flagLine(name: string, value: TriState): string[] {
-  if (value === '') {
-    return []
-  }
-  return [`${name}${value === 'yes' ? '' : '={false}'}`]
+  value: Staged<string>
+  from: Staged<string>
+  to: Staged<string>
+  range: Staged<TriState>
+  time: Staged<TriState>
+  format: Staged<string>
+  placeholder: Staged<string>
+  closeOnSelect: Staged<TriState>
+  highlightRange: Staged<TriState>
+  size: Staged<string>
 }
 
 export function buildDateInputSnippet({
@@ -46,47 +35,44 @@ export function buildDateInputSnippet({
   range,
   time,
   format,
-  formatOn,
   placeholder,
-  placeholderOn,
   closeOnSelect,
   highlightRange,
   size,
-  sizeOn,
 }: DateInputSnippetState): string {
   const indent = '  '
-  const formatAttr = formatOn && format && format !== DEFAULT_DATE_FORMAT ? ` format="${escapeAttr(format)}"` : ''
-  const sizeAttr = sizeOn && size && size !== 'md' ? sizeAttributeFragment(size) : ''
-  const placeholderAttr = placeholderOn && placeholder ? ` placeholder="${escapeAttr(placeholder)}"` : ''
+  const isRange = range.on && range.value === 'yes'
+  const formatAttr = format.on && format.value && format.value !== DEFAULT_DATE_FORMAT ? ` format="${escapeAttr(format.value)}"` : ''
+  const sizeAttr = size.on && size.value && size.value !== 'md' ? sizeAttributeFragment(size.value) : ''
+  const placeholderAttr = placeholder.on && placeholder.value ? ` placeholder="${escapeAttr(placeholder.value)}"` : ''
   const flags = [
-    ...(range === 'yes' ? ['range'] : flagLine('range', range)),
-    ...flagLine('time', time),
-    ...flagLine('closeOnSelect', closeOnSelect),
-    ...flagLine('highlightRange', highlightRange),
+    ...(isRange ? ['range'] : boolAttrLine('range', range, '', '')),
+    ...boolAttrLine('time', time, '', ''),
+    ...boolAttrLine('closeOnSelect', closeOnSelect, '', ''),
+    ...boolAttrLine('highlightRange', highlightRange, '', ''),
   ].map(line => `${indent}${line}`)
-  const body =
-    range === 'yes'
-      ? [
-          '<DateInput',
-          ...flags,
-          `${indent}from={from}`,
-          `${indent}to={to}`,
-          `${indent}onFrom={next => (from = next)}`,
-          `${indent}onTo={next => (to = next)}${formatAttr}${sizeAttr} />`,
-          `<span class="text-sm text-slate-400">range: {from || '—'} – {to || '—'}</span>`,
-        ]
-      : [
-          '<DateInput',
-          ...flags,
-          `${indent}value={value}`,
-          `${indent}onChange={next => (value = next)}${formatAttr}${sizeAttr}${placeholderAttr} />`,
-          `<span class="text-sm text-slate-400">value: {value || '—'}</span>`,
-        ]
+  const body = isRange
+    ? [
+        '<DateInput',
+        ...flags,
+        `${indent}from={from}`,
+        `${indent}to={to}`,
+        `${indent}onFrom={next => (from = next)}`,
+        `${indent}onTo={next => (to = next)}${formatAttr}${sizeAttr} />`,
+        `<span class="text-sm text-slate-400">range: {from || '—'} – {to || '—'}</span>`,
+      ]
+    : [
+        '<DateInput',
+        ...flags,
+        `${indent}value={value}`,
+        `${indent}onChange={next => (value = next)}${formatAttr}${sizeAttr}${placeholderAttr} />`,
+        `<span class="text-sm text-slate-400">value: {value || '—'}</span>`,
+      ]
   return [
     '<script>',
-    `${indent}let value = $state(${JSON.stringify(value)})`,
-    `${indent}let from = $state(${JSON.stringify(from)})`,
-    `${indent}let to = $state(${JSON.stringify(to)})`,
+    `${indent}let value = $state(${JSON.stringify(value.value)})`,
+    `${indent}let from = $state(${JSON.stringify(from.value)})`,
+    `${indent}let to = $state(${JSON.stringify(to.value)})`,
     '</script>',
     `<div class="${DATE_STAGE_CONTENT}">`,
     ...body,

@@ -8,9 +8,8 @@
 // Curated playground option: unset or the component default renders the
 // default, Yes/No force the value. Options start at the default, so the
 // cleared form applies no overrides.
-import { escapeAttr } from '$showcase/snippet-build'
-
-export type TriState = '' | 'yes' | 'no'
+import { boolAttrLine, enumAttrLine, textAttrLine, type TriState } from '$showcase/snippet-build'
+import type { Staged } from '$showcase/staged'
 
 // The document types the wrapped editor loads a language pack for (see
 // CodeEditor's LANGUAGE_LOADERS). Offering only these keeps every panel choice
@@ -37,45 +36,28 @@ export const DEFAULT_DOC_TYPE: DocType = 'markdown'
 export const DEFAULT_CONTENT = ['# Lazy editor', '', 'Language packs load on demand.'].join('\n')
 
 export interface LazyCodeEditorSnippetState {
-  docType: string
-  docTypeOn: boolean
-  editable: TriState
-  editableOn: boolean
-  containerClass: string
-  containerClassOn: boolean
-  editorClass: string
-  editorClassOn: boolean
-  maxContentLength: string
-  maxContentLengthOn: boolean
-  autoFocus: TriState
-  autoFocusOn: boolean
-  editorAriaLabel: string
-  editorAriaLabelOn: boolean
-  recreateKey: string
-  recreateKeyOn: boolean
+  docType: Staged<string>
+  editable: Staged<TriState>
+  containerClass: Staged<string>
+  editorClass: Staged<string>
+  maxContentLength: Staged<string>
+  autoFocus: Staged<TriState>
+  editorAriaLabel: Staged<string>
+  recreateKey: Staged<string>
 }
 
-// A tri-state line: omitted while unset or at the component default, bare
-// while Yes, ={false} while No.
-function flagLine(name: string, value: TriState, indent: number, def: TriState = ''): string[] {
-  if (value === '' || value === def) {
+// A max-length line: omitted while the eye is off, unset, at the component
+// default (`0` disables the cap), or non-numeric.
+function maxLengthLine(pair: Staged<string>, indent: number, def = ''): string[] {
+  if (!pair.on || pair.value === '' || pair.value === def) {
     return []
   }
-  return [`${' '.repeat(indent)}${name}${value === 'yes' ? '' : '={false}'}`]
-}
-
-// A max-length line: omitted while unset, at the component default (`0`
-// disables the cap), or non-numeric.
-function maxLengthLine(value: string, indent: number, def = ''): string[] {
-  if (value === '' || value === def) {
-    return []
-  }
-  const parsed = Number(value)
+  const parsed = Number(pair.value)
   return Number.isInteger(parsed) && parsed >= 0 ? [`${' '.repeat(indent)}maxContentLength={${parsed}}`] : []
 }
 
-export function buildLazyCodeEditorSnippet({ docType, docTypeOn, editable, editableOn, containerClass, containerClassOn, editorClass, editorClassOn, maxContentLength, maxContentLengthOn, autoFocus, autoFocusOn, editorAriaLabel, editorAriaLabelOn, recreateKey, recreateKeyOn }: LazyCodeEditorSnippetState): string {
-  const resolvedDocType = docType || DEFAULT_DOC_TYPE
+export function buildLazyCodeEditorSnippet({ docType, editable, containerClass, editorClass, maxContentLength, autoFocus, editorAriaLabel, recreateKey }: LazyCodeEditorSnippetState): string {
+  const resolvedDocType = docType.value || DEFAULT_DOC_TYPE
   return [
     '<div class="h-64 w-full max-w-xl">',
     '  <LazyCodeEditor',
@@ -83,14 +65,14 @@ export function buildLazyCodeEditorSnippet({ docType, docTypeOn, editable, edita
     // The docType Value prefills the component default (`text`, which loads no
     // pack); the builder omits it so Show-code stays minimal, while unset
     // keeps the Markdown demo baseline.
-    ...(docTypeOn && resolvedDocType !== 'text' ? [`    docType="${resolvedDocType}"`] : []),
-    ...(editableOn ? flagLine('editable', editable, 4, 'yes') : []),
-    ...(containerClassOn && containerClass ? [`    containerClass="${escapeAttr(containerClass)}"`] : []),
-    ...(editorClassOn && editorClass ? [`    editorClass="${escapeAttr(editorClass)}"`] : []),
-    ...(maxContentLengthOn ? maxLengthLine(maxContentLength, 4, '0') : []),
-    ...(autoFocusOn ? flagLine('autoFocus', autoFocus, 4, 'no') : []),
-    ...(editorAriaLabelOn && editorAriaLabel ? [`    editorAriaLabel="${escapeAttr(editorAriaLabel)}"`] : []),
-    ...(recreateKeyOn && recreateKey ? [`    recreateKey="${escapeAttr(recreateKey)}"`] : []),
+    ...enumAttrLine('docType', { on: docType.on, value: resolvedDocType }, 'text', '    '),
+    ...boolAttrLine('editable', editable, 'yes', '    '),
+    ...textAttrLine('containerClass', containerClass, '    '),
+    ...textAttrLine('editorClass', editorClass, '    '),
+    ...maxLengthLine(maxContentLength, 4, '0'),
+    ...boolAttrLine('autoFocus', autoFocus, 'no', '    '),
+    ...textAttrLine('editorAriaLabel', editorAriaLabel, '    '),
+    ...textAttrLine('recreateKey', recreateKey, '    '),
     '  />',
     '</div>',
   ].join('\n')

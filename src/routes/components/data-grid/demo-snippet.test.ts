@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { STAGE_PANE, STAGE_ROW } from '$showcase/resizable-stage'
+import { staged } from '$showcase/staged'
 import {
   DEMO_VALUE,
   buildDataGridSnippet,
@@ -14,23 +15,15 @@ import {
 
 function state(overrides: Partial<DataGridSnippetState> = {}): DataGridSnippetState {
   return {
-    editable: '',
-    editableOn: true,
-    showHeaders: '',
-    showHeadersOn: true,
-    hideHeaderToggle: '',
-    hideHeaderToggleOn: true,
-    columnLabels: [],
-    columnLabelsEnabled: true,
-    initialColumnWidths: [],
-    initialColumnWidthsEnabled: true,
-    valueEnabled: true,
-    maxColumns: '',
-    maxColumnsOn: true,
-    storageKey: '',
-    storageKeyOn: false,
-    size: '',
-    sizeOn: true,
+    editable: staged('', true),
+    showHeaders: staged('', true),
+    hideHeaderToggle: staged('', true),
+    columnLabels: staged([], true),
+    initialColumnWidths: staged([], true),
+    value: staged([], true),
+    maxColumns: staged('', true),
+    storageKey: staged(''),
+    size: staged('', true),
     ...overrides,
   }
 }
@@ -45,21 +38,32 @@ describe('buildDataGridSnippet', () => {
   })
 
   it('emits a bare flag for yes only when it differs from the default', () => {
-    const source = buildDataGridSnippet(state({ editable: 'yes', showHeaders: 'yes', hideHeaderToggle: 'yes' }))
+    const source = buildDataGridSnippet(
+      state({ editable: staged('yes', true), showHeaders: staged('yes', true), hideHeaderToggle: staged('yes', true) }),
+    )
     expect(source).toContain('\n      hideHeaderToggle\n')
     expect(source).not.toContain('\n      editable\n')
     expect(source).not.toContain('\n      showHeaders\n')
   })
 
   it('emits ={false} for no only when it differs from the default', () => {
-    const source = buildDataGridSnippet(state({ editable: 'no', showHeaders: 'no', hideHeaderToggle: 'no' }))
+    const source = buildDataGridSnippet(
+      state({ editable: staged('no', true), showHeaders: staged('no', true), hideHeaderToggle: staged('no', true) }),
+    )
     expect(source).toContain('editable={false}')
     expect(source).toContain('showHeaders={false}')
     expect(source).not.toMatch(/^\s*hideHeaderToggle=/m)
   })
 
   it('omits component defaults (the Value column prefills them)', () => {
-    const source = buildDataGridSnippet(state({ editable: 'yes', showHeaders: 'yes', hideHeaderToggle: 'no', size: 'md', sizeOn: true }))
+    const source = buildDataGridSnippet(
+      state({
+        editable: staged('yes', true),
+        showHeaders: staged('yes', true),
+        hideHeaderToggle: staged('no', true),
+        size: staged('md', true),
+      }),
+    )
     expect(source).not.toContain('editable')
     expect(source).not.toContain('showHeaders')
     expect(source).not.toContain('hideHeaderToggle')
@@ -76,7 +80,9 @@ describe('buildDataGridSnippet', () => {
   })
 
   it('seeds the label and width lists as script-local state when set', () => {
-    const source = buildDataGridSnippet(state({ columnLabels: ['Key', 'Value'], initialColumnWidths: ['30%', '70%'] }))
+    const source = buildDataGridSnippet(
+      state({ columnLabels: staged(['Key', 'Value'], true), initialColumnWidths: staged(['30%', '70%'], true) }),
+    )
     expect(source).toContain('let columnLabels = $state(["Key","Value"]);')
     expect(source).toContain('columnLabels={columnLabels}')
     expect(source).toContain('let initialColumnWidths = $state(["30%","70%"]);')
@@ -86,11 +92,9 @@ describe('buildDataGridSnippet', () => {
   it('omits the lists and cell binding while their eye toggle is off', () => {
     const source = buildDataGridSnippet(
       state({
-        columnLabels: ['Key', 'Value'],
-        columnLabelsEnabled: false,
-        initialColumnWidths: ['30%', '70%'],
-        initialColumnWidthsEnabled: false,
-        valueEnabled: false,
+        columnLabels: staged(['Key', 'Value']),
+        initialColumnWidths: staged(['30%', '70%']),
+        value: staged([], false),
       }),
     )
     expect(source).not.toContain('columnLabels')
@@ -102,22 +106,28 @@ describe('buildDataGridSnippet', () => {
   })
 
   it('emits maxColumns and storageKey when set', () => {
-    const source = buildDataGridSnippet(state({ maxColumns: '2', storageKey: 'grid-widths', storageKeyOn: true }))
+    const source = buildDataGridSnippet(
+      state({ maxColumns: staged('2', true), storageKey: staged('grid-widths', true) }),
+    )
     expect(source).toContain('maxColumns={2}')
     expect(source).toContain('storageKey="grid-widths"')
   })
 
   it('omits the staged storageKey while the eye is off', () => {
-    expect(buildDataGridSnippet(state({ storageKey: 'grid-widths' }))).not.toContain('storageKey=')
+    expect(buildDataGridSnippet(state({ storageKey: staged('grid-widths') }))).not.toContain('storageKey=')
   })
 
   it('omits the staged size while its eye is off', () => {
-    expect(buildDataGridSnippet(state({ size: 'lg', sizeOn: false }))).not.toMatch(/^\s*size=/m)
+    expect(buildDataGridSnippet(state({ size: staged('lg') }))).not.toMatch(/^\s*size=/m)
   })
 
   it('omits staged boolean flags while their eye is off', () => {
     const source = buildDataGridSnippet(
-      state({ editable: 'no', editableOn: false, showHeaders: 'no', showHeadersOn: false, hideHeaderToggle: 'yes', hideHeaderToggleOn: false }),
+      state({
+        editable: staged('no'),
+        showHeaders: staged('no'),
+        hideHeaderToggle: staged('yes'),
+      }),
     )
     expect(source).not.toContain('editable')
     expect(source).not.toContain('showHeaders')
@@ -125,21 +135,21 @@ describe('buildDataGridSnippet', () => {
   })
 
   it('omits maxColumns while its eye is off', () => {
-    expect(buildDataGridSnippet(state({ maxColumns: '2', maxColumnsOn: false }))).not.toContain('maxColumns')
-    expect(buildDataGridSnippet(state({ maxColumns: '2', maxColumnsOn: true }))).toContain('maxColumns={2}')
+    expect(buildDataGridSnippet(state({ maxColumns: staged('2') }))).not.toContain('maxColumns')
+    expect(buildDataGridSnippet(state({ maxColumns: staged('2', true) }))).toContain('maxColumns={2}')
   })
   it('omits maxColumns while unset or non-positive-integer', () => {
     expect(buildDataGridSnippet(state())).not.toContain('maxColumns')
-    expect(buildDataGridSnippet(state({ maxColumns: 'abc' }))).not.toContain('maxColumns')
-    expect(buildDataGridSnippet(state({ maxColumns: '0' }))).not.toContain('maxColumns')
-    expect(buildDataGridSnippet(state({ maxColumns: '-2' }))).not.toContain('maxColumns')
-    expect(buildDataGridSnippet(state({ maxColumns: '2.5' }))).not.toContain('maxColumns')
+    expect(buildDataGridSnippet(state({ maxColumns: staged('abc', true) }))).not.toContain('maxColumns')
+    expect(buildDataGridSnippet(state({ maxColumns: staged('0', true) }))).not.toContain('maxColumns')
+    expect(buildDataGridSnippet(state({ maxColumns: staged('-2', true) }))).not.toContain('maxColumns')
+    expect(buildDataGridSnippet(state({ maxColumns: staged('2.5', true) }))).not.toContain('maxColumns')
   })
 
   it('emits a named size as a string and a numeric size as an expression', () => {
-    expect(buildDataGridSnippet(state({ size: 'lg', sizeOn: true }))).toContain('size="lg"')
-    expect(buildDataGridSnippet(state({ size: '14', sizeOn: true }))).toContain('size={14}')
-    expect(buildDataGridSnippet(state({ size: 'huge', sizeOn: true }))).not.toMatch(/^\s*size=/m)
+    expect(buildDataGridSnippet(state({ size: staged('lg', true) }))).toContain('size="lg"')
+    expect(buildDataGridSnippet(state({ size: staged('14', true) }))).toContain('size={14}')
+    expect(buildDataGridSnippet(state({ size: staged('huge', true) }))).not.toMatch(/^\s*size=/m)
   })
 
   it('parses column-labels editor drafts', () => {

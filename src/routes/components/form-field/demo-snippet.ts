@@ -4,23 +4,18 @@
 import { escapeAttr, escapeRawLine, unescapeAttr } from '$showcase/snippet-build'
 import { isBasicHtmlMarkup } from '$showcase/snippet-html'
 import { sizeAttributeFragment } from '$showcase/size-input'
+import type { Staged } from '$showcase/staged'
 
 export interface FormFieldSnippetState {
-  label: string
-  labelOn: boolean
-  htmlFor: string
-  htmlForOn: boolean
-  className: string
-  classNameOn: boolean
-  layout: string
-  layoutOn: boolean
-  size: string
-  sizeOn: boolean
+  label: Staged<string>
+  htmlFor: Staged<string>
+  className: Staged<string>
+  layout: Staged<string>
+  size: Staged<string>
   // Raw children markup committed from the row's code dialog; empty renders
-  // the canonical TextInput below.
-  children: string
-  // The eye toggle off means the children snippet is not applied.
-  childrenEnabled: boolean
+  // the canonical TextInput below. Its eye off means the children snippet is
+  // not applied.
+  children: Staged<string>
 }
 
 export const STYLED_CLASS = 'rounded-md border border-cyan-500/40 p-3'
@@ -107,34 +102,28 @@ export function parseFormFieldChildSegments(markup: string): FormFieldChildSegme
 
 export function buildFormFieldSnippet({
   label,
-  labelOn,
   htmlFor,
-  htmlForOn,
   className,
-  classNameOn,
   layout,
-  layoutOn,
   size,
-  sizeOn,
   children,
-  childrenEnabled,
 }: FormFieldSnippetState): string {
-  const labelAttr = labelOn && label ? ` label="${escapeAttr(label)}"` : ' label={defaultLabel}'
-  const forAttr = htmlForOn && htmlFor ? ` htmlFor="${escapeAttr(htmlFor)}"` : ''
+  const labelAttr = label.on && label.value ? ` label="${escapeAttr(label.value)}"` : ' label={defaultLabel}'
+  const forAttr = htmlFor.on && htmlFor.value ? ` htmlFor="${escapeAttr(htmlFor.value)}"` : ''
   // The layout prefills its component default in the Value column; the
   // builder omits the default so Show-code stays minimal.
-  const layoutAttr = layoutOn && layout && layout !== 'stacked' ? ` layout="${escapeAttr(layout)}"` : ''
-  const classAttr = classNameOn && className ? ` className="${escapeAttr(className)}"` : ''
+  const layoutAttr = layout.on && layout.value && layout.value !== 'stacked' ? ` layout="${escapeAttr(layout.value)}"` : ''
+  const classAttr = className.on && className.value ? ` className="${escapeAttr(className.value)}"` : ''
   // The size row prefills its `md` default; the builder omits it too.
-  const sizeAttr = sizeOn && size && size !== 'md' ? sizeAttributeFragment(size) : ''
+  const sizeAttr = size.on && size.value && size.value !== 'md' ? sizeAttributeFragment(size.value) : ''
   // The eye toggle off means no children are applied. Otherwise custom
   // children emit verbatim; unset, the canonical TextInput reads the
   // localized default label from scope alongside its bound value.
-  const canonicalHtmlFor = htmlForOn && htmlFor ? htmlFor : ''
-  const childLines = !childrenEnabled
+  const canonicalHtmlFor = htmlFor.on && htmlFor.value ? htmlFor.value : ''
+  const childLines = !children.on
     ? []
-    : children
-      ? children.split('\n').map(line => (line ? `  ${escapeRawLine(line)}` : line))
+    : children.value
+      ? children.value.split('\n').map(line => (line ? `  ${escapeRawLine(line)}` : line))
       : [`  ${buildFormFieldChildrenMarkup({ htmlFor: canonicalHtmlFor })}`]
   if (childLines.length === 0) {
     return [`<FormField${labelAttr}${forAttr}${layoutAttr}${classAttr}${sizeAttr}></FormField>`].join('\n')

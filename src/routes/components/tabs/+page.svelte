@@ -7,7 +7,8 @@
   import ShowcasePage from '$showcase/ShowcasePage.svelte'
   import { parseSizeValue } from '$showcase/size-input'
   import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { textField, sizeField, snippetToggle } from '$showcase/snippet-field'
+  import { applied, eye, eyeToggle, stage, staged } from '$showcase/staged'
+  import { textField, sizeField } from '$showcase/snippet-field'
   import { buildTabsSnippet } from './demo-snippet'
 
   const i18n = getI18nContext()
@@ -27,14 +28,10 @@
   const INITIAL = {
     routePath: '#overview',
     routeMode: '',
-    className: '',
-    classNameOn: false,
-    ariaLabel: 'Components',
-    ariaLabelOn: true,
-    pathname: '',
-    pathnameOn: false,
-    size: 'md',
-    sizeOn: false,
+    className: staged(''),
+    ariaLabel: staged('Components', true),
+    pathname: staged(''),
+    size: staged('md'),
   }
   let pg = $state(structuredClone(INITIAL))
 
@@ -50,14 +47,17 @@
 
   const overviewPath = $derived(pg.routeMode ? '#overview' : 'overview')
   const detailsPath = $derived(pg.routeMode ? '#details' : 'details')
-  const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
+  const demoSize = $derived.by(() => {
+    const value = applied(pg.size)
+    return value === undefined ? undefined : parseSizeValue(value)
+  })
 
   function clearPlayground() {
     pg = structuredClone(INITIAL)
   }
 
   const code = $derived.by(() =>
-    buildTabsSnippet({ routeMode: pg.routeMode, className: pg.className, classNameOn: pg.classNameOn, ariaLabel: pg.ariaLabel, ariaLabelOn: pg.ariaLabelOn, pathname: pg.pathname, pathnameOn: pg.pathnameOn, size: pg.size, sizeOn: pg.sizeOn }),
+    buildTabsSnippet({ routeMode: pg.routeMode, className: pg.className, ariaLabel: pg.ariaLabel, pathname: pg.pathname, size: pg.size }),
   )
 
   // The page owns the preview so the shell can host the code toggle (and the
@@ -71,10 +71,10 @@
   // regenerated seed back so the editor keeps the user's text. The tab list
   // and its snippets are demo data with no prop row.
   const fields: SyncableFieldConfig[] = $derived([
-    { name: 'ariaLabel', type: 'string?', defaultValue: "'Tabs'", editorDefaultValue: 'Tabs', note: 'Accessible name for the nav.', editor: 'text', clearable: true, value: pg.ariaLabel, onChange: value => { pg.ariaLabel = value; pg.ariaLabelOn = true; }, placeholder: 'Tabs', toggle: snippetToggle(pg.ariaLabelOn, enabled => (pg.ariaLabelOn = enabled)), sync: { kind: 'scopeText', scopeRef: 'componentsLabel' } },
-    textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes appended to the header row.', value: pg.className, onChange: v => (pg.className = v), editorDefaultValue: '', clearable: true, enabled: pg.classNameOn, setEnabled: v => (pg.classNameOn = v) }),
-    textField({ name: 'pathname', type: 'string?', defaultValue: '—', note: 'Route mode: active path drives link rendering.', value: pg.pathname, onChange: v => (pg.pathname = v), clearable: true, enabled: pg.pathnameOn, setEnabled: v => (pg.pathnameOn = v) }),
-    sizeField({ note: 'Control scale; numbers are icon-scale pixels. Scales the nav and tab text and chrome.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
+    { name: 'ariaLabel', type: 'string?', defaultValue: "'Tabs'", editorDefaultValue: 'Tabs', note: 'Accessible name for the nav.', editor: 'text', clearable: true, ...eye(pg.ariaLabel), onChange: value => stage(pg.ariaLabel, value), placeholder: 'Tabs', toggle: eyeToggle(pg.ariaLabel), sync: { kind: 'scopeText', scopeRef: 'componentsLabel' } },
+    textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes appended to the header row.', editorDefaultValue: '', clearable: true, ...eye(pg.className) }),
+    textField({ name: 'pathname', type: 'string?', defaultValue: '—', note: 'Route mode: active path drives link rendering.', clearable: true, ...eye(pg.pathname) }),
+    sizeField({ note: 'Control scale; numbers are icon-scale pixels. Scales the nav and tab text and chrome.', ...eye(pg.size) }),
     // Read-only: the generic demo state object has no literal editor.
     { name: 'state', type: 'TState', defaultValue: '—', note: 'Passed to the toolbar/content snippets.' },
     { name: 'tabs', type: 'Tab<TState>[]', defaultValue: '—', note: 'Label, path, optional toolbar snippet, content snippet.' },
@@ -113,20 +113,17 @@
     </FormField>
     <FormField label="Size">
       <SelectDropdown
-        activeValue={pg.size}
+        activeValue={pg.size.value}
         ariaLabel="Size"
         options={sizeOptions}
         filterable
         allowCustomValue
-        onSelect={value => {
-          pg.size = value
-          pg.sizeOn = true
-        }}
+        onSelect={value => stage(pg.size, value)}
         clearable
         clearLabel="Clear size"
         onClear={() => {
-          pg.size = 'md'
-          pg.sizeOn = false
+          pg.size.value = 'md'
+          pg.size.on = false
         }} />
     </FormField>
   </div>
@@ -168,8 +165,8 @@
         { label: i18n.t('showcase.customized'), path: detailsPath, content: detailsContent },
       ]}
       state={demoState}
-      pathname={pg.pathnameOn && pg.pathname ? pg.pathname : (pg.routeMode ? pg.routePath : undefined)}
-      className={pg.classNameOn && pg.className ? pg.className : undefined}
-      ariaLabel={pg.ariaLabelOn && pg.ariaLabel ? pg.ariaLabel : i18n.t('showcase.components')}
+      pathname={applied(pg.pathname) || (pg.routeMode ? pg.routePath : undefined)}
+      className={applied(pg.className) || undefined}
+      ariaLabel={applied(pg.ariaLabel) || i18n.t('showcase.components')}
       size={demoSize} />
   </ShowcasePage>

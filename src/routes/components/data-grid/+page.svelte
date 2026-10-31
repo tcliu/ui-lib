@@ -1,13 +1,14 @@
 <script lang="ts">
-  import { flagOn } from '$showcase/snippet-build'
   import DataGrid from '$lib/components/DataGrid.svelte'
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$showcase/ShowcasePage.svelte'
   import ShowcaseStage from '$showcase/ShowcaseStage.svelte'
   import { parseSizeValue } from '$showcase/size-input'
-  import { textField, boolField, sizeField, jsonField, snippetToggle } from '$showcase/snippet-field'
+  import { textField, boolField, sizeField, jsonField } from '$showcase/snippet-field'
   import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { DEMO_VALUE, buildDataGridSnippet, parseColumnLabelsJson, parseColumnLabelsValue, parseColumnWidthsJson, parseColumnWidthsValue, parseGridValueJson, type TriState } from './demo-snippet'
+  import { applied, appliedFlag, eye, eyeFlag, eyeToggle, stage, staged } from '$showcase/staged'
+  import { type TriState } from '$showcase/snippet-build'
+  import { DEMO_VALUE, buildDataGridSnippet, parseColumnLabelsJson, parseColumnLabelsValue, parseColumnWidthsJson, parseColumnWidthsValue, parseGridValueJson } from './demo-snippet'
 
   const i18n = getI18nContext()
 
@@ -22,33 +23,24 @@
   // applies no overrides and Show-code omits the defaults. Clearing a Value
   // unsets it; Reset restores the defaults below.
   // The cell data is committed state edited in the grid itself.
-  const INITIAL = {
-    value: freshValue() as string[][],
-    valueEnabled: true,
-    editable: 'yes' as TriState,
-    editableOn: false,
-    showHeaders: 'yes' as TriState,
-    showHeadersOn: false,
-    hideHeaderToggle: 'no' as TriState,
-    hideHeaderToggleOn: false,
-    columnLabels: [] as string[],
-    initialColumnWidths: [] as string[],
-    columnLabelsEnabled: true,
-    initialColumnWidthsEnabled: true,
-    maxColumns: '',
-    maxColumnsOn: false,
-    storageKey: '',
-    storageKeyOn: false,
-    size: 'md',
-    sizeOn: false,
-  }
-  let pg = $state(structuredClone(INITIAL))
   // The lists apply only while their eye toggle is on (all on, so the
   // cleared form renders the current demo); committing re-applies.
+  const INITIAL = {
+    value: staged(freshValue() as string[][], true),
+    editable: staged('yes' as TriState),
+    showHeaders: staged('yes' as TriState),
+    hideHeaderToggle: staged('no' as TriState),
+    columnLabels: staged([] as string[], true),
+    initialColumnWidths: staged([] as string[], true),
+    maxColumns: staged(''),
+    storageKey: staged(''),
+    size: staged('md'),
+  }
+  let pg = $state(structuredClone(INITIAL))
 
-  const editable = $derived(pg.editableOn ? flagOn(pg.editable) : undefined)
-  const showHeaders = $derived(pg.showHeadersOn ? flagOn(pg.showHeaders) : undefined)
-  const hideHeaderToggle = $derived(pg.hideHeaderToggleOn ? flagOn(pg.hideHeaderToggle) : undefined)
+  const editable = $derived(appliedFlag(pg.editable))
+  const showHeaders = $derived(appliedFlag(pg.showHeaders))
+  const hideHeaderToggle = $derived(appliedFlag(pg.hideHeaderToggle))
 
   // Unset (or non-positive-integer) renders the component default; otherwise
   // the grid locks to that many columns. The eye stages the customization.
@@ -60,8 +52,15 @@
     return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined
   }
 
-  const demoMaxColumns = $derived(asMaxColumns(pg.maxColumns, pg.maxColumnsOn))
-  const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
+  const demoMaxColumns = $derived(asMaxColumns(pg.maxColumns.value, pg.maxColumns.on))
+  const demoSize = $derived.by(() => {
+    const value = applied(pg.size)
+    return value === undefined ? undefined : parseSizeValue(value)
+  })
+  const demoColumnLabels = $derived(applied(pg.columnLabels)?.length ? pg.columnLabels.value : undefined)
+  const demoInitialColumnWidths = $derived(
+    applied(pg.initialColumnWidths)?.length ? pg.initialColumnWidths.value : undefined,
+  )
 
   function clearPlayground() {
     pg = structuredClone(INITIAL)
@@ -70,22 +69,14 @@
   const code = $derived.by(() =>
     buildDataGridSnippet({
       editable: pg.editable,
-      editableOn: pg.editableOn,
       showHeaders: pg.showHeaders,
-      showHeadersOn: pg.showHeadersOn,
       hideHeaderToggle: pg.hideHeaderToggle,
-      hideHeaderToggleOn: pg.hideHeaderToggleOn,
       columnLabels: pg.columnLabels,
-      columnLabelsEnabled: pg.columnLabelsEnabled,
       initialColumnWidths: pg.initialColumnWidths,
-      initialColumnWidthsEnabled: pg.initialColumnWidthsEnabled,
-      valueEnabled: pg.valueEnabled,
+      value: pg.value,
       maxColumns: pg.maxColumns,
-      maxColumnsOn: pg.maxColumnsOn,
       storageKey: pg.storageKey,
-      storageKeyOn: pg.storageKeyOn,
       size: pg.size,
-      sizeOn: pg.sizeOn,
     }),
   )
 
@@ -101,54 +92,45 @@
       name: 'columnLabels',
       type: 'string[]?',
       note: 'Replaces column letters with display labels; the eye applies the list.',
-      value: JSON.stringify(pg.columnLabels, null, 2),
+      value: JSON.stringify(pg.columnLabels.value, null, 2),
       onChange: (draft: string) => {
         const parsed = parseColumnLabelsJson(draft)
-        if (parsed) {
-          pg.columnLabels = parsed
-          pg.columnLabelsEnabled = true
-        }
+        if (parsed) stage(pg.columnLabels, parsed)
       },
       dialog: { valid: (draft: string) => parseColumnLabelsJson(draft) != null, invalidMessage: 'Invalid column-labels JSON. Use an array of strings.', title: 'Edit column labels' },
-      toggle: snippetToggle(pg.columnLabelsEnabled, enabled => (pg.columnLabelsEnabled = enabled)),
-      sync: { kind: 'scriptJson', parseJson: parseColumnLabelsValue, setJson: value => (pg.columnLabels = value as typeof pg.columnLabels) },
+      toggle: eyeToggle(pg.columnLabels),
+      sync: { kind: 'scriptJson', parseJson: parseColumnLabelsValue, setJson: value => (pg.columnLabels.value = value as string[]) },
     }),
-    boolField({ name: 'editable', defaultValue: 'true', note: 'Enables in-place cell editing and structure edits.', value: pg.editable, onChange: v => (pg.editable = v as TriState), enabled: pg.editableOn, setEnabled: v => (pg.editableOn = v) }),
-    boolField({ name: 'hideHeaderToggle', defaultValue: 'false', note: 'Hides the toolbar header toggle.', value: pg.hideHeaderToggle, onChange: v => (pg.hideHeaderToggle = v as TriState), enabled: pg.hideHeaderToggleOn, setEnabled: v => (pg.hideHeaderToggleOn = v) }),
+    boolField({ name: 'editable', defaultValue: 'true', note: 'Enables in-place cell editing and structure edits.', ...eyeFlag(pg.editable) }),
+    boolField({ name: 'hideHeaderToggle', defaultValue: 'false', note: 'Hides the toolbar header toggle.', ...eyeFlag(pg.hideHeaderToggle) }),
     jsonField({
       name: 'initialColumnWidths',
       type: 'string[]?',
       note: 'Initial widths as px numbers or percent strings; the eye applies the list.',
-      value: JSON.stringify(pg.initialColumnWidths, null, 2),
+      value: JSON.stringify(pg.initialColumnWidths.value, null, 2),
       onChange: (draft: string) => {
         const parsed = parseColumnWidthsJson(draft)
-        if (parsed) {
-          pg.initialColumnWidths = parsed
-          pg.initialColumnWidthsEnabled = true
-        }
+        if (parsed) stage(pg.initialColumnWidths, parsed)
       },
       dialog: { valid: (draft: string) => parseColumnWidthsJson(draft) != null, invalidMessage: 'Invalid column-widths JSON. Use an array of strings.', title: 'Edit column widths' },
-      toggle: snippetToggle(pg.initialColumnWidthsEnabled, enabled => (pg.initialColumnWidthsEnabled = enabled)),
-      sync: { kind: 'scriptJson', parseJson: parseColumnWidthsValue, setJson: value => (pg.initialColumnWidths = value as typeof pg.initialColumnWidths) },
+      toggle: eyeToggle(pg.initialColumnWidths),
+      sync: { kind: 'scriptJson', parseJson: parseColumnWidthsValue, setJson: value => (pg.initialColumnWidths.value = value as string[]) },
     }),
-    { name: 'maxColumns', type: 'number?', defaultValue: '—', note: 'Locks the column count (e.g. key/value grids).', editor: 'number', clearable: true, value: pg.maxColumns, onChange: value => { pg.maxColumns = value; pg.maxColumnsOn = true; }, toggle: snippetToggle(pg.maxColumnsOn, enabled => (pg.maxColumnsOn = enabled)), sync: { kind: 'number', pattern: /^\d+$/ } },
-    boolField({ name: 'showHeaders', defaultValue: 'true', note: 'Treats the first row as a header (bindable).', value: pg.showHeaders, onChange: v => (pg.showHeaders = v as TriState), enabled: pg.showHeadersOn, setEnabled: v => (pg.showHeadersOn = v) }),
-    sizeField({ note: 'Toolbar scale; numbers are icon-scale pixels interpolated between the steps.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
-    textField({ name: 'storageKey', type: 'string?', defaultValue: '—', note: 'Persists resized widths under this localStorage key.', value: pg.storageKey, onChange: v => (pg.storageKey = v), clearable: true, enabled: pg.storageKeyOn, setEnabled: v => (pg.storageKeyOn = v) }),
+    { name: 'maxColumns', type: 'number?', defaultValue: '—', note: 'Locks the column count (e.g. key/value grids).', editor: 'number', clearable: true, ...eye(pg.maxColumns), onChange: value => stage(pg.maxColumns, value), toggle: eyeToggle(pg.maxColumns), sync: { kind: 'number', pattern: /^\d+$/ } },
+    boolField({ name: 'showHeaders', defaultValue: 'true', note: 'Treats the first row as a header (bindable).', ...eyeFlag(pg.showHeaders) }),
+    sizeField({ note: 'Toolbar scale; numbers are icon-scale pixels interpolated between the steps.', ...eye(pg.size) }),
+    textField({ name: 'storageKey', type: 'string?', defaultValue: '—', note: 'Persists resized widths under this localStorage key.', clearable: true, ...eye(pg.storageKey) }),
     jsonField({
       name: 'value',
       type: 'string[][]?',
       note: 'Cells as rows of strings; the first row is the header when showHeaders is on. The eye applies the data (the grid renders empty while off).',
-      value: JSON.stringify(pg.value, null, 2),
+      value: JSON.stringify(pg.value.value, null, 2),
       onChange: (draft: string) => {
         const parsed = parseGridValueJson(draft)
-        if (parsed) {
-          pg.value = parsed
-          pg.valueEnabled = true
-        }
+        if (parsed) stage(pg.value, parsed)
       },
       dialog: { valid: (draft: string) => parseGridValueJson(draft) != null, invalidMessage: 'Invalid grid data JSON. Use an array of rows, each an array of strings.', title: 'Edit grid data' },
-      toggle: snippetToggle(pg.valueEnabled, enabled => (pg.valueEnabled = enabled)),
+      toggle: eyeToggle(pg.value),
     }),
     { name: 'onChange', type: '(rows: string[][]) => void', defaultValue: '—', note: 'Called with the whole grid after every edit.' },
   ])
@@ -163,12 +145,12 @@
     title="DataGrid"
     {code}
     onReset={clearPlayground}
-    scope={{ value: pg.value }}
+    scope={{ value: pg.value.value }}
 
     sync={{ tag: 'DataGrid' }}
-    scopeRefresh={() => [pg.value]}
+    scopeRefresh={() => [pg.value.value]}
   >
     <ShowcaseStage paneClass="h-72 w-full">
-      <DataGrid value={pg.valueEnabled ? pg.value : undefined} onChange={next => (pg.value = next)} {editable} {showHeaders} {hideHeaderToggle} columnLabels={pg.columnLabelsEnabled && pg.columnLabels.length ? pg.columnLabels : undefined} initialColumnWidths={pg.initialColumnWidthsEnabled && pg.initialColumnWidths.length ? pg.initialColumnWidths : undefined} maxColumns={demoMaxColumns} storageKey={pg.storageKeyOn && pg.storageKey ? pg.storageKey : undefined} size={demoSize} />
+      <DataGrid value={applied(pg.value)} onChange={next => (pg.value.value = next)} {editable} {showHeaders} {hideHeaderToggle} columnLabels={demoColumnLabels} initialColumnWidths={demoInitialColumnWidths} maxColumns={demoMaxColumns} storageKey={applied(pg.storageKey) || undefined} size={demoSize} />
     </ShowcaseStage>
   </ShowcasePage>

@@ -3,7 +3,8 @@
   import { getI18nContext } from '$lib/i18n.svelte'
   import ShowcasePage from '$showcase/ShowcasePage.svelte'
   import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { sizeField, snippetToggle } from '$showcase/snippet-field'
+  import { sizeField } from '$showcase/snippet-field'
+  import { applied, eye, eyeToggle, stage, staged } from '$showcase/staged'
   import { buildSpinnerSnippet } from './demo-snippet'
   import { parseSizeValue } from '$showcase/size-input'
 
@@ -15,22 +16,23 @@
   // Reset restores the defaults below. `pgTint` is
   // demo-only chrome with no prop row, so it keeps a settings panel below.
   const INITIAL = {
-    size: 'md',
-    sizeOn: false,
-    tint: '',
-    tintOn: false,
+    size: staged('md'),
+    tint: staged(''),
   }
   let pg = $state(structuredClone(INITIAL))
 
-  const demoSize = $derived(pg.sizeOn ? parseSizeValue(pg.size) : undefined)
-  const demoTint = $derived(pg.tintOn && pg.tint ? pg.tint : undefined)
+  const demoSize = $derived.by(() => {
+    const value = applied(pg.size)
+    return value === undefined ? undefined : parseSizeValue(value)
+  })
+  const demoTint = $derived(applied(pg.tint) || undefined)
   const reloadLabel = $derived(i18n.t('common.reload'))
 
   function clearPlayground() {
     pg = structuredClone(INITIAL)
   }
 
-  const code = $derived.by(() => buildSpinnerSnippet({ size: pg.size, sizeOn: pg.sizeOn, tint: pg.tint, tintOn: pg.tintOn }))
+  const code = $derived.by(() => buildSpinnerSnippet({ size: pg.size, tint: pg.tint }))
 
   
   // Each editable row declares its Value editor and its snippet write-back
@@ -42,8 +44,8 @@
   // a seed edit cannot split the tint back out, so it stays in the editor
   // while the Value column keeps the uncombined class.
   const fields: SyncableFieldConfig[] = $derived([
-    { name: 'className', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Color and extra classes; explicit size classes win over the size attributes.', editor: 'text', clearable: true, value: pg.tint, onChange: value => { pg.tint = value; pg.tintOn = true; }, toggle: snippetToggle(pg.tintOn, enabled => (pg.tintOn = enabled)) },
-    sizeField({ note: 'Width/height attributes (18/21/24/27/30px for names, passthrough for numbers); composes with className.', value: pg.size, onChange: v => (pg.size = v), enabled: pg.sizeOn, setEnabled: v => (pg.sizeOn = v) }),
+    { name: 'className', type: 'string?', defaultValue: "''", editorDefaultValue: '', note: 'Color and extra classes; explicit size classes win over the size attributes.', editor: 'text', clearable: true, ...eye(pg.tint), onChange: value => stage(pg.tint, value), toggle: eyeToggle(pg.tint) },
+    sizeField({ note: 'Width/height attributes (18/21/24/27/30px for names, passthrough for numbers); composes with className.', ...eye(pg.size) }),
   ])
 
   // The reload label reads the locale from scope, which reseeding never

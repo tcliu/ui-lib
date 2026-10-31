@@ -1,55 +1,35 @@
 import { describe, expect, it } from 'vitest'
 import { createSnippetComponent } from '$showcase/snippet-playground'
+import { staged } from '$showcase/staged'
 import { buildTextInputSnippet, type TextInputSnippetState } from './demo-snippet'
 
 function state(overrides: Partial<TextInputSnippetState> = {}): TextInputSnippetState {
   return {
-    ariaLabel: '',
-    ariaLabelOn: true,
-    value: '',
-    placeholder: '',
-    placeholderOn: false,
-    size: '',
-    sizeOn: false,
-    disabled: '',
-    disabledOn: true,
-    hideOutline: '',
-    hideOutlineOn: true,
-    readonly: '',
-    readonlyOn: true,
-    required: '',
-    requiredOn: true,
-    id: '',
-    idOn: false,
-    inputClass: '',
-    inputClassOn: false,
-    variant: 'bordered',
-    variantOn: false,
-    className: '',
-    classNameOn: true,
-    clearable: '',
-    clearableOn: true,
-    clearLabel: '',
-    clearLabelOn: false,
-    clearPlacement: '',
-    clearPlacementOn: false,
-    defaultValue: '',
-    defaultValueOn: false,
-    autocomplete: '',
-    autocompleteOn: false,
-    inputmode: '',
-    inputmodeOn: false,
-    name: '',
-    nameOn: false,
-    type: '',
-    typeOn: false,
-    inputStyle: '',
-    inputStyleOn: false,
-    wrapperStyle: '',
-    wrapperStyleOn: false,
-    leading: '',
-    trailing: '',
-    trailer: '',
+    ariaLabel: staged('', true),
+    value: staged(''),
+    placeholder: staged(''),
+    size: staged(''),
+    disabled: staged('', true),
+    hideOutline: staged('', true),
+    readonly: staged('', true),
+    required: staged('', true),
+    id: staged(''),
+    inputClass: staged(''),
+    variant: staged('bordered'),
+    className: staged('', true),
+    clearable: staged('', true),
+    clearLabel: staged(''),
+    clearPlacement: staged(''),
+    defaultValue: staged(''),
+    autocomplete: staged(''),
+    inputmode: staged(''),
+    name: staged(''),
+    type: staged(''),
+    inputStyle: staged(''),
+    wrapperStyle: staged(''),
+    leading: staged(''),
+    trailing: staged(''),
+    trailer: staged(''),
     ...overrides,
   }
 }
@@ -85,45 +65,26 @@ describe('buildTextInputSnippet', () => {
   it('emits a custom ariaLabel literal and text overrides while set', () => {
     const source = buildTextInputSnippet(
       state({
-        ariaLabel: 'Full name',
-        ariaLabelOn: true,
-        placeholder: 'Jane',
-        placeholderOn: true,
-        size: 'lg',
-        sizeOn: true,
-        disabled: 'yes',
-        disabledOn: true,
-        hideOutline: 'yes',
-        hideOutlineOn: true,
-        readonly: 'yes',
-        readonlyOn: true,
-        required: 'yes',
-        requiredOn: true,
-        inputClass: 'italic',
-        inputClassOn: true,
-        className: 'pr-12',
-        classNameOn: true,
-        clearable: 'yes',
-        clearableOn: true,
-        clearLabel: 'Clear field',
-        clearLabelOn: true,
-        clearPlacement: 'outside',
-        clearPlacementOn: true,
-        defaultValue: 'John',
-        defaultValueOn: true,
-        autocomplete: 'email',
-        autocompleteOn: true,
-        inputmode: 'numeric',
-        inputmodeOn: true,
-        name: 'fullName',
-        nameOn: true,
-        type: 'email',
-        typeOn: true,
-        inputStyle: 'width: 12rem',
-        inputStyleOn: true,
-        wrapperStyle: '--input-pad-x: 0.5rem',
-        wrapperStyleOn: true,
-        trailer: 'Edit',
+        ariaLabel: staged('Full name', true),
+        placeholder: staged('Jane', true),
+        size: staged('lg', true),
+        disabled: staged('yes', true),
+        hideOutline: staged('yes', true),
+        readonly: staged('yes', true),
+        required: staged('yes', true),
+        inputClass: staged('italic', true),
+        className: staged('pr-12', true),
+        clearable: staged('yes', true),
+        clearLabel: staged('Clear field', true),
+        clearPlacement: staged('outside', true),
+        defaultValue: staged('John', true),
+        autocomplete: staged('email', true),
+        inputmode: staged('numeric', true),
+        name: staged('fullName', true),
+        type: staged('email', true),
+        inputStyle: staged('width: 12rem', true),
+        wrapperStyle: staged('--input-pad-x: 0.5rem', true),
+        trailer: staged('Edit', true),
       }),
     )
     expect(source).toContain('ariaLabel="Full name"')
@@ -150,20 +111,13 @@ describe('buildTextInputSnippet', () => {
   it('omits component defaults (the Value column prefills them)', () => {
     const source = buildTextInputSnippet(
       state({
-        size: 'md',
-        sizeOn: true,
-        disabled: 'no',
-        disabledOn: true,
-        readonly: 'no',
-        readonlyOn: true,
-        required: 'no',
-        requiredOn: true,
-        clearable: 'no',
-        clearableOn: true,
-        clearPlacement: 'auto',
-        clearPlacementOn: true,
-        variant: 'bordered',
-        variantOn: true,
+        size: staged('md', true),
+        disabled: staged('no', true),
+        readonly: staged('no', true),
+        required: staged('no', true),
+        clearable: staged('no', true),
+        clearPlacement: staged('auto', true),
+        variant: staged('bordered', true),
       }),
     )
     expect(source).not.toMatch(/^\s*size=/m)
@@ -177,75 +131,72 @@ describe('buildTextInputSnippet', () => {
   })
 
   it('emits the embedded variant while it is set', () => {
-    const staged = buildTextInputSnippet(state({ variant: 'embedded' }))
-    expect(staged).not.toContain('variant=')
-    const applied = buildTextInputSnippet(state({ variant: 'embedded', variantOn: true }))
-    expect(applied).toContain('variant="embedded"')
+    const off = buildTextInputSnippet(state({ variant: staged('embedded') }))
+    expect(off).not.toContain('variant=')
+    const on = buildTextInputSnippet(state({ variant: staged('embedded', true) }))
+    expect(on).toContain('variant="embedded"')
   })
 
   it('compiles the generated snippet with the embedded variant', { timeout: 30000 }, async () => {
     const component = await createSnippetComponent(
-      buildTextInputSnippet(state({ variant: 'embedded', variantOn: true })),
+      buildTextInputSnippet(state({ variant: staged('embedded', true) })),
       { applyLabel: 'Name' },
     )
     expect(typeof component).toBe('function')
   })
 
   it('omits staged text props while the eye is off and emits them while on', () => {
-    const staged = buildTextInputSnippet(state({ placeholder: 'Jane', id: 'name', defaultValue: 'John' }))
-    expect(staged).not.toContain('placeholder=')
-    expect(staged).not.toContain('id=')
-    expect(staged).not.toContain('defaultValue=')
-    const applied = buildTextInputSnippet(
+    const off = buildTextInputSnippet(state({ placeholder: staged('Jane'), id: staged('name'), defaultValue: staged('John') }))
+    expect(off).not.toContain('placeholder=')
+    expect(off).not.toContain('id=')
+    expect(off).not.toContain('defaultValue=')
+    const on = buildTextInputSnippet(
       state({
-        placeholder: 'Jane',
-        placeholderOn: true,
-        id: 'name',
-        idOn: true,
-        defaultValue: 'John',
-        defaultValueOn: true,
+        placeholder: staged('Jane', true),
+        id: staged('name', true),
+        defaultValue: staged('John', true),
       }),
     )
-    expect(applied).toContain('placeholder="Jane"')
-    expect(applied).toContain('id="name"')
-    expect(applied).toContain('defaultValue="John"')
+    expect(on).toContain('placeholder="Jane"')
+    expect(on).toContain('id="name"')
+    expect(on).toContain('defaultValue="John"')
   })
 
   it('omits staged dropdown props while the eye is off and emits them while on', () => {
-    const staged = buildTextInputSnippet(state({ size: 'lg', clearPlacement: 'outside' }))
-    expect(staged).not.toMatch(/^\s*size=/m)
-    expect(staged).not.toContain('clearPlacement=')
-    const applied = buildTextInputSnippet(
-      state({ size: 'lg', sizeOn: true, clearPlacement: 'outside', clearPlacementOn: true }),
+    const off = buildTextInputSnippet(state({ size: staged('lg'), clearPlacement: staged('outside') }))
+    expect(off).not.toMatch(/^\s*size=/m)
+    expect(off).not.toContain('clearPlacement=')
+    const on = buildTextInputSnippet(
+      state({ size: staged('lg', true), clearPlacement: staged('outside', true) }),
     )
-    expect(applied).toContain('size="lg"')
-    expect(applied).toContain('clearPlacement="outside"')
+    expect(on).toContain('size="lg"')
+    expect(on).toContain('clearPlacement="outside"')
   })
 
   it('omits staged boolean and label props while the eye is off and emits them while on', () => {
-    const staged = buildTextInputSnippet(
-      state({ ariaLabel: 'Full name', ariaLabelOn: false, disabled: 'yes', disabledOn: false, readonly: 'yes', readonlyOn: false, required: 'yes', requiredOn: false, className: 'pr-12', classNameOn: false, clearable: 'yes', clearableOn: false }),
+    const off = buildTextInputSnippet(
+      state({ ariaLabel: staged('Full name'), disabled: staged('yes'), readonly: staged('yes'), required: staged('yes'), className: staged('pr-12'), clearable: staged('yes') }),
     )
-    expect(staged).toContain('ariaLabel={applyLabel}')
-    expect(staged).not.toContain('ariaLabel="Full name"')
-    expect(staged).not.toContain('disabled')
-    expect(staged).not.toContain('readonly')
-    expect(staged).not.toContain('required')
-    expect(staged).not.toContain('className=')
-    expect(staged).not.toContain('clearable')
-    const applied = buildTextInputSnippet(
-      state({ ariaLabel: 'Full name', ariaLabelOn: true, disabled: 'yes', disabledOn: true, readonly: 'yes', readonlyOn: true, required: 'yes', requiredOn: true, className: 'pr-12', classNameOn: true, clearable: 'yes', clearableOn: true }),
+    expect(off).toContain('ariaLabel={applyLabel}')
+    expect(off).not.toContain('ariaLabel="Full name"')
+    expect(off).not.toContain('disabled')
+    expect(off).not.toContain('readonly')
+    expect(off).not.toContain('required')
+    expect(off).not.toContain('className=')
+    expect(off).not.toContain('clearable')
+    const on = buildTextInputSnippet(
+      state({ ariaLabel: staged('Full name', true), disabled: staged('yes', true), readonly: staged('yes', true), required: staged('yes', true), className: staged('pr-12', true), clearable: staged('yes', true) }),
     )
-    expect(applied).toContain('ariaLabel="Full name"')
-    expect(applied).toContain('    disabled\n')
-    expect(applied).toContain('    readonly\n')
-    expect(applied).toContain('    required\n')
-    expect(applied).toContain('className="pr-12"')
-    expect(applied).toContain('    clearable\n')
+    expect(on).toContain('ariaLabel="Full name"')
+    expect(on).toContain('    disabled\n')
+    expect(on).toContain('    readonly\n')
+    expect(on).toContain('    required\n')
+    expect(on).toContain('className="pr-12"')
+    expect(on).toContain('    clearable\n')
   })
 
   it('emits adornment snippets with gutters while set', () => {
-    const source = buildTextInputSnippet(state({ leading: '$', trailing: 'USD' }))
+    const source = buildTextInputSnippet(state({ leading: staged('$', true), trailing: staged('USD', true) }))
     expect(source).toContain('{#snippet leading()}')
     expect(source).toContain('{#snippet trailing()}')
     expect(source).toContain('className="pl-8 pr-8"')
@@ -260,7 +211,7 @@ describe('buildTextInputSnippet', () => {
   })
 
   it('emits a trailer snippet with no input gutter', () => {
-    const source = buildTextInputSnippet(state({ trailer: 'Edit' }))
+    const source = buildTextInputSnippet(state({ trailer: staged('Edit', true) }))
     expect(source).toContain('{#snippet trailer()}')
     expect(source).toContain('Edit</span>')
     expect(source).toContain('</TextInput>')
@@ -269,12 +220,12 @@ describe('buildTextInputSnippet', () => {
   })
 
   it('emits a numeric size as an expression and omits invalid sizes', () => {
-    expect(buildTextInputSnippet(state({ size: '14', sizeOn: true }))).toContain('size={14}')
-    expect(buildTextInputSnippet(state({ size: 'huge' }))).not.toMatch(/^\s*size=/m)
+    expect(buildTextInputSnippet(state({ size: staged('14', true) }))).toContain('size={14}')
+    expect(buildTextInputSnippet(state({ size: staged('huge') }))).not.toMatch(/^\s*size=/m)
   })
 
   it('seeds the bound value as script-local state', () => {
-    const source = buildTextInputSnippet(state({ value: 'a"b' }))
+    const source = buildTextInputSnippet(state({ value: staged('a"b') }))
     expect(source).toContain('let value = $state("a\\"b")')
   })
 
@@ -284,7 +235,7 @@ describe('buildTextInputSnippet', () => {
   })
 
   it('compiles the generated snippet with adornments', { timeout: 30000 }, async () => {
-    const component = await createSnippetComponent(buildTextInputSnippet(state({ leading: '$' })), {
+    const component = await createSnippetComponent(buildTextInputSnippet(state({ leading: staged('$', true) })), {
       applyLabel: 'Name',
     })
     expect(typeof component).toBe('function')

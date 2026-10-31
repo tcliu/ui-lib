@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createSnippetComponent } from '$showcase/snippet-playground'
+import { staged } from '$showcase/staged'
 import {
   barHeight,
   buildBarChartSnippet,
@@ -11,17 +12,12 @@ import {
 
 function state(overrides: Partial<BarChartSnippetState> = {}): BarChartSnippetState {
   return {
-    columns: DEMO_COLUMNS,
-    size: '',
-    sizeOn: false,
-    height: '',
-    heightOn: false,
-    legend: '',
-    legendOn: false,
-    ariaLabel: '',
-    ariaLabelOn: false,
-    className: '',
-    classNameOn: false,
+    columns: staged(DEMO_COLUMNS, true),
+    size: staged(''),
+    height: staged(''),
+    legend: staged(''),
+    ariaLabel: staged(''),
+    className: staged(''),
     ...overrides,
   }
 }
@@ -41,7 +37,7 @@ describe('buildBarChartSnippet', () => {
 
   it('emits edited columns in place of the demo data', () => {
     const source = buildBarChartSnippet(
-      state({ columns: [{ label: 'Solo', segments: [{ value: 7, tone: 'rose', label: 'Pings' }] }] }),
+      state({ columns: staged([{ label: 'Solo', segments: [{ value: 7, tone: 'rose', label: 'Pings' }] }]) }),
     )
     expect(source).toContain('"label": "Solo"')
     expect(source).toContain('"tone": "rose"')
@@ -49,7 +45,7 @@ describe('buildBarChartSnippet', () => {
   })
 
   it('omits the component defaults (the Value column prefills them)', () => {
-    const source = buildBarChartSnippet(state({ size: 'md', sizeOn: true, legend: 'yes', legendOn: true }))
+    const source = buildBarChartSnippet(state({ size: staged('md', true), legend: staged('yes', true) }))
     expect(source).not.toContain('size=')
     expect(source).not.toContain('legend=')
     expect(source).not.toContain('height=')
@@ -58,12 +54,9 @@ describe('buildBarChartSnippet', () => {
   it('emits a non-default size, a numeric height, and No legend', () => {
     const source = buildBarChartSnippet(
       state({
-        size: 'lg',
-        sizeOn: true,
-        height: '180',
-        heightOn: true,
-        legend: 'no',
-        legendOn: true,
+        size: staged('lg', true),
+        height: staged('180', true),
+        legend: staged('no', true),
       }),
     )
     expect(source).toContain('size="lg"')
@@ -72,7 +65,7 @@ describe('buildBarChartSnippet', () => {
   })
 
   it('emits a numeric size as an expression and omits a non-integer height', () => {
-    const source = buildBarChartSnippet(state({ size: '20', sizeOn: true, height: '12.5', heightOn: true }))
+    const source = buildBarChartSnippet(state({ size: staged('20', true), height: staged('12.5', true) }))
     expect(source).toContain('size={20}')
     expect(source).not.toContain('height=')
   })
@@ -91,10 +84,8 @@ describe('buildBarChartSnippet', () => {
   it('emits ariaLabel and className only while set', () => {
     const set = buildBarChartSnippet(
       state({
-        ariaLabel: 'Daily activity',
-        ariaLabelOn: true,
-        className: 'mt-2',
-        classNameOn: true,
+        ariaLabel: staged('Daily activity', true),
+        className: staged('mt-2', true),
       }),
     )
     expect(set).toContain('ariaLabel="Daily activity"')
