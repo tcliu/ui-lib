@@ -55,10 +55,13 @@
   // of snapping to tiers. The raw size flows to the inner page-size dropdown,
   // which interpolates it through the same dimension. The line and vertical
   // padding are the page-size dropdown trigger's own, so every page block
-  // lands on its height (see `pgStyle` below); the direction glyphs ride a
-  // trimmed share of the icon slot (0.75×, as `NumberInput`'s steppers do) so
-  // they read lighter than the page numbers.
-  const PG_RATIOS = { line: SELECT_RATIOS.line, padY: SELECT_RATIOS.padY, padX: 0.75, font: 0.875, icon: 0.75 }
+  // lands on its height (see `pgStyle` below); the horizontal padding stays
+  // inside that height once a one-digit label, the padding, and the border are
+  // added, so the resting cell is floored square by `--pg-btn` instead of being
+  // widened by a single digit. The direction glyphs ride a trimmed share of the
+  // icon slot (0.75×, as `NumberInput`'s steppers do) so they read lighter than
+  // the page numbers.
+  const PG_RATIOS = { line: SELECT_RATIOS.line, padY: SELECT_RATIOS.padY, padX: 0.7, font: 0.875, icon: 0.75 }
 
   const pgMetrics = $derived(dimensionMetrics(size, PG_RATIOS))
   // A page block shares the page-size dropdown trigger's box — the select line

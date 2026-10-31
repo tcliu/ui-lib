@@ -128,11 +128,50 @@ test('numeric size scales the SelectDropdown trigger by a constant ratio', async
   rows.forEach((row, i) => {
     const size = SIZES[i]!
     expect(row.font / size).toBeCloseTo(0.8125, 2)
-    expect(row.padLeft / size).toBeCloseTo(0.75, 2)
+    // The trigger box is the text field's own box: same horizontal and vertical
+    // padding, so the two land on one height in a shared row.
+    expect(row.padLeft / size).toBeCloseTo(0.5625, 2)
+    expect(row.padTop / size).toBeCloseTo(0.39375, 2)
     // The right gutter is derived from the padding, not tuned beside it: the
     // computed right padding must track `padLeft × SELECT_GUTTER_SHARE`.
-    expect(row.padRight / size).toBeCloseTo(0.375, 2)
+    expect(row.padRight / size).toBeCloseTo(0.28125, 2)
     expect(row.minWidth / size).toBeCloseTo(7, 2)
+  })
+})
+
+// The select box takes the input chrome's font, line, and padding, so a trigger
+// and a text field sit level in one row: their rendered boxes must match at
+// every size, not merely their emitted vars (jsdom cannot prove that).
+test('a SelectDropdown trigger and a TextInput render the same box height', async ({ page }) => {
+  const snippet = [
+    '<script>',
+    '  let v = $state("two")',
+    '  const opts = ["one", "two"]',
+    '</script>',
+    '<div class="flex flex-col items-start gap-2">',
+    ...SIZES.flatMap(s => [
+      `  <TextInput value="x" ariaLabel="i${s}" size={${s}} />`,
+      `  <SelectDropdown activeValue={v} ariaLabel="s${s}" size={${s}} options={opts} onSelect={n => (v = n)} />`,
+    ]),
+    '</div>',
+  ].join('\n')
+  await applySnippet(page, '/components/select-dropdown', snippet, SIZES.length, 'button[role=combobox]')
+
+  const boxes = await showcaseDemo(page)
+    .locator('input[aria-label^="i"], button[role=combobox]')
+    .evaluateAll(nodes =>
+      nodes.map(el => {
+        const box = el.getBoundingClientRect()
+        return { label: el.getAttribute('aria-label') ?? '', height: box.height }
+      }),
+    )
+  expect(boxes).toHaveLength(SIZES.length * 2)
+  SIZES.forEach(size => {
+    const field = boxes.find(box => box.label === `i${size}`)
+    const trigger = boxes.find(box => box.label === `s${size}`)
+    expect(field, `text field at size ${size}`).toBeTruthy()
+    expect(trigger, `select trigger at size ${size}`).toBeTruthy()
+    expect(trigger!.height).toBeCloseTo(field!.height, 1)
   })
 })
 

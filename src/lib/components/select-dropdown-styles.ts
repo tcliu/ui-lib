@@ -1,3 +1,5 @@
+import { INPUT_RATIOS } from './input-chrome'
+
 // Numeric sizes are positions on the shared scale (`$lib/size-scale`): names
 // are aliases for its steps and every metric below interpolates from the
 // dimension, so nothing below is keyed on a size name.
@@ -5,12 +7,15 @@
 // Every metric is a fixed ratio of the size dimension (the icon is the
 // dimension itself), so each keeps a constant metric:dimension ratio across the
 // range. The min-width floors every surface so an empty query cannot collapse
-// the trigger.
+// the trigger. Font, line, and both paddings are the text field's own ratios
+// (`INPUT_RATIOS`) rather than tuned beside them, so a trigger — and the option
+// rows sharing this box — land on the same box height and the same text inset
+// as `TextInput` at every size, and the two can never drift apart.
 export const SELECT_RATIOS = {
-  font: 0.8125,
-  line: 1.1875,
-  padX: 0.75,
-  padY: 0.5,
+  font: INPUT_RATIOS.font,
+  line: INPUT_RATIOS.line,
+  padX: INPUT_RATIOS.padX,
+  padY: INPUT_RATIOS.padY,
   minW: 7,
   gap: 0.375,
   icon: 1,
