@@ -20,7 +20,7 @@ function scratch(files) {
 // map `svelte-kit sync` writes for the project.
 const ALIASES = new Map([
   ['$lib', 'src/lib'],
-  ['$showcase', 'src/showcase'],
+  ['$showcase', 'src/app/showcase'],
   ['$appLib', 'src/app'],
 ])
 const gate = root => collectViolations(root, ALIASES)
@@ -33,14 +33,14 @@ describe('readAliases', () => {
           paths: {
             $lib: ['../src/lib'],
             '$lib/*': ['../src/lib/*'],
-            $showcase: ['../src/showcase'],
+            $showcase: ['../src/app/showcase'],
           },
         },
       }),
     })
     expect([...readAliases(root)]).toEqual([
       ['$lib', 'src/lib'],
-      ['$showcase', 'src/showcase'],
+      ['$showcase', 'src/app/showcase'],
     ])
   })
 
@@ -130,8 +130,8 @@ describe('collectViolations', () => {
 
   it('accepts a $showcase import that points back at the test directory', () => {
     const root = scratch({
-      'src/showcase/snippet-build.ts': 'export const escape = 1\n',
-      'src/showcase/snippet-build.test.ts': "import { escape } from '$showcase/snippet-build'\n",
+      'src/app/showcase/playground/snippet-build.ts': 'export const escape = 1\n',
+      'src/app/showcase/playground/snippet-build.test.ts': "import { escape } from '$showcase/playground/snippet-build'\n",
     })
     expect(gate(root)).toEqual([])
   })

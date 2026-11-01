@@ -8,7 +8,7 @@
   import TrimIcon from '$lib/icons/TrimIcon.svelte'
   import UndoIcon from '$lib/icons/UndoIcon.svelte'
   import RedoIcon from '$lib/icons/RedoIcon.svelte'
-  import { getI18nContext } from '$lib/i18n.svelte'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
   const i18n = getI18nContext()
 
   interface Props {

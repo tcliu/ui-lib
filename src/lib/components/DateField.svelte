@@ -14,7 +14,7 @@
   import CaretLeftIcon from '$lib/icons/CaretLeftIcon.svelte'
   import CaretRightIcon from '$lib/icons/CaretRightIcon.svelte'
   import CloseIcon from '$lib/icons/CloseIcon.svelte'
-  import { getI18nContext } from '$lib/i18n.svelte'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
   import type { SizeInput } from '$lib/size-scale'
   import Button from './Button.svelte'
   import NumberInput from './NumberInput.svelte'

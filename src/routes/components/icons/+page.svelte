@@ -1,13 +1,13 @@
 <script lang="ts">
   import FormField from '$lib/components/FormField.svelte'
   import SelectDropdown from '$lib/components/SelectDropdown.svelte'
-  import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$showcase/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { enumField, sizeField } from '$showcase/snippet-field'
-  import { applied, eye, eyeToggle, stage, staged } from '$showcase/staged'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
+  import { enumField, sizeField } from '$showcase/playground/snippet-field'
+  import { applied, eye, eyeToggle, stage, staged } from '$showcase/playground/staged'
   import { ALL_VARIANTS, buildIconsSnippet, ICON_COMPONENTS, ICON_ENTRIES, iconClassFor, iconLabel, variantFor } from './demo-snippet'
-  import { parseSizeValue } from '$showcase/size-input'
+  import { parseSizeValue } from '$showcase/playground/size-input'
 
   const i18n = getI18nContext()
 

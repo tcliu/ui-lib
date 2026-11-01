@@ -5,9 +5,9 @@
 // round-trip through the shared structure-value helpers, which the playground
 // resolves from its module registry.
 
-import { extractScriptConst } from '$showcase/snippet-attributes'
-import { boolAttrLine, sizeAttrLine, textAttrLine, type TriState } from '$showcase/snippet-build'
-import type { Staged } from '$showcase/staged'
+import { extractScriptConst } from '$showcase/playground/snippet-attributes'
+import { boolAttrLine, sizeAttrLine, textAttrLine, type TriState } from '$showcase/playground/snippet-build'
+import type { Staged } from '$showcase/playground/staged'
 
 export interface StructureTreeSnippetState {
   value: Staged<unknown>

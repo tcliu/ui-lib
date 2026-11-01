@@ -4,13 +4,13 @@
   import FormDialog from '$lib/components/FormDialog.svelte'
   import { DIALOG_SIZE_VARIANTS } from '$lib/components/BaseDialog.svelte'
   import TextInput from '$lib/components/TextInput.svelte'
-  import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$showcase/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { type TriState } from '$showcase/snippet-build'
-  import { enumField, textField, boolField, snippetDialog, snippetField } from '$showcase/snippet-field'
-  import { applied, appliedFlag, eye, eyeFlag, eyeToggle, stage, staged } from '$showcase/staged'
-  import { buildHeaderLine, parseHeaderMarkup } from '$showcase/snippet-header'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
+  import { type TriState } from '$showcase/playground/snippet-build'
+  import { enumField, textField, boolField, snippetDialog, snippetField } from '$showcase/playground/snippet-field'
+  import { applied, appliedFlag, eye, eyeFlag, eyeToggle, stage, staged } from '$showcase/playground/staged'
+  import { buildHeaderLine, parseHeaderMarkup } from '$showcase/playground/snippet-header'
   import {
     buildEditActionsMarkup,
     buildEditBodyMarkup,

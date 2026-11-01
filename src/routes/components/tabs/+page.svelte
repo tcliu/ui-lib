@@ -3,12 +3,12 @@
   import FormField from '$lib/components/FormField.svelte'
   import SelectDropdown from '$lib/components/SelectDropdown.svelte'
   import Tabs from '$lib/components/Tabs.svelte'
-  import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$showcase/ShowcasePage.svelte'
-  import { parseSizeValue } from '$showcase/size-input'
-  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { applied, eye, eyeToggle, stage, staged } from '$showcase/staged'
-  import { textField, sizeField } from '$showcase/snippet-field'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
+  import { parseSizeValue } from '$showcase/playground/size-input'
+  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
+  import { applied, eye, eyeToggle, stage, staged } from '$showcase/playground/staged'
+  import { textField, sizeField } from '$showcase/playground/snippet-field'
   import { buildTabsSnippet } from './demo-snippet'
 
   const i18n = getI18nContext()

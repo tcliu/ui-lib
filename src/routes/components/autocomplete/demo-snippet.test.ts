@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { createSnippetComponent } from '$showcase/snippet-playground'
-import { staged } from '$showcase/staged'
+import { createSnippetComponent } from '$showcase/playground/snippet-playground'
+import { staged } from '$showcase/playground/staged'
 import { buildAutoCompleteSnippet, type AutoCompleteSnippetState } from './demo-snippet'
 
 function state(overrides: Partial<AutoCompleteSnippetState> = {}): AutoCompleteSnippetState {

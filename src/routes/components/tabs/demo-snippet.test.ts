@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { staged } from '$showcase/staged'
+import { staged } from '$showcase/playground/staged'
 import { STYLED_HEADER, buildTabsSnippet, type TabsSnippetState } from './demo-snippet'
 
 function state(overrides: Partial<TabsSnippetState> = {}): TabsSnippetState {

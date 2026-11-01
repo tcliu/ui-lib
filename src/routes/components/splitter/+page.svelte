@@ -1,12 +1,12 @@
 <script lang="ts">
   import Splitter from '$lib/components/Splitter.svelte'
-  import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$showcase/ShowcasePage.svelte'
-  import ShowcaseStage from '$showcase/ShowcaseStage.svelte'
-  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { applied, appliedFlag, eye, eyeFlag, eyeToggle, stage, staged } from '$showcase/staged'
-  import { type TriState } from '$showcase/snippet-build'
-  import { textField, boolField, enumField } from '$showcase/snippet-field'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
+  import ShowcaseStage from '$showcase/shell/ShowcaseStage.svelte'
+  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
+  import { applied, appliedFlag, eye, eyeFlag, eyeToggle, stage, staged } from '$showcase/playground/staged'
+  import { type TriState } from '$showcase/playground/snippet-build'
+  import { textField, boolField, enumField } from '$showcase/playground/snippet-field'
   import {
     SPLITTER_MAIN,
     SPLITTER_PANE,

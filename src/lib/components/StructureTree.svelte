@@ -1,7 +1,7 @@
 <script lang="ts">
   import StructureNode, { STRUCTURE_TEXT_CLASS, structureStyle } from './StructureNode.svelte'
   import { containerSummary, isContainer, valueClass, valueText } from './structure-value'
-  import { getI18nContext } from '$lib/i18n.svelte'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
   import type { SizeInput } from '$lib/size-scale'
   const i18n = getI18nContext()
 

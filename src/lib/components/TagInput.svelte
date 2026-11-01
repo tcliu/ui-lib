@@ -8,7 +8,7 @@
   import { DEFAULT_CHIP_PANEL_CLASS } from '$lib/dropdown-chrome'
   import { useListbox } from '$lib/actions/use-listbox.svelte'
   import { matchLabelParts } from '$lib/actions/option-index'
-  import { getI18nContext } from '$lib/i18n.svelte'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
   import { FONT_RATIO, type SizeInput } from '$lib/size-scale'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
   import type { ClearableProps } from './clearable-props'

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { staged } from '$showcase/staged'
+import { staged } from '$showcase/playground/staged'
 import { DEFAULT_TEXT, buildEditableTextSnippet, type EditableTextSnippetState } from './demo-snippet'
 
 function state(overrides: Partial<EditableTextSnippetState> = {}): EditableTextSnippetState {

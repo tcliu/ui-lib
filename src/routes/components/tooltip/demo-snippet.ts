@@ -2,8 +2,8 @@
 // playground form state: the section regenerates the editor text from this, so
 // the editor always shows the markup behind the demo above.
 
-import { escapeAttr } from '$showcase/snippet-build'
-import type { Staged } from '$showcase/staged'
+import { escapeAttr } from '$showcase/playground/snippet-build'
+import type { Staged } from '$showcase/playground/staged'
 
 export interface TooltipSnippetState {
   // Required content: the eye resets to the default label instead of omitting

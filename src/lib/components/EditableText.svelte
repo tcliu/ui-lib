@@ -9,7 +9,7 @@
   import { INPUT_METRIC_CLASS, INPUT_RATIOS } from './input-chrome'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
   import TextInput from './TextInput.svelte'
-  import { getI18nContext } from '$lib/i18n.svelte'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
   const i18n = getI18nContext()
 
   // Text-field metrics follow TextInput's shared base chrome (`input-chrome.ts`

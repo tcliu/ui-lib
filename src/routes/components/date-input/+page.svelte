@@ -1,13 +1,13 @@
 <script lang="ts">
   import DateInput from '$lib/components/DateInput.svelte'
   import { DEFAULT_DATE_FORMAT } from '$lib/components/date-input-core'
-  import { DATE_STAGE_CONTENT, DATE_STAGE_DEFAULT_WIDTH, DATE_STAGE_MIN_WIDTH } from '$showcase/date-stage'
-  import ShowcasePage from '$showcase/ShowcasePage.svelte'
-  import { parseSizeValue } from '$showcase/size-input'
-  import type { TriState } from '$showcase/snippet-build'
-  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { boolField, sizeField, textField } from '$showcase/snippet-field'
-  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, stage, staged } from '$showcase/staged'
+  import { DATE_STAGE_CONTENT, DATE_STAGE_DEFAULT_WIDTH, DATE_STAGE_MIN_WIDTH } from '$showcase/shell/date-stage'
+  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
+  import { parseSizeValue } from '$showcase/playground/size-input'
+  import type { TriState } from '$showcase/playground/snippet-build'
+  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
+  import { boolField, sizeField, textField } from '$showcase/playground/snippet-field'
+  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, stage, staged } from '$showcase/playground/staged'
   import { buildDateInputSnippet } from './demo-snippet'
 
   // Customizer playground state. The single value and the range pair are

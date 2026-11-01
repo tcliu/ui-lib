@@ -16,8 +16,8 @@ import {
   textAttrLine,
   unescapeAttr,
   type TriState,
-} from '$showcase/snippet-build'
-import type { Staged } from '$showcase/staged'
+} from '$showcase/playground/snippet-build'
+import type { Staged } from '$showcase/playground/staged'
 
 export const MENU_STAGE_CONTENT = 'flex items-center gap-4'
 export const MENU_STAGE_DEFAULT_WIDTH = 560

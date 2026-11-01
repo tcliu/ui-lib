@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { SHOWCASE_COMPONENTS } from '../src/showcase/showcase-components'
+import { SHOWCASE_COMPONENTS } from '../src/app/showcase/index/showcase-components'
 import {
   hideCodeToggle,
   normalizeDemoText,

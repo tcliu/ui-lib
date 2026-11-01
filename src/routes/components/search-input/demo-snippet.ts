@@ -8,8 +8,8 @@ import {
   sizeAttrLine,
   textAttrLine,
   type TriState,
-} from '$showcase/snippet-build'
-import type { Staged } from '$showcase/staged'
+} from '$showcase/playground/snippet-build'
+import type { Staged } from '$showcase/playground/staged'
 
 export interface SearchInputSnippetState {
   ariaLabel: Staged<string>

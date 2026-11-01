@@ -1,6 +1,6 @@
 <script lang="ts">
   import Resizable from '$lib/components/Resizable.svelte'
-  import { createAppI18n, setI18nContext } from '$lib/i18n.svelte'
+  import { createAppI18n, setI18nContext } from '$lib/i18n/store.svelte'
 
   // Realistic provider so the handles resolve labels without the fallback warning.
   setI18nContext(createAppI18n())

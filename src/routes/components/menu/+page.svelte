@@ -1,13 +1,13 @@
 <script lang="ts">
   import Menu, { type MenuItemState } from '$lib/components/Menu.svelte'
   import KebabIcon from '$lib/icons/KebabIcon.svelte'
-  import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$showcase/ShowcasePage.svelte'
-  import { parseSizeValue } from '$showcase/size-input'
-  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import type { SnippetAttribute } from '$showcase/snippet-attributes'
-  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/staged'
-  import { enumField, textField, boolField, jsonField, snippetDialog, snippetField, sizeField } from '$showcase/snippet-field'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
+  import { parseSizeValue } from '$showcase/playground/size-input'
+  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
+  import type { SnippetAttribute } from '$showcase/playground/snippet-attributes'
+  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/playground/staged'
+  import { enumField, textField, boolField, jsonField, snippetDialog, snippetField, sizeField } from '$showcase/playground/snippet-field'
   import {
     buildMenuIconMarkup,
     buildMenuSnippet,
@@ -21,7 +21,7 @@
     seedMenuItems,
     type MenuDemoItem,
   } from './demo-snippet'
-  import { type TriState } from '$showcase/snippet-build'
+  import { type TriState } from '$showcase/playground/snippet-build'
 
   const i18n = getI18nContext()
 

@@ -3,12 +3,12 @@
   import Button from '$lib/components/Button.svelte'
   import Buttons from '$lib/components/Buttons.svelte'
   import Copyable from '$lib/components/Copyable.svelte'
-  import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$showcase/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { enumField, textField, snippetDialog, snippetField } from '$showcase/snippet-field'
-  import { applied, eye, eyeToggle, stage, staged } from '$showcase/staged'
-  import { buildHeaderLine, parseHeaderMarkup } from '$showcase/snippet-header'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
+  import { enumField, textField, snippetDialog, snippetField } from '$showcase/playground/snippet-field'
+  import { applied, eye, eyeToggle, stage, staged } from '$showcase/playground/staged'
+  import { buildHeaderLine, parseHeaderMarkup } from '$showcase/playground/snippet-header'
   import {
     DISMISS_HANDLER,
     buildBaseDialogSnippet,

@@ -2,7 +2,7 @@
 // shared `FieldTable` defaults to English literals so it carries no locale
 // contract; pages spread this one-liner to keep the translated headers the
 // old `PropsTable` rendered.
-import type { getI18nContext } from '$lib/i18n.svelte'
+import type { getI18nContext } from '$lib/i18n/store.svelte'
 
 export function docsHeaders(i18n: ReturnType<typeof getI18nContext>) {
   return {

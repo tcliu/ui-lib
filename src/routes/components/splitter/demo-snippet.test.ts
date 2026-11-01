@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { STAGE_PANE, STAGE_ROW } from '$showcase/resizable-stage'
-import { staged } from '$showcase/staged'
+import { STAGE_PANE, STAGE_ROW } from '$showcase/shell/resizable-stage'
+import { staged } from '$showcase/playground/staged'
 import { SPLITTER_MAIN, SPLITTER_PANE, SPLITTER_WRAPPER, buildSplitterSnippet, parseSplitterBound, splitterPreset, type SplitterSnippetState } from './demo-snippet'
 
 const unset: SplitterSnippetState = { orientation: staged('', true), unit: staged('', true), ariaLabel: staged('', true), className: staged('', true), lineClass: staged('', true), invert: staged(''), min: staged('', true), max: staged('', true) }

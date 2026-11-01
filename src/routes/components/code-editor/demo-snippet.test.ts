@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { staged } from '$showcase/staged'
+import { staged } from '$showcase/playground/staged'
 import { DEFAULT_CONTENT, buildCodeEditorSnippet, type CodeEditorSnippetState } from './demo-snippet'
 
 // A base state with every value unset; each case overrides only what it

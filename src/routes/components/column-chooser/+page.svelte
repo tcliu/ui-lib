@@ -1,11 +1,11 @@
 <script lang="ts">
   import ColumnChooser from '$lib/components/ColumnChooser.svelte'
-  import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$showcase/ShowcasePage.svelte'
-  import { parseSizeValue } from '$showcase/size-input'
-  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { applied, eye, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/staged'
-  import { sizeField, jsonField } from '$showcase/snippet-field'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
+  import { parseSizeValue } from '$showcase/playground/size-input'
+  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
+  import { applied, eye, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/playground/staged'
+  import { sizeField, jsonField } from '$showcase/playground/snippet-field'
   import {
     buildColumnChooserSnippet,
     CHOOSER_LABEL,

@@ -1,13 +1,13 @@
 <script lang="ts">
   import Checkbox from '$lib/components/Checkbox.svelte'
-  import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$showcase/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { textField, boolField, sizeField } from '$showcase/snippet-field'
-  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/staged'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
+  import { textField, boolField, sizeField } from '$showcase/playground/snippet-field'
+  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/playground/staged'
   import { buildCheckboxSnippet } from './demo-snippet'
-  import { type TriState } from '$showcase/snippet-build'
-  import { parseSizeValue } from '$showcase/size-input'
+  import { type TriState } from '$showcase/playground/snippet-build'
+  import { parseSizeValue } from '$showcase/playground/size-input'
 
   const i18n = getI18nContext()
 

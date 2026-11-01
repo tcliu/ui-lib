@@ -32,7 +32,7 @@
   import { onDestroy, onMount, tick } from 'svelte'
   import CloseIcon from '$lib/icons/CloseIcon.svelte'
   import { positionPanel } from '$lib/position-panel.svelte'
-  import { getI18nContext } from '$lib/i18n.svelte'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
   const i18n = getI18nContext()
 
   // Panel footprint steps. `xs`–`7xl` are the shared container scale (the same

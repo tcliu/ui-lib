@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { getI18nContext } from '$lib/i18n.svelte'
-  import { SHOWCASE_COMPONENTS } from './showcase-components'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import { SHOWCASE_COMPONENTS } from '../index/showcase-components'
 
   const i18n = getI18nContext()
   const firstSlug = SHOWCASE_COMPONENTS[0]?.slug ?? 'base-dialog'

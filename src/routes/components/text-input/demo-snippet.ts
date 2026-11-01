@@ -1,8 +1,8 @@
 // Show-code source for the TextInput demo section. Pure string building over
 // the playground form state: the section regenerates the editor text from this,
 // so the editor always shows the markup behind the demo above.
-import { boolAttrLine, enumAttrLine, escapeAttr, escapeText, sizeAttrLine, textAttrLine, type TriState } from '$showcase/snippet-build'
-import { applied, type Staged } from '$showcase/staged'
+import { boolAttrLine, enumAttrLine, escapeAttr, escapeText, sizeAttrLine, textAttrLine, type TriState } from '$showcase/playground/snippet-build'
+import { applied, type Staged } from '$showcase/playground/staged'
 
 export interface TextInputSnippetState {
   ariaLabel: Staged<string>

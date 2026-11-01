@@ -11,7 +11,7 @@
   import { CHIP_PANEL_BASE } from '$lib/dropdown-chrome'
   import type { SelectOption } from './SelectDropdown.svelte'
   import type { ClearableProps } from './clearable-props'
-  import { getI18nContext } from '$lib/i18n.svelte'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
   import type { SizeInput } from '$lib/size-scale'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
 

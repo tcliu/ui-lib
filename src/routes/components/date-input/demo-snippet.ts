@@ -10,10 +10,10 @@
 // snippet carries only the demo content the page authors inside that frame.
 
 import { DEFAULT_DATE_FORMAT } from '$lib/components/date-input-core'
-import { DATE_STAGE_CONTENT } from '$showcase/date-stage'
-import { boolAttrLine, escapeAttr, type TriState } from '$showcase/snippet-build'
-import { sizeAttributeFragment } from '$showcase/size-input'
-import type { Staged } from '$showcase/staged'
+import { DATE_STAGE_CONTENT } from '$showcase/shell/date-stage'
+import { boolAttrLine, escapeAttr, type TriState } from '$showcase/playground/snippet-build'
+import { sizeAttributeFragment } from '$showcase/playground/size-input'
+import type { Staged } from '$showcase/playground/staged'
 
 export interface DateInputSnippetState {
   value: Staged<string>

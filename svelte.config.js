@@ -25,7 +25,7 @@ const config = {
     : {}),
   kit: {
     alias: {
-      $showcase: fileURLToPath(new URL('./src/showcase', import.meta.url)),
+      $showcase: fileURLToPath(new URL('./src/app/showcase', import.meta.url)),
       $appLib: fileURLToPath(new URL('./src/app', import.meta.url)),
     },
     adapter: useCloudflare ? adapterCloudflare() : adapterVercel({ runtime: 'nodejs24.x' }),

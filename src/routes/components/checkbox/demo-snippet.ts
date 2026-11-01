@@ -2,8 +2,8 @@
 // the playground form state: the section regenerates the editor text from
 // this, so the editor always shows the markup behind the demo above.
 
-import { boolAttrLine, escapeAttr, sizeAttrLine, textAttrLine, type TriState } from '$showcase/snippet-build'
-import type { Staged } from '$showcase/staged'
+import { boolAttrLine, escapeAttr, sizeAttrLine, textAttrLine, type TriState } from '$showcase/playground/snippet-build'
+import type { Staged } from '$showcase/playground/staged'
 
 export interface CheckboxSnippetState {
   label: Staged<string>

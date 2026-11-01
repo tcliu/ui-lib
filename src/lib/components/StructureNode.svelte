@@ -69,7 +69,7 @@
   } from './structure-value'
   import { createInlineEdit } from './use-structure-inline-edit.svelte'
   import { createStructureObjectEditor } from './use-structure-object-editor.svelte'
-  import { getI18nContext } from '$lib/i18n.svelte'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
   const i18n = getI18nContext()
 
   interface Props {

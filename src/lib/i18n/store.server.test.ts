@@ -5,8 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('esm-env', async (importOriginal) => ({ ...(await importOriginal()), BROWSER: false }))
 
 import { flushSync, mount, unmount } from 'svelte'
-import Harness from './i18n.harness.svelte'
-import { createAppI18n, setDefaultI18nStore, type I18nStore } from './i18n.svelte'
+import Harness from './store.harness.svelte'
+import { createAppI18n, setDefaultI18nStore, type I18nStore } from './store.svelte'
 
 let mounted: { instance: ReturnType<typeof mount>; target: HTMLDivElement }[] = []
 

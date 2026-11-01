@@ -16,7 +16,7 @@
   import EditIcon from '$lib/icons/EditIcon.svelte'
   import EyeIcon from '$lib/icons/EyeIcon.svelte'
   import EyeSlashIcon from '$lib/icons/EyeSlashIcon.svelte'
-  import { getI18nContext } from '$lib/i18n.svelte'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
 
   export type FieldEditor = 'text' | 'textarea' | 'number' | 'enum' | 'size' | 'boolean' | 'options-json' | 'snippet'
 

@@ -13,7 +13,7 @@
   import { createTableScrollSync } from './use-table-scroll-sync.svelte'
   import { resolveColumnWidths } from '$lib/components/column-helpers'
   import Tooltip from './Tooltip.svelte'
-  import { getI18nContext } from '$lib/i18n.svelte'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
 
   export type SortDirection = 'asc' | 'desc'
 

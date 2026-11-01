@@ -1,13 +1,13 @@
 <script lang="ts">
   import EditableText from '$lib/components/EditableText.svelte'
-  import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$showcase/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/staged'
-  import { textField, boolField, sizeField } from '$showcase/snippet-field'
-  import { type TriState } from '$showcase/snippet-build'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
+  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/playground/staged'
+  import { textField, boolField, sizeField } from '$showcase/playground/snippet-field'
+  import { type TriState } from '$showcase/playground/snippet-build'
   import { DEFAULT_CLASS_NAME, DEFAULT_MAX_WIDTH, DEFAULT_TEXT, buildEditableTextSnippet } from './demo-snippet'
-  import { parseSizeValue } from '$showcase/size-input'
+  import { parseSizeValue } from '$showcase/playground/size-input'
 
   const i18n = getI18nContext()
 

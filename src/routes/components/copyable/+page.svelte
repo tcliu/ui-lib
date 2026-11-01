@@ -1,11 +1,11 @@
 <script lang="ts">
   import Copyable from '$lib/components/Copyable.svelte'
-  import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$showcase/ShowcasePage.svelte'
-  import { parseSizeValue } from '$showcase/size-input'
-  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { enumField, textField, sizeField, snippetField } from '$showcase/snippet-field'
-  import { applied, eye, eyeToggle, stage, staged } from '$showcase/staged'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
+  import { parseSizeValue } from '$showcase/playground/size-input'
+  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
+  import { enumField, textField, sizeField, snippetField } from '$showcase/playground/snippet-field'
+  import { applied, eye, eyeToggle, stage, staged } from '$showcase/playground/staged'
   import { buildCopyableSnippet } from './demo-snippet'
 
   const i18n = getI18nContext()

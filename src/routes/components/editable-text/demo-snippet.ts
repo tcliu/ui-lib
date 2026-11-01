@@ -4,8 +4,8 @@
 // value lives in a local `$state` so the live snippet keeps its own edits and
 // still starts from the demo's displayed text.
 
-import { boolAttrLine, sizeAttrLine, textAttrLine, type TriState } from '$showcase/snippet-build'
-import type { Staged } from '$showcase/staged'
+import { boolAttrLine, sizeAttrLine, textAttrLine, type TriState } from '$showcase/playground/snippet-build'
+import type { Staged } from '$showcase/playground/staged'
 
 // Default value shared by the page and the snippet so the static demo and the
 // Show-code source start from the same text.

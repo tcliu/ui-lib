@@ -1,13 +1,13 @@
 <script lang="ts">
   import SelectDropdown, { type SelectOption } from '$lib/components/SelectDropdown.svelte'
-  import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$showcase/ShowcasePage.svelte'
-  import { parseSizeValue } from '$showcase/size-input'
-  import { parseOptionArrayJson } from '$showcase/option-json'
-  import { enumField, textField, boolField, sizeField, jsonField } from '$showcase/snippet-field'
-  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/staged'
-  import { type TriState } from '$showcase/snippet-build'
-  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
+  import { parseSizeValue } from '$showcase/playground/size-input'
+  import { parseOptionArrayJson } from '$showcase/playground/option-json'
+  import { enumField, textField, boolField, sizeField, jsonField } from '$showcase/playground/snippet-field'
+  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/playground/staged'
+  import { type TriState } from '$showcase/playground/snippet-build'
+  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
   import {
     buildSelectDropdownSnippet,
     SELECT_STAGE_DEFAULT_WIDTH,

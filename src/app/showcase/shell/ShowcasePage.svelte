@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy, untrack, type Snippet } from 'svelte'
-  import { getI18nContext } from '$lib/i18n.svelte'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
   import Button from '$lib/components/Button.svelte'
   import Buttons from '$lib/components/Buttons.svelte'
   import FieldTable, { type FieldConfig } from '$lib/components/FieldTable.svelte'
@@ -13,9 +13,9 @@
   import ResetIcon from '$lib/icons/ResetIcon.svelte'
   import RelatedNav from './RelatedNav.svelte'
   import { docsHeaders } from './docs-headers'
-  import { SnippetPreview } from './use-snippet-preview.svelte'
-  import { syncFieldsOf, type SyncField } from './snippet-sync'
-  import { useScopeRefresh } from './use-scope-refresh.svelte'
+  import { SnippetPreview } from '../playground/use-snippet-preview.svelte'
+  import { syncFieldsOf, type SyncField } from '../playground/snippet-sync'
+  import { useScopeRefresh } from '../playground/use-scope-refresh.svelte'
 
   // Optional resizable demo stage. The page supplies only its demo content and
   // the frame bounds; the shell owns the host/Resizable/pane chrome, so the

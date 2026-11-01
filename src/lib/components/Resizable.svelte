@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
-  import { getI18nContext } from '$lib/i18n.svelte'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
   import { createDragResize, type ResizeEdge } from './use-resize-drag.svelte'
   const i18n = getI18nContext()
 

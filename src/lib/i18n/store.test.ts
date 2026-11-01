@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushSync, mount, unmount } from 'svelte'
-import Harness from './i18n.harness.svelte'
-import { createAppI18n, createI18nStore, setDefaultI18nStore, type I18nStore } from './i18n.svelte'
+import Harness from './store.harness.svelte'
+import { createAppI18n, createI18nStore, setDefaultI18nStore, type I18nStore } from './store.svelte'
 
 // The fallback registration lives on the global symbol registry, not in this
 // module: that is what lets the app's copy and the package's copy agree. The

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getI18nContext } from '$lib/i18n.svelte'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
   import type CodeEditor from './CodeEditor.svelte'
   import type { ComponentProps } from 'svelte'
   import { CODE_EDITOR_CLASS, CODE_EDITOR_CONTAINER_CLASS } from './code-editor-styles'

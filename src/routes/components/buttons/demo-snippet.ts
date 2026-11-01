@@ -2,9 +2,9 @@
 // playground form state: the section regenerates the editor text from this, so
 // the editor always shows the markup behind the demo above.
 
-import { escapeAttr, escapeRawLine } from '$showcase/snippet-build'
-import { sizeAttributeFragment } from '$showcase/size-input'
-import type { Staged } from '$showcase/staged'
+import { escapeAttr, escapeRawLine } from '$showcase/playground/snippet-build'
+import { sizeAttributeFragment } from '$showcase/playground/size-input'
+import type { Staged } from '$showcase/playground/staged'
 
 export type ButtonsButtonVariant = 'primary' | 'secondary' | 'danger' | 'outline' | 'ghost'
 

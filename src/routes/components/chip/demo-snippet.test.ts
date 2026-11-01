@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { staged } from '$showcase/staged'
+import { staged } from '$showcase/playground/staged'
 import { DEFAULT_CHIP_CLASS, buildChipSnippet, type ChipSnippetState } from './demo-snippet'
 
 function state(overrides: Partial<ChipSnippetState> = {}): ChipSnippetState {

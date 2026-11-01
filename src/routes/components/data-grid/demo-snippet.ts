@@ -3,9 +3,9 @@
 // the editor always shows the markup behind the demo above. The cell data is a
 // scope binding, so the snippet mirrors the live demo's controlled editing.
 
-import { boolAttrLine, sizeAttrLine, textAttrLine, type TriState } from '$showcase/snippet-build'
-import type { Staged } from '$showcase/staged'
-import { stageStaticCloseLines, stageStaticOpenLines } from '$showcase/resizable-stage'
+import { boolAttrLine, sizeAttrLine, textAttrLine, type TriState } from '$showcase/playground/snippet-build'
+import type { Staged } from '$showcase/playground/staged'
+import { stageStaticCloseLines, stageStaticOpenLines } from '$showcase/shell/resizable-stage'
 
 // Default grid contents, shared by the page and the snippet's scope so the
 // static demo, Show-code, and live render start from the same cells.

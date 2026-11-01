@@ -12,8 +12,8 @@ import {
   sizeAttrLine,
   textAttrLine,
   type TriState,
-} from '$showcase/snippet-build'
-import type { Staged } from '$showcase/staged'
+} from '$showcase/playground/snippet-build'
+import type { Staged } from '$showcase/playground/staged'
 
 export const CHIP_STAGE_DEFAULT_WIDTH = 560
 export const CHIP_STAGE_MIN_WIDTH = 240

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getI18nContext, setI18nContext, type I18nStore } from './i18n.svelte'
+  import { getI18nContext, setI18nContext, type I18nStore } from './store.svelte'
 
   // A provider plus the read a child renders with: the two must name the same
   // context. `provide` off exercises the provider-less fallback. Context is

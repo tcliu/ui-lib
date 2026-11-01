@@ -4,11 +4,11 @@
   import MenuIcon from '$lib/icons/MenuIcon.svelte'
   import type { AppShellHeaderApi } from '$lib/app-shell'
   import Resizable from '$lib/components/Resizable.svelte'
-  import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$showcase/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { applied, eye, eyeToggle, stage, staged } from '$showcase/staged'
-  import { enumField, textField, jsonField, snippetDialog, snippetField } from '$showcase/snippet-field'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
+  import { applied, eye, eyeToggle, stage, staged } from '$showcase/playground/staged'
+  import { enumField, textField, jsonField, snippetDialog, snippetField } from '$showcase/playground/snippet-field'
   import {
     APP_SHELL_HEADER_MARKUP,
     appShellChildrenMarkup,

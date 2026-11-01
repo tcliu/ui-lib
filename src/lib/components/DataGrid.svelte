@@ -27,7 +27,7 @@
   import GridToolbar from './GridToolbar.svelte'
   import CaretDownIcon from '$lib/icons/CaretDownIcon.svelte'
   import CaretUpIcon from '$lib/icons/CaretUpIcon.svelte'
-  import { getI18nContext } from '$lib/i18n.svelte'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
   const i18n = getI18nContext()
 
   interface Props {

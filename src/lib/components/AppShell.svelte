@@ -2,7 +2,7 @@
   import type { Snippet } from 'svelte'
   import { getContext, onMount, setContext } from 'svelte'
   import { slide } from 'svelte/transition'
-  import { getI18nContext } from '$lib/i18n.svelte'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
   import {
     APP_SHELL_DEFAULT_WIDTH,
     APP_SHELL_DESKTOP_BREAKPOINT,

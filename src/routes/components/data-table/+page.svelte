@@ -1,12 +1,12 @@
 <script lang="ts">
   import DataTable, { type DataTableColumn } from '$lib/components/DataTable.svelte'
-  import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$showcase/ShowcasePage.svelte'
-  import ShowcaseStage from '$showcase/ShowcaseStage.svelte'
-  import { parseSizeValue } from '$showcase/size-input'
-  import { textField, boolField, sizeField, jsonField, snippetDialog } from '$showcase/snippet-field'
-  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/staged'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
+  import ShowcaseStage from '$showcase/shell/ShowcaseStage.svelte'
+  import { parseSizeValue } from '$showcase/playground/size-input'
+  import { textField, boolField, sizeField, jsonField, snippetDialog } from '$showcase/playground/snippet-field'
+  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
+  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/playground/staged'
   import {
     buildDataTableSnippet,
     DEFAULT_ROWS,
@@ -18,7 +18,7 @@
     TABLE_STAGE_PANE_FILL,
     type DemoRow,
   } from './demo-snippet'
-  import { type TriState } from '$showcase/snippet-build'
+  import { type TriState } from '$showcase/playground/snippet-build'
 
   const i18n = getI18nContext()
 

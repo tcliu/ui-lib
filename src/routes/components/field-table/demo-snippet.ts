@@ -8,8 +8,8 @@
 // customized key renders as a literal.
 
 import type { FieldEditor, FieldOption } from '$lib/components/FieldTable.svelte'
-import { sizeAttrLine, type TriState } from '$showcase/snippet-build'
-import type { Staged } from '$showcase/staged'
+import { sizeAttrLine, type TriState } from '$showcase/playground/snippet-build'
+import type { Staged } from '$showcase/playground/staged'
 
 // One sample field's data-only facets, shared by the static demo and the
 // Show-code builder so the two can never drift. Each consumer supplies only

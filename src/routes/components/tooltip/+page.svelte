@@ -1,11 +1,11 @@
 <script lang="ts">
   import Button from '$lib/components/Button.svelte'
   import Tooltip from '$lib/components/Tooltip.svelte'
-  import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$showcase/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { applied, eye, eyeResetToggle, stage, staged } from '$showcase/staged'
-  import { enumField, textField, snippetField } from '$showcase/snippet-field'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
+  import { applied, eye, eyeResetToggle, stage, staged } from '$showcase/playground/staged'
+  import { enumField, textField, snippetField } from '$showcase/playground/snippet-field'
   import { buildTooltipSnippet } from './demo-snippet'
 
   const i18n = getI18nContext()

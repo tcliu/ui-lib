@@ -3,8 +3,8 @@
 // this, so the editor always shows the markup behind the demo above. The
 // paging interaction state (total, pageSize, currentPage) reads from scope,
 // so it has no sync write-back on the page.
-import { escapeAttr, escapeText, sizeAttrLine, textAttrLine } from '$showcase/snippet-build'
-import type { Staged } from '$showcase/staged'
+import { escapeAttr, escapeText, sizeAttrLine, textAttrLine } from '$showcase/playground/snippet-build'
+import type { Staged } from '$showcase/playground/staged'
 import type { PaginationLabels } from '$lib/components/pagination-labels'
 
 export interface PaginationSnippetState {

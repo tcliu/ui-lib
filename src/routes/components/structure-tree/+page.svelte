@@ -5,12 +5,12 @@
     DEFAULT_LEAF_ROW_CLASS,
   } from '$lib/components/StructureNode.svelte'
   import { isContainer, renameKeyAtPath, setAtPath } from '$lib/components/structure-value'
-  import ShowcasePage from '$showcase/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { boolField, jsonField, sizeField } from '$showcase/snippet-field'
-  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/staged'
-  import { parseSizeValue } from '$showcase/size-input'
-  import { type TriState } from '$showcase/snippet-build'
+  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
+  import { boolField, jsonField, sizeField } from '$showcase/playground/snippet-field'
+  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/playground/staged'
+  import { parseSizeValue } from '$showcase/playground/size-input'
+  import { type TriState } from '$showcase/playground/snippet-build'
   import {
     buildStructureTreeSnippet,
     DEFAULT_TREE_VALUE,

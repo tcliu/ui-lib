@@ -2,8 +2,8 @@
 // playground form state: the section regenerates the editor text from this, so
 // the editor always shows the markup behind the demo above.
 
-import { enumAttrLine, escapeAttr, sizeAttrLine, textAttrLine } from '$showcase/snippet-build'
-import type { Staged } from '$showcase/staged'
+import { enumAttrLine, escapeAttr, sizeAttrLine, textAttrLine } from '$showcase/playground/snippet-build'
+import type { Staged } from '$showcase/playground/staged'
 export interface ToastSnippetState {
   message: Staged<string>
   toastType: Staged<string>

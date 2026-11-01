@@ -2,7 +2,7 @@
   import type { Snippet } from 'svelte'
   import Button from '$lib/components/Button.svelte'
   import CopyIcon from '$lib/icons/CopyIcon.svelte'
-  import { getI18nContext } from '$lib/i18n.svelte'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
   import { copyToClipboard } from './copy-to-clipboard'
   import type { SizeInput } from '$lib/size-scale'
 

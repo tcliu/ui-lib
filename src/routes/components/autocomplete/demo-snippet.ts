@@ -4,8 +4,8 @@
 //
 // The resize harness is ShowcasePage-owned chrome (its `stage` prop), so the
 // snippet carries only the demo content the page authors inside that frame.
-import { boolAttrLine, enumAttrLine, sizeAttrLine, textAttrLine, type TriState } from '$showcase/snippet-build'
-import type { Staged } from '$showcase/staged'
+import { boolAttrLine, enumAttrLine, sizeAttrLine, textAttrLine, type TriState } from '$showcase/playground/snippet-build'
+import type { Staged } from '$showcase/playground/staged'
 
 export const AUTOCOMPLETE_STAGE_DEFAULT_WIDTH = 560
 export const AUTOCOMPLETE_STAGE_MIN_WIDTH = 240

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { staged } from '$showcase/staged'
-import { type TriState } from '$showcase/snippet-build'
+import { staged } from '$showcase/playground/staged'
+import { type TriState } from '$showcase/playground/snippet-build'
 import { buildConfirmDialogSnippet } from './demo-snippet'
 
 describe('buildConfirmDialogSnippet', () => {

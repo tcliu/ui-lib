@@ -3,9 +3,9 @@
 // the editor always shows the markup behind the demo above.
 
 import type { Component } from 'svelte'
-import { escapeAttr } from '$showcase/snippet-build'
-import { sizeAttributeFragment } from '$showcase/size-input'
-import type { Staged } from '$showcase/staged'
+import { escapeAttr } from '$showcase/playground/snippet-build'
+import { sizeAttributeFragment } from '$showcase/playground/size-input'
+import type { Staged } from '$showcase/playground/staged'
 import { VARIANT_LADDERS } from '$lib/icons/icon-variants'
 import AutoRefreshIcon from '$lib/icons/AutoRefreshIcon.svelte'
 import BrowseIcon from '$lib/icons/BrowseIcon.svelte'

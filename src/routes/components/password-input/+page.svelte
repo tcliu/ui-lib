@@ -1,14 +1,14 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import type { HTMLInputAttributes } from 'svelte/elements'
-  import { getI18nContext } from '$lib/i18n.svelte'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
   import PasswordInput from '$lib/components/PasswordInput.svelte'
-  import ShowcasePage from '$showcase/ShowcasePage.svelte'
-  import { parseSizeValue } from '$showcase/size-input'
-  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, stage, staged } from '$showcase/staged'
-  import { enumField, textField, boolField, sizeField } from '$showcase/snippet-field'
-  import { type TriState } from '$showcase/snippet-build'
+  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
+  import { parseSizeValue } from '$showcase/playground/size-input'
+  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
+  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, stage, staged } from '$showcase/playground/staged'
+  import { enumField, textField, boolField, sizeField } from '$showcase/playground/snippet-field'
+  import { type TriState } from '$showcase/playground/snippet-build'
   import { buildPasswordInputSnippet } from './demo-snippet'
 
   const i18n = getI18nContext()

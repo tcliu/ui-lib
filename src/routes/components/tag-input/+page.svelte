@@ -1,12 +1,12 @@
 <script lang="ts">
   import TagInput from '$lib/components/TagInput.svelte'
-  import { getI18nContext } from '$lib/i18n.svelte'
-  import ShowcasePage from '$showcase/ShowcasePage.svelte'
-  import { parseSizeValue } from '$showcase/size-input'
-  import { type SyncableFieldConfig } from '$showcase/snippet-sync'
-  import { enumField, textField, boolField, sizeField, jsonField, snippetField } from '$showcase/snippet-field'
-  import { applied, appliedFlag, eye, eyeFlag, eyeToggle, stage, staged } from '$showcase/staged'
-  import { type TriState } from '$showcase/snippet-build'
+  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
+  import { parseSizeValue } from '$showcase/playground/size-input'
+  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
+  import { enumField, textField, boolField, sizeField, jsonField, snippetField } from '$showcase/playground/snippet-field'
+  import { applied, appliedFlag, eye, eyeFlag, eyeToggle, stage, staged } from '$showcase/playground/staged'
+  import { type TriState } from '$showcase/playground/snippet-build'
   import {
     buildTagInputSnippet,
     parseTagListJson,
