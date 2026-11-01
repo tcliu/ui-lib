@@ -790,7 +790,7 @@ export function deleteBranch(root, branch) {
 }
 
 // Create a worktree and run the standard post-create setup shared by
-// tools/create-worktree.mjs and the worktree-manager TUI: register the
+// the create-worktree script and the worktree-manager TUI: register the
 // branch, copy gitignored dev files, write DEV_TAG, and carry the main
 // checkout's uncommitted work. Throws with `phase: 'register' | 'setup'` so
 // callers can report the failing step; a setup failure leaves the partial
