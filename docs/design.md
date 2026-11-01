@@ -10,7 +10,7 @@ UI Library is a component showcase: a responsive Svelte 5 / SvelteKit /
 Tailwind CSS v4 app cataloguing the shared primitives in
 `src/lib/components/` — one route per component
 (`src/routes/components/<slug>/+page.svelte`, indexed by
-`SHOWCASE_COMPONENTS` in `src/showcase/showcase-components.ts`) with a live
+`SHOWCASE_COMPONENTS` in `src/app/showcase/index/showcase-components.ts`) with a live
 Show-code playground on every page. It supports multiple themes.
 
 ## Layout

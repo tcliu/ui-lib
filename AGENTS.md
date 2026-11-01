@@ -53,16 +53,18 @@ Project-specific development conventions for the UI Library web app.
   or server stay in `devDependencies`.
 - This project is the canonical source for the shared UI surface; fix a shared component here first, then port it, never fork without syncing back.
 - Reuse the existing shared control for a concern instead of building a parallel one; keep app-private UI out of the shared directories (inventory in `ARCHITECTURE.md`).
+- Give `src/lib` a folder only when at least two of its members import one another — the i18n store with the dictionaries it loads (`i18n/`), the typed storage store over the generic one it builds on (`storage/`); a module with no intra-folder import stays at the `src/lib` root, and no folder groups by kind alone (`types/`, `utils/`).
 - `server/` stays under `src/lib` so SvelteKit's `$lib/server` guard covers it;
-  the package prunes it from `dist/`. `showcase/` and `app/` are app-private and
-  live in `src/showcase` and `src/app`, outside the package source. An
-  app-only module belongs in one of those two.
+  the package prunes it from `dist/`. `src/app` is the app-private root: `state/`
+  for runtime state (theme, web-settings), `showcase/` for the demo harness split
+  into `shell/`, `playground/`, and `index/`. An app-only module belongs in one of
+  those sub-folders, outside the package source.
 - An app-owned value rides a shared default plus an app-supplied override (a configure call or a data file read at the call site): the shared module stays byte-identical and the package owns it, so the app supplies data instead of owning code. A per-app literal inside a shared module is the exception the parity gate has to whitelist; prefer the override shape.
 - A keyed `localStorage` surface layers a generic store and a typed wrapper instead of hand-rolling prefix logic: `createPersistStore(prefixes)` owns the chain (first prefix writes, later ones are migrated read fallbacks, removal clears all) and the domain module (`useColumnWidthStorage`) owns parsing and appends its canonical prefix. The caller passes its own prefixes; no module-level `configure` call or global registry, so behavior never depends on startup order.
 - A module whose only per-app part is such a value becomes package-owned (its marker drops); a marker survives only for app content — dictionary bodies, project config data, a package entry — where no call site can supply it.
 - Shared components never traverse or manipulate the DOM; sanctioned exceptions and the permitted `svelte-ignore` suppressions are in `ARCHITECTURE.md`. Never suppress another `a11y_*` warning or `state_referenced_locally`.
 - Plain-text hints use the `tooltip` prop with the shared `Tooltip` component; a disabled `Button`'s tooltip rides its non-disabled wrapper (disabled triggers fire no events).
-- `npm run check` enforces shared parity; a change is complete only once siblings are re-ported or the app declares the fork and its reason in its own `shared-parity.json`. Mechanism in `ARCHITECTURE.md`.
+- `npm run check` enforces shared parity; a change is complete only once siblings are re-ported or the app declares the fork and its reason in its own `shared-parity.json`. The gate also resolves each sibling's package imports back to canonical source, so renaming a shared module fails it until every consumer stops asking for the old path. Mechanism in `ARCHITECTURE.md`.
 - A module only the server runtime and the scripts use lives under `src/lib/server/`, which SvelteKit keeps out of the client bundle; the scripts import the same file, so the two runtimes cannot drift. Mechanism in `ARCHITECTURE.md`.
 - Keep shared scripts byte-identical: read per-app values from ungated app files, never hardcode an app name or path; project-owned data stays out of gated directories.
 - Tag editing stays one shared control (`TagInput`); map an app's richer tag
@@ -179,7 +181,7 @@ Project-specific development conventions for the UI Library web app.
 - Never assign a constructed collection (`new Set()`/`new Map()`) to snippet state; the compiler emits a legacy `init()` that throws at root mount.
 - The playground executes arbitrary JavaScript in the page and is not a sandbox:
   never hand it app secrets, stores, or fetch wrappers.
-- Register every page in `src/showcase/showcase-components.ts` and start a new page
+- Register every page in `src/app/showcase/index/showcase-components.ts` and start a new page
   from a close existing one; the add-a-page checklist is in `ARCHITECTURE.md`
   (Showcase component pages).
 - The Icons page indexes the whole set: every glyph under `src/lib/icons` gets an entry, in name order, and the snippet playground's preamble imports every glyph, so a directory-parity spec fails when either list misses one.
@@ -196,13 +198,13 @@ Project-specific development conventions for the UI Library web app.
 - The only eye-free dialog row is data applied elsewhere with nothing of its own to preserve (data-table `chooserColumns`); record the reason in a code comment.
 - Build a required dialog row's eye with `eyeResetToggle` (off resets committed data to the row default); an optional row's uses `eyeToggle`. A row whose demo binds the state also uses `eyeResetToggle` (off resets the bound state to its default; the binding stays). Mechanism in `ARCHITECTURE.md`.
 - Declare a `text`/`number`/`tri` row and let `syncFieldsOf` derive its absent-attribute fallback; never hand-write a `sync.set` repeating it (`set` stays for a bespoke setter) — except an eye row prefilling a literal default, which takes a custom `read` (absent resolves to current state) and `set` (default maps back to unset) so compiling never stages the default into the form.
-- Model a curated playground prop as one `Staged<T>` pair (`staged(value, on)` from `$showcase/staged.ts`), never a value plus an `On` flag: read it with `applied`/`appliedFlag`, wire a row with `eye`/`eyeFlag`/`eyeToggle`/`eyeResetToggle`, commit in place with `stage`, and never reassign the pair. Mechanism in `ARCHITECTURE.md`.
-- A Show-code builder takes the pair per prop and applies the eye gate once through a shared `$showcase/snippet-build.ts` attribute-line helper, so the page passes its state straight through instead of flattening `value`/`on` at the call site.
+- Model a curated playground prop as one `Staged<T>` pair (`staged(value, on)` from `$showcase/playground/staged.ts`), never a value plus an `On` flag: read it with `applied`/`appliedFlag`, wire a row with `eye`/`eyeFlag`/`eyeToggle`/`eyeResetToggle`, commit in place with `stage`, and never reassign the pair. Mechanism in `ARCHITECTURE.md`.
+- A Show-code builder takes the pair per prop and applies the eye gate once through a shared `$showcase/playground/snippet-build.ts` attribute-line helper, so the page passes its state straight through instead of flattening `value`/`on` at the call site.
 - A `text`/`number` Value cell with a Value editor sets `clearable`; `TextArea` has no clearable.
 - A Value cell's Type takes a `?` suffix only when the prop is optional, so a required value keeps the bare type.
 - A Value input's placeholder is the literal default when the prop has one, otherwise absent, never a meta-hint like `(none)` or `(built-in)`.
 - Build a dialog-backed prop row with the shared `snippetField`/`jsonField`/`eyeToggle`/`eyeResetToggle`/`snippetDialog` helpers rather than inline row literals; the row's seed and commit stay page-specific. Mechanism in `ARCHITECTURE.md`.
-- Build a `size`/`text`/`boolean`/`enum` prop row with the shared `sizeField`/`textField`/`boolField`/`enumField` helper rather than an inline literal; Show-code builders share escaping and tri-state helpers (`escapeAttr`/`escapeText`/`escapeRawLine`/`unescapeAttr`/`TriState`/`flagOn`) and the pair-gated attribute lines (`textAttrLine`/`enumAttrLine`/`boolAttrLine`/`sizeAttrLine`/`popupAttrLine`) from `$showcase/snippet-build.ts` instead of re-declaring them per page.
+- Build a `size`/`text`/`boolean`/`enum` prop row with the shared `sizeField`/`textField`/`boolField`/`enumField` helper rather than an inline literal; Show-code builders share escaping and tri-state helpers (`escapeAttr`/`escapeText`/`escapeRawLine`/`unescapeAttr`/`TriState`/`flagOn`) and the pair-gated attribute lines (`textAttrLine`/`enumAttrLine`/`boolAttrLine`/`sizeAttrLine`/`popupAttrLine`) from `$showcase/playground/snippet-build.ts` instead of re-declaring them per page.
 - The shell owns the snippet preview: a page passes `scope`/`sync` (plus `scopeRefresh`/`scopeRefreshWhen` when its snippet reads scope keys the seed omits) to `ShowcasePage` rather than constructing a `SnippetPreview` itself.
 - Seed a dialog-backed Value cell from the fallback-resolved demo value, not the raw override; map the untouched default back to unset on commit.
 - A dialog-backed row must round-trip every editable facet its dialog presents, with `dialog.valid` rejecting any shape it cannot reproduce; cover each with a round-trip spec.

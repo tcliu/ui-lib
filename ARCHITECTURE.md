@@ -26,13 +26,22 @@ ui-lib/
 │   │   │   └── <slug>/+page.svelte # One showcase page per component
 │   │   └── api/
 │   │       └── info/+server.ts    # GET /api/info — project self-card for discovery
-│   ├── app/                      # App-only chrome (theme state, web-settings storage); never published
-│   ├── showcase/                 # Showcase shell (ShowcasePage/ShowcaseStage, snippet playground, component index)
+│   ├── app/                      # App-private code; never published
+│   │   ├── state/                # Runtime app state (theme, web-settings storage)
+│   │   └── showcase/             # Showcase harness: the demo shell, not the package
+│   │       ├── shell/            # ShowcasePage/ShowcaseStage, nav, stage metrics
+│   │       ├── playground/       # Snippet playground (build/sync/source/staged)
+│   │       └── index/            # Component registry + picker
 │   └── lib/
 │       ├── components/           # Presentational UI components (canonical shared surface)
 │       ├── actions/              # Shared interaction helpers (type-ahead, option match, list key-nav)
 │       ├── icons/                # Shared icon glyphs
-│       ├── locales/              # i18n dictionaries (en, zh-CN, zh-TW)
+│       ├── i18n/                 # App i18n store and the dictionaries it loads
+│       │   ├── store.svelte.ts   # Store, context, label resolution
+│       │   └── locales/          # i18n dictionaries (en, zh-CN, zh-TW)
+│       ├── storage/              # Keyed localStorage stores
+│       │   ├── persist-storage.ts # Generic prefix-chain store
+│       │   └── column-width-storage.ts # Typed column-width store over it
 │       ├── server/               # Server-only: SvelteKit keeps this out of the client bundle
 │       │   ├── card.ts           # Shared card contract (normalize + resolve)
 │       │   ├── cron-expression.ts # Shared cron parser (scheduler apps)
@@ -41,7 +50,6 @@ ui-lib/
 │       │   ├── sql-rewrite.mjs   # Postgres→SQLite token rewrite (app runtime + scripts)
 │       │   └── d1-binding.mjs    # D1 binding name (deploy flow + runtime selector)
 │       ├── app-shell.ts          # AppShell geometry + drawer-mode ruler (768px container breakpoint)
-│       ├── i18n.svelte.ts        # App i18n store + context
 │       └── styles.css            # Tailwind entry, theme palette overrides
 ├── static/
 │   └── favicon.svg               # Served as-is (browser tab mark)
@@ -82,9 +90,9 @@ ui-lib/
    Read this first to see the top bar (picker toggle, title, theme/language
    menus), the searchable component list, and the AppShell that separates them.
 
-2. **`src/showcase/showcase-components.ts`** — the showcase index (`SHOWCASE_COMPONENTS`)
+2. **`src/app/showcase/index/showcase-components.ts`** — the showcase index (`SHOWCASE_COMPONENTS`)
    and browsing groups (`SHOWCASE_COMPONENT_GROUPS`); `/` redirects to
-   `/components/base-dialog`. Helpers in `src/showcase/` (`ShowcasePage`,
+   `/components/base-dialog`. Helpers in `src/app/showcase/` (`ShowcasePage`,
    `SnippetPreview` +
    `snippet-playground.ts`, `FieldTable` rows) compose each page.
 
@@ -96,7 +104,7 @@ Showcase pages are thin composition over the shared surface:
 Route (components/<slug>/+page.svelte + colocated demo-snippet.ts)
   │  composes
   ▼
-Showcase shell (src/showcase/) + FieldTable rows
+Showcase shell (src/app/showcase/) + FieldTable rows
   │  drive
   ▼
 Shared components (src/lib/components/) + actions/i18n/theme helpers
@@ -196,7 +204,11 @@ the gated surface (everything under `src/lib` and `scripts/`, minus the
 app-owned files and tests) and byte-compares it against each
 registered sibling, resolving each sibling's own module references so a
 present-but-unreferenced port is flagged as dead. It fails on a divergence or a
-dead port. The gate carries no path list: a file that owns a per-app value marks its own
+dead port. It also resolves a sibling's imports of the published package to the
+source file the tarball ships that path from (the prune rules it applies live in
+`tools/lib/package-surface.mjs`), so renaming a module fails the gate for every
+consumer still asking for the old path instead of breaking that app's build after
+the publish. The gate carries no path list: a file that owns a per-app value marks its own
 header `// parity: app-owned — reason`, and an app that must diverge declares the
 fork and its reason in its own `shared-parity.json`. A declaration that matches
 canonical again is reported as stale.
@@ -226,12 +238,12 @@ src/lib/**                       canonical shared source
   any warning remains that it cannot prove moot. The alternative — the
   `$app/server` guard import the warning suggests — would put a SvelteKit runtime
   import into shared source that plain-`node` scripts import. The app-private
-  `showcase/` and `app/` live outside `src/lib`.
+  `app/` (state and showcase) lives outside `src/lib`.
   The exports map is seven patterns: `.`, `./*`, `./components/use-*.svelte`,
   `./components/*.svelte`, `./icons/*.svelte`, `./styles.css`,
   `./package.json`. The more specific `use-*` pattern outranks the directory
   wildcard for a rune module under `components/`, resolving it to `.svelte.js`;
-  root and `actions/` rune modules ride the `./*` catch-all. A rune module
+  root, `actions/`, and `i18n/` rune modules ride the `./*` catch-all. A rune module
   outside those shapes needs an explicit entry, and the package check catches
   the miss because every shipped file must resolve.
 - **The manifest** — the root `package.json` carries the package identity,
@@ -239,7 +251,7 @@ src/lib/**                       canonical shared source
   `publishConfig`, `peerDependencies.svelte`, and the runtime dependencies. It is
   not generated, so `npm publish` reads exactly what the repository carries.
 - **The aliases** — `svelte.config.js` keeps the app's `kit` config (with
-  `$showcase` → `src/showcase` and `$appLib` → `src/app`) and adds top-level
+  `$showcase` → `src/app/showcase` and `$appLib` → `src/app`) and adds top-level
   `$lib`/`$app/environment` aliases only when `PACKAGE=1`, because
   `svelte-package` reads top-level aliases while SvelteKit accepts them only
   under `kit`. `$app/environment` maps to `app-environment.ts`, which re-exports
@@ -717,7 +729,7 @@ of building a parallel control.
   `ConfirmDialog` renders its message as the body with the confirm row in
   `footer`.
 - **i18n** — a primitive resolves its label as `$derived(prop ?? i18n.t('key'))`
-  against `src/lib/locales/` (nested `as const` trees with a dotted-path
+  against `src/lib/i18n/locales/` (nested `as const` trees with a dotted-path
   `MessageKey`; non-default locales are typed `LocaleMessages<typeof en>` so a
   missing key fails the build). A consuming app's dictionaries define `common.*`,
   `number.*`, `dropdown.*`, `pagination.*`, `tabs.label`, `chart.label`,
@@ -739,7 +751,7 @@ exceptions, and the pattern must not be copied into feature code:
 `focus-within.ts`, `drag-close-down.ts`, `caret-at-end-on-keyboard-focus.ts`,
 `Tooltip.svelte`, `AppShell.svelte`,
 `use-grid-autoscroll.svelte.ts`, `grid-cell-refs.ts`,
-`use-table-scroll-sync.svelte.ts`, `src/app/theme.svelte.ts`, and `i18n.svelte.ts`.
+`use-table-scroll-sync.svelte.ts`, `src/app/state/theme.svelte.ts`, and `i18n/store.svelte.ts`.
 
 One component carries a single, named exception rather than a general licence:
 `StructureNode.svelte`'s inline-edit text measurement writes and clears a hidden
@@ -754,13 +766,13 @@ DataGrid (`a11y_no_static_element_interactions`) subtrees; never suppress anothe
 ## Showcase component pages
 
 Each component has one route, `src/routes/components/<slug>/+page.svelte`,
-registered in `src/showcase/showcase-components.ts`: `SHOWCASE_COMPONENTS`
+registered in `src/app/showcase/index/showcase-components.ts`: `SHOWCASE_COMPONENTS`
 (`{ slug, name }[]`) is the index and route source (`/` redirects to
 `/components/base-dialog`), and `SHOWCASE_COMPONENT_GROUPS` (`Record<group, slug[]>`) declares the
 relatedness behind each page's `RelatedNav` chips — two components are related
 when they share a group, so the relation is symmetric by construction.
 
-A page composes shared pieces from `src/showcase/`:
+A page composes shared pieces from `src/app/showcase/`:
 
 - `ShowcasePage` — page container and demo block: `title`, demo `children`,
   `code`, the `scope`/`sync` it builds its own `SnippetPreview` from (a
@@ -882,7 +894,7 @@ same literal default is the editors' clear baseline, so the cross hides while
 the Value matches it.
 
 **Staged props.** A curated playground prop lives in one `Staged<T>` pair
-(`$showcase/staged.ts`): its value and its eye together, so the off state keeps
+(`$showcase/playground/staged.ts`): its value and its eye together, so the off state keeps
 the committed data instead of parking it in a second variable. `applied` /
 `appliedFlag` gate the demo and scope; `eye` / `eyeFlag` supply a row's
 `value`/`onChange`/`enabled`/`setEnabled`; `eyeToggle` / `eyeResetToggle` build a
@@ -891,23 +903,23 @@ a plain object because Reset restores `structuredClone(INITIAL)`, and a page
 mutates it in place (`.value`, `.on`, `stage`) — reassigning the pair would leave
 a captured setter writing to the stale object. A Show-code builder takes the pair
 per prop and applies the eye gate once in a shared attribute-line helper
-(`$showcase/snippet-build.ts`: `textAttrLine`, `enumAttrLine`, `boolAttrLine`,
+(`$showcase/playground/snippet-build.ts`: `textAttrLine`, `enumAttrLine`, `boolAttrLine`,
 `sizeAttrLine`, `popupAttrLine`), so the page passes its state straight through
 and the emitted markup matches the demo.
 
 A row
 with a `dialog` editor opens `FieldTable`'s dialog
 (`OK` commits, `Reset` reverts); pure snippet helpers shared across demos live in
-`$showcase/`. A dialog-backed prop row is built with `snippetField`
+`$showcase/playground/`. A dialog-backed prop row is built with `snippetField`
 (markup dialog) or `jsonField` (JSON dialog) plus `eyeToggle` (optional
 eye) / `eyeResetToggle` (required eye) / `snippetDialog`
-(`$showcase/snippet-field.ts`), which supply its `type`/`defaultValue`/
+(`$showcase/playground/snippet-field.ts`), which supply its `type`/`defaultValue`/
 `editor` boilerplate, apply-eye toggle, and exact-shape dialog; only the
 row's seed and commit stay page-specific. A non-dialog row family is built the
 same way: the `size`/`text`/`boolean`/`enum` rows are `sizeField`/`textField`/
 `boolField`/`enumField` (same module), and the Show-code
 builders share their escaping, tri-state, and pair-gated attribute-line helpers
-from `$showcase/snippet-build.ts` rather than re-declaring them. A
+from `$showcase/playground/snippet-build.ts` rather than re-declaring them. A
 dialog-backed `children` row that takes free-form HTML (the
 AppShell block) accepts only well-balanced markup the demo and the compiled seed
 render identically — no expressions, component tags, directives, comments,
