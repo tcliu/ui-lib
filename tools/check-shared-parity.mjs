@@ -21,6 +21,7 @@ import { collectUsage } from './lib/usage-graph.mjs'
 //             shared scripts are program entry points, not imports.
 //   missing   referenced but absent from the sibling -> real port candidate
 //   (an absent, unreferenced file is omitted: the app does not need it)
+//   unshipped a sibling imports a package path this repo no longer ships -> exits 1
 // The surface itself is derived (`tools/lib/shared-surface.mjs`), and a file
 // that owns a per-app value marks its own header `// parity: app-owned — reason`
 // instead of the gate carrying a path list.
@@ -132,12 +133,30 @@ if (diverged.length > 0) {
   console.log(`shared-parity: ${diverged.length} file(s) diverged from the canonical copy:`)
   for (const d of diverged) console.log(`  diverged ${d}`)
   console.log(`\nPort the canonical version with the unify skill, or declare the fork in the app's shared-parity.json.`)
-  process.exit(1)
 }
-if (process.argv.includes('--strict') && deadPorts.length > 0) {
+const strict = process.argv.includes('--strict')
+if (strict && deadPorts.length > 0) {
   console.log(`\nshared-parity: --strict fails on dead ports; delete them or declare the fork.`)
-  process.exit(1)
 }
+
+// A sibling that imports the package by name takes those modules from the
+// tarball, not from a ported copy, so the comparison above never sees it. A
+// canonical rename would ship a path the consumer still asks for, and the
+// consumer's build breaks only after the publish; fail here instead.
+const unshipped = []
+for (const app of apps) {
+  for (const miss of usageFor(app).missingPackageImports) {
+    unshipped.push(`${app.name}: ${miss.specifier} (${miss.importer}) -> ${miss.target}`)
+  }
+}
+if (unshipped.length > 0) {
+  console.log(`shared-parity: ${unshipped.length} package import(s) this repo no longer ships:`)
+  for (const entry of unshipped) console.log(`  unshipped ${entry}`)
+  console.log(`\nPort the consumer to the current module path, or restore the path it imports.`)
+}
+
+// Report every failure class before exiting, so one never hides another.
+if (diverged.length > 0 || unshipped.length > 0 || (strict && deadPorts.length > 0)) process.exit(1)
 
 const stale = []
 for (const app of apps) {

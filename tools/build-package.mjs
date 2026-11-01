@@ -23,14 +23,10 @@ import { spawnSync } from 'node:child_process'
 import { existsSync, readFileSync, readdirSync, rmSync, unlinkSync } from 'node:fs'
 import { basename, dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { PRUNED_DIR, PRUNED_NAME_RE } from './lib/package-surface.mjs'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const OUT = join(ROOT, 'dist')
-
-// Compiled output that never ships: SvelteKit's server-only directory, and the
-// specs and fixtures that sit beside the module they exercise.
-const PRUNED_DIR = 'server'
-const PRUNED_NAME_RE = /\.(test|harness)\./
 
 const WARNINGS_HEADER = '@sveltejs/package found the following issues while packaging your library:'
 const GUARD_HEADER = 'The following server-only files do not import `$app/server` or `$app/env/private`:'
@@ -122,7 +118,32 @@ function run(script, env) {
   return spawnSync(process.execPath, [script], { cwd: ROOT, env, encoding: 'utf8' })
 }
 
+/** Wait without a timer thread, so a retry stays synchronous like the build. */
+function sleepSync(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms)
+}
+
+/**
+ * Remove `dist/` before the compile. `svelte-package` deletes it itself, but on a
+ * mounted workspace (WSL's DrvFs) that delete reports ENOTEMPTY when a watcher —
+ * a dev server on the same project — touches the tree mid-traversal, even though
+ * it emptied the directory. Cleaning here retries, so the compile step finds no
+ * directory left to race on.
+ */
+function cleanOutDir(outDir) {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      rmSync(outDir, { recursive: true, force: true })
+      return
+    } catch (error) {
+      if (error.code !== 'ENOTEMPTY' || attempt >= 5) throw error
+      sleepSync(100 * attempt)
+    }
+  }
+}
+
 function main() {
+  cleanOutDir(OUT)
   const compile = run(binOf('@sveltejs/package', 'svelte-package'), { ...process.env, PACKAGE: '1' })
   if (compile.error) {
     console.error(`package: ${compile.error.message}`)
