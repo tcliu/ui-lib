@@ -5,7 +5,7 @@ import EditableText from './EditableText.svelte'
 import Spinner from './Spinner.svelte'
 import Toast from './Toast.svelte'
 import { INPUT_LEADING, INPUT_RATIOS } from './input-chrome'
-import { SIZE_PX } from '$lib/size-scale'
+import { SIZE_PX } from '#lib/size-scale.js'
 
 // jsdom lacks ResizeObserver (positionPanel), matchMedia, and scrollIntoView;
 // stub them so mounting is a layout no-op.

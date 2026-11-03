@@ -1,4 +1,4 @@
-// parity: app-owned — package build shim for SvelteKit's $app/environment
+// parity: app-owned — package build shim for SvelteKit's $app/env
 //
 // The package aliases the framework module onto this file, so the compiled
 // output carries no `$app` import while the canonical shared source keeps the

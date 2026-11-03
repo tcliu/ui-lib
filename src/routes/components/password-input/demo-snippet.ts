@@ -1,10 +1,10 @@
 // Show-code source for the PasswordInput demo section. Pure string building
 // over the playground form state: the section regenerates the editor text from
 // this, so the editor always shows the markup behind the demo above.
-import { boolAttrLine, enumAttrLine, escapeAttr, sizeAttrLine, textAttrLine, type TriState } from '$showcase/playground/snippet-build'
-import { ratiosAttrLine } from '$showcase/playground/text-input-ratios'
-import type { Staged } from '$showcase/playground/staged'
-import type { PasswordInputRatioOverrides } from '$lib/components/PasswordInput.svelte'
+import { boolAttrLine, enumAttrLine, escapeAttr, sizeAttrLine, textAttrLine, type TriState } from '#showcase/playground/snippet-build.js'
+import { ratiosAttrLine } from '#showcase/playground/text-input-ratios.js'
+import type { Staged } from '#showcase/playground/staged.js'
+import type { PasswordInputRatioOverrides } from '#lib/components/PasswordInput.svelte'
 
 export interface PasswordInputSnippetState {
   // Bound value, seeded as script-local state (like the stage size) so the

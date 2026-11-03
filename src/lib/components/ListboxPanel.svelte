@@ -1,8 +1,8 @@
 <script lang="ts" generics="T">
   import type { Snippet } from 'svelte'
-  import { positionPanel } from '$lib/position-panel.svelte'
-  import type { DropdownAlign } from '$lib/dropdown-chrome'
-  import type { MatchedLabelParts } from '$lib/actions/option-index'
+  import { positionPanel } from '#lib/position-panel.svelte.js'
+  import type { DropdownAlign } from '#lib/dropdown-chrome.js'
+  import type { MatchedLabelParts } from '#lib/actions/option-index.js'
 
   // Shared floating listbox panel for the dropdown surfaces: one positioned
   // `role="listbox"` container, the optional empty row, and the option rows

@@ -4,8 +4,8 @@
 // Single-quoted lines throughout: backticks and ${} inside them stay literal,
 // so no escaping.
 
-import { boolAttrLine, enumAttrLine, escapeAttr, sizeAttrLine, textAttrLine, type TriState } from '$showcase/playground/snippet-build'
-import type { Staged } from '$showcase/playground/staged'
+import { boolAttrLine, enumAttrLine, escapeAttr, sizeAttrLine, textAttrLine, type TriState } from '#showcase/playground/snippet-build.js'
+import type { Staged } from '#showcase/playground/staged.js'
 
 export interface ConfirmDialogSnippetState {
   widthVariant: Staged<string>

@@ -4,10 +4,10 @@
 </script>
 
 <script lang="ts">
-  import Button from '$lib/components/Button.svelte'
-  import CloseIcon from '$lib/icons/CloseIcon.svelte'
-  import { positionPanel } from '$lib/position-panel.svelte'
-  import { FONT_RATIO, type SizeInput } from '$lib/size-scale'
+  import Button from '#lib/components/Button.svelte'
+  import CloseIcon from '#lib/icons/CloseIcon.svelte'
+  import { positionPanel } from '#lib/position-panel.svelte.js'
+  import { FONT_RATIO, type SizeInput } from '#lib/size-scale.js'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
 
   interface Props {

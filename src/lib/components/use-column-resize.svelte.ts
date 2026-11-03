@@ -1,4 +1,4 @@
-import { useColumnWidthStorage } from '$lib/storage/column-width-storage'
+import { useColumnWidthStorage } from '#lib/storage/column-width-storage.js'
 
 // Shared column-resize engine for tables that render resizable columns via a
 // fixed-layout `<colgroup>` (DataGrid and DataTable). Each data column is

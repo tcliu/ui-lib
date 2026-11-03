@@ -1,4 +1,4 @@
-import { browser } from '$app/environment'
+import { browser } from '$app/env'
 import { readWebSettings, writeWebSetting } from './web-settings'
 
 // UI themes. Dark is the default palette (no data-theme attribute); every other

@@ -1,5 +1,5 @@
 import { tick } from 'svelte'
-import { isFocusWithin } from '$lib/actions/focus-within'
+import { isFocusWithin } from '#lib/actions/focus-within.js'
 import {
   DAY_STEP,
   addDays,

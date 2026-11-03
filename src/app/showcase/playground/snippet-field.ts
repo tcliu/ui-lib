@@ -7,7 +7,7 @@
 // carry the demo's own parse/normalize/reset logic, which this module does not
 // model. Only the repeated machinery lives here.
 
-import type { FieldDialog, FieldOption, FieldToggle } from '$lib/components/FieldTable.svelte'
+import type { FieldDialog, FieldOption, FieldToggle } from '#lib/components/FieldTable.svelte'
 import type { FieldSyncMeta, SyncableFieldConfig } from './snippet-sync'
 
 // The apply/unapply eye toggle beside a dialog row's edit icon: `enabled` is

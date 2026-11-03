@@ -4,7 +4,7 @@
 // objects, where a missing label displays as its own value. Pure parsing (no
 // component import beyond the shared option type), so it unit-tests without a
 // browser.
-import type { SelectOption } from '$lib/components/SelectDropdown.svelte'
+import type { SelectOption } from '#lib/components/SelectDropdown.svelte'
 
 // Parse an options editor draft. Returns null for anything else (unparseable
 // text, a non-array, or an entry without a string value), so the dialog can

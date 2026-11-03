@@ -1,11 +1,11 @@
 <script lang="ts">
-  import BarChart from '$lib/components/BarChart.svelte'
-  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
-  import { type TriState } from '$showcase/playground/snippet-build'
-  import { boolField, jsonField, sizeField, textField } from '$showcase/playground/snippet-field'
-  import { parseSizeValue } from '$showcase/playground/size-input'
-  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/playground/staged'
+  import BarChart from '#lib/components/BarChart.svelte'
+  import ShowcasePage from '#showcase/shell/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
+  import { type TriState } from '#showcase/playground/snippet-build.js'
+  import { boolField, jsonField, sizeField, textField } from '#showcase/playground/snippet-field.js'
+  import { parseSizeValue } from '#showcase/playground/size-input.js'
+  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
   import { barHeight, buildBarChartSnippet, DEMO_COLUMNS, parseColumnsJson, parseColumnsValue } from './demo-snippet'
 
   // Customizer playground state. Every curated option starts at the component

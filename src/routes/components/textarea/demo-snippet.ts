@@ -1,10 +1,10 @@
 // Show-code source for the TextArea demo section. Pure string building over
 // the playground form state: the section regenerates the editor text from this,
 // so the editor always shows the markup behind the demo above.
-import { boolAttrLine, escapeAttr, sizeAttrLine, textAttrLine, type TriState } from '$showcase/playground/snippet-build'
-import { ratiosAttrLine } from '$showcase/playground/text-input-ratios'
-import type { Staged } from '$showcase/playground/staged'
-import type { FieldRatioOverrides } from '$lib/components/input-chrome'
+import { boolAttrLine, escapeAttr, sizeAttrLine, textAttrLine, type TriState } from '#showcase/playground/snippet-build.js'
+import { ratiosAttrLine } from '#showcase/playground/text-input-ratios.js'
+import type { Staged } from '#showcase/playground/staged.js'
+import type { FieldRatioOverrides } from '#lib/components/input-chrome.js'
 
 export interface TextAreaSnippetState {
   ariaLabel: Staged<string>

@@ -1,12 +1,12 @@
 <script lang="ts">
-  import Chip from '$lib/components/Chip.svelte'
-  import { getI18nContext } from '$lib/i18n/store.svelte'
-  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
-  import { parseSizeValue } from '$showcase/playground/size-input'
-  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
-  import { textField, boolField, sizeField } from '$showcase/playground/snippet-field'
-  import { applied, appliedFlag, eye, eyeFlag, eyeToggle, stage, staged } from '$showcase/playground/staged'
-  import { type TriState } from '$showcase/playground/snippet-build'
+  import Chip from '#lib/components/Chip.svelte'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
+  import ShowcasePage from '#showcase/shell/ShowcasePage.svelte'
+  import { parseSizeValue } from '#showcase/playground/size-input.js'
+  import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
+  import { textField, boolField, sizeField } from '#showcase/playground/snippet-field.js'
+  import { applied, appliedFlag, eye, eyeFlag, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
+  import { type TriState } from '#showcase/playground/snippet-build.js'
   import { DEFAULT_CHIP_CLASS, buildChipSnippet } from './demo-snippet'
 
   const i18n = getI18nContext()

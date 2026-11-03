@@ -1,14 +1,14 @@
 <script lang="ts">
-  import AppShell from '$lib/components/AppShell.svelte'
-  import Button from '$lib/components/Button.svelte'
-  import MenuIcon from '$lib/icons/MenuIcon.svelte'
-  import type { AppShellHeaderApi } from '$lib/app-shell'
-  import Resizable from '$lib/components/Resizable.svelte'
-  import { getI18nContext } from '$lib/i18n/store.svelte'
-  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
-  import { applied, eye, eyeToggle, stage, staged } from '$showcase/playground/staged'
-  import { enumField, textField, jsonField, snippetDialog, snippetField } from '$showcase/playground/snippet-field'
+  import AppShell from '#lib/components/AppShell.svelte'
+  import Button from '#lib/components/Button.svelte'
+  import MenuIcon from '#lib/icons/MenuIcon.svelte'
+  import type { AppShellHeaderApi } from '#lib/app-shell.js'
+  import Resizable from '#lib/components/Resizable.svelte'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
+  import ShowcasePage from '#showcase/shell/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
+  import { applied, eye, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
+  import { enumField, textField, jsonField, snippetDialog, snippetField } from '#showcase/playground/snippet-field.js'
   import {
     APP_SHELL_HEADER_MARKUP,
     appShellChildrenMarkup,

@@ -2,7 +2,7 @@
 // renders the canonical `<input>`; `PasswordInput`/`SearchInput`/`NumberInput`
 // compose it, and `TextArea` imports these directly because a `<textarea>` cannot
 // compose an `<input>`. Keep the chrome here so no input re-declares it.
-import { FONT_RATIO } from '$lib/size-scale'
+import { FONT_RATIO } from '#lib/size-scale.js'
 
 // The border and the focus color that accompanies it; a field embedded in
 // another surface drops both together (see `INPUT_EMBEDDED`).

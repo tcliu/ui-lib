@@ -1,9 +1,9 @@
 <script lang="ts">
-  import Resizable from '$lib/components/Resizable.svelte'
-  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
-  import { applied, eye, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/playground/staged'
-  import { textField, snippetDialog, snippetField } from '$showcase/playground/snippet-field'
+  import Resizable from '#lib/components/Resizable.svelte'
+  import ShowcasePage from '#showcase/shell/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
+  import { applied, eye, eyeResetToggle, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
+  import { textField, snippetDialog, snippetField } from '#showcase/playground/snippet-field.js'
   import {
     RESIZABLE_CONTENT,
     RESIZABLE_DEFAULT_HEIGHT,

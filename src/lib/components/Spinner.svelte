@@ -1,6 +1,6 @@
 <script lang="ts">
   import { resolveSize } from './size-metrics'
-  import type { SizeInput } from '$lib/size-scale'
+  import type { SizeInput } from '#lib/size-scale.js'
 
   interface Props {
     className?: string

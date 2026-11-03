@@ -1,10 +1,10 @@
 // Show-code source for the TextInput demo section. Pure string building over
 // the playground form state: the section regenerates the editor text from this,
 // so the editor always shows the markup behind the demo above.
-import { boolAttrLine, enumAttrLine, escapeAttr, escapeText, sizeAttrLine, textAttrLine, type TriState } from '$showcase/playground/snippet-build'
-import { applied, type Staged } from '$showcase/playground/staged'
-import { ratiosAttrLine } from '$showcase/playground/text-input-ratios'
-import type { TextInputRatioOverrides } from '$lib/components/text-input-metrics'
+import { boolAttrLine, enumAttrLine, escapeAttr, escapeText, sizeAttrLine, textAttrLine, type TriState } from '#showcase/playground/snippet-build.js'
+import { applied, type Staged } from '#showcase/playground/staged.js'
+import { ratiosAttrLine } from '#showcase/playground/text-input-ratios.js'
+import type { TextInputRatioOverrides } from '#lib/components/text-input-metrics.js'
 
 export interface TextInputSnippetState {
   ariaLabel: Staged<string>

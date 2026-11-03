@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { staged } from '$showcase/playground/staged'
+import { staged } from '#showcase/playground/staged.js'
 import { DEFAULT_CONTENT, buildLazyCodeEditorSnippet } from './demo-snippet'
 
 describe('buildLazyCodeEditorSnippet', () => {

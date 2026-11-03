@@ -1,4 +1,4 @@
-import { createOptionIndex, matchesOption, matchLabelParts, type MatchedLabelParts } from '$lib/actions/option-index'
+import { createOptionIndex, matchesOption, matchLabelParts, type MatchedLabelParts } from '#lib/actions/option-index.js'
 
 // The normalized option shape a filterable select reads: a bare string already
 // normalizes to its own label, so both sides agree on `{ value, label }`.

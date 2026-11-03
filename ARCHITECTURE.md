@@ -222,7 +222,7 @@ own scripts and server dependencies stay out of the published dependency set.
 ```
 src/lib/**                       canonical shared source
   └─ npm run package             tools/build-package.mjs
-       PACKAGE=1 svelte-package  $lib → relative; $app/environment → shim
+       svelte-package            #lib/* → relative; #lib/app-environment → shim
        dist/                      compiled output; server-only + tests pruned
 ```
 
@@ -250,13 +250,14 @@ src/lib/**                       canonical shared source
   `exports` (patterns), `files`, `svelte`, `sideEffects: ["**/*.css"]`,
   `publishConfig`, `peerDependencies.svelte`, and the runtime dependencies. It is
   not generated, so `npm publish` reads exactly what the repository carries.
-- **The aliases** — `svelte.config.js` keeps the app's `kit` config (with
-  `$showcase` → `src/app/showcase` and `$appLib` → `src/app`) and adds top-level
-  `$lib`/`$app/environment` aliases only when `PACKAGE=1`, because
-  `svelte-package` reads top-level aliases while SvelteKit accepts them only
-  under `kit`. `$app/environment` maps to `app-environment.ts`, which re-exports
-  `esm-env`; the output carries neither alias. The canonical `BaseDialog` keeps
-  the framework import so it stays byte-identical across projects.
+- **The import paths** — SvelteKit 3 replaced `$lib` and `kit.alias` with Node
+  subpath imports declared in the root `package.json`: `#lib/*` → `src/lib`,
+  `#showcase/*` → `src/app/showcase`, `#appLib/*` → `src/app`. `svelte.config.js`
+  is gone; `svelte-package` resolves those `#` entries from the manifest itself,
+  so packaging needs no alias configuration. The shipped `BaseDialog` imports
+  `#lib/app-environment.js` (which re-exports `esm-env`) instead of the
+  framework's `$app/env`, so the published output carries no `$app` import; the
+  app-private showcase code may still use `$app/env`.
 - **The dependencies** — every shared runtime package stays in `dependencies`;
   packages used only by the app's scripts or server tooling
   (`@neondatabase/serverless`, `better-sqlite3`) stay in `devDependencies`, so
@@ -927,7 +928,7 @@ same literal default is the editors' clear baseline, so the cross hides while
 the Value matches it.
 
 **Staged props.** A curated playground prop lives in one `Staged<T>` pair
-(`$showcase/playground/staged.ts`): its value and its eye together, so the off state keeps
+(`#showcase/playground/staged.ts`): its value and its eye together, so the off state keeps
 the committed data instead of parking it in a second variable. `applied` /
 `appliedFlag` gate the demo and scope; `eye` / `eyeFlag` supply a row's
 `value`/`onChange`/`enabled`/`setEnabled`; `eyeToggle` / `eyeResetToggle` build a
@@ -936,23 +937,23 @@ a plain object because Reset restores `structuredClone(INITIAL)`, and a page
 mutates it in place (`.value`, `.on`, `stage`) — reassigning the pair would leave
 a captured setter writing to the stale object. A Show-code builder takes the pair
 per prop and applies the eye gate once in a shared attribute-line helper
-(`$showcase/playground/snippet-build.ts`: `textAttrLine`, `enumAttrLine`, `boolAttrLine`,
+(`#showcase/playground/snippet-build.ts`: `textAttrLine`, `enumAttrLine`, `boolAttrLine`,
 `sizeAttrLine`, `popupAttrLine`), so the page passes its state straight through
 and the emitted markup matches the demo.
 
 A row
 with a `dialog` editor opens `FieldTable`'s dialog
 (`OK` commits, `Reset` reverts); pure snippet helpers shared across demos live in
-`$showcase/playground/`. A dialog-backed prop row is built with `snippetField`
+`#showcase/playground/`. A dialog-backed prop row is built with `snippetField`
 (markup dialog) or `jsonField` (JSON dialog) plus `eyeToggle` (optional
 eye) / `eyeResetToggle` (required eye) / `snippetDialog`
-(`$showcase/playground/snippet-field.ts`), which supply its `type`/`defaultValue`/
+(`#showcase/playground/snippet-field.ts`), which supply its `type`/`defaultValue`/
 `editor` boilerplate, apply-eye toggle, and exact-shape dialog; only the
 row's seed and commit stay page-specific. A non-dialog row family is built the
 same way: the `size`/`text`/`boolean`/`enum` rows are `sizeField`/`textField`/
 `boolField`/`enumField` (same module), and the Show-code
 builders share their escaping, tri-state, and pair-gated attribute-line helpers
-from `$showcase/playground/snippet-build.ts` rather than re-declaring them. A
+from `#showcase/playground/snippet-build.ts` rather than re-declaring them. A
 dialog-backed `children` row that takes free-form HTML (the
 AppShell block) accepts only well-balanced markup the demo and the compiled seed
 render identically — no expressions, component tags, directives, comments,
@@ -987,9 +988,10 @@ e2e`, `tools/run-e2e.mjs`); only its directory follows the scaffold.
 `npm run check` runs `tools/check-test-layout.mjs`: it fails on a test-only
 directory, a unit test outside `src/`, `scripts/` or `tools/`, a unit test whose
 directory holds no module, a unit test that imports no module from its own
-directory, and a spec filed on the wrong side of the split. It reads `$lib` and
-the app aliases from the generated `.svelte-kit/tsconfig.json` rather than
-restating them, so an alias added to `svelte.config.js` needs no second edit.
+directory, and a spec filed on the wrong side of the split. It reads the
+`#`-prefixed subpath imports from `package.json` (plus any tsconfig `paths`), so
+a new alias needs no second edit, and it resolves a `.js` specifier to the
+`.ts`/`.svelte.ts` source it compiles from.
 
 ## End-to-end tests
 

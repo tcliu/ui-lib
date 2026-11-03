@@ -1,9 +1,9 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
   import type { HTMLInputAttributes } from 'svelte/elements'
-  import type { SizeInput } from '$lib/size-scale'
-  import { getI18nContext } from '$lib/i18n/store.svelte'
-  import CloseIcon from '$lib/icons/CloseIcon.svelte'
+  import type { SizeInput } from '#lib/size-scale.js'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
+  import CloseIcon from '#lib/icons/CloseIcon.svelte'
   import Button from './Button.svelte'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
   import {

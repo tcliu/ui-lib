@@ -8,8 +8,8 @@
 // Curated playground option: unset or the component default renders the
 // default, Yes/No force the value. Options start at the default, so the
 // cleared form applies no overrides.
-import { boolAttrLine, enumAttrLine, textAttrLine, type TriState } from '$showcase/playground/snippet-build'
-import type { Staged } from '$showcase/playground/staged'
+import { boolAttrLine, enumAttrLine, textAttrLine, type TriState } from '#showcase/playground/snippet-build.js'
+import type { Staged } from '#showcase/playground/staged.js'
 
 // The document types CodeEditor loads a language pack for (see
 // LANGUAGE_LOADERS). Offering only these keeps every panel choice resolvable.

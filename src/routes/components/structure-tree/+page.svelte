@@ -1,16 +1,16 @@
 <script lang="ts">
-  import StructureTree from '$lib/components/StructureTree.svelte'
+  import StructureTree from '#lib/components/StructureTree.svelte'
   import {
     DEFAULT_CONTAINER_ROW_CLASS,
     DEFAULT_LEAF_ROW_CLASS,
-  } from '$lib/components/StructureNode.svelte'
-  import { isContainer, renameKeyAtPath, setAtPath } from '$lib/components/structure-value'
-  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
-  import { boolField, jsonField, sizeField } from '$showcase/playground/snippet-field'
-  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/playground/staged'
-  import { parseSizeValue } from '$showcase/playground/size-input'
-  import { type TriState } from '$showcase/playground/snippet-build'
+  } from '#lib/components/StructureNode.svelte'
+  import { isContainer, renameKeyAtPath, setAtPath } from '#lib/components/structure-value.js'
+  import ShowcasePage from '#showcase/shell/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
+  import { boolField, jsonField, sizeField } from '#showcase/playground/snippet-field.js'
+  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
+  import { parseSizeValue } from '#showcase/playground/size-input.js'
+  import { type TriState } from '#showcase/playground/snippet-build.js'
   import {
     buildStructureTreeSnippet,
     DEFAULT_TREE_VALUE,

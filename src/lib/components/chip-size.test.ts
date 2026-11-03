@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushSync, mount, unmount } from 'svelte'
 import Chip from './Chip.svelte'
-import { resolveIconPx } from '$lib/icons/icon-size'
+import { resolveIconPx } from '#lib/icons/icon-size.js'
 
 function installDomStubs(): void {
   vi.stubGlobal('matchMedia', () => ({

@@ -1,6 +1,5 @@
 import { env } from '$env/dynamic/private'
-import { json } from '@sveltejs/kit'
-import { normalizeCard } from '$lib/server/card'
+import { normalizeCard } from '#lib/server/card.js'
 
 const NO_STORE = { 'cache-control': 'no-store, max-age=0' }
 
@@ -10,7 +9,7 @@ export function GET(): Response {
   // tools/find-running-apps.mjs) can identify a running dev server. Branch is
   // the runtime ref, not a static prop: worktree tag in dev, commit ref on Vercel.
   const branch = (env.DEV_TAG || env.VERCEL_GIT_COMMIT_REF || '').trim() || null
-  return json(
+  return Response.json(
     normalizeCard({
       id: 'ui-lib',
       name: 'UI Library',

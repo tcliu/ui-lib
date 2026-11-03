@@ -28,11 +28,11 @@
 </script>
 
 <script lang="ts">
-  import { browser } from '$app/environment'
+  import { browser } from '#lib/app-environment.js'
   import { onDestroy, onMount, tick } from 'svelte'
-  import CloseIcon from '$lib/icons/CloseIcon.svelte'
-  import { positionPanel } from '$lib/position-panel.svelte'
-  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import CloseIcon from '#lib/icons/CloseIcon.svelte'
+  import { positionPanel } from '#lib/position-panel.svelte.js'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
   const i18n = getI18nContext()
 
   // Panel footprint steps. `xs`–`7xl` are the shared container scale (the same

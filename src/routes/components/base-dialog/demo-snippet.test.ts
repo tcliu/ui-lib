@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { staged } from '$showcase/playground/staged'
+import { staged } from '#showcase/playground/staged.js'
 import {
   DISMISS_HANDLER,
   STYLED_PANEL,

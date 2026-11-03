@@ -1,8 +1,8 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
-  import { positionPanel } from '$lib/position-panel.svelte'
-  import { dragCloseDown } from '$lib/actions/drag-close-down'
-  import CloseIcon from '$lib/icons/CloseIcon.svelte'
+  import { positionPanel } from '#lib/position-panel.svelte.js'
+  import { dragCloseDown } from '#lib/actions/drag-close-down.js'
+  import CloseIcon from '#lib/icons/CloseIcon.svelte'
 
   interface Props {
     containerRef: HTMLElement | null

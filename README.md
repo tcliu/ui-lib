@@ -162,7 +162,7 @@ app-agnostic; edit that file to change which plugins/targets run.
 ## Deployment (Cloudflare Pages)
 
 Second target on the existing Neon backend: `CF_PAGES=1` selects
-`@sveltejs/adapter-cloudflare` (see `svelte.config.js`).
+`@sveltejs/adapter-cloudflare` (see `vite.config.ts`).
 
 ```bash
 npm run deploy -- --target cloudflare

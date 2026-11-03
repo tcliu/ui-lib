@@ -4,10 +4,10 @@
 //
 // The resize harness is ShowcasePage-owned chrome (its `stage` prop), so the
 // snippet carries only the demo content the page authors inside that frame.
-import { boolAttrLine, enumAttrLine, sizeAttrLine, textAttrLine, type TriState } from '$showcase/playground/snippet-build'
-import type { Staged } from '$showcase/playground/staged'
-import { ratiosAttrLine } from '$showcase/playground/text-input-ratios'
-import type { AutoCompleteRatioOverrides } from '$lib/components/AutoComplete.svelte'
+import { boolAttrLine, enumAttrLine, sizeAttrLine, textAttrLine, type TriState } from '#showcase/playground/snippet-build.js'
+import type { Staged } from '#showcase/playground/staged.js'
+import { ratiosAttrLine } from '#showcase/playground/text-input-ratios.js'
+import type { AutoCompleteRatioOverrides } from '#lib/components/AutoComplete.svelte'
 
 export const AUTOCOMPLETE_STAGE_DEFAULT_WIDTH = 560
 export const AUTOCOMPLETE_STAGE_MIN_WIDTH = 240

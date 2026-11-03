@@ -1,5 +1,5 @@
 <script module lang="ts">
-  import { ICON_RATIO, type SizeInput } from '$lib/size-scale'
+  import { ICON_RATIO, type SizeInput } from '#lib/size-scale.js'
   import { INPUT_RATIOS } from './input-chrome'
   import { dimensionMetrics, iconPadRatio } from './size-metrics'
 

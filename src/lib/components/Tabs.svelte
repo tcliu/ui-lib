@@ -1,7 +1,7 @@
 <script lang="ts" generics="TState">
   import type { Snippet } from 'svelte'
-  import { getI18nContext } from '$lib/i18n/store.svelte'
-  import type { SizeInput } from '$lib/size-scale'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
+  import type { SizeInput } from '#lib/size-scale.js'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
 
   const i18n = getI18nContext()

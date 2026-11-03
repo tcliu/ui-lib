@@ -4,8 +4,8 @@
 // $state in the snippet (seeded from scope) so the live instance is resizable,
 // matching the static demo.
 
-import { escapeAttr, textAttrLine, unescapeAttr } from '$showcase/playground/snippet-build'
-import type { Staged } from '$showcase/playground/staged'
+import { escapeAttr, textAttrLine, unescapeAttr } from '#showcase/playground/snippet-build.js'
+import type { Staged } from '#showcase/playground/staged.js'
 
 export const RESIZABLE_DEFAULT_WIDTH = 320
 export const RESIZABLE_DEFAULT_HEIGHT = 240

@@ -1,11 +1,11 @@
 <script lang="ts">
-  import LazyCodeEditor from '$lib/components/LazyCodeEditor.svelte'
-  import { getI18nContext } from '$lib/i18n/store.svelte'
-  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
-  import { type TriState } from '$showcase/playground/snippet-build'
-  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/playground/staged'
-  import { enumField, textField, boolField, snippetField } from '$showcase/playground/snippet-field'
+  import LazyCodeEditor from '#lib/components/LazyCodeEditor.svelte'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
+  import ShowcasePage from '#showcase/shell/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
+  import { type TriState } from '#showcase/playground/snippet-build.js'
+  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
+  import { enumField, textField, boolField, snippetField } from '#showcase/playground/snippet-field.js'
   import {
     DEFAULT_CONTENT,
     DEFAULT_DOC_TYPE,

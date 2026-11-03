@@ -27,11 +27,11 @@
 
 <script lang="ts">
   import { flushSync, tick } from 'svelte'
-  import { useListbox } from '$lib/actions/use-listbox.svelte'
-  import { createOptionIndex, matchesOption, matchLabelParts } from '$lib/actions/option-index'
-  import { isModifiedNavKey } from '$lib/actions/listbox-keynav'
-  import type { SizeInput } from '$lib/size-scale'
-  import type { DropdownPanelProps } from '$lib/dropdown-chrome'
+  import { useListbox } from '#lib/actions/use-listbox.svelte.js'
+  import { createOptionIndex, matchesOption, matchLabelParts } from '#lib/actions/option-index.js'
+  import { isModifiedNavKey } from '#lib/actions/listbox-keynav.js'
+  import type { SizeInput } from '#lib/size-scale.js'
+  import type { DropdownPanelProps } from '#lib/dropdown-chrome.js'
   import TextInput from './TextInput.svelte'
   import ListboxPanel from './ListboxPanel.svelte'
   import { DEFAULT_PANEL_CLASS, SELECT_BOX_UTILITIES, OPTION_BASE } from './select-dropdown-styles'

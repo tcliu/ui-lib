@@ -2,7 +2,7 @@
   import type { Snippet } from 'svelte'
   import { getContext, onMount, setContext } from 'svelte'
   import { slide } from 'svelte/transition'
-  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
   import {
     APP_SHELL_DEFAULT_WIDTH,
     APP_SHELL_DESKTOP_BREAKPOINT,
@@ -17,8 +17,8 @@
     type AppShellHeaderApi,
     type AppShellNesting,
     APP_SHELL_NESTING_KEY,
-  } from '$lib/app-shell'
-  import Splitter from '$lib/components/Splitter.svelte'
+  } from '#lib/app-shell.js'
+  import Splitter from '#lib/components/Splitter.svelte'
   import AppShellPane from './AppShellPane.svelte'
   import { AppShellDrawer } from './use-app-shell-drawer.svelte'
 

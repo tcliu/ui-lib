@@ -1,6 +1,6 @@
 <script lang="ts">
-  import FormField from '$lib/components/FormField.svelte'
-  import type { SizeInput } from '$lib/size-scale'
+  import FormField from '#lib/components/FormField.svelte'
+  import type { SizeInput } from '#lib/size-scale.js'
 
   interface HarnessProps {
     layout?: 'stacked' | 'inline'

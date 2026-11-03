@@ -1,10 +1,10 @@
 // Show-code source for the FormField demo section. Pure string building over
 // the playground form state: the section regenerates the editor text from this,
 // so the editor always shows the markup behind the demo above.
-import { escapeAttr, escapeRawLine, unescapeAttr } from '$showcase/playground/snippet-build'
-import { isBasicHtmlMarkup } from '$showcase/playground/snippet-html'
-import { sizeAttributeFragment } from '$showcase/playground/size-input'
-import type { Staged } from '$showcase/playground/staged'
+import { escapeAttr, escapeRawLine, unescapeAttr } from '#showcase/playground/snippet-build.js'
+import { isBasicHtmlMarkup } from '#showcase/playground/snippet-html.js'
+import { sizeAttributeFragment } from '#showcase/playground/size-input.js'
+import type { Staged } from '#showcase/playground/staged.js'
 
 export interface FormFieldSnippetState {
   label: Staged<string>

@@ -1,16 +1,16 @@
 <script lang="ts">
-  import Button from '$lib/components/Button.svelte'
-  import FormField from '$lib/components/FormField.svelte'
-  import SelectDropdown from '$lib/components/SelectDropdown.svelte'
-  import TextInput from '$lib/components/TextInput.svelte'
-  import Toast from '$lib/components/Toast.svelte'
-  import { getI18nContext } from '$lib/i18n/store.svelte'
-  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
-  import { applied, eye, eyeToggle, stage, staged } from '$showcase/playground/staged'
-  import { enumField, textField, sizeField } from '$showcase/playground/snippet-field'
+  import Button from '#lib/components/Button.svelte'
+  import FormField from '#lib/components/FormField.svelte'
+  import SelectDropdown from '#lib/components/SelectDropdown.svelte'
+  import TextInput from '#lib/components/TextInput.svelte'
+  import Toast from '#lib/components/Toast.svelte'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
+  import ShowcasePage from '#showcase/shell/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
+  import { applied, eye, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
+  import { enumField, textField, sizeField } from '#showcase/playground/snippet-field.js'
   import { buildToastSnippet } from './demo-snippet'
-  import { parseSizeValue } from '$showcase/playground/size-input'
+  import { parseSizeValue } from '#showcase/playground/size-input.js'
 
   const i18n = getI18nContext()
 

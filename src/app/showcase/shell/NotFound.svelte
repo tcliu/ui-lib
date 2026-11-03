@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
   import { SHOWCASE_COMPONENTS } from '../index/showcase-components'
 
   const i18n = getI18nContext()

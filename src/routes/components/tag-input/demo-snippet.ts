@@ -8,10 +8,10 @@
 // The resize harness is ShowcasePage-owned chrome (its `stage` prop), so the
 // snippet carries only the demo content the page authors inside that frame.
 
-import { boolAttrLine, enumAttrLine, escapeText, sizeAttrLine, textAttrLine, type TriState } from '$showcase/playground/snippet-build'
-import { ratiosAttrLine } from '$showcase/playground/text-input-ratios'
-import type { TagInputRatioOverrides } from '$lib/components/TagInput.svelte'
-import type { Staged } from '$showcase/playground/staged'
+import { boolAttrLine, enumAttrLine, escapeText, sizeAttrLine, textAttrLine, type TriState } from '#showcase/playground/snippet-build.js'
+import { ratiosAttrLine } from '#showcase/playground/text-input-ratios.js'
+import type { TagInputRatioOverrides } from '#lib/components/TagInput.svelte'
+import type { Staged } from '#showcase/playground/staged.js'
 
 export const TAG_STAGE_DEFAULT_WIDTH = 560
 export const TAG_STAGE_MIN_WIDTH = 240

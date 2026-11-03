@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { TEXT_INPUT_RATIOS } from '$lib/components/text-input-metrics'
+import { TEXT_INPUT_RATIOS } from '#lib/components/text-input-metrics.js'
 import type { SnippetAttribute } from './snippet-attributes'
 import { staged, type Staged } from './staged'
 import {

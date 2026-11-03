@@ -5,10 +5,10 @@
 // tracks Value edits instead of hiding the entries in scope, and the Value cell
 // can parse an edited list back out of the script block.
 
-import { boolAttrLine, sizeAttrLine, textAttrLine, type TriState } from '$showcase/playground/snippet-build'
-import type { Staged } from '$showcase/playground/staged'
-import { CHART_TONES, type ChartTone } from '$lib/components/chart-tones'
-import type { ChartColumn, ChartSegment } from '$lib/components/BarChart.svelte'
+import { boolAttrLine, sizeAttrLine, textAttrLine, type TriState } from '#showcase/playground/snippet-build.js'
+import type { Staged } from '#showcase/playground/staged.js'
+import { CHART_TONES, type ChartTone } from '#lib/components/chart-tones.js'
+import type { ChartColumn, ChartSegment } from '#lib/components/BarChart.svelte'
 
 // Default chart data, shared by the page seed and the tests, so the static demo,
 // Show-code, and live render start from the same columns.

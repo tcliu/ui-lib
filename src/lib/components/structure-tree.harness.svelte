@@ -1,6 +1,6 @@
 <script lang="ts">
   import StructureTree from './StructureTree.svelte'
-  import type { SizeInput } from '$lib/size-scale'
+  import type { SizeInput } from '#lib/size-scale.js'
 
   interface Props {
     value: unknown

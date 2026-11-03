@@ -1,6 +1,6 @@
 <script lang="ts">
   import Tabs from './Tabs.svelte'
-  import type { SizeInput } from '$lib/size-scale'
+  import type { SizeInput } from '#lib/size-scale.js'
 
   interface Props {
     size?: SizeInput

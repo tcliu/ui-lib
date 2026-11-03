@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { extractScriptValue } from '$showcase/playground/snippet-attributes'
-import { createSnippetComponent } from '$showcase/playground/snippet-playground'
-import { splitLeadingScript } from '$showcase/playground/snippet-source'
-import { staged } from '$showcase/playground/staged'
+import { extractScriptValue } from '#showcase/playground/snippet-attributes.js'
+import { createSnippetComponent } from '#showcase/playground/snippet-playground.js'
+import { splitLeadingScript } from '#showcase/playground/snippet-source.js'
+import { staged } from '#showcase/playground/staged.js'
 import { buildTextAreaSnippet, type TextAreaSnippetState } from './demo-snippet'
 
 function state(overrides: Partial<TextAreaSnippetState> = {}): TextAreaSnippetState {

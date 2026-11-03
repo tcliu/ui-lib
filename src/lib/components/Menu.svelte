@@ -11,10 +11,10 @@
 <script lang="ts" generics="T">
   // Menu owns the icon-trigger dropdown (desktop popover, phone bottom sheet).
   import { flushSync, onMount, tick, untrack } from 'svelte'
-  import { positionPanel } from '$lib/position-panel.svelte'
-  import { useListbox } from '$lib/actions/use-listbox.svelte'
-  import { PHONE_SHEET_QUERY, type DropdownPanelProps } from '$lib/dropdown-chrome'
-  import type { SizeInput } from '$lib/size-scale'
+  import { positionPanel } from '#lib/position-panel.svelte.js'
+  import { useListbox } from '#lib/actions/use-listbox.svelte.js'
+  import { PHONE_SHEET_QUERY, type DropdownPanelProps } from '#lib/dropdown-chrome.js'
+  import type { SizeInput } from '#lib/size-scale.js'
   import Button from './Button.svelte'
   import MenuSheet from './MenuSheet.svelte'
 

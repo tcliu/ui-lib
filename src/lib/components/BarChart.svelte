@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { SizeInput } from '$lib/size-scale'
-  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import type { SizeInput } from '#lib/size-scale.js'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
   import Tooltip from './Tooltip.svelte'
   import { CHART_TONES, TONE_CLASS, type ChartTone } from './chart-tones'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'

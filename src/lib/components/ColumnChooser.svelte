@@ -1,12 +1,12 @@
 <script lang="ts">
-  import Button from '$lib/components/Button.svelte'
-  import Checkbox from '$lib/components/Checkbox.svelte'
-  import type { SizeInput } from '$lib/size-scale'
-  import ColumnsIcon from '$lib/icons/ColumnsIcon.svelte'
-  import RefreshIcon from '$lib/icons/RefreshIcon.svelte'
-  import { createFocusoutClose } from '$lib/actions/use-focusout-close'
-  import { useDropdown } from '$lib/actions/use-dropdown.svelte'
-  import { positionPanel } from '$lib/position-panel.svelte'
+  import Button from '#lib/components/Button.svelte'
+  import Checkbox from '#lib/components/Checkbox.svelte'
+  import type { SizeInput } from '#lib/size-scale.js'
+  import ColumnsIcon from '#lib/icons/ColumnsIcon.svelte'
+  import RefreshIcon from '#lib/icons/RefreshIcon.svelte'
+  import { createFocusoutClose } from '#lib/actions/use-focusout-close.js'
+  import { useDropdown } from '#lib/actions/use-dropdown.svelte.js'
+  import { positionPanel } from '#lib/position-panel.svelte.js'
 
   export interface ChooserColumn {
     key: string

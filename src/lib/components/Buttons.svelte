@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
-  import type { SizeInput } from '$lib/size-scale'
+  import type { SizeInput } from '#lib/size-scale.js'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
 
   type ButtonsAlign = 'left' | 'center' | 'right'

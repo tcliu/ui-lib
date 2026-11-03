@@ -8,10 +8,10 @@ import {
   sizeAttrLine,
   textAttrLine,
   type TriState,
-} from '$showcase/playground/snippet-build'
-import { ratiosAttrLine } from '$showcase/playground/text-input-ratios'
-import type { Staged } from '$showcase/playground/staged'
-import type { SearchInputRatioOverrides } from '$lib/components/SearchInput.svelte'
+} from '#showcase/playground/snippet-build.js'
+import { ratiosAttrLine } from '#showcase/playground/text-input-ratios.js'
+import type { Staged } from '#showcase/playground/staged.js'
+import type { SearchInputRatioOverrides } from '#lib/components/SearchInput.svelte'
 
 export interface SearchInputSnippetState {
   ariaLabel: Staged<string>

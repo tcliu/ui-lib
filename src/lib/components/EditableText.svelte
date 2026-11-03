@@ -2,15 +2,15 @@
   import { onDestroy, tick, untrack } from 'svelte'
   import Button from './Button.svelte'
   import Tooltip from './Tooltip.svelte'
-  import CopyIcon from '$lib/icons/CopyIcon.svelte'
-  import EditIcon from '$lib/icons/EditIcon.svelte'
-  import type { SizeInput } from '$lib/size-scale'
+  import CopyIcon from '#lib/icons/CopyIcon.svelte'
+  import EditIcon from '#lib/icons/EditIcon.svelte'
+  import type { SizeInput } from '#lib/size-scale.js'
   import { copyToClipboard } from './copy-to-clipboard'
   import { FIELD_RATIOS, INPUT_METRIC_CLASS, type FieldRatioOverrides } from './input-chrome'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
   import { fieldOverrides, withLine } from './text-input-metrics'
   import TextInput from './TextInput.svelte'
-  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
   const i18n = getI18nContext()
 
   // Text-field metrics follow TextInput's shared base chrome (`input-chrome.ts`

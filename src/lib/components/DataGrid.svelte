@@ -1,7 +1,7 @@
 <script lang="ts">
   import { tick, untrack } from 'svelte'
   import Button from './Button.svelte'
-  import type { SizeInput } from '$lib/size-scale'
+  import type { SizeInput } from '#lib/size-scale.js'
   import { createGridModel } from './use-grid-model.svelte'
   import { createGridSelection, createInitialSelectionState } from './use-grid-selection.svelte'
   import {
@@ -25,9 +25,9 @@
   import { createGridSort } from './use-grid-sort.svelte'
   import { createGridUndoRedo } from './use-grid-undo-redo.svelte'
   import GridToolbar from './GridToolbar.svelte'
-  import CaretDownIcon from '$lib/icons/CaretDownIcon.svelte'
-  import CaretUpIcon from '$lib/icons/CaretUpIcon.svelte'
-  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import CaretDownIcon from '#lib/icons/CaretDownIcon.svelte'
+  import CaretUpIcon from '#lib/icons/CaretUpIcon.svelte'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
   const i18n = getI18nContext()
 
   interface Props {

@@ -1,4 +1,4 @@
-import { SIZE_PX, type SizeInput } from '$lib/size-scale'
+import { SIZE_PX, type SizeInput } from '#lib/size-scale.js'
 
 // The size dimension in pixels: a numeric size, or a name aliased to the shared
 // scale. Names need no table — they are just the axis values.

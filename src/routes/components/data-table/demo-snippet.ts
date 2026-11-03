@@ -5,9 +5,9 @@
 // Single-quoted lines throughout: backticks and ${} inside them stay literal,
 // so no escaping.
 
-import { boolAttrLine, escapeText, sizeAttrLine, textAttrLine, type TriState } from '$showcase/playground/snippet-build'
-import { stageStaticCloseLines, stageStaticOpenLines } from '$showcase/shell/resizable-stage'
-import type { Staged } from '$showcase/playground/staged'
+import { boolAttrLine, escapeText, sizeAttrLine, textAttrLine, type TriState } from '#showcase/playground/snippet-build.js'
+import { stageStaticCloseLines, stageStaticOpenLines } from '#showcase/shell/resizable-stage.js'
+import type { Staged } from '#showcase/playground/staged.js'
 
 // Validate unknown data into a search-key list (every entry a string).
 // Returns null for anything else, so the dialog and parse-back apply only

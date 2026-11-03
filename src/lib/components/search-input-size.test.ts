@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushSync, mount, unmount } from 'svelte'
-import { ICON_RATIO } from '$lib/size-scale'
+import { ICON_RATIO } from '#lib/size-scale.js'
 import { INPUT_RATIOS } from './input-chrome'
 import SearchInput from './SearchInput.svelte'
 

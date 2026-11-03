@@ -1,10 +1,10 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
-  import Button from '$lib/components/Button.svelte'
-  import CopyIcon from '$lib/icons/CopyIcon.svelte'
-  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import Button from '#lib/components/Button.svelte'
+  import CopyIcon from '#lib/icons/CopyIcon.svelte'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
   import { copyToClipboard } from './copy-to-clipboard'
-  import type { SizeInput } from '$lib/size-scale'
+  import type { SizeInput } from '#lib/size-scale.js'
 
   const i18n = getI18nContext()
 

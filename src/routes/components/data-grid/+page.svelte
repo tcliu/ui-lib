@@ -1,13 +1,13 @@
 <script lang="ts">
-  import DataGrid from '$lib/components/DataGrid.svelte'
-  import { getI18nContext } from '$lib/i18n/store.svelte'
-  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
-  import ShowcaseStage from '$showcase/shell/ShowcaseStage.svelte'
-  import { parseSizeValue } from '$showcase/playground/size-input'
-  import { textField, boolField, sizeField, jsonField } from '$showcase/playground/snippet-field'
-  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
-  import { applied, appliedFlag, eye, eyeFlag, eyeToggle, stage, staged } from '$showcase/playground/staged'
-  import { type TriState } from '$showcase/playground/snippet-build'
+  import DataGrid from '#lib/components/DataGrid.svelte'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
+  import ShowcasePage from '#showcase/shell/ShowcasePage.svelte'
+  import ShowcaseStage from '#showcase/shell/ShowcaseStage.svelte'
+  import { parseSizeValue } from '#showcase/playground/size-input.js'
+  import { textField, boolField, sizeField, jsonField } from '#showcase/playground/snippet-field.js'
+  import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
+  import { applied, appliedFlag, eye, eyeFlag, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
+  import { type TriState } from '#showcase/playground/snippet-build.js'
   import { DEMO_VALUE, buildDataGridSnippet, parseColumnLabelsJson, parseColumnLabelsValue, parseColumnWidthsJson, parseColumnWidthsValue, parseGridValueJson } from './demo-snippet'
 
   const i18n = getI18nContext()

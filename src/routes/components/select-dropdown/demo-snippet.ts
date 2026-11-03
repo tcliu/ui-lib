@@ -4,10 +4,10 @@
 //
 // The resize harness is ShowcasePage-owned chrome (its `stage` prop), so the
 // snippet carries only the demo content the page authors inside that frame.
-import { boolAttrLine, enumAttrLine, sizeAttrLine, textAttrLine, type TriState } from '$showcase/playground/snippet-build'
-import { ratiosAttrLine } from '$showcase/playground/text-input-ratios'
-import type { Staged } from '$showcase/playground/staged'
-import type { SelectRatioOverrides } from '$lib/components/select-dropdown-styles'
+import { boolAttrLine, enumAttrLine, sizeAttrLine, textAttrLine, type TriState } from '#showcase/playground/snippet-build.js'
+import { ratiosAttrLine } from '#showcase/playground/text-input-ratios.js'
+import type { Staged } from '#showcase/playground/staged.js'
+import type { SelectRatioOverrides } from '#lib/components/select-dropdown-styles.js'
 
 export const SELECT_STAGE_DEFAULT_WIDTH = 560
 export const SELECT_STAGE_MIN_WIDTH = 240

@@ -1,7 +1,7 @@
 import type { Component } from 'svelte'
 import { describe, expect, it } from 'vitest'
 import { flushSync, mount, unmount } from 'svelte'
-import type { SizeInput } from '$lib/size-scale'
+import type { SizeInput } from '#lib/size-scale.js'
 import ChevronDownIcon from './ChevronDownIcon.svelte'
 import ChevronLeftIcon from './ChevronLeftIcon.svelte'
 import ChevronRightIcon from './ChevronRightIcon.svelte'

@@ -1,14 +1,14 @@
 <script lang="ts">
-  import TagInput, { TAG_INPUT_RATIOS } from '$lib/components/TagInput.svelte'
-  import { getI18nContext } from '$lib/i18n/store.svelte'
-  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
-  import { parseSizeValue } from '$showcase/playground/size-input'
-  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
-  import { enumField, textField, boolField, sizeField, jsonField, snippetField } from '$showcase/playground/snippet-field'
-  import { applied, appliedFlag, eye, eyeFlag, eyeToggle, stage, staged } from '$showcase/playground/staged'
-  import { type TriState } from '$showcase/playground/snippet-build'
-  import { appliedRatios, componentRatiosField } from '$showcase/playground/text-input-ratios'
-  import type { TagInputRatioOverrides } from '$lib/components/TagInput.svelte'
+  import TagInput, { TAG_INPUT_RATIOS } from '#lib/components/TagInput.svelte'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
+  import ShowcasePage from '#showcase/shell/ShowcasePage.svelte'
+  import { parseSizeValue } from '#showcase/playground/size-input.js'
+  import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
+  import { enumField, textField, boolField, sizeField, jsonField, snippetField } from '#showcase/playground/snippet-field.js'
+  import { applied, appliedFlag, eye, eyeFlag, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
+  import { type TriState } from '#showcase/playground/snippet-build.js'
+  import { appliedRatios, componentRatiosField } from '#showcase/playground/text-input-ratios.js'
+  import type { TagInputRatioOverrides } from '#lib/components/TagInput.svelte'
   import {
     buildTagInputSnippet,
     parseTagListJson,

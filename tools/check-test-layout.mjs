@@ -96,27 +96,51 @@ function listDirs(dir, root, out = []) {
   return out
 }
 
-// The project aliases a test's import may go through, read from the generated
-// `.svelte-kit/tsconfig.json` (SvelteKit writes `kit.alias`, `$lib` and the
-// framework's own entries there), so a new alias needs no edit here. A tree
-// without that generated config (a scratch fixture) takes the caller's map.
+// The project aliases a test's import may go through. SvelteKit 3 dropped the
+// generated `$lib` entry in favour of Node subpath imports (`#lib/*` in
+// package.json), so those are the primary source; a project tsconfig `paths`
+// map and the legacy generated config are read too, so no alias needs an edit
+// here. A tree without any of them (a scratch fixture) takes the caller's map.
 // `$app/*` stays unresolved because it names a framework module, not a project
 // file.
 export function readAliases(root) {
-  const configPath = join(root, '.svelte-kit', 'tsconfig.json')
-  if (!existsSync(configPath)) return new Map()
-  const { compilerOptions } = JSON.parse(readFileSync(configPath, 'utf8'))
   const aliases = new Map()
-  for (const [alias, targets] of Object.entries(compilerOptions?.paths ?? {})) {
-    const target = targets?.[0]
-    if (!target || alias.endsWith('/*') || alias.startsWith('$app/')) continue
-    aliases.set(
-      alias,
-      relative(root, resolve(dirname(configPath), target))
-        .split('\\')
-        .join('/'),
-    )
+  const record = (key, target, baseDir = root) => {
+    if (!target) return
+    const name = key.endsWith('/*') ? key.slice(0, -2) : key
+    if (name === '$app' || name.startsWith('$app/')) return
+    const dir = target.endsWith('/*') ? target.slice(0, -2) : target
+    aliases.set(name, relative(root, resolve(baseDir, dir)).split('\\').join('/'))
   }
+
+  const pkgPath = join(root, 'package.json')
+  if (existsSync(pkgPath)) {
+    try {
+      const { imports = {} } = JSON.parse(readFileSync(pkgPath, 'utf8'))
+      for (const [key, value] of Object.entries(imports)) {
+        if (key.startsWith('#') && typeof value === 'string') record(key, value)
+      }
+    } catch {
+      // malformed package.json — fall through to the tsconfig sources
+    }
+  }
+
+  for (const [configPath, baseDir] of [
+    [join(root, 'tsconfig.json'), root],
+    [join(root, '.svelte-kit', 'tsconfig.json'), join(root, '.svelte-kit')],
+  ]) {
+    if (!existsSync(configPath)) continue
+    try {
+      const { compilerOptions } = JSON.parse(readFileSync(configPath, 'utf8'))
+      for (const [alias, targets] of Object.entries(compilerOptions?.paths ?? {})) {
+        const target = targets?.[0]
+        if (typeof target === 'string') record(alias, target, baseDir)
+      }
+    } catch {
+      // JSONC or a missing map — skip this source
+    }
+  }
+
   return aliases
 }
 
@@ -132,8 +156,12 @@ function resolveImport(specifier, importerDir, root, aliases) {
     if (target === undefined) return null
     base = resolve(root, target, rest.join('/'))
   }
-  for (const suffix of PROBE_SUFFIXES) {
-    const candidate = base + suffix
+  // A `.js` specifier resolves to the `.ts`/`.svelte.ts` source it compiles
+  // from (Node subpath imports carry the emitted extension), so probe that too.
+  const probes = [base]
+  if (base.endsWith('.js')) probes.push(base.slice(0, -3) + '.ts')
+  for (const suffix of PROBE_SUFFIXES) probes.push(base + suffix)
+  for (const candidate of probes) {
     if (existsSync(candidate)) return realpathSync(candidate)
   }
   return null

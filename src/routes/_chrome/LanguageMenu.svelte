@@ -1,7 +1,7 @@
 <script lang="ts">
-  import Menu, { type MenuItemState } from '$lib/components/Menu.svelte'
-  import { LOCALES, getI18nContext } from '$lib/i18n/store.svelte'
-  import GlobeIcon from '$lib/icons/GlobeIcon.svelte'
+  import Menu, { type MenuItemState } from '#lib/components/Menu.svelte'
+  import { LOCALES, getI18nContext } from '#lib/i18n/store.svelte.js'
+  import GlobeIcon from '#lib/icons/GlobeIcon.svelte'
   import { menuRadioItemClass } from './menu-item-class'
 
   const i18n = getI18nContext()

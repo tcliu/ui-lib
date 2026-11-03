@@ -5,7 +5,7 @@ import {
   type DragResizeOptions,
   type ResizeEdge,
   type ResizeMovePhase,
-} from '$lib/components/use-resize-drag.svelte'
+} from '#lib/components/use-resize-drag.svelte.js'
 
 type DownEvent = Parameters<DragResize['handlePointerDown']>[0]
 type KeyEvent = Parameters<DragResize['handleKeydown']>[0]

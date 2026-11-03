@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ICON_RATIO } from '$lib/size-scale'
+import { ICON_RATIO } from '#lib/size-scale.js'
 import { resolveIconPx } from './icon-size'
 
 describe('resolveIconPx', () => {

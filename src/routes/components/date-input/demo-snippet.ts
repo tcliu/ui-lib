@@ -9,13 +9,13 @@
 // The resize harness is ShowcasePage-owned chrome (its `stage` prop), so the
 // snippet carries only the demo content the page authors inside that frame.
 
-import { DEFAULT_DATE_FORMAT } from '$lib/components/date-input-core'
-import { DATE_STAGE_CONTENT } from '$showcase/shell/date-stage'
-import { boolAttrLine, escapeAttr, type TriState } from '$showcase/playground/snippet-build'
-import { sizeAttributeFragment } from '$showcase/playground/size-input'
-import type { Staged } from '$showcase/playground/staged'
-import { ratiosAttributeFragment } from '$showcase/playground/text-input-ratios'
-import type { PickerRatioOverrides } from '$lib/components/date-input-metrics'
+import { DEFAULT_DATE_FORMAT } from '#lib/components/date-input-core.js'
+import { DATE_STAGE_CONTENT } from '#showcase/shell/date-stage.js'
+import { boolAttrLine, escapeAttr, type TriState } from '#showcase/playground/snippet-build.js'
+import { sizeAttributeFragment } from '#showcase/playground/size-input.js'
+import type { Staged } from '#showcase/playground/staged.js'
+import { ratiosAttributeFragment } from '#showcase/playground/text-input-ratios.js'
+import type { PickerRatioOverrides } from '#lib/components/date-input-metrics.js'
 
 export interface DateInputSnippetState {
   value: Staged<string>

@@ -2,8 +2,8 @@
 // playground form state: the section regenerates the editor text from this, so
 // the editor always shows the markup behind the demo above.
 
-import { sizeAttrLine, textAttrLine } from '$showcase/playground/snippet-build'
-import type { Staged } from '$showcase/playground/staged'
+import { sizeAttrLine, textAttrLine } from '#showcase/playground/snippet-build.js'
+import type { Staged } from '#showcase/playground/staged.js'
 
 export interface SpinnerSnippetState {
   size: Staged<string>

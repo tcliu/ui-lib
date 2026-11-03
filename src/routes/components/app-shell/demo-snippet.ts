@@ -14,8 +14,8 @@
 // The frame chrome and sizing on the `Resizable` itself; `w-full` is what the
 // frame's own `maxWidth="parent"` measures against, and `overflow-hidden`
 // contains the demo without a scrollbar over the frame handles.
-import { enumAttrLine, escapeRawLine, textAttrLine } from '$showcase/playground/snippet-build'
-import type { Staged } from '$showcase/playground/staged'
+import { enumAttrLine, escapeRawLine, textAttrLine } from '#showcase/playground/snippet-build.js'
+import type { Staged } from '#showcase/playground/staged.js'
 
 export const SHELL_STAGE_FRAME = 'w-full overflow-hidden rounded-lg border border-slate-800'
 export const SHELL_STAGE_DEFAULT_WIDTH = 840

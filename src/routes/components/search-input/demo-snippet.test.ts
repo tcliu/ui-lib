@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { createSnippetComponent } from '$showcase/playground/snippet-playground'
-import { staged } from '$showcase/playground/staged'
+import { createSnippetComponent } from '#showcase/playground/snippet-playground.js'
+import { staged } from '#showcase/playground/staged.js'
 import { buildSearchInputSnippet, type SearchInputSnippetState } from './demo-snippet'
 
 function state(overrides: Partial<SearchInputSnippetState> = {}): SearchInputSnippetState {

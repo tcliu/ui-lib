@@ -1,7 +1,7 @@
 <script lang="ts">
   import { page } from '$app/state'
-  import Chip from '$lib/components/Chip.svelte'
-  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import Chip from '#lib/components/Chip.svelte'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
   import { getRelatedComponents } from '../index/showcase-components'
 
   const i18n = getI18nContext()

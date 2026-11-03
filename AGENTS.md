@@ -30,16 +30,20 @@ Project-specific development conventions for the UI Library web app.
 
 - The project root hosts the browser app and the npm package: the shared source
   stays in `src/lib`, and the root `package.json` is the package manifest.
-- `npm run package` runs `tools/build-package.mjs`: `svelte-package` with
-  `PACKAGE=1`, the prune of server-only output and tests from `dist/`, then
-  `publint`. The root `exports`/`files` fields define what ships.
+- `npm run package` runs `tools/build-package.mjs`: `svelte-package`, the prune
+  of server-only output and tests from `dist/`, then `publint`. The root
+  `exports`/`files` fields define what ships.
 - That tool drops `svelte-package`'s server-only guard warning only for the
   files the prune removes; it names them and fails when one survives, or when
   any other warning remains. Never add an `$app/server` guard import to silence
   it.
-- The root `svelte.config.js` keeps the app aliases under `kit` and adds the
-  package-only `$lib`/`$app/environment` ones when `PACKAGE=1`, because
-  `svelte-package` and SvelteKit read different config keys.
+- Imports go through the subpath imports in the root `package.json`: `#lib/*`
+  (`src/lib`), `#showcase/*` (`src/app/showcase`), `#appLib/*` (`src/app`).
+  There is no `svelte.config.js` and no `kit.alias` — SvelteKit 3 deprecated
+  both, and `svelte-package` resolves the `#` entries natively. Shipped source
+  must not import `$app/*`: the components import `#lib/app-environment.js`
+  (an `esm-env` re-export) so `dist` carries no framework import, while the
+  app-private showcase code may use `$app/env`.
 - Release by bumping the root version with `npm version <patch|minor|major>` and
   running `npm publish`; npm's `prepublishOnly` hook checks the target registry's
   credentials (`tools/check-publish-auth.mjs`) and then runs
@@ -56,7 +60,7 @@ Project-specific development conventions for the UI Library web app.
 - This project is the canonical source for the shared UI surface; fix a shared component here first, then port it, never fork without syncing back.
 - Reuse the existing shared control for a concern instead of building a parallel one; keep app-private UI out of the shared directories (inventory in `ARCHITECTURE.md`).
 - Give `src/lib` a folder only when at least two of its members import one another — the i18n store with the dictionaries it loads (`i18n/`), the typed storage store over the generic one it builds on (`storage/`); a module with no intra-folder import stays at the `src/lib` root, and no folder groups by kind alone (`types/`, `utils/`).
-- `server/` stays under `src/lib` so SvelteKit's `$lib/server` guard covers it;
+- A `server/` directory stays server-only (SvelteKit treats any `server` directory outside `src/routes` that way), so shared server code lives in `src/lib/server/`;
   the package prunes it from `dist/`. `src/app` is the app-private root: `state/`
   for runtime state (theme, web-settings), `showcase/` for the demo harness split
   into `shell/`, `playground/`, and `index/`. An app-only module belongs in one of
@@ -214,13 +218,13 @@ Project-specific development conventions for the UI Library web app.
 - The only eye-free dialog row is data applied elsewhere with nothing of its own to preserve (data-table `chooserColumns`); record the reason in a code comment.
 - Build a required dialog row's eye with `eyeResetToggle` (off resets committed data to the row default); an optional row's uses `eyeToggle`. A row whose demo binds the state also uses `eyeResetToggle` (off resets the bound state to its default; the binding stays). Mechanism in `ARCHITECTURE.md`.
 - Declare a `text`/`number`/`tri` row and let `syncFieldsOf` derive its absent-attribute fallback; never hand-write a `sync.set` repeating it (`set` stays for a bespoke setter) — except an eye row prefilling a literal default, which takes a custom `read` (absent resolves to current state) and `set` (default maps back to unset) so compiling never stages the default into the form.
-- Model a curated playground prop as one `Staged<T>` pair (`staged(value, on)` from `$showcase/playground/staged.ts`), never a value plus an `On` flag: read it with `applied`/`appliedFlag`, wire a row with `eye`/`eyeFlag`/`eyeToggle`/`eyeResetToggle`, commit in place with `stage`, and never reassign the pair. Mechanism in `ARCHITECTURE.md`.
-- A Show-code builder takes the pair per prop and applies the eye gate once through a shared `$showcase/playground/snippet-build.ts` attribute-line helper, so the page passes its state straight through instead of flattening `value`/`on` at the call site.
+- Model a curated playground prop as one `Staged<T>` pair (`staged(value, on)` from `#showcase/playground/staged.ts`), never a value plus an `On` flag: read it with `applied`/`appliedFlag`, wire a row with `eye`/`eyeFlag`/`eyeToggle`/`eyeResetToggle`, commit in place with `stage`, and never reassign the pair. Mechanism in `ARCHITECTURE.md`.
+- A Show-code builder takes the pair per prop and applies the eye gate once through a shared `#showcase/playground/snippet-build.ts` attribute-line helper, so the page passes its state straight through instead of flattening `value`/`on` at the call site.
 - A `text`/`number` Value cell with a Value editor sets `clearable`; `TextArea` has no clearable.
 - A Value cell's Type takes a `?` suffix only when the prop is optional, so a required value keeps the bare type.
 - A Value input's placeholder is the literal default when the prop has one, otherwise absent, never a meta-hint like `(none)` or `(built-in)`.
 - Build a dialog-backed prop row with the shared `snippetField`/`jsonField`/`eyeToggle`/`eyeResetToggle`/`snippetDialog` helpers rather than inline row literals; the row's seed and commit stay page-specific. Mechanism in `ARCHITECTURE.md`.
-- Build a `size`/`text`/`boolean`/`enum` prop row with the shared `sizeField`/`textField`/`boolField`/`enumField` helper rather than an inline literal; Show-code builders share escaping and tri-state helpers (`escapeAttr`/`escapeText`/`escapeRawLine`/`unescapeAttr`/`TriState`/`flagOn`) and the pair-gated attribute lines (`textAttrLine`/`enumAttrLine`/`boolAttrLine`/`sizeAttrLine`/`popupAttrLine`) from `$showcase/playground/snippet-build.ts` instead of re-declaring them per page.
+- Build a `size`/`text`/`boolean`/`enum` prop row with the shared `sizeField`/`textField`/`boolField`/`enumField` helper rather than an inline literal; Show-code builders share escaping and tri-state helpers (`escapeAttr`/`escapeText`/`escapeRawLine`/`unescapeAttr`/`TriState`/`flagOn`) and the pair-gated attribute lines (`textAttrLine`/`enumAttrLine`/`boolAttrLine`/`sizeAttrLine`/`popupAttrLine`) from `#showcase/playground/snippet-build.ts` instead of re-declaring them per page.
 - The shell owns the snippet preview: a page passes `scope`/`sync` (plus `scopeRefresh`/`scopeRefreshWhen` when its snippet reads scope keys the seed omits) to `ShowcasePage` rather than constructing a `SnippetPreview` itself.
 - Seed a dialog-backed Value cell from the fallback-resolved demo value, not the raw override; map the untouched default back to unset on commit.
 - A dialog-backed row must round-trip every editable facet its dialog presents, with `dialog.valid` rejecting any shape it cannot reproduce; cover each with a round-trip spec.

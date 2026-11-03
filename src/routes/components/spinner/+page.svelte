@@ -1,12 +1,12 @@
 <script lang="ts">
-  import Spinner from '$lib/components/Spinner.svelte'
-  import { getI18nContext } from '$lib/i18n/store.svelte'
-  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
-  import { sizeField } from '$showcase/playground/snippet-field'
-  import { applied, eye, eyeToggle, stage, staged } from '$showcase/playground/staged'
+  import Spinner from '#lib/components/Spinner.svelte'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
+  import ShowcasePage from '#showcase/shell/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
+  import { sizeField } from '#showcase/playground/snippet-field.js'
+  import { applied, eye, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
   import { buildSpinnerSnippet } from './demo-snippet'
-  import { parseSizeValue } from '$showcase/playground/size-input'
+  import { parseSizeValue } from '#showcase/playground/size-input.js'
 
   const i18n = getI18nContext()
 

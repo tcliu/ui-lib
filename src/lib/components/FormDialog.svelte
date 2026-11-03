@@ -1,9 +1,9 @@
 <script lang="ts">
   import type { ComponentProps, Snippet } from 'svelte'
-  import BaseDialog from '$lib/components/BaseDialog.svelte'
-  import Button from '$lib/components/Button.svelte'
-  import Buttons from '$lib/components/Buttons.svelte'
-  import ConfirmDialog from '$lib/components/ConfirmDialog.svelte'
+  import BaseDialog from '#lib/components/BaseDialog.svelte'
+  import Button from '#lib/components/Button.svelte'
+  import Buttons from '#lib/components/Buttons.svelte'
+  import ConfirmDialog from '#lib/components/ConfirmDialog.svelte'
 
   interface Props {
     /** Ignored when `header` is set. */

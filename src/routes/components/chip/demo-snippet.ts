@@ -2,8 +2,8 @@
 // playground form state: the section regenerates the editor text from this, so
 // the editor always shows the markup behind the demo above.
 
-import { boolAttrLine, escapeAttr, sizeAttrLine, textAttrLine, type TriState } from '$showcase/playground/snippet-build'
-import { appliedFlag, type Staged } from '$showcase/playground/staged'
+import { boolAttrLine, escapeAttr, sizeAttrLine, textAttrLine, type TriState } from '#showcase/playground/snippet-build.js'
+import { appliedFlag, type Staged } from '#showcase/playground/staged.js'
 
 export interface ChipSnippetState {
   label: Staged<string>

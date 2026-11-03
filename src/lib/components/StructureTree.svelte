@@ -1,8 +1,8 @@
 <script lang="ts">
   import StructureNode, { STRUCTURE_TEXT_CLASS, structureStyle } from './StructureNode.svelte'
   import { containerSummary, isContainer, valueClass, valueText } from './structure-value'
-  import { getI18nContext } from '$lib/i18n/store.svelte'
-  import type { SizeInput } from '$lib/size-scale'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
+  import type { SizeInput } from '#lib/size-scale.js'
   const i18n = getI18nContext()
 
   interface Props {

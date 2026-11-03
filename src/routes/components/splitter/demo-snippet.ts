@@ -4,9 +4,9 @@
 // local $state in the snippet (seeded from scope) so the live instance is
 // draggable, matching the static demo.
 
-import { boolAttrLine, enumAttrLine, textAttrLine, type TriState } from '$showcase/playground/snippet-build'
-import { stageStaticCloseLines, stageStaticOpenLines } from '$showcase/shell/resizable-stage'
-import type { Staged } from '$showcase/playground/staged'
+import { boolAttrLine, enumAttrLine, textAttrLine, type TriState } from '#showcase/playground/snippet-build.js'
+import { stageStaticCloseLines, stageStaticOpenLines } from '#showcase/shell/resizable-stage.js'
+import type { Staged } from '#showcase/playground/staged.js'
 
 export type SplitterOrientation = 'vertical' | 'horizontal'
 export type SplitterUnit = 'px' | '%'

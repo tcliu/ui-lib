@@ -1,7 +1,7 @@
 // Shared playground size input: a step name, an icon-scale pixel number, or
 // unset. Anything else is invalid and renders the component default.
 
-import { SIZE_ORDER, type SizeName } from '$lib/size-scale'
+import { SIZE_ORDER, type SizeName } from '#lib/size-scale.js'
 
 export type { SizeName }
 

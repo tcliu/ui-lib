@@ -1,5 +1,5 @@
 import { createColumnResize } from './use-column-resize.svelte'
-import { realignColumnWidths } from '$lib/components/column-helpers'
+import { realignColumnWidths } from '#lib/components/column-helpers.js'
 
 // The minimal column shape the width engine reads; any DataTableColumn
 // satisfies it structurally.

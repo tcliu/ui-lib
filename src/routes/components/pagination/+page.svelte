@@ -1,16 +1,16 @@
 <script lang="ts">
-  import FormField from '$lib/components/FormField.svelte'
-  import Pagination from '$lib/components/Pagination.svelte'
-  import SelectDropdown from '$lib/components/SelectDropdown.svelte'
-  import { getI18nContext } from '$lib/i18n/store.svelte'
-  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
-  import type { SnippetAttribute } from '$showcase/playground/snippet-attributes'
-  import { applied, eye, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/playground/staged'
-  import { textField, sizeField, jsonField, snippetField } from '$showcase/playground/snippet-field'
+  import FormField from '#lib/components/FormField.svelte'
+  import Pagination from '#lib/components/Pagination.svelte'
+  import SelectDropdown from '#lib/components/SelectDropdown.svelte'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
+  import ShowcasePage from '#showcase/shell/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
+  import type { SnippetAttribute } from '#showcase/playground/snippet-attributes.js'
+  import { applied, eye, eyeResetToggle, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
+  import { textField, sizeField, jsonField, snippetField } from '#showcase/playground/snippet-field.js'
   import { CUSTOM_LABELS, DEFAULT_PAGE_SIZE_OPTIONS, LABEL_FIELDS, buildPaginationSnippet, parseLabelsJson, parseLabelsValue, parsePageSizeOptionsJson } from './demo-snippet'
-  import { parseSizeValue } from '$showcase/playground/size-input'
-  import type { PaginationLabels } from '$lib/components/pagination-labels'
+  import { parseSizeValue } from '#showcase/playground/size-input.js'
+  import type { PaginationLabels } from '#lib/components/pagination-labels.js'
 
   const i18n = getI18nContext()
 

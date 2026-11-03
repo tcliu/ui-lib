@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
   import { createDragResize } from './use-resize-drag.svelte'
   const i18n = getI18nContext()
 

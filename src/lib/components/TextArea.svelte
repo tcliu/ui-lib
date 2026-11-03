@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { SizeInput } from '$lib/size-scale'
+  import type { SizeInput } from '#lib/size-scale.js'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
   import {
     FIELD_RATIOS,

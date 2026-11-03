@@ -1,6 +1,6 @@
 <script lang="ts">
-  import CheckIcon from '$lib/icons/CheckIcon.svelte'
-  import type { SizeInput } from '$lib/size-scale'
+  import CheckIcon from '#lib/icons/CheckIcon.svelte'
+  import type { SizeInput } from '#lib/size-scale.js'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
 
   interface Props {

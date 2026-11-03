@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_DATE_FORMAT } from '$lib/components/date-input-core'
-import { createSnippetComponent } from '$showcase/playground/snippet-playground'
-import type { TriState } from '$showcase/playground/snippet-build'
-import { staged } from '$showcase/playground/staged'
+import { DEFAULT_DATE_FORMAT } from '#lib/components/date-input-core.js'
+import { createSnippetComponent } from '#showcase/playground/snippet-playground.js'
+import type { TriState } from '#showcase/playground/snippet-build.js'
+import { staged } from '#showcase/playground/staged.js'
 import { buildDateInputSnippet } from './demo-snippet'
 
 const base = {

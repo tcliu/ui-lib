@@ -3,7 +3,7 @@
 // component wires the left and right panes through the same implementation
 // instead of mirroring the logic twice.
 import { tick } from 'svelte'
-import { clampPaneWidth, collapsesToRail, loadPaneSize, savePaneSize, type AppShellCollapseMode } from '$lib/app-shell'
+import { clampPaneWidth, collapsesToRail, loadPaneSize, savePaneSize, type AppShellCollapseMode } from '#lib/app-shell.js'
 
 export interface AppShellDrawerOptions {
   getOpen: () => boolean

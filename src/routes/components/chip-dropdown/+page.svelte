@@ -1,14 +1,14 @@
 <script lang="ts">
-  import ChipDropdown from '$lib/components/ChipDropdown.svelte'
-  import { type SelectOption } from '$lib/components/SelectDropdown.svelte'
-  import { getI18nContext } from '$lib/i18n/store.svelte'
-  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
-  import { parseOptionArrayJson } from '$showcase/playground/option-json'
-  import { parseSizeValue } from '$showcase/playground/size-input'
-  import { enumField, textField, boolField, sizeField, jsonField } from '$showcase/playground/snippet-field'
-  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/playground/staged'
-  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
-  import { type TriState } from '$showcase/playground/snippet-build'
+  import ChipDropdown from '#lib/components/ChipDropdown.svelte'
+  import { type SelectOption } from '#lib/components/SelectDropdown.svelte'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
+  import ShowcasePage from '#showcase/shell/ShowcasePage.svelte'
+  import { parseOptionArrayJson } from '#showcase/playground/option-json.js'
+  import { parseSizeValue } from '#showcase/playground/size-input.js'
+  import { enumField, textField, boolField, sizeField, jsonField } from '#showcase/playground/snippet-field.js'
+  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
+  import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
+  import { type TriState } from '#showcase/playground/snippet-build.js'
   import {
     buildChipDropdownSnippet,
     CHIP_STAGE_DEFAULT_WIDTH,

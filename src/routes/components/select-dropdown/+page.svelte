@@ -1,15 +1,15 @@
 <script lang="ts">
-  import SelectDropdown, { type SelectOption } from '$lib/components/SelectDropdown.svelte'
-  import { getI18nContext } from '$lib/i18n/store.svelte'
-  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
-  import { parseSizeValue } from '$showcase/playground/size-input'
-  import { parseOptionArrayJson } from '$showcase/playground/option-json'
-  import { enumField, textField, boolField, sizeField, jsonField } from '$showcase/playground/snippet-field'
-  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/playground/staged'
-  import { type TriState } from '$showcase/playground/snippet-build'
-  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
-  import { appliedRatios, componentRatiosField } from '$showcase/playground/text-input-ratios'
-  import { SELECT_RATIOS, type SelectRatioOverrides } from '$lib/components/select-dropdown-styles'
+  import SelectDropdown, { type SelectOption } from '#lib/components/SelectDropdown.svelte'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
+  import ShowcasePage from '#showcase/shell/ShowcasePage.svelte'
+  import { parseSizeValue } from '#showcase/playground/size-input.js'
+  import { parseOptionArrayJson } from '#showcase/playground/option-json.js'
+  import { enumField, textField, boolField, sizeField, jsonField } from '#showcase/playground/snippet-field.js'
+  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
+  import { type TriState } from '#showcase/playground/snippet-build.js'
+  import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
+  import { appliedRatios, componentRatiosField } from '#showcase/playground/text-input-ratios.js'
+  import { SELECT_RATIOS, type SelectRatioOverrides } from '#lib/components/select-dropdown-styles.js'
   import {
     buildSelectDropdownSnippet,
     SELECT_STAGE_DEFAULT_WIDTH,

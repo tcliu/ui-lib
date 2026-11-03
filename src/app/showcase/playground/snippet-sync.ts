@@ -37,7 +37,7 @@ import {
   type SnippetAttribute,
 } from './snippet-attributes'
 import { splitLeadingScript } from './snippet-source'
-import type { FieldConfig } from '$lib/components/FieldTable.svelte'
+import type { FieldConfig } from '#lib/components/FieldTable.svelte'
 
 export type SyncKind =
   | 'text'

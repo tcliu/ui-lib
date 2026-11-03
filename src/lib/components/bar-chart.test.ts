@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushSync, mount, unmount, type ComponentProps } from 'svelte'
 import BarChart, { type ChartColumn } from './BarChart.svelte'
-import { SIZE_PX } from '$lib/size-scale'
+import { SIZE_PX } from '#lib/size-scale.js'
 
 // jsdom lacks ResizeObserver (the Tooltip's positionPanel), matchMedia,
 // requestAnimationFrame, and scrollIntoView; stub them so mounting is a layout

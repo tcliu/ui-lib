@@ -4,10 +4,10 @@
 // value lives in a local `$state` so the live snippet keeps its own edits and
 // still starts from the demo's displayed text.
 
-import { boolAttrLine, sizeAttrLine, textAttrLine, type TriState } from '$showcase/playground/snippet-build'
-import type { Staged } from '$showcase/playground/staged'
-import { ratiosAttrLine } from '$showcase/playground/text-input-ratios'
-import type { FieldRatioOverrides } from '$lib/components/input-chrome'
+import { boolAttrLine, sizeAttrLine, textAttrLine, type TriState } from '#showcase/playground/snippet-build.js'
+import type { Staged } from '#showcase/playground/staged.js'
+import { ratiosAttrLine } from '#showcase/playground/text-input-ratios.js'
+import type { FieldRatioOverrides } from '#lib/components/input-chrome.js'
 
 // Default value shared by the page and the snippet so the static demo and the
 // Show-code source start from the same text.

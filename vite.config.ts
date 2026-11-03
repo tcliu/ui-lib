@@ -1,4 +1,6 @@
 import path from 'node:path'
+import adapterCloudflare from '@sveltejs/adapter-cloudflare'
+import adapterVercel from '@sveltejs/adapter-vercel'
 import { sveltekit } from '@sveltejs/kit/vite'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vitest/config'
@@ -41,8 +43,19 @@ export default defineConfig(async ({ command, mode }) => {
     loadDevEnv(mode)
   }
 
+  // Second deploy target: `CF_PAGES=1` selects the Cloudflare Pages adapter,
+  // otherwise the Vercel adapter stays the default. Deploys run through
+  // `scripts/deploy.mjs --target cloudflare` on the existing Neon backend.
+  // Read after `loadDevEnv` so a dotenv-provided flag is honored too.
+  const useCloudflare = process.env.CF_PAGES === '1'
+
   return {
-    plugins: [sveltekit(), tailwindcss()],
+    plugins: [
+      sveltekit({
+        adapter: useCloudflare ? adapterCloudflare() : adapterVercel({ runtime: 'nodejs24.x' }),
+      }),
+      tailwindcss(),
+    ],
     // Vitest runs the SSR transform pipeline, so `svelte` resolves to its
     // server entry and component mounting is unavailable. Scope the browser
     // export conditions to vitest only (Svelte's testing guidance); dev/build

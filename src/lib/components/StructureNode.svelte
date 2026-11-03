@@ -1,5 +1,5 @@
 <script module lang="ts">
-  import { FONT_RATIO, type SizeInput } from '$lib/size-scale'
+  import { FONT_RATIO, type SizeInput } from '#lib/size-scale.js'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
   import { iconOnlyBoxPx } from './Button.svelte'
 
@@ -52,9 +52,9 @@
   import FormDialog from './FormDialog.svelte'
   import LazyCodeEditor from './LazyCodeEditor.svelte'
   import Tooltip from './Tooltip.svelte'
-  import CaretRightIcon from '$lib/icons/CaretRightIcon.svelte'
-  import EditIcon from '$lib/icons/EditIcon.svelte'
-  import CopyIcon from '$lib/icons/CopyIcon.svelte'
+  import CaretRightIcon from '#lib/icons/CaretRightIcon.svelte'
+  import EditIcon from '#lib/icons/EditIcon.svelte'
+  import CopyIcon from '#lib/icons/CopyIcon.svelte'
   import {
     type StructureEntry,
     childEntries,
@@ -69,7 +69,7 @@
   } from './structure-value'
   import { createInlineEdit } from './use-structure-inline-edit.svelte'
   import { createStructureObjectEditor } from './use-structure-object-editor.svelte'
-  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
   const i18n = getI18nContext()
 
   interface Props {

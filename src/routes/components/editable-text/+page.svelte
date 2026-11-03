@@ -1,15 +1,15 @@
 <script lang="ts">
-  import EditableText from '$lib/components/EditableText.svelte'
-  import { getI18nContext } from '$lib/i18n/store.svelte'
-  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
-  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/playground/staged'
-  import { textField, boolField, sizeField } from '$showcase/playground/snippet-field'
-  import { type TriState } from '$showcase/playground/snippet-build'
-  import { appliedRatios, componentRatiosField } from '$showcase/playground/text-input-ratios'
-  import { FIELD_RATIOS, type FieldRatioOverrides } from '$lib/components/input-chrome'
+  import EditableText from '#lib/components/EditableText.svelte'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
+  import ShowcasePage from '#showcase/shell/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
+  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
+  import { textField, boolField, sizeField } from '#showcase/playground/snippet-field.js'
+  import { type TriState } from '#showcase/playground/snippet-build.js'
+  import { appliedRatios, componentRatiosField } from '#showcase/playground/text-input-ratios.js'
+  import { FIELD_RATIOS, type FieldRatioOverrides } from '#lib/components/input-chrome.js'
   import { DEFAULT_CLASS_NAME, DEFAULT_MAX_WIDTH, DEFAULT_TEXT, buildEditableTextSnippet } from './demo-snippet'
-  import { parseSizeValue } from '$showcase/playground/size-input'
+  import { parseSizeValue } from '#showcase/playground/size-input.js'
 
   const i18n = getI18nContext()
 

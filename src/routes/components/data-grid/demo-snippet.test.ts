@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { STAGE_PANE, STAGE_ROW } from '$showcase/shell/resizable-stage'
-import { staged } from '$showcase/playground/staged'
+import { STAGE_PANE, STAGE_ROW } from '#showcase/shell/resizable-stage.js'
+import { staged } from '#showcase/playground/staged.js'
 import {
   DEMO_VALUE,
   buildDataGridSnippet,

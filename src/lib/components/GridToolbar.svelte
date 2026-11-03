@@ -1,14 +1,14 @@
 <script lang="ts">
   import Button from './Button.svelte'
-  import type { SizeInput } from '$lib/size-scale'
+  import type { SizeInput } from '#lib/size-scale.js'
   import type { createGridModel, HistoryState } from './use-grid-model.svelte'
   import type { createGridSelection } from './use-grid-selection.svelte'
-  import TableIcon from '$lib/icons/TableIcon.svelte'
-  import DeleteIcon from '$lib/icons/DeleteIcon.svelte'
-  import TrimIcon from '$lib/icons/TrimIcon.svelte'
-  import UndoIcon from '$lib/icons/UndoIcon.svelte'
-  import RedoIcon from '$lib/icons/RedoIcon.svelte'
-  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import TableIcon from '#lib/icons/TableIcon.svelte'
+  import DeleteIcon from '#lib/icons/DeleteIcon.svelte'
+  import TrimIcon from '#lib/icons/TrimIcon.svelte'
+  import UndoIcon from '#lib/icons/UndoIcon.svelte'
+  import RedoIcon from '#lib/icons/RedoIcon.svelte'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
   const i18n = getI18nContext()
 
   interface Props {

@@ -1,14 +1,21 @@
 {
-  "extends": "./.svelte-kit/tsconfig.json",
+  "extends": "$app/tsconfig",
+  "include": ["src/**/*.js", "src/**/*.ts", "src/**/*.svelte", "vite.config.ts", "playwright.config.ts"],
+  "exclude": ["node_modules", ".svelte-kit", ".worktrees", ".tmp", "build"],
   "compilerOptions": {
     "allowJs": true,
     "checkJs": false,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "bundler",
+    "paths": {
+      "#lib/*": ["./src/lib/*"],
+      "#showcase/*": ["./src/app/showcase/*"],
+      "#appLib/*": ["./src/app/*"]
+    },
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
-    "types": ["node", "vitest/globals"]
+    "types": ["$app/types", "node", "vitest/globals"]
   }
 }

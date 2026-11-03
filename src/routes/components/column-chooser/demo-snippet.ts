@@ -6,9 +6,9 @@
 //
 // The resize harness is ShowcasePage-owned chrome (its `stage` prop), so the
 // snippet carries only the demo content the page authors inside that frame.
-import { escapeAttr, sizeAttrLine } from '$showcase/playground/snippet-build'
-import type { Staged } from '$showcase/playground/staged'
-import type { ChooserColumn } from '$lib/components/ColumnChooser.svelte'
+import { escapeAttr, sizeAttrLine } from '#showcase/playground/snippet-build.js'
+import type { Staged } from '#showcase/playground/staged.js'
+import type { ChooserColumn } from '#lib/components/ColumnChooser.svelte'
 
 export const COLUMNS_STAGE_DEFAULT_WIDTH = 560
 export const COLUMNS_STAGE_MIN_WIDTH = 240

@@ -1,6 +1,6 @@
 <script lang="ts">
   import Menu from './Menu.svelte'
-  import type { SizeInput } from '$lib/size-scale'
+  import type { SizeInput } from '#lib/size-scale.js'
 
   interface Props {
     size?: SizeInput

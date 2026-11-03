@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { flushSync, mount, unmount } from 'svelte'
-import type { SizeInput } from '$lib/size-scale'
+import type { SizeInput } from '#lib/size-scale.js'
 import Buttons from './Buttons.svelte'
 
 let target: HTMLDivElement

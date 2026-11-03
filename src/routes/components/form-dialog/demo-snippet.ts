@@ -10,10 +10,10 @@ import {
   textAttrLine,
   unescapeAttr,
   type TriState,
-} from '$showcase/playground/snippet-build'
-import { isBasicHtmlMarkup } from '$showcase/playground/snippet-html'
-import { buildHeaderLine, parseHeaderMarkup } from '$showcase/playground/snippet-header'
-import type { Staged } from '$showcase/playground/staged'
+} from '#showcase/playground/snippet-build.js'
+import { isBasicHtmlMarkup } from '#showcase/playground/snippet-html.js'
+import { buildHeaderLine, parseHeaderMarkup } from '#showcase/playground/snippet-header.js'
+import type { Staged } from '#showcase/playground/staged.js'
 
 export interface FormDialogSnippetState {
   widthVariant: Staged<string>

@@ -3,7 +3,7 @@
   import BaseDialog from './BaseDialog.svelte'
   import Button from './Button.svelte'
   import Buttons from './Buttons.svelte'
-  import type { SizeInput } from '$lib/size-scale'
+  import type { SizeInput } from '#lib/size-scale.js'
 
   interface Props {
     title: string

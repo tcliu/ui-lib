@@ -5,7 +5,7 @@
 // the component around it was tuned for. Width/height stay attributes, never
 // classes, so `size` composes with `className`. The scales themselves live in
 // `$lib/size-scale` alongside every other sized component.
-import { ICON_RATIO, SIZE_PX, type SizeInput } from '$lib/size-scale'
+import { ICON_RATIO, SIZE_PX, type SizeInput } from '#lib/size-scale.js'
 
 export type IconSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 

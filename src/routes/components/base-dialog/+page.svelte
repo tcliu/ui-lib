@@ -1,14 +1,14 @@
 <script lang="ts">
-  import BaseDialog, { DIALOG_SIZE_VARIANTS } from '$lib/components/BaseDialog.svelte'
-  import Button from '$lib/components/Button.svelte'
-  import Buttons from '$lib/components/Buttons.svelte'
-  import Copyable from '$lib/components/Copyable.svelte'
-  import { getI18nContext } from '$lib/i18n/store.svelte'
-  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
-  import { enumField, textField, snippetDialog, snippetField } from '$showcase/playground/snippet-field'
-  import { applied, eye, eyeToggle, stage, staged } from '$showcase/playground/staged'
-  import { buildHeaderLine, parseHeaderMarkup } from '$showcase/playground/snippet-header'
+  import BaseDialog, { DIALOG_SIZE_VARIANTS } from '#lib/components/BaseDialog.svelte'
+  import Button from '#lib/components/Button.svelte'
+  import Buttons from '#lib/components/Buttons.svelte'
+  import Copyable from '#lib/components/Copyable.svelte'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
+  import ShowcasePage from '#showcase/shell/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
+  import { enumField, textField, snippetDialog, snippetField } from '#showcase/playground/snippet-field.js'
+  import { applied, eye, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
+  import { buildHeaderLine, parseHeaderMarkup } from '#showcase/playground/snippet-header.js'
   import {
     DISMISS_HANDLER,
     buildBaseDialogSnippet,

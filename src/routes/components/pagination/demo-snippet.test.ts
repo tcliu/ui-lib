@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { staged } from '$showcase/playground/staged'
+import { staged } from '#showcase/playground/staged.js'
 import { CUSTOM_LABELS, DEFAULT_PAGE_SIZE_OPTIONS, STYLED_CLASS, buildPaginationSnippet, parseLabelsJson, parseLabelsValue, parsePageSizeOptionsJson, parsePageSizeOptionsValue } from './demo-snippet'
 
 const base = {

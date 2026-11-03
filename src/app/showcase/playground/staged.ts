@@ -8,7 +8,7 @@
 // rune-backed class fields do not survive the clone. Mutate a pair in place
 // (`.value`, `.on`, or `stage`); never reassign it, or a captured setter keeps
 // writing to the stale object.
-import type { FieldToggle } from '$lib/components/FieldTable.svelte'
+import type { FieldToggle } from '#lib/components/FieldTable.svelte'
 import { flagOn, type TriState } from './snippet-build'
 import { resetToggle, snippetToggle } from './snippet-field'
 

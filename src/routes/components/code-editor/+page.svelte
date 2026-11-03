@@ -1,11 +1,11 @@
 <script lang="ts">
-  import CodeEditor from '$lib/components/CodeEditor.svelte'
-  import { getI18nContext } from '$lib/i18n/store.svelte'
-  import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
-  import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
-  import { textField, boolField, enumField, snippetField } from '$showcase/playground/snippet-field'
-  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/playground/staged'
-  import { type TriState } from '$showcase/playground/snippet-build'
+  import CodeEditor from '#lib/components/CodeEditor.svelte'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
+  import ShowcasePage from '#showcase/shell/ShowcasePage.svelte'
+  import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
+  import { textField, boolField, enumField, snippetField } from '#showcase/playground/snippet-field.js'
+  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
+  import { type TriState } from '#showcase/playground/snippet-build.js'
   import {
     DEFAULT_CONTENT,
     DEFAULT_DOC_TYPE,

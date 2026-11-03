@@ -13,11 +13,11 @@
   import { INPUT_CHROME, INPUT_METRIC_CLASS, INPUT_RATIOS } from './input-chrome'
   import { dimensionMetrics } from './size-metrics'
   import { TEXT_INPUT_RATIOS } from './text-input-metrics'
-  import type { SizeInput } from '$lib/size-scale'
-  import EditIcon from '$lib/icons/EditIcon.svelte'
-  import EyeIcon from '$lib/icons/EyeIcon.svelte'
-  import EyeSlashIcon from '$lib/icons/EyeSlashIcon.svelte'
-  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import type { SizeInput } from '#lib/size-scale.js'
+  import EditIcon from '#lib/icons/EditIcon.svelte'
+  import EyeIcon from '#lib/icons/EyeIcon.svelte'
+  import EyeSlashIcon from '#lib/icons/EyeSlashIcon.svelte'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
 
   export type FieldEditor = 'text' | 'textarea' | 'number' | 'enum' | 'size' | 'boolean' | 'options-json' | 'snippet'
 

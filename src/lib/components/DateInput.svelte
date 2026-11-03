@@ -7,8 +7,8 @@
   // how many fields to render, what each one is called, and how the pair holds
   // its two days: one end hands the focus to the empty one, and the pair keeps
   // its days in order.
-  import { getI18nContext } from '$lib/i18n/store.svelte'
-  import type { SizeInput } from '$lib/size-scale'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
+  import type { SizeInput } from '#lib/size-scale.js'
   import DateField from './DateField.svelte'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
   import {

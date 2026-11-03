@@ -1,16 +1,16 @@
 <script lang="ts">
   import { flushSync, tick } from 'svelte'
-  import { useListbox } from '$lib/actions/use-listbox.svelte'
-  import { isModifiedNavKey } from '$lib/actions/listbox-keynav'
-  import Button from '$lib/components/Button.svelte'
-  import ListboxPanel from '$lib/components/ListboxPanel.svelte'
-  import TextInput from '$lib/components/TextInput.svelte'
+  import { useListbox } from '#lib/actions/use-listbox.svelte.js'
+  import { isModifiedNavKey } from '#lib/actions/listbox-keynav.js'
+  import Button from '#lib/components/Button.svelte'
+  import ListboxPanel from '#lib/components/ListboxPanel.svelte'
+  import TextInput from '#lib/components/TextInput.svelte'
   import { useCaretAtEnd } from './use-caret-at-end.svelte'
   import { useSelectFilter } from './use-select-filter.svelte'
-  import ChevronDownIcon from '$lib/icons/ChevronDownIcon.svelte'
-  import CloseIcon from '$lib/icons/CloseIcon.svelte'
-  import type { DropdownPanelProps } from '$lib/dropdown-chrome'
-  import type { SizeInput } from '$lib/size-scale'
+  import ChevronDownIcon from '#lib/icons/ChevronDownIcon.svelte'
+  import CloseIcon from '#lib/icons/CloseIcon.svelte'
+  import type { DropdownPanelProps } from '#lib/dropdown-chrome.js'
+  import type { SizeInput } from '#lib/size-scale.js'
   import {
     DEFAULT_PANEL_CLASS,
     SELECT_BOX_UTILITIES,
@@ -24,7 +24,7 @@
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
   import { withLine } from './text-input-metrics'
   import type { ClearableProps } from './clearable-props'
-  import { getI18nContext } from '$lib/i18n/store.svelte'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
 
   const i18n = getI18nContext()
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { staged } from '$showcase/playground/staged'
+import { staged } from '#showcase/playground/staged.js'
 import { STYLED_WRAPPER, buildCheckboxSnippet, type CheckboxSnippetState } from './demo-snippet'
 
 const IDLE: CheckboxSnippetState = {

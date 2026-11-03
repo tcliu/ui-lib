@@ -1,9 +1,9 @@
 import { readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { VARIANT_LADDERS } from '$lib/icons/icon-variants'
-import { createSnippetComponent } from '$showcase/playground/snippet-playground'
-import { staged } from '$showcase/playground/staged'
+import { VARIANT_LADDERS } from '#lib/icons/icon-variants.js'
+import { createSnippetComponent } from '#showcase/playground/snippet-playground.js'
+import { staged } from '#showcase/playground/staged.js'
 import {
   ALL_VARIANTS,
   buildIconsSnippet,

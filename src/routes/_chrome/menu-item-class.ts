@@ -1,4 +1,4 @@
-import type { MenuItemState } from '$lib/components/Menu.svelte'
+import type { MenuItemState } from '#lib/components/Menu.svelte'
 
 // Shared radio-item row styling for the chrome's theme/language menus: the same
 // row chrome, differing only in whether the option is the currently selected

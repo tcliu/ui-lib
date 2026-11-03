@@ -1,4 +1,4 @@
-import { browser } from '$app/environment'
+import { browser } from '$app/env'
 
 // Persisted web settings key, read by the pre-paint script in `src/app.html`.
 // Preferences (theme, picker visibility) are fields of one JSON object so

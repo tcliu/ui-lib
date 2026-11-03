@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { staged } from '$showcase/playground/staged'
+import { staged } from '#showcase/playground/staged.js'
 import { STYLED_CLASS, buildTooltipSnippet } from './demo-snippet'
 
 // The curated props this builder reads, all eyes off and no label.
