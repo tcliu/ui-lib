@@ -298,9 +298,25 @@ of building a parallel control.
   (`INPUT_CHROME` surface/border/focus/disabled/read-only/motion,
   `INPUT_CHROME_NO_OUTLINE` the same surface without the border/focus border,
   `INPUT_EMBEDDED` the chrome-less base for a field inside another surface,
-  `INPUT_METRIC_CLASS` the `--input-*` metric classes, `INPUT_RATIOS` the
-  metric ratios). `PasswordInput`, `SearchInput`, and `NumberInput` compose
-  `TextInput`, passing their adornment (eye toggle, search icon, steppers)
+  `INPUT_METRIC_CLASS` the `--input-*` metric classes, `FIELD_RATIOS` the
+  tunable text ratios a field's `ratios` prop overrides — font, radius, and both
+  paddings, with the font taken from `FONT_RATIO` — and `INPUT_RATIOS` the same
+  set plus the line box derived through `INPUT_LEADING`). `text-input-metrics.ts`
+  carries the field's independent ratio set: `TEXT_INPUT_RATIOS` spreads
+  `FIELD_RATIOS` and adds the clear affordance's box and gutter plus the trailer
+  gap, and `TextInput` merges a caller's partial `ratios` override over it, with
+  the line box derived from `font` and the clear inset from `padX`. No
+  input-family set exposes the line box as a key: every field, trigger, tag row,
+  and picker derives it from its own font, so one font retune moves every row's
+  height together. Every sized input exposes the same
+  partial `ratios` prop over its own base set (`TEXT_INPUT_RATIOS`,
+  `SELECT_RATIOS`, `PICKER_RATIOS`, `TAG_INPUT_RATIOS`, and each composite's
+  field-plus-adornment set), and a composite forwards the field subset to its
+  inner `TextInput`, so one object tunes the field and its adornment together and
+  its set carries only the keys it renders (a composite with no trailer row
+  leaves the trailer gap out). `PasswordInput`, `SearchInput`,
+  and `NumberInput` compose `TextInput` and forward its `ratios` prop, passing
+  their adornment (eye toggle, search icon, steppers)
   through its `leading`/`trailing` snippets; every input-family control forwards
   `hideOutline`, which drops the bordered outline while keeping the surface,
   padding, and text metrics. `TextArea` is a `<textarea>`, so it
@@ -349,7 +365,9 @@ of building a parallel control.
   `danger`, `outline`, `ghost`), `size` on the shared axis, an `icon` snippet for
   an icon-only control, and `className` for the caller's own additions. An
   icon-only button (`icon` with no children) takes its box from the icon
-  metrics alone, so it matches a text button's row height; `pending` disables
+  metrics alone, so it matches a text button's row height; the padded box
+  matches the text field's row box, so a button beside a field stays level.
+  `pending` disables
   the button and marks it `aria-busy` for assistive tech, so a caller never
   hand-writes that state. A `className` adds utilities; it never restates a
   variant utility: the button's own classes win on source order, so an
@@ -365,21 +383,25 @@ of building a parallel control.
 - **Size metrics** — a sized component exposes one numeric size dimension;
   `xs`–`xl` are aliases of the shared `SIZE_PX` axis (`xs:12 … xl:20`). Every
   metric scales by a fixed ratio of that dimension (`metric = ratio ×
-  resolveSize(size)`); font is a ratio too — the text-like controls share
-  `0.8125` (Button, the input chrome, `SelectDropdown`), while text-only
-  components reuse the shared `FONT_RATIO` (0.875, e.g. TagInput/Toast/
-  Checkbox/Pagination). `Button`'s icon-only padding is derived
+  resolveSize(size)`); font is a ratio too — the text-like controls take the
+  shared `FONT_RATIO` (0.875: the input chrome, `SelectDropdown`, `DateInput`,
+  `TagInput`, `Pagination`, and the text-only components), while `Button`
+  keeps its compact `0.8125` label. `Button`'s line box is derived so its padded
+  box (`line + 2·padY`) equals the text field's row box
+  (`INPUT_RATIOS.line + 2·INPUT_RATIOS.padY`), while its vertical padding stays
+  at the original share, so the compact button still sits level beside a field.
+  Its icon-only padding is derived
   (`iconPadRatio`: `padY + (line − icon) / 2`, via `p-[var(--btn-icon-pad)]`), so
   a bordered icon-only box (`icon + 2·iconPad`) is the same height as a text
   button's (`line + 2·padY`) and never goes stale when `padY`/`line` are tuned;
   the icon-only shape also floors its box at the text line height, so the
   paddingless `ghost` glyph matches the ghost text row too. An interrelated
-  metric is derived from its base rather than tuned beside it: `SelectDropdown`'s
-  trigger gutter (chevron → border) is a fixed share of `padX`
-  (`SELECT_GUTTER_SHARE`), emitted as
-  `--sel-pad-right: calc(var(--sel-pad-x) * share)` so retuning the padding — or
-  a caller overriding `--sel-pad-x` — rescales the chevron's inset with it
-  instead of shifting it by a constant offset. The helpers in
+  metric is derived from its base rather than tuned beside it: `TextInput`'s
+  in-field clear cross sits at `padX` (`--clear-inset`), so retuning the field
+  padding carries the cross with it instead of shifting it by a constant
+  offset. `SelectDropdown`'s chevron gutter is deliberately its own
+  `chevronGap` ratio (emitted as `--sel-chevron-gap`), so the marker's inset can
+  be tuned without moving the label's `padX` inset. The helpers in
   `size-metrics.ts` (`resolveSize`, `dimensionMetrics`, `iconPadRatio`,
   `sizeVarStyle`) emit the metric custom properties on the inline style while a
   static utility set consumes them; the constant ratio means no per-step
@@ -718,10 +740,11 @@ of building a parallel control.
   region still labels the dialog; `title` renders the default heading when no
   header is passed), while `children` scrolls between it. The action row is
   part of the content, not a panel region: a dialog that keeps its row visible
-  composes it as a `flex-none` sibling of its own scroll area, which is what
-  `ConfirmDialog` and `FormDialog` do. `FormDialog` forwards `header`, wraps the
-  body in a `<form>` (so Enter still submits), and owns the action row: the
-  built-in save/reset pair, extra `actions` buttons before it, or a caller
+  composes it as a `flex-none` sibling of its own scroll area, separated from
+  that area by the same `gap-4` the panel puts between header and body, which
+  is what `ConfirmDialog` and `FormDialog` do. `FormDialog` forwards `header`,
+  wraps the body in a `<form>` (so Enter still submits), and owns the action
+  row: the built-in save/reset pair, extra `actions` buttons before it, or a caller
   `footer` that replaces the pair — the footer renders inside the form, so a
   `type="submit"` button in it submits the form. Its discard confirm takes
   `confirmOnDismiss` — with it the confirm's own dismissal performs the

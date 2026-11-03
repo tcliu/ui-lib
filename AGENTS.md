@@ -94,6 +94,25 @@ Project-specific development conventions for the UI Library web app.
   field uses that base instead of re-declaring it. A field drops its outline with
   `hideOutline` (the base's borderless surface, padding, and text metrics) rather
   than a custom `inputClass`, and every input-family control forwards it.
+- A text field's tunable ratios live in one `FIELD_RATIOS` object (font, radius,
+  and both paddings) exposed as a partial `ratios` prop, with the line box
+  derived from `font` through `INPUT_LEADING` rather than exposed as a key, so a
+  font retune carries the field's height. `TextInput` extends that set with its
+  clear affordance and trailer gap (`TEXT_INPUT_RATIOS`), while `TextArea` and
+  `EditableText` ride the base set. A composing field forwards the field subset
+  instead of re-declaring it. Its props row and Show-code line come from the
+  shared `componentRatiosField`/`ratiosAttrLine` helpers (and
+  `ratiosAttributeFragment` for a builder that closes its tag on one line), used
+  by every sized input page.
+- Every sized input control exposes the same partial `ratios` prop over its own
+  full ratio set (`TEXT_INPUT_RATIOS`, `SELECT_RATIOS`, `PICKER_RATIOS`,
+  `TAG_INPUT_RATIOS`, and the composite sets). A composite forwards the field
+  subset to its inner `TextInput`, so one object tunes field and adornment
+  together, and its set carries only the keys it renders (a composite with no
+  trailer row leaves the trailer gap out); no set exposes the line box as a key —
+  it derives from the font — and the other derived metrics (gutter, clear inset)
+  still follow their base. A new sized input adds the prop and its
+  showcase row instead of a parallel configuration path.
 - `NumberInput`'s `showControls` hides only the stepper overlay; `variant="embedded"`
   is what hands the box to the caller, so a stepper-less field keeps its bordered
   box — pair it with `hideOutline` for a borderless one.
@@ -117,7 +136,7 @@ Project-specific development conventions for the UI Library web app.
   dictionaries must define the shared keys. Keys, dictionaries, and the exact
   list are in `ARCHITECTURE.md`.
 - Component attributes stay camelCase.
-- A sized component exposes one numeric size dimension (`xs`–`xl` aliases of the `SIZE_PX` axis) and scales every metric by a fixed ratio; an interrelated metric derives from its base rather than being tuned beside it (the trigger gutter is a fixed share of the horizontal padding), per `~/.agents/references/tailwind.md` (Derived custom properties); details in `ARCHITECTURE.md`.
+- A sized component exposes one numeric size dimension (`xs`–`xl` aliases of the `SIZE_PX` axis) and scales every metric by a fixed ratio; an interrelated metric derives from its base rather than being tuned beside it (the input line box follows the font; a clear cross's inset follows the horizontal padding), per `~/.agents/references/tailwind.md` (Derived custom properties); details in `ARCHITECTURE.md`.
 - A composite embedding sized controls exposes `size?: SizeInput` and forwards it to every inner sized control, defaulting to the shared `md` step so both agree.
 - `SelectDropdown`'s trigger and its option rows (also `AutoComplete`'s) take
   the text field's box — the input chrome's font, line, and padding — so a
@@ -126,7 +145,7 @@ Project-specific development conventions for the UI Library web app.
 - `Pagination`'s page blocks match the page-size dropdown trigger's height (same select line, vertical padding, and 1px border), so the row's controls sit level rather than from a hand-tuned block ratio; a page cell sizes in CSS alone — square at rest, widened only by its own label — and the active cell (the jump field) shares the page buttons' box for the same text and puts the caret at the end on focus/click (`caretAtEnd`).
 - A dialog panel's footprint is `BaseDialog`'s `widthVariant`/`heightVariant` (or the `size` shorthand setting both; explicit variant wins), not a `SizeInput` metric scale. Mechanism in `ARCHITECTURE.md`.
 - Size svg primitives (icons, spinner) take `size` attributes, never classes.
-- A sized control's icon slot is the size dimension itself (`icon` ratio `1`), while the glyph renders at the shared `ICON_RATIO` (`0.8125`), so an icon matches its label and keeps the optical size the filled-viewBox glyphs were normalized from.
+- A sized control's icon slot is the size dimension itself (`icon` ratio `1`), while the glyph renders at the shared `ICON_RATIO` (`0.8125`), keeping the optical size the filled-viewBox glyphs were normalized from.
 - An in-field affordance glyph rides a trimmed share of the icon slot rather than the whole slot — the dropdown trigger's chevron and its clear cross and a clearable field's cross at `0.625×`, the number steppers at `0.75×`, the date panel's clear cross at `0.8×`, the search icon at `0.9×` — so it reads lighter than the label while still scaling with the control.
 - `ChipDropdown` scales on the shared size axis (its ratios calibrated so `md` reproduces the original chip's label, padding, and gaps, with its chevron on `SelectDropdown`'s `0.625×` affordance share) and reserves the clear slot while holding its own label width, so clearing never resizes it.
 - `Chip` owns its size-scaled spacing (padding, font, line, gap) on the shared axis; `chipClass` supplies color and the static pill's shape (radius), so a caller passes `size` instead of baking padding/font into the class.
@@ -151,6 +170,10 @@ Project-specific development conventions for the UI Library web app.
 - Reuse this project's existing UI primitives; every button is the shared
   `Button` (icon-only through its `icon` snippet) per
   `~/.agents/references/ui-patterns.md`, never a raw `<button>`.
+- A padded `Button` keeps its compact label and original vertical padding, and
+  derives its line box from the text field's row box instead, so a button beside
+  a field lands on the same height without growing its padding. Mechanism in
+  `ARCHITECTURE.md`.
 - A composite trigger that renders the shared `Button` (the `Menu` trigger)
   inherits its box, hit area, focus ring, and glyph size, so the trigger's
   icon carries no `size` and a trigger class never restates padding; the
@@ -229,6 +252,7 @@ Project-specific development conventions for the UI Library web app.
 - The `ghost` variant deliberately carries no padding for icons or text, so it stays compact.
 - A ghost text button restores breathing room through `className`; a ghost on a touch surface still owes the mobile target (`~/.agents/references/responsive-design.md`).
 - `ConfirmDialog` routes dismiss affordances to `onCancel` when passed; a discard confirm passes `confirmOnDismiss` so Escape/overlay/close perform the confirm, while destructive confirms keep the safe cancel.
+- A dialog's action row sits `gap-4` below its scrolling body (the panel's own header-to-body gap), never flush against it.
 
 ## Theming
 
