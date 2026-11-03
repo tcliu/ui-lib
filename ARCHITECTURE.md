@@ -261,26 +261,36 @@ src/lib/**                       canonical shared source
 - **The dependencies** — every shared runtime package stays in `dependencies`;
   packages used only by the app's scripts or server tooling
   (`@neondatabase/serverless`, `better-sqlite3`) stay in `devDependencies`, so
-  a consumer never installs them.
+  a consumer never installs them. The editor's CodeMirror packages are the one
+  exception to runtime meaning `dependencies`: they are optional peer
+  dependencies (and dev dependencies for this repo's own build), so a consumer
+  that never renders `CodeEditor` installs none of them. `@babel/runtime` stays
+  a dependency because the theme package imports it at runtime.
 - **The stylesheet** — `src/lib/styles.css` ships as `dist/styles.css` and
   carries `@source "./"`, which points the consumer's Tailwind at the package
   (Tailwind does not scan `node_modules`).
-- **The README and license** — npm packs the root `README.md` and `LICENSE`
-  beside `dist/`; both are tracked, because a publish from a clean checkout packs
-  only files the repository carries.
+- **The README, changelog and license** — npm packs the root `README.md`,
+  `CHANGELOG.md` and `LICENSE` beside `dist/` (`files` names the changelog;
+  npm adds the README and license itself). The README is written for the
+  package first — install, stylesheet, imports, i18n, versioning — and keeps the
+  showcase's setup and deployment below those sections, because the npm page
+  renders the root file. All three are tracked, because a publish from a clean
+  checkout packs only files the repository carries.
 - **`npm run publish:check`** — runs the app gates, builds the package, asserts
   that no test and no app-only alias ships, that every import, export target and
-  TypeScript type declaration resolves, that the README ships and the stylesheet
-  keeps its side effect, packs the tarball, and builds a scratch consumer against
-  it.
-- **`npm publish`** — the standard publish path: bump with
-  `npm version <patch|minor|major>` first, then publish; npm's
-  `prepublishOnly` hook runs `tools/check-publish-auth.mjs` (a registry
-  credential preflight that fails fast, skipped on a dry run) and then
-  `npm run publish:check` before anything is uploaded.
-  `publishConfig.access` already marks the scoped package public, so
-  the command needs no flags. A version already on the registry fails at npm, so
-  there is no registry-diff or auto-bump step.
+  TypeScript type declaration resolves, that the README and changelog ship, that
+  the newest version section in `CHANGELOG.md` names the manifest version, and
+  that the stylesheet keeps its side effect; it then packs the tarball and
+  builds a scratch consumer twice: without the optional editor peers (every
+  other component) and with them (every component).
+- **`npm publish`** — the standard publish path: write the changelog entry for
+  the version, bump to it with `npm version <x.y.z>` (or a
+  `patch`/`minor`/`major` word), then publish; npm's `prepublishOnly` hook runs
+  `tools/check-publish-auth.mjs` (a registry credential preflight that fails
+  fast, skipped on a dry run) and then `npm run publish:check` before anything
+  is uploaded. `publishConfig.access` already marks the scoped package public,
+  so the command needs no flags. A version already on the registry fails at
+  npm, so there is no registry-diff or auto-bump step.
 
 The i18n store is the one module the package owns and the app also uses: the
 context key comes from the global symbol registry (`Symbol.for('ui-lib:i18n')`),

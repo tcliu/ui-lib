@@ -44,11 +44,22 @@ Project-specific development conventions for the UI Library web app.
   must not import `$app/*`: the components import `#lib/app-environment.js`
   (an `esm-env` re-export) so `dist` carries no framework import, while the
   app-private showcase code may use `$app/env`.
+- Write the changelog entry for a version before bumping to it and publishing:
+  the newest version section in `CHANGELOG.md` must name the manifest version,
+  because `npm run publish:check` fails on a mismatch and a version is only
+  discoverable through its entry.
 - Release by bumping the root version with `npm version <patch|minor|major>` and
   running `npm publish`; npm's `prepublishOnly` hook checks the target registry's
   credentials (`tools/check-publish-auth.mjs`) and then runs
   `npm run publish:check`, and the build does not diff against the registry or
   bump.
+- The root `README.md` is the npm page, so it leads with the package (install,
+  stylesheet, imports, i18n, versioning) and keeps the showcase's setup and
+  deployment below those sections; never link to repo-only files from it, since
+  a consumer sees neither `docs/` nor `ARCHITECTURE.md`.
+- A dependency only the editor needs is an optional peer (plus a dev
+  dependency for this repo's build), so a consumer that never renders
+  `CodeEditor` installs none of the editor's packages.
 - A shared component originates here: a sibling that needs one adds it to this
   repo, republishes the package, then consumes it from the package.
 - A consuming app imports the package by name (`@codepg/ui-lib/...`); the
@@ -192,8 +203,8 @@ Project-specific development conventions for the UI Library web app.
 - Temporary scratch (plans in `.tmp/plans/`, requirements in `.tmp/features/`)
   lives in `.tmp/`, never in source directories.
 - The shared `CodeEditor`/`LazyCodeEditor` load language packs on demand through
-  a `docType` lookup; its CodeMirror theme package needs `@babel/runtime` in any
-  app that vendors it.
+  a `docType` lookup; its CodeMirror packages are optional peer dependencies,
+  and its theme package needs `@babel/runtime` in any app that vendors it.
 - The showcase's code panel is a live playground: a Show-code snippet must reproduce its static demo exactly, never including a shell-owned resize frame.
 - `ShowcasePage` pins everything above the props `tbody` so only the `FieldTable` body scrolls and the header band never scrolls away; mechanism in `ARCHITECTURE.md`.
 - When a component's props change, update its showcase page in the same change (playground state, props-table rows, snippet builder, tests), or the change is incomplete.

@@ -162,6 +162,19 @@ check(
 )
 check('the stylesheet keeps its side effect', manifest.sideEffects?.includes?.('**/*.css') === true)
 
+// A published version is only discoverable through the changelog, so the entry
+// for the version being published has to exist before `npm publish` runs this
+// gate. The first version heading is the newest, because entries are newest
+// first.
+const changelogPath = join(ROOT, 'CHANGELOG.md')
+const changelog = existsSync(changelogPath) ? readFileSync(changelogPath, 'utf8') : ''
+const documentedVersion = [...changelog.matchAll(/^## \[(\d+\.\d+\.\d+)\]/gm)].map(match => match[1])[0]
+check(
+  'the changelog documents the manifest version',
+  documentedVersion === manifest.version,
+  `changelog ${documentedVersion ?? '(none)'}, manifest ${manifest.version}`,
+)
+
 // --- the consumer ----------------------------------------------------------
 
 console.log('\npackage: building the scratch consumer')
@@ -179,44 +192,63 @@ if (tarball.status !== 0) {
   const packed = files.map(file => file.path)
   check('the tarball carries the manifest', packed.includes('package.json'))
   check('the tarball carries the README', packed.includes('README.md'))
+  check('the tarball carries the changelog', packed.includes('CHANGELOG.md'))
   check(
     'the tarball carries no test or harness',
     packed.every(file => !/(\.test\.[a-z]+|\.harness\.svelte)$/.test(file)),
   )
   check(
     'the tarball carries only the built surface',
-    packed.every(file => /^(package\.json|README\.md|LICEN[CS]E(\.md)?|dist\/)/.test(file)),
-    packed.filter(file => !/^(package\.json|README\.md|LICEN[CS]E(\.md)?|dist\/)/.test(file)).join(', '),
+    packed.every(file => /^(package\.json|README\.md|CHANGELOG\.md|LICEN[CS]E(\.md)?|dist\/)/.test(file)),
+    packed.filter(file => !/^(package\.json|README\.md|CHANGELOG\.md|LICEN[CS]E(\.md)?|dist\/)/.test(file)).join(', '),
   )
   const app = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'))
-  await writeFile(
-    join(CONSUMER, 'package.json'),
-    `${JSON.stringify(
-      {
-        name: 'package-consumer',
-        private: true,
-        type: 'module',
-        dependencies: {
-          [PACKAGE_NAME]: `file:${join(BUILD_DIR, filename)}`,
+  // The editor's CodeMirror packages are optional peers, so the consumer is
+  // built twice: once without them, proving the rest of the surface installs
+  // and builds on its own, and once with them, proving the editor does too.
+  const optionalPeers = Object.entries(app.peerDependenciesMeta ?? {})
+    .filter(([, meta]) => meta?.optional)
+    .map(([name]) => name)
+  const writeConsumerManifest = extraDev =>
+    writeFile(
+      join(CONSUMER, 'package.json'),
+      `${JSON.stringify(
+        {
+          name: 'package-consumer',
+          private: true,
+          type: 'module',
+          dependencies: {
+            [PACKAGE_NAME]: `file:${join(BUILD_DIR, filename)}`,
+          },
+          devDependencies: {
+            '@sveltejs/vite-plugin-svelte': app.devDependencies['@sveltejs/vite-plugin-svelte'],
+            '@tailwindcss/vite': app.devDependencies['@tailwindcss/vite'],
+            tailwindcss: app.devDependencies.tailwindcss,
+            vite: app.devDependencies.vite,
+            ...extraDev,
+          },
         },
-        devDependencies: {
-          '@sveltejs/vite-plugin-svelte': app.devDependencies['@sveltejs/vite-plugin-svelte'],
-          '@tailwindcss/vite': app.devDependencies['@tailwindcss/vite'],
-          tailwindcss: app.devDependencies.tailwindcss,
-          vite: app.devDependencies.vite,
-        },
-      },
-      null,
-      2,
-    )}\n`,
-  )
-  // The consumer imports every shipped component and lets Tailwind scan the
+        null,
+        2,
+      )}\n`,
+    )
+  // The consumer imports every module it is handed and lets Tailwind scan the
   // package's stylesheet, so a broken export or a missing class fails the build.
+  const writeConsumerEntry = modules =>
+    writeFile(
+      join(CONSUMER, 'src', 'main.ts'),
+      `import './app.css'\n${modules.map(name => `import '${PACKAGE_NAME}/${name}.svelte'`).join('\n')}\nconsole.log(${modules.length})\n`,
+    )
+  const installConsumer = () =>
+    spawnSync('npm', ['install', '--no-audit', '--no-fund'], { cwd: CONSUMER, encoding: 'utf8' })
+  const buildConsumer = () => spawnSync('npx', ['vite', 'build'], { cwd: CONSUMER, encoding: 'utf8' })
+
   const modules = shipped.filter(abs => rel(abs).endsWith('.svelte')).map(abs => rel(abs).replace(/\.svelte$/, ''))
-  await writeFile(
-    join(CONSUMER, 'src', 'main.ts'),
-    `import './app.css'\n${modules.map(name => `import '${PACKAGE_NAME}/${name}.svelte'`).join('\n')}\nconsole.log(${modules.length})\n`,
-  )
+  const editorModule = /(^|\/)components\/(Lazy)?CodeEditor$/
+  const withoutEditor = modules.filter(name => !editorModule.test(name))
+
+  await writeConsumerManifest({})
+  await writeConsumerEntry(withoutEditor)
   await writeFile(
     join(CONSUMER, 'index.html'),
     '<!doctype html><html><head><meta charset="utf-8"><title>consumer</title></head><body><script type="module" src="/src/main.ts"></script></body></html>\n',
@@ -227,16 +259,24 @@ if (tarball.status !== 0) {
     "import { svelte } from '@sveltejs/vite-plugin-svelte'\nimport tailwindcss from '@tailwindcss/vite'\nimport { defineConfig } from 'vite'\n\nexport default defineConfig({ plugins: [svelte(), tailwindcss()] })\n",
   )
 
-  const install = spawnSync('npm', ['install', '--no-audit', '--no-fund'], {
-    cwd: CONSUMER,
-    encoding: 'utf8',
-  })
+  const install = installConsumer()
   check('the consumer installs the tarball', install.status === 0, (install.stderr ?? '').trim().split('\n')[0])
 
-  const buildConsumer = spawnSync('npx', ['vite', 'build'], { cwd: CONSUMER, encoding: 'utf8' })
-  check('the consumer builds against the package', buildConsumer.status === 0)
-  if (buildConsumer.status !== 0) {
-    console.error((buildConsumer.stderr ?? '').split('\n').slice(-25).join('\n'))
+  const buildCore = buildConsumer()
+  check('the consumer builds without the optional editor peers', buildCore.status === 0)
+  if (buildCore.status !== 0) {
+    console.error((buildCore.stderr ?? '').split('\n').slice(-25).join('\n'))
+  }
+
+  await writeConsumerManifest(Object.fromEntries(optionalPeers.map(name => [name, app.peerDependencies[name]])))
+  await writeConsumerEntry(modules)
+  const peerInstall = installConsumer()
+  check('the consumer installs the editor peers', peerInstall.status === 0, (peerInstall.stderr ?? '').trim().split('\n')[0])
+
+  const buildEditor = buildConsumer()
+  check('the consumer builds with the editor peers installed', buildEditor.status === 0)
+  if (buildEditor.status !== 0) {
+    console.error((buildEditor.stderr ?? '').split('\n').slice(-25).join('\n'))
   }
 }
 
