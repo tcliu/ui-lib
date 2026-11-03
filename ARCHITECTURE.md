@@ -203,8 +203,10 @@ deletes the now-unguarded targets; a non-interactive run needs both `--kill` and
 the gated surface (everything under `src/lib` and `scripts/`, minus the
 app-owned files and tests) and byte-compares it against each
 registered sibling, resolving each sibling's own module references so a
-present-but-unreferenced port is flagged as dead. It fails on a divergence or a
-dead port. It also resolves a sibling's imports of the published package to the
+present-but-unreferenced port is flagged as dead. It reads each app's Node
+subpath imports (`#lib/*`) from that app's manifest, so a SvelteKit 3 app's
+references stay live; legacy `$lib` maps still resolve. It fails on a divergence
+or a dead port. It also resolves a sibling's imports of the published package to the
 source file the tarball ships that path from (the prune rules it applies live in
 `tools/lib/package-surface.mjs`), so renaming a module fails the gate for every
 consumer still asking for the old path instead of breaking that app's build after
@@ -265,7 +267,9 @@ src/lib/**                       canonical shared source
   exception to runtime meaning `dependencies`: they are optional peer
   dependencies (and dev dependencies for this repo's own build), so a consumer
   that never renders `CodeEditor` installs none of them. `@babel/runtime` stays
-  a dependency because the theme package imports it at runtime.
+  a dependency because the theme package imports it at runtime. `svelte` and
+  `tailwindcss` (v4) are required peers: the components are Svelte and the
+  stylesheet imports Tailwind rather than shipping compiled CSS.
 - **The stylesheet** — `src/lib/styles.css` ships as `dist/styles.css` and
   carries `@source "./"`, which points the consumer's Tailwind at the package
   (Tailwind does not scan `node_modules`).

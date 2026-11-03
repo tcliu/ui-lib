@@ -9,11 +9,12 @@ import { SHARED, SHARED_SET } from './shared-surface.mjs'
 // non-shared file imports it, directly or through other shared files, or names
 // it literally where scripts are invoked (package.json). A live file's own
 // imports become live too, so an orphaned cluster — a dead component and the
-// helpers only it imports — reads as dead, not just its root. `$lib` maps to
-// `src/lib` in every app; a bare import of the canonical package is the
-// published surface, so it resolves to the source the tarball ships and a path
-// this repo no longer ships is reported instead of silently ignored. Other bare
-// and `$app`/`$env` specifiers are ignored.
+// helpers only it imports — reads as dead, not just its root. An app's Node
+// subpath imports (`#lib/*`) are read from its own manifest, and `$lib` still
+// maps to `src/lib` for an app that has not moved; a bare import of the
+// canonical package is the published surface, so it resolves to the source the
+// tarball ships and a path this repo no longer ships is reported instead of
+// silently ignored. Other bare and `$app`/`$env` specifiers are ignored.
 
 // The package a sibling imports by name is this repo's manifest name, so the
 // resolution reads it instead of hardcoding a scope in a script that every
@@ -40,7 +41,6 @@ const EXTENSIONS = ['.ts', '.js', '.mjs', '.cjs', '.svelte', '.json']
 // literal reference, or its sample payload would look like a port candidate.
 const REFERENCE_EXTENSIONS = ['.ts', '.js', '.mjs', '.cjs', '.svelte']
 const isReferenceSource = rel => rel === 'package.json' || REFERENCE_EXTENSIONS.some(ext => rel.endsWith(ext))
-
 // On-disk candidates a specifier may resolve to, so an extensionless import
 // (`$lib/size-scale`) still matches `src/lib/size-scale.ts`.
 export const RESOLVE_SUFFIXES = [
@@ -66,17 +66,61 @@ function stripComments(text) {
   return text.replace(BLOCK_COMMENT_RE, '').replace(LINE_COMMENT_RE, '')
 }
 
-function resolveSpecifier(specifier, importerRel) {
-  const clean = specifier.split('?')[0].split('#')[0]
+// The app's Node subpath imports (`#lib/*` -> `./src/lib/*`). SvelteKit 3 moved
+// the app aliases into the manifest, so the graph reads them from the project it
+// scans rather than carrying a copy of the map.
+function readSubpathImports(projectPath) {
+  try {
+    const { imports = {} } = JSON.parse(readFileSync(join(projectPath, 'package.json'), 'utf8'))
+    return Object.entries(imports).filter(
+      ([key, target]) => key.startsWith('#') && typeof target === 'string',
+    )
+  } catch {
+    return []
+  }
+}
+
+/** The target a Node subpath import maps to, or null when no key matches. */
+function matchSubpathImport(specifier, imports) {
+  for (const [key, target] of imports) {
+    const star = key.indexOf('*')
+    if (star === -1) {
+      if (specifier === key) return target
+      continue
+    }
+    const prefix = key.slice(0, star)
+    const suffix = key.slice(star + 1)
+    if (!specifier.startsWith(prefix) || !specifier.endsWith(suffix)) continue
+    if (specifier.length < prefix.length + suffix.length) continue
+    return target.replace('*', specifier.slice(prefix.length, specifier.length - suffix.length))
+  }
+  return null
+}
+
+function resolveSpecifier(specifier, importerRel, subpathImports) {
+  // A subpath import keeps its leading `#`; only a fragment after a path is a
+  // suffix to strip.
+  const withoutQuery = specifier.split('?')[0]
+  const clean = withoutQuery.startsWith('#') ? withoutQuery : withoutQuery.split('#')[0]
   if (!clean) return []
   let base
-  if (clean === '$lib') base = 'src/lib'
+  const mapped = clean.startsWith('#') ? matchSubpathImport(clean, subpathImports) : null
+  if (mapped) {
+    // An app maps its aliases to its own files; a mapping to a package is not a
+    // shared-surface edge, so it is ignored like any other bare specifier.
+    if (!mapped.startsWith('./') && !mapped.startsWith('../')) return []
+    base = posix.normalize(mapped.replace(/^\.\//, ''))
+  } else if (clean === '$lib') base = 'src/lib'
   else if (clean.startsWith('$lib/')) base = `src/lib/${clean.slice(5)}`
   else if (clean.startsWith('./') || clean.startsWith('../')) {
     base = posix.normalize(posix.join(posix.dirname(importerRel), clean))
-    if (base.startsWith('..')) return []
   } else return []
-  return RESOLVE_SUFFIXES.map(suffix => base + suffix)
+  if (base.startsWith('..')) return []
+  // A `.js` specifier resolves to the `.ts`/`.svelte.ts` source it compiles
+  // from (the subpath imports carry the emitted extension).
+  const probes = RESOLVE_SUFFIXES.map(suffix => base + suffix)
+  if (base.endsWith('.js')) probes.push(`${base.slice(0, -3)}.ts`)
+  return probes
 }
 
 /**
@@ -115,6 +159,7 @@ export function collectUsage(projectPath) {
   const sharedEdges = new Map()
   const nonShared = new Set()
   const seen = new Set()
+  const subpathImports = readSubpathImports(projectPath)
   let externalCorpus = ''
   const read = rel => {
     let text
@@ -142,7 +187,7 @@ export function collectUsage(projectPath) {
         }
         continue
       }
-      for (const candidate of resolveSpecifier(match[1], rel)) {
+      for (const candidate of resolveSpecifier(match[1], rel, subpathImports)) {
         importTargets.add(candidate)
         candidates.add(candidate)
       }

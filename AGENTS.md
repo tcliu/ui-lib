@@ -57,9 +57,10 @@ Project-specific development conventions for the UI Library web app.
   stylesheet, imports, i18n, versioning) and keeps the showcase's setup and
   deployment below those sections; never link to repo-only files from it, since
   a consumer sees neither `docs/` nor `ARCHITECTURE.md`.
-- A dependency only the editor needs is an optional peer (plus a dev
-  dependency for this repo's build), so a consumer that never renders
-  `CodeEditor` installs none of the editor's packages.
+- A host toolchain the package needs at runtime is a required peer (`svelte`,
+  `tailwindcss`); a dependency only one optional surface needs is an optional
+  peer (plus a dev dependency for this repo's build), so a consumer that never
+  renders `CodeEditor` installs none of the editor's packages.
 - A shared component originates here: a sibling that needs one adds it to this
   repo, republishes the package, then consumes it from the package.
 - A consuming app imports the package by name (`@codepg/ui-lib/...`); the

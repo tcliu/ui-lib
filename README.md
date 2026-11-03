@@ -7,7 +7,8 @@ path, and every sized control scales from one `size` prop.
 ## Requirements
 
 - Svelte `^5.57` (a peer dependency)
-- Tailwind CSS v4 (the stylesheet ships Tailwind source, not compiled CSS)
+- Tailwind CSS v4 (a peer dependency; the stylesheet ships Tailwind source, not
+  compiled CSS)
 
 ## Install
 

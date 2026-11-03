@@ -96,3 +96,29 @@ describe('package imports', () => {
     expect(collectUsage(root).importTargets.has('src/lib/size-scale.ts')).toBe(true)
   })
 })
+
+describe('subpath imports', () => {
+  it('resolves a Node subpath import from the project manifest', () => {
+    const root = scratch({
+      'package.json': JSON.stringify({ imports: { '#lib/*': './src/lib/*' } }),
+      'src/a.ts': `import Button from '#lib/components/Button.svelte'\n`,
+    })
+    expect(collectUsage(root).live.has('src/lib/components/Button.svelte')).toBe(true)
+  })
+
+  it('resolves a subpath import emitted with a .js extension to its TypeScript source', () => {
+    const root = scratch({
+      'package.json': JSON.stringify({ imports: { '#lib/*': './src/lib/*' } }),
+      'src/a.ts': `import env from '#lib/app-environment.js'\n`,
+    })
+    expect(collectUsage(root).importTargets.has('src/lib/app-environment.ts')).toBe(true)
+  })
+
+  it('ignores a subpath import that maps outside the project', () => {
+    const root = scratch({
+      'package.json': JSON.stringify({ imports: { '#dep': 'some-package' } }),
+      'src/a.ts': `import dep from '#dep'\n`,
+    })
+    expect(collectUsage(root).importTargets.size).toBe(0)
+  })
+})

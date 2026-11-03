@@ -224,10 +224,12 @@ export function collectViolations(root, aliases = readAliases(root)) {
 
 function main() {
   const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-  // The aliases come from the generated config `svelte-kit sync` writes; without
-  // it a `$lib` import would look unresolvable and report a false violation.
-  if (!existsSync(join(root, '.svelte-kit', 'tsconfig.json'))) {
-    console.error('test-layout: .svelte-kit/tsconfig.json is missing — run `svelte-kit sync` first')
+  // The aliases come from package.json `imports` (SvelteKit 3 subpath imports),
+  // a tsconfig `paths` map, or the legacy generated config. Without any, every
+  // alias import looks unresolvable, so point at the fix instead of reporting
+  // false violations.
+  if (readAliases(root).size === 0) {
+    console.error('test-layout: no project aliases found — add package.json `imports` or a tsconfig `paths` map')
     process.exitCode = 1
     return
   }

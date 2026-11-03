@@ -13,6 +13,16 @@ version has one section, newest first; the format follows
   that never renders the editor no longer installs them.
 - The README leads with the package instead of the showcase app, and the package
   ships a changelog.
+- Tailwind CSS v4 is a declared peer dependency, because the stylesheet imports
+  Tailwind rather than shipping compiled CSS.
+
+### Fixed
+
+- The shared-parity gate resolves SvelteKit 3 subpath imports (`#lib/*`) from
+  each app's manifest, so a migrated app's references no longer read as dead
+  ports.
+- The test-layout gate no longer requires the generated `.svelte-kit/tsconfig.json`
+  that SvelteKit 3 stopped writing.
 
 ## [0.2.1] - 2026-11-03
 
