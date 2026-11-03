@@ -94,25 +94,16 @@ Project-specific development conventions for the UI Library web app.
   field uses that base instead of re-declaring it. A field drops its outline with
   `hideOutline` (the base's borderless surface, padding, and text metrics) rather
   than a custom `inputClass`, and every input-family control forwards it.
-- A text field's tunable ratios live in one `FIELD_RATIOS` object (font, radius,
-  and both paddings) exposed as a partial `ratios` prop, with the line box
-  derived from `font` through `INPUT_LEADING` rather than exposed as a key, so a
-  font retune carries the field's height. `TextInput` extends that set with its
-  clear affordance and trailer gap (`TEXT_INPUT_RATIOS`), while `TextArea` and
-  `EditableText` ride the base set. A composing field forwards the field subset
-  instead of re-declaring it. Its props row and Show-code line come from the
-  shared `componentRatiosField`/`ratiosAttrLine` helpers (and
-  `ratiosAttributeFragment` for a builder that closes its tag on one line), used
-  by every sized input page.
-- Every sized input control exposes the same partial `ratios` prop over its own
-  full ratio set (`TEXT_INPUT_RATIOS`, `SELECT_RATIOS`, `PICKER_RATIOS`,
-  `TAG_INPUT_RATIOS`, and the composite sets). A composite forwards the field
-  subset to its inner `TextInput`, so one object tunes field and adornment
-  together, and its set carries only the keys it renders (a composite with no
-  trailer row leaves the trailer gap out); no set exposes the line box as a key —
-  it derives from the font — and the other derived metrics (gutter, clear inset)
-  still follow their base. A new sized input adds the prop and its
-  showcase row instead of a parallel configuration path.
+- A text-field control's metrics live in its own exported ratio set built over
+  the shared ones (`FIELD_RATIOS` for the text metrics, `TEXT_INPUT_RATIOS` for a
+  field with its clear affordance and outside-row gap), exposed as one partial
+  `ratios` prop. Derive an interrelated metric from its base instead of adding a
+  key (the line box from the font via `withLine`, the clear inset from the
+  padding), and hand an inner `TextInput` the subset it renders via
+  `fieldOverrides` rather than a hand-copied list. Every text-field-family
+  control exposes the prop and its showcase row through the shared
+  `componentRatiosField`/`ratiosAttrLine` helpers; a non-field control such as
+  the chip trigger keeps its metrics internal. Mechanism in `ARCHITECTURE.md`.
 - `NumberInput`'s `showControls` hides only the stepper overlay; `variant="embedded"`
   is what hands the box to the caller, so a stepper-less field keeps its bordered
   box — pair it with `hideOutline` for a borderless one.

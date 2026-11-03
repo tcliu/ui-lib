@@ -305,16 +305,23 @@ of building a parallel control.
   carries the field's independent ratio set: `TEXT_INPUT_RATIOS` spreads
   `FIELD_RATIOS` and adds the clear affordance's box and gutter plus the trailer
   gap, and `TextInput` merges a caller's partial `ratios` override over it, with
-  the line box derived from `font` and the clear inset from `padX`. No
+  the line box derived from `font` and the clear inset from `padX`. Two helpers
+  own the shared derivation and forwarding so no component repeats them:
+  `withLine` merges the font-derived line box into a resolved set, and
+  `fieldOverrides` picks the field subset a composite hands its inner field from
+  `TEXT_INPUT_RATIOS` (only the keys that set carries), so a new field metric
+  cannot be dropped by a hand-copied list. No
   input-family set exposes the line box as a key: every field, trigger, tag row,
   and picker derives it from its own font, so one font retune moves every row's
-  height together. Every sized input exposes the same
-  partial `ratios` prop over its own base set (`TEXT_INPUT_RATIOS`,
-  `SELECT_RATIOS`, `PICKER_RATIOS`, `TAG_INPUT_RATIOS`, and each composite's
+  height together. Every text-field-family control exposes the same
+  partial `ratios` prop over its own base set (`FIELD_RATIOS` for
+  `TextArea`/`EditableText`, `TEXT_INPUT_RATIOS`, `SELECT_RATIOS`,
+  `PICKER_RATIOS`, `TAG_INPUT_RATIOS`, and each composite's
   field-plus-adornment set), and a composite forwards the field subset to its
   inner `TextInput`, so one object tunes the field and its adornment together and
   its set carries only the keys it renders (a composite with no trailer row
-  leaves the trailer gap out). `PasswordInput`, `SearchInput`,
+  leaves the trailer gap out; `AutoComplete` carries it because an outside clear
+  renders that row). `PasswordInput`, `SearchInput`,
   and `NumberInput` compose `TextInput` and forward its `ratios` prop, passing
   their adornment (eye toggle, search icon, steppers)
   through its `leading`/`trailing` snippets; every input-family control forwards
@@ -742,7 +749,8 @@ of building a parallel control.
   part of the content, not a panel region: a dialog that keeps its row visible
   composes it as a `flex-none` sibling of its own scroll area, separated from
   that area by the same `gap-4` the panel puts between header and body, which
-  is what `ConfirmDialog` and `FormDialog` do. `FormDialog` forwards `header`,
+  is what `ConfirmDialog`, `FormDialog`, and `FieldTable`'s markup dialog do.
+  `FormDialog` forwards `header`,
   wraps the body in a `<form>` (so Enter still submits), and owns the action
   row: the built-in save/reset pair, extra `actions` buttons before it, or a caller
   `footer` that replaces the pair — the footer renders inside the form, so a
