@@ -41,8 +41,10 @@ Project-specific development conventions for the UI Library web app.
   package-only `$lib`/`$app/environment` ones when `PACKAGE=1`, because
   `svelte-package` and SvelteKit read different config keys.
 - Release by bumping the root version with `npm version <patch|minor|major>` and
-  running `npm publish`; npm's `prepublishOnly` hook runs `npm run publish:check`
-  first, and the build does not diff against the registry or bump.
+  running `npm publish`; npm's `prepublishOnly` hook checks the target registry's
+  credentials (`tools/check-publish-auth.mjs`) and then runs
+  `npm run publish:check`, and the build does not diff against the registry or
+  bump.
 - A shared component originates here: a sibling that needs one adds it to this
   repo, republishes the package, then consumes it from the package.
 - A consuming app imports the package by name (`@codepg/ui-lib/...`); the

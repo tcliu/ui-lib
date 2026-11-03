@@ -273,9 +273,11 @@ src/lib/**                       canonical shared source
   keeps its side effect, packs the tarball, and builds a scratch consumer against
   it.
 - **`npm publish`** — the standard publish path: bump with
-  `npm version <patch|minor|major>` first, then publish, and npm's
-  `prepublishOnly` hook runs `npm run publish:check` before anything is
-  uploaded. `publishConfig.access` already marks the scoped package public, so
+  `npm version <patch|minor|major>` first, then publish; npm's
+  `prepublishOnly` hook runs `tools/check-publish-auth.mjs` (a registry
+  credential preflight that fails fast, skipped on a dry run) and then
+  `npm run publish:check` before anything is uploaded.
+  `publishConfig.access` already marks the scoped package public, so
   the command needs no flags. A version already on the registry fails at npm, so
   there is no registry-diff or auto-bump step.
 

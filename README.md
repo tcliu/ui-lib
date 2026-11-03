@@ -59,11 +59,14 @@ Bump the version, then publish the package:
 
 ```bash
 npm version patch       # or minor / major
-npm publish             # prepublishOnly runs publish:check first
+npm publish             # prepublishOnly checks credentials, then runs publish:check
 ```
 
 `npm publish` does not bump or diff against the registry; npm rejects a version
-that is already published.
+that is already published. The `prepublishOnly` hook first runs
+`tools/check-publish-auth.mjs`, which fails in a second when the target registry
+has no usable credentials instead of after the full gate, then runs
+`publish:check`. A dry run and `SKIP_PUBLISH_AUTH_CHECK=1` skip that probe.
 
 ### Publishing locally
 
