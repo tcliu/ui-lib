@@ -12,6 +12,7 @@
   import TextInput from './TextInput.svelte'
   import { INPUT_CHROME, INPUT_METRIC_CLASS, INPUT_RATIOS } from './input-chrome'
   import { dimensionMetrics } from './size-metrics'
+  import { TEXT_INPUT_RATIOS } from './text-input-metrics'
   import type { SizeInput } from '$lib/size-scale'
   import EditIcon from '$lib/icons/EditIcon.svelte'
   import EyeIcon from '$lib/icons/EyeIcon.svelte'
@@ -173,11 +174,15 @@
   }
 
   // Shift applied to a number row's eye while its outside clear slot is empty:
-  // TextInput's trailer gap plus the reserved clear box (its own ratios, both
-  // size-scaled like here). NumberInput always shows its steppers in this
-  // table, so `auto` placement renders the clear outside beside them.
+  // TextInput's trailer gap plus the reserved clear box, read from the shared
+  // ratio set so a retune of the field carries the pull with it. NumberInput
+  // always shows its steppers in this table, so `auto` placement renders the
+  // clear outside beside them.
   function numberEyePull(): number {
-    const metrics = dimensionMetrics(size, { gap: 0.375, box: 1 })
+    const metrics = dimensionMetrics(size, {
+      gap: TEXT_INPUT_RATIOS.trailerGap,
+      box: TEXT_INPUT_RATIOS.clearBox,
+    })
     return metrics.gap + metrics.box
   }
 
@@ -489,7 +494,7 @@
     widthVariant={dialogWidthVariant}
     closeLabel={i18n.t('common.close')}
     onCancel={closeDialog}>
-    <div class="flex min-h-0 flex-1 flex-col">
+    <div class="flex min-h-0 flex-1 flex-col gap-4">
       <div tabindex="-1" class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
         <LazyCodeEditor
           bind:content={draft}

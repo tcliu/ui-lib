@@ -1,13 +1,24 @@
 <script lang="ts">
   import type { SizeInput } from '$lib/size-scale'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
-  import { INPUT_CHROME, INPUT_CHROME_NO_OUTLINE, INPUT_METRIC_CLASS, INPUT_RATIOS } from './input-chrome'
+  import {
+    FIELD_RATIOS,
+    INPUT_CHROME,
+    INPUT_CHROME_NO_OUTLINE,
+    INPUT_LEADING,
+    INPUT_METRIC_CLASS,
+    type FieldRatioOverrides,
+  } from './input-chrome'
 
   interface Props {
     value: string
     ariaLabel: string
     placeholder?: string
     size?: SizeInput
+    // Partial override of the field's tunable ratios (font, radius, and both
+    // paddings); omitted keys keep the shared defaults. The line box is not an
+    // override: it follows `font`, so a font change carries the row height.
+    ratios?: FieldRatioOverrides
     disabled?: boolean
     readonly?: boolean
     id?: string
@@ -29,6 +40,7 @@
     ariaLabel,
     placeholder,
     size = 'md',
+    ratios,
     disabled = false,
     readonly = false,
     id,
@@ -42,7 +54,14 @@
     onblur,
   }: Props = $props()
 
-  const metrics = $derived(dimensionMetrics(size, INPUT_RATIOS))
+  const resolvedRatios = $derived({ ...FIELD_RATIOS, ...ratios })
+  const metrics = $derived(
+    dimensionMetrics(size, {
+      ...resolvedRatios,
+      // Derived, not overridden: the editor's row height follows its font.
+      line: resolvedRatios.font * INPUT_LEADING,
+    }),
+  )
   const style = $derived(sizeVarStyle('input', metrics))
 
   // Non-positive or fractional rows fall back to the default; only the page

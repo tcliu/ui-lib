@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushSync, mount, unmount } from 'svelte'
-import Button from './Button.svelte'
+import Button, { BUTTON_RATIOS } from './Button.svelte'
+import { INPUT_RATIOS } from './input-chrome'
 import { dimensionMetrics, iconPadRatio, resolveSize } from './size-metrics'
 
 function installDomStubs(): void {
@@ -65,10 +66,12 @@ describe('Button dimension ratios', () => {
       instance = mount(Button, { target, props: { size: name } })
       flushSync()
       const style = target.querySelector('button')?.getAttribute('style') ?? ''
-      expect(num(style, 'font') / px).toBeCloseTo(0.8125)
+      expect(num(style, 'font') / px).toBeCloseTo(BUTTON_RATIOS.font)
       expect(num(style, 'pad-x') / px).toBeCloseTo(0.65)
       expect(num(style, 'pad-y') / px).toBeCloseTo(0.45)
       expect(num(style, 'radius') / px).toBeCloseTo(0.375)
+      // The padded box equals the text field's row box.
+      expect(num(style, 'line') + 2 * num(style, 'pad-y')).toBeCloseTo(px * (INPUT_RATIOS.line + 2 * INPUT_RATIOS.padY))
       expect(num(style, 'icon') / px).toBeCloseTo(1)
       // Icon-only padding keeps its box the text row height: icon + 2·iconPad
       // equals line + 2·padY, so the glyph square is never shorter.
@@ -77,6 +80,12 @@ describe('Button dimension ratios', () => {
       const padY = num(style, 'pad-y')
       expect(num(style, 'icon-pad')).toBeCloseTo(padY + (line - icon) / 2)
     }
+  })
+
+  it('pins the padded box to the text field row box', () => {
+    // Both boxes carry the same 1px border, so equal line + padding is equal
+    // height beside a TextInput at every size.
+    expect(BUTTON_RATIOS.line + 2 * BUTTON_RATIOS.padY).toBeCloseTo(INPUT_RATIOS.line + 2 * INPUT_RATIOS.padY)
   })
 
   it('keeps an interpolated size below the exact step above it', async () => {

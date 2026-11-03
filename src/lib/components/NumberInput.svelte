@@ -1,9 +1,25 @@
+<script module lang="ts">
+  import { TEXT_INPUT_RATIOS } from './text-input-metrics'
+
+  // The field's ratios plus the stepper column's own metrics, so one partial
+  // object tunes the whole control.
+  export const NUMBER_INPUT_RATIOS = {
+    ...TEXT_INPUT_RATIOS,
+    stepperIcon: 0.75,
+    stepperGutter: 1.25,
+    stepperRadius: 0.375,
+  }
+  export type NumberInputRatios = typeof NUMBER_INPUT_RATIOS
+  export type NumberInputRatioOverrides = Partial<NumberInputRatios>
+</script>
+
 <script lang="ts">
   import ChevronUpIcon from '$lib/icons/ChevronUpIcon.svelte'
   import ChevronDownIcon from '$lib/icons/ChevronDownIcon.svelte'
   import TextInput from './TextInput.svelte'
   import { getI18nContext } from '$lib/i18n/store.svelte'
   import type { SizeInput } from '$lib/size-scale'
+  import type { TextInputRatioOverrides } from './text-input-metrics'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
   import type { ClearableProps } from './clearable-props'
   const i18n = getI18nContext()
@@ -42,6 +58,9 @@
     id?: string
     ariaLabel: string
     size?: SizeInput
+    // Partial override of the field and stepper metric ratios; omitted keys keep
+    // the shared defaults.
+    ratios?: NumberInputRatioOverrides
     incrementLabel?: string
     decrementLabel?: string
     // The steppers own the field's right edge, so `clearPlacement` `auto`
@@ -69,6 +88,7 @@
     id,
     ariaLabel,
     size = 'md',
+    ratios,
     incrementLabel,
     decrementLabel,
     clearable = false,
@@ -84,10 +104,25 @@
   // the gutter that clears it are the only metrics NumberInput adds. The glyph
   // rides a trimmed share of the slot rather than the whole of it, so the
   // steppers read lighter than the value beside them while still scaling.
-  const NUM_RATIOS = { icon: 0.75, padRight: 1.25, radius: 0.375 }
-
-  const numMetrics = $derived(dimensionMetrics(size, NUM_RATIOS))
+  const resolvedRatios = $derived({ ...NUMBER_INPUT_RATIOS, ...ratios })
+  const numMetrics = $derived(
+    dimensionMetrics(size, {
+      icon: resolvedRatios.stepperIcon,
+      padRight: resolvedRatios.stepperGutter,
+      radius: resolvedRatios.stepperRadius,
+    }),
+  )
   const numStyle = $derived(sizeVarStyle('num', numMetrics))
+  const fieldRatios: TextInputRatioOverrides = $derived({
+    font: resolvedRatios.font,
+    radius: resolvedRatios.radius,
+    padX: resolvedRatios.padX,
+    padY: resolvedRatios.padY,
+    clearButton: resolvedRatios.clearButton,
+    clearGutter: resolvedRatios.clearGutter,
+    clearBox: resolvedRatios.clearBox,
+    trailerGap: resolvedRatios.trailerGap,
+  })
 
   // A trailing stepper column is overlaid on the input's right gutter, so the
   // box keeps exactly TextInput's height instead of growing to the steppers.
@@ -351,6 +386,7 @@
     {disabled}
     {ariaLabel}
     {size}
+    ratios={fieldRatios}
     {inputStyle}
     {hideOutline}
     bind:value

@@ -18,12 +18,11 @@ export const SIZE_ORDER: SizeName[] = (Object.entries(SIZE_PX) as [SizeName, num
 // Fixed font ratio: font size is always the size dimension times this.
 export const FONT_RATIO = 0.875
 
-// Fixed icon ratio: an icon renders at this fraction of its size — the same
-// ratio the text-like controls give their font, so a glyph sits at its label's
-// size. Glyphs fill their viewBox, so this is what holds a filled glyph at the
-// optical size the component around it was tuned for (the artwork it replaced
-// filled ~0.79 of its box); the control's own icon slot stays the size
-// dimension.
+// Fixed icon ratio: an icon renders at this fraction of its size. Glyphs fill
+// their viewBox, so this is what holds a filled glyph at the optical size the
+// component around it was tuned for (the artwork it replaced filled ~0.79 of
+// its box); the control's own icon slot stays the size dimension. It is the
+// glyph's own optical ratio, independent of the label's `FONT_RATIO`.
 export const ICON_RATIO = 0.8125
 
 // Ratio-scaled font size for any input on the shared axis: names resolve to

@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushSync, mount, unmount } from 'svelte'
+import { ICON_RATIO } from '$lib/size-scale'
+import { INPUT_RATIOS } from './input-chrome'
 import SearchInput from './SearchInput.svelte'
 
 function installDomStubs(): void {
@@ -46,7 +48,7 @@ describe('SearchInput dimension ratios', () => {
       instance = mount(SearchInput, { target, props: { value: '', ariaLabel: 'Search', size: name } })
       flushSync()
       const style = styleOf()
-      expect(num(style, 'input-font') / px).toBeCloseTo(0.8125)
+      expect(num(style, 'input-font') / px).toBeCloseTo(INPUT_RATIOS.font)
       expect(num(style, 'input-pad-y') / px).toBeCloseTo(0.39375)
       expect(num(style, 'input-pad-x') / px).toBeCloseTo(0.5625)
       expect(num(style, 'input-radius') / px).toBeCloseTo(0.375)
@@ -56,5 +58,27 @@ describe('SearchInput dimension ratios', () => {
       // shared icon ratio of the dimension.
       expect(Number(target.querySelector('svg')?.getAttribute('width')) / px).toBeCloseTo(0.73125)
     }
+  })
+
+  it('merges a partial override over the field and the icon metrics', async () => {
+    instance = mount(SearchInput, {
+      target,
+      props: {
+        value: '',
+        ariaLabel: 'Search',
+        size: 16,
+        // `padX` is a field ratio the composite must forward to its inner
+        // `TextInput`; the icon keys size the leading glyph and its gutter.
+        ratios: { font: 0.5, padX: 0.75, iconLeft: 0.5, icon: 0.5, iconGap: 0.5 },
+      },
+    })
+    flushSync()
+    const style = styleOf()
+    expect(num(style, 'input-font')).toBeCloseTo(8)
+    expect(num(style, 'input-pad-x')).toBeCloseTo(12)
+    expect(num(style, 'search-icon-left')).toBeCloseTo(8)
+    // The gutter derives from inset + glyph + gap.
+    expect(num(style, 'search-pad-left')).toBeCloseTo(24)
+    expect(Number(target.querySelector('svg')?.getAttribute('width'))).toBeCloseTo(8 * ICON_RATIO)
   })
 })

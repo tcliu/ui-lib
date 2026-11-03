@@ -1,3 +1,18 @@
+<script module lang="ts">
+  import { TEXT_INPUT_RATIOS } from './text-input-metrics'
+
+  // The field's ratios plus the visibility toggle's own metrics, so one partial
+  // object tunes the whole control.
+  export const PASSWORD_INPUT_RATIOS = {
+    ...TEXT_INPUT_RATIOS,
+    icon: 1,
+    box: 2.25,
+    inset: 0.25,
+  }
+  export type PasswordInputRatios = typeof PASSWORD_INPUT_RATIOS
+  export type PasswordInputRatioOverrides = Partial<PasswordInputRatios>
+</script>
+
 <script lang="ts">
   import type { HTMLInputAttributes } from 'svelte/elements'
   import Button from './Button.svelte'
@@ -6,6 +21,7 @@
   import EyeSlashIcon from '$lib/icons/EyeSlashIcon.svelte'
   import { getI18nContext } from '$lib/i18n/store.svelte'
   import type { SizeInput } from '$lib/size-scale'
+  import type { TextInputRatioOverrides } from './text-input-metrics'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
   import type { ClearableProps } from './clearable-props'
   const i18n = getI18nContext()
@@ -24,6 +40,9 @@
     showLabel?: string
     hideLabel?: string
     size?: SizeInput
+    // Partial override of the field and toggle metric ratios; omitted keys keep
+    // the shared defaults.
+    ratios?: PasswordInputRatioOverrides
     className?: string
     // Forwarded to TextInput: drop the field's border and focus border while
     // keeping its surface, metrics, and text rules.
@@ -45,6 +64,7 @@
     showLabel,
     hideLabel,
     size = 'md',
+    ratios,
     className = '',
     hideOutline = false,
     clearable = false,
@@ -54,10 +74,27 @@
     oninput,
   }: Props = $props()
 
+  const resolvedRatios = $derived({ ...PASSWORD_INPUT_RATIOS, ...ratios })
   // The input box rides TextInput's shared base metrics; only the toggle's
   // icon needs its own metric, scaled by the same dimension.
-  const pwdMetrics = $derived(dimensionMetrics(size, { icon: 1, box: 2.25, inset: 0.25 }))
+  const pwdMetrics = $derived(
+    dimensionMetrics(size, {
+      icon: resolvedRatios.icon,
+      box: resolvedRatios.box,
+      inset: resolvedRatios.inset,
+    }),
+  )
   const pwdStyle = $derived(sizeVarStyle('pwd', pwdMetrics))
+  const fieldRatios: TextInputRatioOverrides = $derived({
+    font: resolvedRatios.font,
+    radius: resolvedRatios.radius,
+    padX: resolvedRatios.padX,
+    padY: resolvedRatios.padY,
+    clearButton: resolvedRatios.clearButton,
+    clearGutter: resolvedRatios.clearGutter,
+    clearBox: resolvedRatios.clearBox,
+    trailerGap: resolvedRatios.trailerGap,
+  })
 
   // The toggle overlays the field's right edge, so the input reserves that
   // gutter. A standalone literal the scanner can extract: glued to a `${`
@@ -109,6 +146,7 @@
   {disabled}
   {required}
   {size}
+  ratios={fieldRatios}
   type={visible ? 'text' : 'password'}
   {hideOutline}
   {oninput}

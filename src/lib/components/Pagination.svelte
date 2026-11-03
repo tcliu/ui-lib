@@ -8,6 +8,7 @@
   import type { SizeInput } from '$lib/size-scale'
   import type { PaginationLabels } from './pagination-labels'
   import { SELECT_RATIOS } from './select-dropdown-styles'
+  import { INPUT_RATIOS } from './input-chrome'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
   const i18n = getI18nContext()
 
@@ -61,7 +62,7 @@
   // widened by a single digit. The direction glyphs ride a trimmed share of the
   // icon slot (0.75×, as `NumberInput`'s steppers do) so they read lighter than
   // the page numbers.
-  const PG_RATIOS = { line: SELECT_RATIOS.line, padY: SELECT_RATIOS.padY, padX: 0.7, font: 0.875, icon: 0.75 }
+  const PG_RATIOS = { line: INPUT_RATIOS.line, padY: SELECT_RATIOS.padY, padX: 0.7, font: SELECT_RATIOS.font, icon: 0.75 }
 
   const pgMetrics = $derived(dimensionMetrics(size, PG_RATIOS))
   // A page block shares the page-size dropdown trigger's box — the select line

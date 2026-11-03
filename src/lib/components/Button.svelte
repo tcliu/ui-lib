@@ -1,17 +1,33 @@
 <script module lang="ts">
   import { ICON_RATIO, type SizeInput } from '$lib/size-scale'
+  import { INPUT_RATIOS } from './input-chrome'
   import { dimensionMetrics, iconPadRatio } from './size-metrics'
 
   // Every metric is a fixed ratio of the size dimension, so each keeps a
   // constant metric:dimension ratio across the range; the icon slot is the
   // dimension itself (ratio 1) and the glyph inside renders at the shared icon
   // ratio, matching every other icon at the same size. Font weight is an
-  // emphasis tier, not a length. The ratios reproduce a compact 13px toolbar
-  // button at the default `md` dimension. `iconPad` is derived so an icon-only
-  // button's box (`icon + 2·iconPad`) equals a text button's (`line + 2·padY`)
-  // and the glyph reads as a square at the text row height instead of a shorter
-  // box — see `iconPadRatio`.
-  export const BUTTON_RATIOS = { font: 0.8125, line: 1.1607, radius: 0.375, padX: 0.65, padY: 0.45, icon: 1 }
+  // emphasis tier, not a length. The label keeps its compact 13px step rather
+  // than the field's shared font ratio, so a button still reads as a tool
+  // button. `iconPad` is derived so an icon-only button's box
+  // (`icon + 2·iconPad`) equals a text button's (`line + 2·padY`) and the glyph
+  // reads as a square at the text row height instead of a shorter box — see
+  // `iconPadRatio`.
+  // The vertical padding stays at its original share and the line box absorbs
+  // the difference instead: `line + 2·padY` equals the text field's row box
+  // (`INPUT_RATIOS.line + 2·INPUT_RATIOS.padY`), so a button beside a field
+  // lands on exactly the field's height without growing its padding.
+  const BUTTON_FONT = 0.8125
+  const BUTTON_PAD_Y = 0.45
+  const BUTTON_LINE = INPUT_RATIOS.line + 2 * INPUT_RATIOS.padY - 2 * BUTTON_PAD_Y
+  export const BUTTON_RATIOS = {
+    font: BUTTON_FONT,
+    line: BUTTON_LINE,
+    radius: 0.375,
+    padX: 0.65,
+    padY: BUTTON_PAD_Y,
+    icon: 1,
+  }
   export const BUTTON_METRICS = { ...BUTTON_RATIOS, iconPad: iconPadRatio(BUTTON_RATIOS), glyph: ICON_RATIO }
 
   // A paddingless icon-only button floors its box at the text row height

@@ -109,7 +109,7 @@ test('showcase: the Buttons size preset scales the row and its buttons', async (
   await page.getByRole('combobox', { name: 'Size', exact: true }).click()
   await page.getByRole('option', { name: 'lg' }).click()
 
-  // lg = 18px dimension → a 9px gap and a 14.6px button label.
+  // lg = 18px dimension → a 9px gap and a 14.625px button label.
   await expect(row).toHaveCSS('row-gap', '9px')
   await expect(demo.getByRole('button', { name: 'OK', exact: true })).toHaveCSS('font-size', '14.625px')
 

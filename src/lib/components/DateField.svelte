@@ -32,7 +32,9 @@
     type DateFieldSibling,
     type DateSpan,
   } from './date-input-core'
-  import { PICKER_RATIOS, type DateInputTheme } from './date-input-metrics'
+  import { PICKER_RATIOS, type DateInputTheme, type PickerRatioOverrides } from './date-input-metrics'
+  import { INPUT_LEADING } from './input-chrome'
+  import type { TextInputRatioOverrides } from './text-input-metrics'
   import { createCalendarGrid } from './use-calendar-grid.svelte'
   import { createDateTextField } from './use-date-text-field.svelte'
   import { createTimeSegments } from './use-time-segments.svelte'
@@ -43,6 +45,9 @@
     value?: string
     onChange?: (value: string) => void
     size?: SizeInput
+    // Partial override of the picker ratios, forwarded by `DateInput`; the
+    // field text follows the same font and paddings.
+    ratios?: PickerRatioOverrides
     // Display pattern, and the pattern the typed text is parsed against
     // (`DateInput` resolves the default from `time` and passes it here).
     format: string
@@ -70,6 +75,7 @@
     value = '',
     onChange,
     size = 'md',
+    ratios,
     format,
     time = false,
     label,
@@ -80,7 +86,19 @@
     highlight,
   }: Props = $props()
 
-  const metrics = $derived(dimensionMetrics(size, PICKER_RATIOS))
+  const resolvedRatios = $derived({ ...PICKER_RATIOS, ...ratios })
+  // The picker's line box follows its font, so a font retune carries the panel
+  // rows and the field's calendar affordance with it.
+  const metrics = $derived(
+    dimensionMetrics(size, { ...resolvedRatios, line: resolvedRatios.font * INPUT_LEADING }),
+  )
+  // The field text rides the picker's font, radius, and paddings.
+  const fieldRatios: TextInputRatioOverrides = $derived({
+    font: resolvedRatios.font,
+    radius: resolvedRatios.radius,
+    padX: resolvedRatios.padX,
+    padY: resolvedRatios.padY,
+  })
 
   // A value that does not parse strictly under `valueFormat` reads as unset
   // rather than poisoning comparisons.
@@ -276,6 +294,7 @@
     autocomplete="off"
     placeholder={label}
     {size}
+    ratios={fieldRatios}
     inputStyle="width:{fieldWidth}"
     className="pr-[calc(var(--pick-pad-x)+var(--pick-icon)+var(--pick-gap))]"
     trailing={calendarButton}
@@ -379,18 +398,21 @@
           <NumberInput
             value={timeSegments.hourText}
             {size}
+            ratios={fieldRatios}
             ariaLabel={i18n.t('time.hour')}
             oninput={event => timeSegments.setSegment('hour', (event.target as HTMLInputElement).value)} />
           <span aria-hidden="true" class="text-[length:var(--pick-sm-font)] text-slate-500">:</span>
           <NumberInput
             value={timeSegments.minuteText}
             {size}
+            ratios={fieldRatios}
             ariaLabel={i18n.t('time.minute')}
             oninput={event => timeSegments.setSegment('minute', (event.target as HTMLInputElement).value)} />
           <span aria-hidden="true" class="text-[length:var(--pick-sm-font)] text-slate-500">:</span>
           <NumberInput
             value={timeSegments.secondText}
             {size}
+            ratios={fieldRatios}
             ariaLabel={i18n.t('time.second')}
             oninput={event => timeSegments.setSegment('second', (event.target as HTMLInputElement).value)} />
         </div>

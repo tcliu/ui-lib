@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushSync, mount, unmount } from 'svelte'
 import Pagination from './Pagination.svelte'
+import { INPUT_RATIOS } from './input-chrome'
+import { SELECT_RATIOS } from './select-dropdown-styles'
 
 // Same DOM stubs as the other component tests: jsdom lacks ResizeObserver,
 // matchMedia, and scrollIntoView.
@@ -48,18 +50,18 @@ describe('Pagination numeric size', () => {
       props: { total: 100, pageSize: 10, currentPage: 1, size: 14, onPageChange: () => {}, onPageSizeChange: () => {} },
     })
     flushSync()
-    // Numeric sizes scale every metric by a constant ratio: 14 * 0.875, and the
-    // select line/padY the block height derives from: 14 * 1.1875 / 0.39375.
+    // Numeric sizes scale every metric by a constant ratio; the page font and
+    // the select line/padY the block height derives from stay in lockstep.
     const nav = target.querySelector('nav')
-    expect(nav?.getAttribute('style')).toContain('--pg-font: 12.25px')
-    expect(nav?.getAttribute('style')).toContain('--pg-line: 16.625px')
-    expect(nav?.getAttribute('style')).toContain('--pg-pad-y: 5.5125px')
+    expect(nav?.getAttribute('style')).toContain(`--pg-font: ${14 * SELECT_RATIOS.font}px`)
+    expect(nav?.getAttribute('style')).toContain(`--pg-line: ${14 * INPUT_RATIOS.line}px`)
+    expect(nav?.getAttribute('style')).toContain(`--pg-pad-y: ${14 * SELECT_RATIOS.padY}px`)
     // The block height matches the page-size dropdown trigger's box.
     expect(nav?.getAttribute('style')).toContain(
       '--pg-btn: calc(var(--pg-line) + 2 * var(--pg-pad-y) + 2px)',
     )
     const trigger = target.querySelector('[aria-label="Page size"]')
-    expect(trigger?.getAttribute('style')).toContain('--sel-font: 11.375px')
+    expect(trigger?.getAttribute('style')).toContain(`--sel-font: ${14 * SELECT_RATIOS.font}px`)
   })
 
   it('renders named sizes through the same var path', () => {
@@ -69,10 +71,10 @@ describe('Pagination numeric size', () => {
     })
     flushSync()
     const nav = target.querySelector('nav')
-    expect(nav?.getAttribute('style')).toContain('--pg-font: 12.25px')
+    expect(nav?.getAttribute('style')).toContain(`--pg-font: ${14 * SELECT_RATIOS.font}px`)
     // The inner dropdown resolves the sm dimension through the same var path.
     const trigger = target.querySelector('[aria-label="Page size"]')
-    expect(trigger?.getAttribute('style')).toContain('--sel-font: 11.375px')
+    expect(trigger?.getAttribute('style')).toContain(`--sel-font: ${14 * SELECT_RATIOS.font}px`)
   })
 })
 

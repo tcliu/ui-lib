@@ -1,3 +1,29 @@
+<script module lang="ts">
+  import { SELECT_RATIOS } from './select-dropdown-styles'
+  import { TEXT_INPUT_RATIOS } from './text-input-metrics'
+
+  // The field and the option panel share one ratio set: the field's tunable
+  // metrics — including the clear affordance it renders — plus the panel's own
+  // min-width, gap, and icon slot. The field's trailer gap is left out: this
+  // composite renders no trailer row, so the key would tune nothing. Both line
+  // boxes derive from the font, so the shared font retune carries them too.
+  export const AUTOCOMPLETE_RATIOS = {
+    font: TEXT_INPUT_RATIOS.font,
+    radius: TEXT_INPUT_RATIOS.radius,
+    padX: TEXT_INPUT_RATIOS.padX,
+    padY: TEXT_INPUT_RATIOS.padY,
+    clearButton: TEXT_INPUT_RATIOS.clearButton,
+    clearGutter: TEXT_INPUT_RATIOS.clearGutter,
+    clearBox: TEXT_INPUT_RATIOS.clearBox,
+    // The panel's own keys keep the shared select names.
+    minW: SELECT_RATIOS.minW,
+    gap: SELECT_RATIOS.gap,
+    icon: SELECT_RATIOS.icon,
+  }
+  export type AutoCompleteRatios = typeof AUTOCOMPLETE_RATIOS
+  export type AutoCompleteRatioOverrides = Partial<AutoCompleteRatios>
+</script>
+
 <script lang="ts">
   import { flushSync, tick } from 'svelte'
   import { useListbox } from '$lib/actions/use-listbox.svelte'
@@ -7,13 +33,10 @@
   import type { DropdownPanelProps } from '$lib/dropdown-chrome'
   import TextInput from './TextInput.svelte'
   import ListboxPanel from './ListboxPanel.svelte'
-  import {
-    DEFAULT_PANEL_CLASS,
-    SELECT_BOX_UTILITIES,
-    SELECT_RATIOS,
-    OPTION_BASE,
-  } from './select-dropdown-styles'
+  import { DEFAULT_PANEL_CLASS, SELECT_BOX_UTILITIES, OPTION_BASE } from './select-dropdown-styles'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
+  import { INPUT_LEADING } from './input-chrome'
+  import type { TextInputRatioOverrides } from './text-input-metrics'
   import type { SelectOption } from './SelectDropdown.svelte'
   import type { ClearableProps } from './clearable-props'
 
@@ -38,6 +61,11 @@
     ariaLabel?: string
     placeholder?: string
     size?: SizeInput
+    // Partial override of the field and panel metric ratios (font, radius,
+    // paddings, the clear affordance, and the panel's min-width, gap, and icon
+    // slot); omitted keys keep the shared defaults. The field has no trailer
+    // row, so there is no trailer gap to tune.
+    ratios?: AutoCompleteRatioOverrides
     inputRef?: HTMLInputElement | null
     disabled?: boolean
   }
@@ -50,6 +78,7 @@
     ariaLabel,
     placeholder,
     size = 'md',
+    ratios,
     inputRef = $bindable(null),
     disabled = false,
     clearable = false,
@@ -108,8 +137,30 @@
 
   // The option panel is the shared `SelectDropdown` chrome: its rows consume
   // the same `--sel-*` box metrics, so both surfaces read alike.
-  const panelMetrics = $derived(dimensionMetrics(size, SELECT_RATIOS))
+  const resolvedRatios = $derived({ ...AUTOCOMPLETE_RATIOS, ...ratios })
+  const panelMetrics = $derived(
+    dimensionMetrics(size, {
+      font: resolvedRatios.font,
+      line: resolvedRatios.font * INPUT_LEADING,
+      padX: resolvedRatios.padX,
+      padY: resolvedRatios.padY,
+      minW: resolvedRatios.minW,
+      gap: resolvedRatios.gap,
+      icon: resolvedRatios.icon,
+    }),
+  )
   const panelStyle = $derived(sizeVarStyle('sel', panelMetrics))
+  // The field rides the same font, radius, paddings, and clear affordance as the
+  // panel's rows; `trailerGap` is not part of the set, so nothing is dropped.
+  const fieldRatios: TextInputRatioOverrides = $derived({
+    font: resolvedRatios.font,
+    radius: resolvedRatios.radius,
+    padX: resolvedRatios.padX,
+    padY: resolvedRatios.padY,
+    clearButton: resolvedRatios.clearButton,
+    clearGutter: resolvedRatios.clearGutter,
+    clearBox: resolvedRatios.clearBox,
+  })
 
   const resolvedPanelClass = $derived(panelClass ?? DEFAULT_PANEL_CLASS)
   const resolvedOptionRowClass = $derived(`${SELECT_BOX_UTILITIES} ${OPTION_BASE}`)
@@ -273,6 +324,7 @@
     {placeholder}
     {ariaLabel}
     {size}
+    ratios={fieldRatios}
     {defaultValue}
     {clearable}
     {clearLabel}

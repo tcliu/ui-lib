@@ -1,3 +1,19 @@
+<script module lang="ts">
+  import { INPUT_LEADING, INPUT_RATIOS } from './input-chrome'
+
+  // Container ratios: the field's font (its line box derives from it), its own
+  // wider padding, the tag gap, and the inner input's tighter vertical padding.
+  export const TAG_INPUT_RATIOS = {
+    font: INPUT_RATIOS.font,
+    padX: 0.625,
+    padY: 0.375,
+    gap: 0.375,
+    inputPadY: 0.125,
+  }
+  export type TagInputRatios = typeof TAG_INPUT_RATIOS
+  export type TagInputRatioOverrides = Partial<TagInputRatios>
+</script>
+
 <script lang="ts">
   import { flushSync, tick, type Snippet } from 'svelte'
   import Button from '$lib/components/Button.svelte'
@@ -9,7 +25,7 @@
   import { useListbox } from '$lib/actions/use-listbox.svelte'
   import { matchLabelParts } from '$lib/actions/option-index'
   import { getI18nContext } from '$lib/i18n/store.svelte'
-  import { FONT_RATIO, type SizeInput } from '$lib/size-scale'
+  import { type SizeInput } from '$lib/size-scale'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
   import type { ClearableProps } from './clearable-props'
 
@@ -29,6 +45,10 @@
     disabled?: boolean
     id?: string
     size?: SizeInput
+    // Partial override of the container's metric ratios (font, line, both
+    // paddings, gap, and the inner input's vertical padding); omitted keys keep
+    // the shared defaults. The clear cross's inset follows `padX`.
+    ratios?: TagInputRatioOverrides
     chipClass?: string | ((tag: string) => string)
     // Colour classes per tag when `chipClass` is not given; replaces the
     // built-in palette.
@@ -57,6 +77,7 @@
     disabled = false,
     id,
     size = 'md',
+    ratios,
     chipClass,
     palette,
     chipStyle,
@@ -107,17 +128,12 @@
   // constant metric:dimension ratio across the whole range. The container pads
   // like a text field (padX matches --input-pad-x); the chips size themselves
   // from the same dimension (their metrics live in `Chip`), and the input rides
-  // tighter type so mixed content stays compact.
-  const TAG_INPUT_RATIOS = {
-    font: FONT_RATIO,
-    line: 1.25,
-    padX: 0.625,
-    padY: 0.375,
-    gap: 0.375,
-    inputPadY: 0.125,
-  }
-
-  const metrics = $derived(dimensionMetrics(size, TAG_INPUT_RATIOS))
+  // tighter type so mixed content stays compact. The row's line box follows the
+  // font, so one font retune carries its height.
+  const resolvedRatios = $derived({ ...TAG_INPUT_RATIOS, ...ratios })
+  const metrics = $derived(
+    dimensionMetrics(size, { ...resolvedRatios, line: resolvedRatios.font * INPUT_LEADING }),
+  )
   const style = $derived(sizeVarStyle('tag', metrics))
 
   let uid = $props.id()
@@ -256,8 +272,7 @@
   // both, so chips never run under the overlay. The gutter is reserved
   // whenever the inside clear is configured, not only while tags show the
   // button, so the content keeps the same width filled and at default.
-  const CLEAR_RATIOS = { inset: TAG_INPUT_RATIOS.padX, gutter: 1.875, box: 1 }
-  const clearMetrics = $derived(dimensionMetrics(size, CLEAR_RATIOS))
+  const clearMetrics = $derived(dimensionMetrics(size, { inset: resolvedRatios.padX, gutter: 1.875, box: 1 }))
   const clearStyle = $derived(sizeVarStyle('clear', clearMetrics))
   const boxStyle = $derived(
     [style, insideField ? clearStyle : '', insideField ? 'padding-right:var(--clear-gutter)' : '']

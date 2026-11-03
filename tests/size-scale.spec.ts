@@ -63,7 +63,7 @@ test('numeric size scales every Button metric by a constant ratio', async ({ pag
   rows.forEach((row, i) => {
     const size = SIZES[i]!
     expect(row.font / size).toBeCloseTo(0.8125, 2)
-    expect(row.line / size).toBeCloseTo(1.1607, 2)
+    expect(row.line / size).toBeCloseTo(1.166, 3)
     expect(row.padLeft / size).toBeCloseTo(0.65, 2)
     expect(row.padTop / size).toBeCloseTo(0.45, 2)
     expect(row.radius / size).toBeCloseTo(0.375, 2)
@@ -82,8 +82,8 @@ test('numeric size scales every TextInput metric by a constant ratio', async ({ 
   const rows = await measure(page, 'input')
   rows.forEach((row, i) => {
     const size = SIZES[i]!
-    expect(row.font / size).toBeCloseTo(0.8125, 2)
-    expect(row.line / size).toBeCloseTo(1.1875, 2)
+    expect(row.font / size).toBeCloseTo(0.875, 2)
+    expect(row.line / size).toBeCloseTo(1.279, 3)
     expect(row.padLeft / size).toBeCloseTo(0.5625, 2)
     expect(row.padTop / size).toBeCloseTo(0.39375, 2)
   })
@@ -104,7 +104,7 @@ test('numeric size scales the SearchInput box and icon by a constant ratio', asy
     .evaluateAll(nodes => nodes.map(node => parseFloat(node.getAttribute('width') ?? '0')))
   rows.forEach((row, i) => {
     const size = SIZES[i]!
-    expect(row.font / size).toBeCloseTo(0.8125, 2)
+    expect(row.font / size).toBeCloseTo(0.875, 2)
     expect(row.padLeft / size).toBeCloseTo(1.8, 2)
     // The search icon trims the icon slot, so its glyph rides 0.9× the shared
     // icon ratio of the dimension.
@@ -127,14 +127,14 @@ test('numeric size scales the SelectDropdown trigger by a constant ratio', async
   const rows = await measure(page, 'button[role=combobox]')
   rows.forEach((row, i) => {
     const size = SIZES[i]!
-    expect(row.font / size).toBeCloseTo(0.8125, 2)
+    expect(row.font / size).toBeCloseTo(0.875, 2)
     // The trigger box is the text field's own box: same horizontal and vertical
     // padding, so the two land on one height in a shared row.
     expect(row.padLeft / size).toBeCloseTo(0.5625, 2)
     expect(row.padTop / size).toBeCloseTo(0.39375, 2)
-    // The right gutter is derived from the padding, not tuned beside it: the
-    // computed right padding must track `padLeft × SELECT_GUTTER_SHARE`.
-    expect(row.padRight / size).toBeCloseTo(0.28125, 2)
+    // The chevron gutter is its own size ratio (`chevronGap`), independent of
+    // the text padding, so a padding retune leaves it where it is.
+    expect(row.padRight / size).toBeCloseTo(0.4, 2)
     expect(row.minWidth / size).toBeCloseTo(7, 2)
   })
 })

@@ -60,6 +60,18 @@ describe('NumberInput size', () => {
     await remount(NumberInput, { value: '5', ariaLabel: 'x', size: Number.NaN })
     expect(target.firstElementChild?.getAttribute('style')).toContain('--num-icon: 12px')
   })
+
+  it('merges a partial override over the field and the stepper metrics', async () => {
+    await remount(NumberInput, {
+      value: '5',
+      ariaLabel: 'x',
+      ratios: { font: 0.5, stepperIcon: 0.5, stepperGutter: 2 },
+    })
+    const frame = target.firstElementChild
+    expect(frame?.getAttribute('style')).toContain('--num-icon: 8px')
+    expect(frame?.getAttribute('style')).toContain('--num-pad-right: 32px')
+    expect(target.querySelector('input')?.getAttribute('style')).toContain('--input-font: 8px')
+  })
 })
 
 describe('PasswordInput size', () => {
@@ -79,6 +91,13 @@ describe('PasswordInput size', () => {
     expect(target.querySelector('.relative')?.getAttribute('style')).toContain('--pwd-icon: 14px')
     await remount(PasswordInput, { value: '', size: Number.NaN })
     expect(target.querySelector('.relative')?.getAttribute('style')).toContain('--pwd-icon: 16px')
+  })
+
+  it('merges a partial override over the field and the toggle metrics', async () => {
+    await remount(PasswordInput, { value: '', ratios: { font: 0.5, icon: 0.5, box: 3 } })
+    expect(target.querySelector('.relative')?.getAttribute('style')).toContain('--pwd-icon: 8px')
+    expect(target.querySelector('.relative')?.getAttribute('style')).toContain('--pwd-box: 48px')
+    expect(target.querySelector('input')?.getAttribute('style')).toContain('--input-font: 8px')
   })
 
   it('keeps the reveal tooltip reachable while the field is disabled', async () => {

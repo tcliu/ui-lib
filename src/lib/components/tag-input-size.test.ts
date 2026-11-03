@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushSync, mount, unmount } from 'svelte'
+import { INPUT_RATIOS } from './input-chrome'
 import TagInput from './TagInput.svelte'
 
 function installDomStubs(): void {
@@ -44,8 +45,8 @@ describe('TagInput dimension ratios', () => {
       instance = mount(TagInput, { target, props: { value: ['svelte'], options: [], size: name } })
       flushSync()
       const style = styleOf()
-      expect(num(style, 'tag-font') / px).toBeCloseTo(0.875)
-      expect(num(style, 'tag-line') / px).toBeCloseTo(1.25)
+      expect(num(style, 'tag-font') / px).toBeCloseTo(INPUT_RATIOS.font)
+      expect(num(style, 'tag-line') / px).toBeCloseTo(INPUT_RATIOS.line)
       expect(num(style, 'tag-pad-x') / px).toBeCloseTo(0.625)
       expect(num(style, 'tag-pad-y') / px).toBeCloseTo(0.375)
       expect(num(style, 'tag-gap') / px).toBeCloseTo(0.375)
@@ -60,5 +61,19 @@ describe('TagInput dimension ratios', () => {
     instance = mount(TagInput, { target, props: { value: [], options: [], size: 20 } })
     flushSync()
     expect(num(styleOf(), 'tag-font')).toBeCloseTo(17.5)
+  })
+
+  it('merges a partial ratios override and carries the clear inset', () => {
+    instance = mount(TagInput, {
+      target,
+      props: { value: ['svelte'], options: [], size: 16, clearable: true, ratios: { padX: 0.75, padY: 0.5, gap: 0.5 } },
+    })
+    flushSync()
+    const style = styleOf()
+    expect(num(style, 'tag-pad-x')).toBeCloseTo(12)
+    expect(num(style, 'tag-pad-y')).toBeCloseTo(8)
+    expect(num(style, 'tag-gap')).toBeCloseTo(8)
+    // The cross's inset follows the resolved padding.
+    expect(num(style, 'clear-inset')).toBeCloseTo(12)
   })
 })

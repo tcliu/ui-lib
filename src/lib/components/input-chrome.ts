@@ -2,6 +2,7 @@
 // renders the canonical `<input>`; `PasswordInput`/`SearchInput`/`NumberInput`
 // compose it, and `TextArea` imports these directly because a `<textarea>` cannot
 // compose an `<input>`. Keep the chrome here so no input re-declares it.
+import { FONT_RATIO } from '$lib/size-scale'
 
 // The border and the focus color that accompanies it; a field embedded in
 // another surface drops both together (see `INPUT_EMBEDDED`).
@@ -32,6 +33,27 @@ export const INPUT_EMBEDDED = 'bg-transparent outline-none'
 export const INPUT_METRIC_CLASS =
   'rounded-[var(--input-radius)] py-[var(--input-pad-y)] px-[var(--input-pad-x)] text-[length:var(--input-font)] leading-[var(--input-line)]'
 
+// The line box's leading over the label: the tuned 19px line at 13px text.
+// `line` derives from `font` through this share, so retuning the shared font
+// carries every field's row height with it instead of leaving a fixed line box
+// behind. Derived, not a separate ratio, per the size-metric rule.
+export const INPUT_LEADING = 19 / 13
+
 // Every metric is a fixed ratio of the size dimension, so each keeps a constant
-// metric:dimension ratio across the whole range.
-export const INPUT_RATIOS = { font: 0.8125, line: 1.1875, radius: 0.375, padX: 0.5625, padY: 0.39375 }
+// metric:dimension ratio across the whole range. The font is the shared text
+// ratio (`FONT_RATIO`), so every text surface stays at one label size.
+//
+// The tunable set is `FIELD_RATIOS`: the text metrics a field's `ratios` prop
+// may override. `line` is deliberately absent — it derives from `font` through
+// `INPUT_LEADING` at each field, so a font override carries the row height
+// instead of leaving a fixed line box behind.
+export const FIELD_RATIOS = { font: FONT_RATIO, radius: 0.375, padX: 0.5625, padY: 0.39375 }
+
+// The resolved chrome ratios: the tunable set plus the derived line box, for
+// consumers that read a resolved line (the display label, the select trigger,
+// the pager) rather than deriving their own.
+export const INPUT_RATIOS = { ...FIELD_RATIOS, line: FIELD_RATIOS.font * INPUT_LEADING }
+
+export type FieldRatios = typeof FIELD_RATIOS
+// A caller's override is partial: omitted keys keep the shared defaults.
+export type FieldRatioOverrides = Partial<FieldRatios>

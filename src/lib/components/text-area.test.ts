@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { flushSync, mount, unmount } from 'svelte'
 import Harness from './text-area.harness.svelte'
+import { INPUT_LEADING } from './input-chrome'
 
 let target: HTMLDivElement
 let instance: ReturnType<typeof mount> | null = null
@@ -50,5 +51,16 @@ describe('TextArea', () => {
     expect(area.rows).toBe(5)
     expect(area.disabled).toBe(true)
     expect(area.readOnly).toBe(true)
+  })
+
+  it('merges a partial ratios override over the shared metrics', () => {
+    const area = render({ ratios: { font: 0.5, padX: 0.75 } })
+    const style = area.getAttribute('style') ?? ''
+    expect(Number(/--input-font:\s*([\d.]+)/.exec(style)?.[1])).toBeCloseTo(8)
+    expect(Number(/--input-pad-x:\s*([\d.]+)/.exec(style)?.[1])).toBeCloseTo(12)
+    expect(Number(/--input-radius:\s*([\d.]+)/.exec(style)?.[1])).toBeCloseTo(6)
+    // The line box derives from the overridden font rather than staying on the
+    // shared default, so the editor's row height follows its text.
+    expect(Number(/--input-line:\s*([\d.]+)/.exec(style)?.[1])).toBeCloseTo(8 * INPUT_LEADING)
   })
 })

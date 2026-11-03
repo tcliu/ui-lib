@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushSync, mount, unmount } from 'svelte'
+import AutoComplete from './AutoComplete.svelte'
 import Harness from './autocomplete.harness.svelte'
 
 // jsdom lacks ResizeObserver (positionPanel), matchMedia, and scrollIntoView
@@ -152,6 +153,54 @@ describe('AutoComplete value model', () => {
     expect(pressKey('Enter')).toBe(true)
     expect(text('value')).toBe('United Kingdom')
     expect(text('picked')).toBe('uk')
+  })
+})
+
+describe('AutoComplete ratios', () => {
+  it('merges a partial override over the field and the panel', () => {
+    instance = mount(AutoComplete, {
+      target,
+      props: {
+        value: '',
+        options: ['a', 'b'],
+        ariaLabel: 'Country',
+        onSelect: () => {},
+        size: 16,
+        ratios: { font: 0.5, padX: 0.75, minW: 10 },
+      },
+    })
+    flushSync()
+    expect(combobox().getAttribute('style')).toContain('--input-font: 8px')
+    combobox().focus()
+    flushSync()
+    const row = document.querySelector('[role=listbox] [role=option]')
+    expect(row?.getAttribute('style')).toContain('--sel-font: 8px')
+    expect(row?.getAttribute('style')).toContain('--sel-pad-x: 12px')
+    expect(row?.getAttribute('style')).toContain('--sel-min-w: 160px')
+  })
+
+  it('applies an overridden clear affordance to the field it renders', () => {
+    instance = mount(AutoComplete, {
+      target,
+      props: {
+        value: 'Two',
+        options: ['a', 'b'],
+        ariaLabel: 'Country',
+        onSelect: () => {},
+        size: 16,
+        clearable: true,
+        ratios: { clearButton: 0.5, clearGutter: 3, clearBox: 2 },
+      },
+    })
+    flushSync()
+    const style = Array.from(target.querySelectorAll('[style]'))
+      .map(element => element.getAttribute('style') ?? '')
+      .join(';')
+    // The clear keys are part of AutoComplete's set, so they must reach the
+    // shared field instead of falling back to the defaults.
+    expect(Number(/--clear-button:\s*([\d.]+)/.exec(style)?.[1])).toBeCloseTo(8)
+    expect(Number(/--clear-gutter:\s*([\d.]+)/.exec(style)?.[1])).toBeCloseTo(48)
+    expect(Number(/--clear-box:\s*([\d.]+)/.exec(style)?.[1])).toBeCloseTo(32)
   })
 })
 

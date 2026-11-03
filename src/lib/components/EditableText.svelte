@@ -6,14 +6,14 @@
   import EditIcon from '$lib/icons/EditIcon.svelte'
   import type { SizeInput } from '$lib/size-scale'
   import { copyToClipboard } from './copy-to-clipboard'
-  import { INPUT_METRIC_CLASS, INPUT_RATIOS } from './input-chrome'
+  import { FIELD_RATIOS, INPUT_LEADING, INPUT_METRIC_CLASS, type FieldRatioOverrides } from './input-chrome'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
   import TextInput from './TextInput.svelte'
   import { getI18nContext } from '$lib/i18n/store.svelte'
   const i18n = getI18nContext()
 
   // Text-field metrics follow TextInput's shared base chrome (`input-chrome.ts`
-  // INPUT_RATIOS): every metric is a fixed ratio of the size dimension, so names
+  // FIELD_RATIOS): every metric is a fixed ratio of the size dimension, so names
   // (axis aliases) and numbers scale continuously together.
 
   interface Props {
@@ -22,6 +22,10 @@
     // the component then restores the previous text and keeps editing.
     onChange: (text: string) => void | boolean
     size?: SizeInput
+    // Partial override of the label's and field's tunable ratios (font, radius,
+    // and both paddings); omitted keys keep the shared defaults. The line box is
+    // not an override: both derive it from `font`.
+    ratios?: FieldRatioOverrides
     className?: string
     onActivate?: () => void
     // maximum width (in px) the editable input may expand to; the actual max
@@ -36,6 +40,7 @@
     text,
     onChange,
     size = 'md',
+    ratios,
     className = 'text-slate-200',
     onActivate,
     maxWidth = 480,
@@ -176,10 +181,26 @@
   })
 
   // Text sizing follows TextInput: the shared input chrome (`input-chrome.ts`)
-  // drives font, line, radius, and padding from the size dimension, emitted as
-  // `--input-*` vars consumed by `INPUT_METRIC_CLASS` below.
-  const metrics = $derived(dimensionMetrics(size, INPUT_RATIOS))
+  // drives font, radius, and padding from the size dimension, emitted as
+  // `--input-*` vars consumed by `INPUT_METRIC_CLASS` below. Both the label and
+  // the edit field derive their line box from the font, so one font override
+  // keeps them on one height.
+  const resolvedRatios = $derived({ ...FIELD_RATIOS, ...ratios })
+  const metrics = $derived(
+    dimensionMetrics(size, {
+      ...resolvedRatios,
+      line: resolvedRatios.font * INPUT_LEADING,
+    }),
+  )
   const sizeStyle = $derived(sizeVarStyle('input', metrics))
+  // The edit field rides the same metrics; TextInput derives its own line from
+  // the font, so it takes only the tunable subset.
+  const fieldRatios = $derived({
+    font: resolvedRatios.font,
+    radius: resolvedRatios.radius,
+    padX: resolvedRatios.padX,
+    padY: resolvedRatios.padY,
+  })
   const metricClass = INPUT_METRIC_CLASS
   // The edit field rides TextInput, which emits the same `--input-*` vars for
   // the shared size, so the field needs only its measured width on top.
@@ -202,6 +223,7 @@
       inputClass={`${metricClass} max-w-full bg-slate-950 text-slate-100 outline outline-1 outline-slate-700 transition focus:outline-cyan-500 motion-reduce:transition-none`}
       inputStyle={widthStyle}
       {size}
+      ratios={fieldRatios}
       ariaLabel={i18n.t('edit.editText')}
       onclick={e => e.stopPropagation()}
       onkeydown={e => {

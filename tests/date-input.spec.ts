@@ -226,8 +226,8 @@ test('showcase: the DateInput size Value cell scales the picker', async ({ page 
   await page.getByRole('combobox', { name: 'size value' }).click()
   await page.getByRole('option', { name: 'lg' }).click()
 
-  // lg = 18px dimension → a 14.625px field font.
-  await expect(demo.locator('[style*="--pick-font"]').first()).toHaveAttribute('style', /--pick-font:\s*14\.625px/)
+  // lg = 18px dimension → a 15.75px field font (FONT_RATIO).
+  await expect(demo.locator('[style*="--pick-font"]').first()).toHaveAttribute('style', /--pick-font:\s*15\.75px/)
 })
 
 test('showcase: the DateInput format Value cell drives the field text', async ({ page }) => {

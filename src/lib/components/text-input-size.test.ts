@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushSync, mount, unmount } from 'svelte'
+import { INPUT_RATIOS } from './input-chrome'
 import TextInput from './TextInput.svelte'
+import { TEXT_INPUT_RATIOS } from './text-input-metrics'
 
 function installDomStubs(): void {
   vi.stubGlobal('matchMedia', () => ({
@@ -43,12 +45,58 @@ describe('TextInput dimension ratios', () => {
       instance = mount(TextInput, { target, props: { value: '', ariaLabel: 'Name', size: name } })
       flushSync()
       const style = styleOf()
-      expect(num(style, 'font') / px).toBeCloseTo(0.8125)
+      expect(num(style, 'font') / px).toBeCloseTo(TEXT_INPUT_RATIOS.font)
+      expect(num(style, 'line') / px).toBeCloseTo(INPUT_RATIOS.line)
       expect(num(style, 'pad-x') / px).toBeCloseTo(0.5625)
       expect(num(style, 'pad-y') / px).toBeCloseTo(0.39375)
       expect(num(style, 'radius') / px).toBeCloseTo(0.375)
       expect(target.querySelector('input')?.className).toContain('text-[length:var(--input-font)]')
     }
+  })
+
+  it('merges a partial ratios override over the shared defaults', async () => {
+    instance = mount(TextInput, {
+      target,
+      props: { value: '', ariaLabel: 'Name', size: 16, ratios: { font: 0.5, padX: 0.75 } },
+    })
+    flushSync()
+    const style = styleOf()
+    expect(num(style, 'font')).toBeCloseTo(8)
+    expect(num(style, 'line')).toBeCloseTo(8 * (INPUT_RATIOS.line / INPUT_RATIOS.font))
+    expect(num(style, 'pad-x')).toBeCloseTo(12)
+    expect(num(style, 'pad-y')).toBeCloseTo(16 * TEXT_INPUT_RATIOS.padY)
+  })
+
+  it('carries the line box with an overridden font', async () => {
+    instance = mount(TextInput, {
+      target,
+      props: { value: '', ariaLabel: 'Name', size: 16, ratios: { font: 0.5 } },
+    })
+    flushSync()
+    const style = styleOf()
+    // Height follows the font: the leading share is fixed, so the line scales
+    // with it instead of staying on the shared default line.
+    expect(num(style, 'line') / num(style, 'font')).toBeCloseTo(INPUT_RATIOS.line / INPUT_RATIOS.font)
+    expect(num(style, 'line')).not.toBeCloseTo(16 * INPUT_RATIOS.line)
+  })
+
+  it('derives the clear inset from an overridden padX', async () => {
+    instance = mount(TextInput, {
+      target,
+      props: {
+        value: 'x',
+        ariaLabel: 'Name',
+        size: 16,
+        clearable: true,
+        ratios: { padX: 0.75, clearButton: 0.5 },
+      },
+    })
+    flushSync()
+    const style = Array.from(target.querySelectorAll('[style]'))
+      .map(element => element.getAttribute('style') ?? '')
+      .join(';')
+    expect(Number(/--clear-inset:\s*([\d.]+)/.exec(style)?.[1])).toBeCloseTo(12)
+    expect(Number(/--clear-button:\s*([\d.]+)/.exec(style)?.[1])).toBeCloseTo(8)
   })
 
   it('lets an inputClass override replace the metrics', async () => {

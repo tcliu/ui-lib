@@ -1,4 +1,4 @@
-import { INPUT_RATIOS } from './input-chrome'
+import { FIELD_RATIOS } from './input-chrome'
 
 // Numeric sizes are positions on the shared scale (`$lib/size-scale`): names
 // are aliases for its steps and every metric below interpolates from the
@@ -7,26 +7,27 @@ import { INPUT_RATIOS } from './input-chrome'
 // Every metric is a fixed ratio of the size dimension (the icon is the
 // dimension itself), so each keeps a constant metric:dimension ratio across the
 // range. The min-width floors every surface so an empty query cannot collapse
-// the trigger. Font, line, and both paddings are the text field's own ratios
-// (`INPUT_RATIOS`) rather than tuned beside them, so a trigger — and the option
-// rows sharing this box — land on the same box height and the same text inset
-// as `TextInput` at every size, and the two can never drift apart.
+// the trigger. Font and both paddings are the text field's own ratios
+// (`FIELD_RATIOS`) rather than tuned beside them, and the line box derives from
+// the font at the trigger, so a trigger — and the option rows sharing this box —
+// land on the same box height and the same text inset as `TextInput` at every
+// size, and the two can never drift apart.
 export const SELECT_RATIOS = {
-  font: INPUT_RATIOS.font,
-  line: INPUT_RATIOS.line,
-  padX: INPUT_RATIOS.padX,
-  padY: INPUT_RATIOS.padY,
+  font: FIELD_RATIOS.font,
+  padX: FIELD_RATIOS.padX,
+  padY: FIELD_RATIOS.padY,
+  // The chevron's own right gutter (chevron → border), deliberately independent
+  // of the text padding: the marker sits closer to the border than the label's
+  // `padX` inset, and a padding retune leaves it where it is.
+  chevronGap: 0.4,
   minW: 7,
   gap: 0.375,
   icon: 1,
 }
 
-// The trigger's right gutter (chevron → border) is derived, not a ratio of the
-// dimension: it is a fixed, size-independent share of the horizontal padding,
-// so retuning `padX` — or a caller overriding `--sel-pad-x` — rescales the
-// gutter with the padding instead of shifting it by a constant offset. The
-// share is the fixed constant; the emitted gutter is `--sel-pad-right`.
-export const SELECT_GUTTER_SHARE = 0.5
+export type SelectRatios = typeof SELECT_RATIOS
+// A caller's override is partial: omitted keys keep the shared defaults.
+export type SelectRatioOverrides = Partial<SelectRatios>
 
 // The var-driven box metrics shared by the trigger boxes, the option rows, and
 // the empty row; the element's inline style carries the values.
@@ -34,12 +35,11 @@ export const SELECT_BOX_UTILITIES =
   'min-w-[var(--sel-min-w)] text-[length:var(--sel-font)] leading-[var(--sel-line)] py-[var(--sel-pad-y)] px-[var(--sel-pad-x)]'
 
 // The trigger box shares the box metrics but carries an asymmetric right
-// padding: the chevron sits inside the right gutter, published as
-// `--sel-pad-right` — a fixed share of the horizontal padding, defined in terms
-// of `--sel-pad-x` so a padding override carries the gutter along — rather than
-// tuned as its own absolute ratio.
+// padding: the chevron sits inside its own gutter, published as
+// `--sel-chevron-gap` from `SELECT_RATIOS.chevronGap`, so the marker's inset is
+// tuned independently of the label's `padX` inset.
 export const SELECT_TRIGGER_UTILITIES =
-  'min-w-[var(--sel-min-w)] text-[length:var(--sel-font)] leading-[var(--sel-line)] py-[var(--sel-pad-y)] pl-[var(--sel-pad-x)] pr-[var(--sel-pad-right)]'
+  'min-w-[var(--sel-min-w)] text-[length:var(--sel-font)] leading-[var(--sel-line)] py-[var(--sel-pad-y)] pl-[var(--sel-pad-x)] pr-[var(--sel-chevron-gap)]'
 
 // Default floating panel chrome; a `panelClass` override replaces it. The
 // per-size min-width lives on the trigger and option rows (see

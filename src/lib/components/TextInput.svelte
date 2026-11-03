@@ -6,7 +6,14 @@
   import CloseIcon from '$lib/icons/CloseIcon.svelte'
   import Button from './Button.svelte'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
-  import { INPUT_CHROME, INPUT_CHROME_NO_OUTLINE, INPUT_EMBEDDED, INPUT_METRIC_CLASS, INPUT_RATIOS } from './input-chrome'
+  import {
+    INPUT_CHROME,
+    INPUT_CHROME_NO_OUTLINE,
+    INPUT_EMBEDDED,
+    INPUT_LEADING,
+    INPUT_METRIC_CLASS,
+  } from './input-chrome'
+  import { TEXT_INPUT_RATIOS, type TextInputRatioOverrides } from './text-input-metrics'
   import type { ClearableProps } from './clearable-props'
 
   const i18n = getI18nContext()
@@ -24,6 +31,12 @@
     defaultValue?: string
     ariaLabel?: string
     size?: SizeInput
+    // Partial override of the field's metric ratios (font, radius, both
+    // paddings, the clear affordance's box and gutter, and the trailer gap).
+    // Omitted keys keep the shared defaults; the line box follows `font` and
+    // the clear cross's inset follows `padX` rather than sitting beside them as
+    // separate ratios.
+    ratios?: TextInputRatioOverrides
     inputRef?: HTMLInputElement | null
     // Inline style appended after the size-metric custom properties, for
     // callers that size the field themselves (runtime widths must not be
@@ -62,6 +75,7 @@
     defaultValue,
     ariaLabel,
     size = 'md',
+    ratios,
     disabled = false,
     readonly = false,
     inputRef = $bindable(null),
@@ -81,7 +95,17 @@
     ...rest
   }: Props = $props()
 
-  const metrics = $derived(dimensionMetrics(size, INPUT_RATIOS))
+  const resolvedRatios = $derived({ ...TEXT_INPUT_RATIOS, ...ratios })
+  const metrics = $derived(
+    dimensionMetrics(size, {
+      font: resolvedRatios.font,
+      // Derived, not overridden: the row height follows the field's font.
+      line: resolvedRatios.font * INPUT_LEADING,
+      radius: resolvedRatios.radius,
+      padX: resolvedRatios.padX,
+      padY: resolvedRatios.padY,
+    }),
+  )
   const style = $derived(sizeVarStyle('input', metrics))
 
   // Clear-affordance metrics: the button rides a trimmed share of the size
@@ -90,14 +114,19 @@
   // inset matches the field's horizontal padding, and the gutter reserves room
   // for both. The box reserves the outside row's clear slot so the input keeps
   // the same width empty and filled.
-  const CLEAR_RATIOS = { button: 0.625, inset: INPUT_RATIOS.padX, gutter: 1.6875, box: 1 }
-  const clearMetrics = $derived(dimensionMetrics(size, CLEAR_RATIOS))
+  const clearMetrics = $derived(
+    dimensionMetrics(size, {
+      button: resolvedRatios.clearButton,
+      inset: resolvedRatios.padX,
+      gutter: resolvedRatios.clearGutter,
+      box: resolvedRatios.clearBox,
+    }),
+  )
   const clearStyle = $derived(sizeVarStyle('clear', clearMetrics))
 
   // The outside row's gap between the field and whatever follows it — the clear
   // cross and/or a caller's trailer.
-  const TRAILER_RATIOS = { gap: 0.375 }
-  const trailerMetrics = $derived(dimensionMetrics(size, TRAILER_RATIOS))
+  const trailerMetrics = $derived(dimensionMetrics(size, { gap: resolvedRatios.trailerGap }))
 
   // A disabled or read-only field offers no clear action: clearing it is not
   // permitted, and a disabled input cannot take focus back after the cross

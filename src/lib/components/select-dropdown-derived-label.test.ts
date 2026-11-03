@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { flushSync, mount, unmount } from 'svelte'
+import { INPUT_RATIOS } from './input-chrome'
 import Harness from './select-dropdown-derived-label.harness.svelte'
 
 let target: HTMLDivElement
@@ -79,6 +80,6 @@ describe('SelectDropdown derived trigger label', () => {
     const row = target.querySelector('button[role=combobox] > span')
     expect(row?.getAttribute('class')).toContain('min-h-[var(--sel-line)]')
     const trigger = target.querySelector('button[role=combobox]')
-    expect(trigger?.getAttribute('style')).toContain('--sel-line: 19px')
+    expect(trigger?.getAttribute('style')).toContain(`--sel-line: ${16 * INPUT_RATIOS.line}px`)
   })
 })

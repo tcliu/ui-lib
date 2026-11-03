@@ -5,6 +5,7 @@ import RangeHarness from './date-range.harness.svelte'
 import RangeTimeHarness from './date-range-time.harness.svelte'
 import ValueHarness from './date-value.harness.svelte'
 import { todayIso } from './date-input-core'
+import { PICKER_RATIOS } from './date-input-metrics'
 
 // jsdom lacks ResizeObserver (positionPanel), matchMedia, and scrollIntoView.
 function installDomStubs(): void {
@@ -136,9 +137,23 @@ describe('DateInput', () => {
     instance = mount(DateInput, { target, props: { value: '' } })
     flushSync()
     const root = target.firstElementChild as HTMLElement
-    expect(root.getAttribute('style')).toContain('--pick-font: 13px')
+    expect(root.getAttribute('style')).toContain(`--pick-font: ${16 * PICKER_RATIOS.font}px`)
     expect(root.getAttribute('style')).toContain('--pick-panel-width: 272px')
     expect(root.getAttribute('style')).toContain('--pick-cell-size: 32px')
+  })
+
+  it('merges a partial ratios override over the fields and the calendar', () => {
+    instance = mount(DateInput, {
+      target,
+      props: { value: '', ratios: { font: 0.5, padX: 0.75, panelWidth: 10 } },
+    })
+    flushSync()
+    const root = target.firstElementChild as HTMLElement
+    expect(root.getAttribute('style')).toContain('--pick-font: 8px')
+    expect(root.getAttribute('style')).toContain('--pick-pad-x: 12px')
+    expect(root.getAttribute('style')).toContain('--pick-panel-width: 160px')
+    // The field text follows the same font and padding.
+    expect(target.querySelector('input')?.getAttribute('style')).toContain('--input-font: 8px')
   })
 
   it('selects a single date and reflects it in the field', () => {
@@ -331,7 +346,7 @@ describe('DateInput', () => {
     flushSync()
     openTrigger()
     const dialog = document.querySelector('[role="dialog"]') as HTMLElement
-    expect(dialog.style.getPropertyValue('--pick-font')).toBe('14.625px')
+    expect(dialog.style.getPropertyValue('--pick-font')).toBe(`${18 * PICKER_RATIOS.font}px`)
     expect(dialog.style.getPropertyValue('--pick-panel-width')).toBe('306px')
   })
 })
@@ -365,7 +380,7 @@ describe('DateInput range', () => {
     instance = mount(DateInput, { target, props: rangeProps })
     flushSync()
     const root = target.firstElementChild as HTMLElement
-    expect(root.getAttribute('style')).toContain('--pick-font: 13px')
+    expect(root.getAttribute('style')).toContain(`--pick-font: ${16 * PICKER_RATIOS.font}px`)
   })
 
   it('picks each end in its own panel', () => {

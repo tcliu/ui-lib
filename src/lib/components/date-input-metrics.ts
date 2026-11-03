@@ -31,7 +31,6 @@ export interface DateInputTheme {
 // `--pick-*` set serves them.
 export const PICKER_RATIOS = {
   font: INPUT_RATIOS.font,
-  line: INPUT_RATIOS.line,
   radius: 0.375,
   padX: INPUT_RATIOS.padX,
   padY: INPUT_RATIOS.padY,
@@ -48,3 +47,7 @@ export const PICKER_RATIOS = {
   tightPadY: 0.125,
   cellSize: 2,
 }
+
+export type PickerRatios = typeof PICKER_RATIOS
+// A caller's override is partial: omitted keys keep the shared defaults.
+export type PickerRatioOverrides = Partial<PickerRatios>

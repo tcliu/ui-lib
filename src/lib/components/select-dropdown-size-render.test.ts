@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushSync, mount, unmount } from 'svelte'
+import { INPUT_RATIOS } from './input-chrome'
+import { SELECT_RATIOS } from './select-dropdown-styles'
 import SelectDropdown from './SelectDropdown.svelte'
 import Harness from './select-dropdown-size.harness.svelte'
 
@@ -46,14 +48,14 @@ describe('SelectDropdown numeric size', () => {
   it('carries the resolved metrics on the trigger and the option rows', () => {
     instance = mount(Harness, { target })
     flushSync()
-    // size 14 → font 0.8125 * 14.
+    // size 14 → font = INPUT_RATIOS.font × 14.
     const trigger = document.querySelector('button[role=combobox]')
-    expect(trigger?.getAttribute('style')).toContain('--sel-font: 11.375px')
+    expect(trigger?.getAttribute('style')).toContain(`--sel-font: ${14 * INPUT_RATIOS.font}px`)
 
     trigger?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     flushSync()
     const row = document.querySelector('[role=listbox] [role=option]')
-    expect(row?.getAttribute('style')).toContain('--sel-font: 11.375px')
+    expect(row?.getAttribute('style')).toContain(`--sel-font: ${14 * INPUT_RATIOS.font}px`)
     // The row references the min-width var rather than a literal class.
     expect(row?.getAttribute('class')).toContain('min-w-[var(--sel-min-w)]')
   })
@@ -65,14 +67,35 @@ describe('SelectDropdown numeric size', () => {
     expect(document.querySelector('.relative svg')?.getAttribute('width')).toBe('7.109375')
   })
 
-  it('publishes the chevron gutter as a calc over the padding var', () => {
+  it('merges a partial ratios override without moving the chevron gutter', () => {
+    instance = mount(SelectDropdown, {
+      target,
+      props: {
+        options: ['a', 'b'],
+        ariaLabel: 'Pick',
+        onSelect: () => {},
+        size: 16,
+        ratios: { font: 0.5, padX: 0.75, minW: 10 },
+      },
+    })
+    flushSync()
+    const trigger = document.querySelector('button[role=combobox]')
+    const style = trigger?.getAttribute('style') ?? ''
+    expect(style).toContain('--sel-font: 8px')
+    expect(style).toContain('--sel-pad-x: 12px')
+    expect(style).toContain('--sel-min-w: 160px')
+    // The gutter is its own ratio: a padding override leaves it at 0.4 × 16.
+    expect(style).toContain('--sel-chevron-gap: 6.4px')
+  })
+
+  it('publishes the chevron gutter as its own size metric', () => {
     instance = mount(Harness, { target })
     flushSync()
     const trigger = document.querySelector('button[role=combobox]')
-    // Derived, not baked to px: the gutter reads `--sel-pad-x`, so retuning the
-    // padding or overriding the var carries the chevron's inset with it.
-    expect(trigger?.getAttribute('style')).toContain('--sel-pad-right: calc(var(--sel-pad-x) * 0.5)')
-    expect(trigger?.getAttribute('class')).toContain('pr-[var(--sel-pad-right)]')
+    const style = trigger?.getAttribute('style') ?? ''
+    // Its own ratio, independent of the text padding: size 14 → 0.4 × 14.
+    expect(Number(/--sel-chevron-gap:\s*([\d.]+)/.exec(style)?.[1])).toBeCloseTo(14 * SELECT_RATIOS.chevronGap)
+    expect(trigger?.getAttribute('class')).toContain('pr-[var(--sel-chevron-gap)]')
   })
 })
 

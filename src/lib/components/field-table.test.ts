@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushSync, mount, unmount } from 'svelte'
 import { type FieldConfig } from './FieldTable.svelte'
 import { iconOnlyBoxPx } from './Button.svelte'
+import { INPUT_RATIOS } from './input-chrome'
 import Harness from './field-table.harness.svelte'
 
 let target: HTMLDivElement
@@ -95,7 +96,9 @@ describe('FieldTable', () => {
     // The in-flow spacer holds the natural two-row floor, so a row whose
     // area is its tallest content keeps its height.
     const spacer = cell.querySelector('[aria-hidden="true"]') as HTMLElement
-    expect(spacer.style.minHeight).toBe('52.6px')
+    expect(spacer.style.minHeight).toBe(
+      `${16 * (INPUT_RATIOS.line * 2 + INPUT_RATIOS.padY * 2) + 2}px`,
+    )
     expect(table.querySelector('input[aria-label="badge value"]')).toBeNull()
   })
 

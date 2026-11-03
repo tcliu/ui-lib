@@ -1,8 +1,24 @@
+<script module lang="ts">
+  import { TEXT_INPUT_RATIOS } from './text-input-metrics'
+
+  // The field's ratios plus the leading search icon's own metrics, so one
+  // partial object tunes the whole control. The text gutter derives from them.
+  export const SEARCH_INPUT_RATIOS = {
+    ...TEXT_INPUT_RATIOS,
+    iconLeft: 0.6,
+    icon: 0.9,
+    iconGap: 0.3,
+  }
+  export type SearchInputRatios = typeof SEARCH_INPUT_RATIOS
+  export type SearchInputRatioOverrides = Partial<SearchInputRatios>
+</script>
+
 <script lang="ts">
   import SearchIcon from '$lib/icons/SearchIcon.svelte'
   import TextInput from './TextInput.svelte'
   import { getI18nContext } from '$lib/i18n/store.svelte'
   import type { SizeInput } from '$lib/size-scale'
+  import type { TextInputRatioOverrides } from './text-input-metrics'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
   import type { ClearableProps } from './clearable-props'
 
@@ -16,6 +32,9 @@
     ariaLabel: string
     placeholder?: string
     size?: SizeInput
+    // Partial override of the field and search-icon metric ratios; omitted keys
+    // keep the shared defaults.
+    ratios?: SearchInputRatioOverrides
     wrapperClass?: string
     inputClass?: string
     // Forwarded to TextInput: drop the field's border and focus border while
@@ -36,6 +55,7 @@
     ariaLabel,
     placeholder,
     size = 'md',
+    ratios,
     wrapperClass = '',
     inputClass,
     hideOutline = false,
@@ -50,22 +70,28 @@
     onblur,
   }: Props = $props()
 
-  // The input box rides TextInput's shared base metrics; the search icon and
-  // its gutter are the only metrics this wrapper adds. The icon's leading inset
-  // and slot are fixed ratios of the size dimension; the text gutter is derived
-  // from them plus a fixed gap, so tuning the glyph carries the text with it
-  // instead of letting the label slide under the icon.
-  const SEARCH_ICON_LEFT = 0.6
-  const SEARCH_ICON = 0.9
-  const SEARCH_ICON_GAP = 0.3
-  const SEARCH_RATIOS = {
-    iconLeft: SEARCH_ICON_LEFT,
-    icon: SEARCH_ICON,
-    padLeft: SEARCH_ICON_LEFT + SEARCH_ICON + SEARCH_ICON_GAP,
-  }
-
-  const metrics = $derived(dimensionMetrics(size, SEARCH_RATIOS))
+  const resolvedRatios = $derived({ ...SEARCH_INPUT_RATIOS, ...ratios })
+  // The icon's leading inset and slot are fixed ratios of the size dimension;
+  // the text gutter is derived from them plus a fixed gap, so tuning the glyph
+  // carries the text with it instead of letting the label slide under the icon.
+  const metrics = $derived(
+    dimensionMetrics(size, {
+      iconLeft: resolvedRatios.iconLeft,
+      icon: resolvedRatios.icon,
+      padLeft: resolvedRatios.iconLeft + resolvedRatios.icon + resolvedRatios.iconGap,
+    }),
+  )
   const style = $derived(sizeVarStyle('search', metrics))
+  const fieldRatios: TextInputRatioOverrides = $derived({
+    font: resolvedRatios.font,
+    radius: resolvedRatios.radius,
+    padX: resolvedRatios.padX,
+    padY: resolvedRatios.padY,
+    clearButton: resolvedRatios.clearButton,
+    clearGutter: resolvedRatios.clearGutter,
+    clearBox: resolvedRatios.clearBox,
+    trailerGap: resolvedRatios.trailerGap,
+  })
 
   const resolvedPlaceholder = $derived(placeholder ?? i18n.t('search.placeholder'))
 </script>
@@ -78,6 +104,7 @@
     {ariaLabel}
     placeholder={resolvedPlaceholder}
     {size}
+    ratios={fieldRatios}
     {inputClass}
     {hideOutline}
     className="pl-[var(--search-pad-left)]"

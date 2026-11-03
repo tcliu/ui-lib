@@ -4,6 +4,7 @@ import Checkbox from './Checkbox.svelte'
 import EditableText from './EditableText.svelte'
 import Spinner from './Spinner.svelte'
 import Toast from './Toast.svelte'
+import { INPUT_LEADING, INPUT_RATIOS } from './input-chrome'
 import { SIZE_PX } from '$lib/size-scale'
 
 // jsdom lacks ResizeObserver (positionPanel), matchMedia, and scrollIntoView;
@@ -108,14 +109,14 @@ describe('EditableText numeric size', () => {
     flushSync()
     const display = target.querySelector('button')
     expect(display?.className).toContain('var(--input-font)')
-    expect(display?.getAttribute('style')).toContain('--input-font: 13px')
+    expect(display?.getAttribute('style')).toContain(`--input-font: ${16 * INPUT_RATIOS.font}px`)
     expect(display?.getAttribute('style')).toContain('--input-pad-x: 9px')
     await unmount(instance!)
     instance = mount(EditableText, { target, props: { text: 'hi', size: 14, onChange: () => {} } })
     flushSync()
     const custom = target.querySelector('button')
     expect(custom?.className).toContain('var(--input-font)')
-    expect(custom?.getAttribute('style')).toContain('--input-font: 11.375px')
+    expect(custom?.getAttribute('style')).toContain(`--input-font: ${14 * INPUT_RATIOS.font}px`)
     expect(custom?.getAttribute('style')).toContain('--input-pad-x: 7.875px')
     await unmount(instance!)
     instance = null
@@ -125,6 +126,21 @@ describe('EditableText numeric size', () => {
     const fallback = target.querySelector('button')
     expect(fallback?.className).toContain('var(--input-font)')
     expect(fallback?.className).not.toContain('undefined')
-    expect(fallback?.getAttribute('style')).toContain('--input-font: 13px')
+    expect(fallback?.getAttribute('style')).toContain(`--input-font: ${16 * INPUT_RATIOS.font}px`)
+  })
+
+  it('merges a partial ratios override', async () => {
+    instance = mount(EditableText, {
+      target,
+      props: { text: 'hi', onChange: () => {}, ratios: { font: 0.5, padX: 0.75 } },
+    })
+    flushSync()
+    const display = target.querySelector('button')
+    expect(display?.getAttribute('style')).toContain('--input-font: 8px')
+    expect(display?.getAttribute('style')).toContain('--input-pad-x: 12px')
+    // The label's line box follows the overridden font, matching the edit field
+    // (which derives its own line from the same font).
+    const line = /--input-line:\s*([\d.]+)/.exec(display?.getAttribute('style') ?? '')?.[1]
+    expect(Number(line)).toBeCloseTo(8 * INPUT_LEADING)
   })
 })
