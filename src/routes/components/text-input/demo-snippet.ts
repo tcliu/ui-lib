@@ -3,6 +3,8 @@
 // so the editor always shows the markup behind the demo above.
 import { boolAttrLine, enumAttrLine, escapeAttr, escapeText, sizeAttrLine, textAttrLine, type TriState } from '$showcase/playground/snippet-build'
 import { applied, type Staged } from '$showcase/playground/staged'
+import { ratiosAttrLine } from '$showcase/playground/text-input-ratios'
+import type { TextInputRatioOverrides } from '$lib/components/text-input-metrics'
 
 export interface TextInputSnippetState {
   ariaLabel: Staged<string>
@@ -11,6 +13,7 @@ export interface TextInputSnippetState {
   value: Staged<string>
   placeholder: Staged<string>
   size: Staged<string>
+  ratios: Staged<TextInputRatioOverrides>
   disabled: Staged<TriState>
   hideOutline: Staged<TriState>
   readonly: Staged<TriState>
@@ -62,6 +65,7 @@ export function buildTextInputSnippet(state: TextInputSnippetState): string {
     value,
     placeholder,
     size,
+    ratios,
     disabled,
     hideOutline,
     readonly,
@@ -105,6 +109,7 @@ export function buildTextInputSnippet(state: TextInputSnippetState): string {
       : ['  <TextInput bind:value={value} ariaLabel={applyLabel}']),
     ...textAttrLine('placeholder', placeholder, attributeIndent),
     ...sizeAttrLine(size, attributeIndent),
+    ...ratiosAttrLine(ratios, attributeIndent),
     ...boolAttrLine('disabled', disabled, 'no', attributeIndent),
     ...boolAttrLine('hideOutline', hideOutline, 'no', attributeIndent),
     ...boolAttrLine('readonly', readonly, 'no', attributeIndent),

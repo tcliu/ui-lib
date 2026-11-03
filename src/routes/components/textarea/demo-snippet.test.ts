@@ -12,6 +12,7 @@ function state(overrides: Partial<TextAreaSnippetState> = {}): TextAreaSnippetSt
     placeholder: staged(''),
     rows: staged('', true),
     size: staged(''),
+    ratios: staged({}),
     disabled: staged('', true),
     hideOutline: staged('', true),
     readonly: staged('', true),
@@ -27,6 +28,7 @@ describe('buildTextAreaSnippet', () => {
     expect(source).toContain('<TextArea bind:value={value} ariaLabel={applyLabel}')
     expect(source).toContain('let value = $state("")')
     expect(source).not.toContain('placeholder=')
+    expect(source).not.toContain('ratios=')
     expect(source).not.toContain('rows=')
     expect(source).not.toContain('disabled')
     expect(source).not.toContain('hideOutline')
@@ -59,6 +61,13 @@ describe('buildTextAreaSnippet', () => {
 
   it('omits non-numeric rows', () => {
     expect(buildTextAreaSnippet(state({ rows: staged('tall', true) }))).not.toContain('rows=')
+  })
+
+  it('emits a partial ratios override while its eye is on', () => {
+    expect(buildTextAreaSnippet(state())).not.toContain('ratios=')
+    expect(buildTextAreaSnippet(state({ ratios: staged({ padX: 0.75 }, true) }))).toContain(
+      'ratios={{"padX":0.75}}',
+    )
   })
 
   it('omits staged label, rows, and flags while their eyes are off and emits them while on', () => {

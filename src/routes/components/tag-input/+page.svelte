@@ -1,5 +1,5 @@
 <script lang="ts">
-  import TagInput from '$lib/components/TagInput.svelte'
+  import TagInput, { TAG_INPUT_RATIOS } from '$lib/components/TagInput.svelte'
   import { getI18nContext } from '$lib/i18n/store.svelte'
   import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
   import { parseSizeValue } from '$showcase/playground/size-input'
@@ -7,6 +7,8 @@
   import { enumField, textField, boolField, sizeField, jsonField, snippetField } from '$showcase/playground/snippet-field'
   import { applied, appliedFlag, eye, eyeFlag, eyeToggle, stage, staged } from '$showcase/playground/staged'
   import { type TriState } from '$showcase/playground/snippet-build'
+  import { appliedRatios, componentRatiosField } from '$showcase/playground/text-input-ratios'
+  import type { TagInputRatioOverrides } from '$lib/components/TagInput.svelte'
   import {
     buildTagInputSnippet,
     parseTagListJson,
@@ -38,6 +40,7 @@
     options: staged([...DEFAULT_OPTIONS], true),
     placeholder: staged(''),
     size: staged('md'),
+    ratios: staged({} as TagInputRatioOverrides),
     palette: staged(''),
     disabled: staged('no' as TriState),
     id: staged(''),
@@ -70,6 +73,8 @@
     return value === undefined ? undefined : parseSizeValue(value)
   })
 
+  const demoRatios = $derived(appliedRatios(pg.ratios))
+
   const paletteOptions = [{ value: 'alt', label: 'Alt palette' }]
 
   const clearPlacementOptions = [
@@ -88,6 +93,7 @@
       options: pg.options,
       placeholder: pg.placeholder,
       size: pg.size,
+      ratios: pg.ratios,
       palette: pg.palette,
       disabled: pg.disabled,
       id: pg.id,
@@ -164,6 +170,7 @@
       defaultValue: 'built-in',
       note: 'Per-tag colour classes; replaces the built-in palette.', editor: 'enum', options: paletteOptions, clearLabel: 'Clear palette', ...eye(pg.palette), onChange: value => stage(pg.palette, value), toggle: eyeToggle(pg.palette), sync: { kind: 'scopeReset', scopeRef: 'altPalette' } },
     textField({ name: 'placeholder', type: 'string?', defaultValue: '—', note: 'Placeholder text.', clearable: true, ...eye(pg.placeholder) }),
+    componentRatiosField({ base: TAG_INPUT_RATIOS, type: 'TagInputRatioOverrides?', note: 'Partial override of the tag-row ratios (font, paddings, gap, inner input padding); the line box and the clear inset follow their base.', value: pg.ratios }),
     sizeField({ note: 'Control scale; numbers are icon-scale pixels interpolated between the steps.', ...eye(pg.size) }),
     jsonField({
       name: 'value',
@@ -224,6 +231,7 @@
       options={applied(pg.options)}
       placeholder={applied(pg.placeholder) || undefined}
       size={demoSize}
+      ratios={demoRatios}
       palette={pg.palette.on && pg.palette.value === 'alt' ? ALT_PALETTE : undefined}
       disabled={disabled}
       clearable={clearable}

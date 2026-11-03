@@ -1,5 +1,5 @@
 <script lang="ts">
-  import AutoComplete from '$lib/components/AutoComplete.svelte'
+  import AutoComplete, { AUTOCOMPLETE_RATIOS } from '$lib/components/AutoComplete.svelte'
   import type { SelectOption } from '$lib/components/SelectDropdown.svelte'
   import { getI18nContext } from '$lib/i18n/store.svelte'
   import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
@@ -9,6 +9,8 @@
   import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, stage, staged } from '$showcase/playground/staged'
   import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
   import { type TriState } from '$showcase/playground/snippet-build'
+  import { appliedRatios, componentRatiosField } from '$showcase/playground/text-input-ratios'
+  import type { AutoCompleteRatioOverrides } from '$lib/components/AutoComplete.svelte'
   import {
     buildAutoCompleteSnippet,
     AUTOCOMPLETE_STAGE_DEFAULT_WIDTH,
@@ -50,6 +52,7 @@
     value: staged('Two', true),
     ariaLabel: staged('default', true),
     size: staged('md'),
+    ratios: staged({} as AutoCompleteRatioOverrides),
     placeholder: staged(''),
     disabled: staged('no' as TriState),
     clearable: staged('no' as TriState),
@@ -77,6 +80,7 @@
     return value === undefined ? undefined : parseSizeValue(value)
   })
   const demoPlaceholder = $derived(applied(pg.placeholder) || undefined)
+  const demoRatios = $derived(appliedRatios(pg.ratios))
   const disabled = $derived(appliedFlag(pg.disabled))
   const clearable = $derived(appliedFlag(pg.clearable))
   const demoClearLabel = $derived(applied(pg.clearLabel) || undefined)
@@ -102,6 +106,7 @@
       ariaLabel: pg.ariaLabel,
       value: pg.value,
       size: pg.size,
+      ratios: pg.ratios,
       placeholder: pg.placeholder,
       disabled: pg.disabled,
       clearable: pg.clearable,
@@ -146,6 +151,7 @@
     }),
     textField({ name: 'panelClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the floating panel classes.', clearable: true, ...eye(pg.panelClass) }),
     textField({ name: 'placeholder', type: 'string?', defaultValue: '—', note: 'Native placeholder.', clearable: true, ...eye(pg.placeholder) }),
+    componentRatiosField({ base: AUTOCOMPLETE_RATIOS, type: 'AutoCompleteRatioOverrides?', note: 'Partial override of the field and panel ratios; the panel line follows the font.', value: pg.ratios }),
     sizeField({ note: 'Field scale; numbers are icon-scale pixels interpolated between the steps.', ...eye(pg.size) }),
     { name: 'value', type: 'string', defaultValue: '—', note: 'Bindable input text; free-typed text persists; the eye resets to the default text.', editor: 'text', clearable: true, ...eye(pg.value), onChange: value => stage(pg.value, value), toggle: eyeResetToggle(pg.value, () => (pg.value.value = 'Two')), sync: { kind: 'script', attr: 'value' } },
     { name: 'inputRef', type: 'HTMLInputElement | null', defaultValue: 'null', note: 'Bindable native input element.' },
@@ -171,6 +177,7 @@
       bind:value={pg.value.value}
       ariaLabel={applied(pg.ariaLabel) || undefined}
       size={demoSize}
+      ratios={demoRatios}
       placeholder={demoPlaceholder}
       disabled={disabled}
       align={demoAlign}

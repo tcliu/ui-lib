@@ -10,6 +10,7 @@ function state(overrides: Partial<PasswordInputSnippetState> = {}): PasswordInpu
     showLabel: staged(''),
     hideLabel: staged(''),
     size: staged('', true),
+    ratios: staged({}),
     disabled: staged('', true),
     hideOutline: staged('', true),
     required: staged('', true),
@@ -83,6 +84,13 @@ describe('buildPasswordInputSnippet', () => {
     expect(buildPasswordInputSnippet(state({ size: staged('lg', true) }))).toContain('size="lg"')
     expect(buildPasswordInputSnippet(state({ size: staged('14', true) }))).toContain('size={14}')
     expect(buildPasswordInputSnippet(state({ size: staged('huge', true) }))).not.toContain('size=')
+  })
+
+  it('emits a partial ratios override while its eye is on', () => {
+    expect(buildPasswordInputSnippet(state())).not.toContain('ratios=')
+    expect(buildPasswordInputSnippet(state({ ratios: staged({ padX: 0.75 }, true) }))).toContain(
+      'ratios={{"padX":0.75}}',
+    )
   })
 
   it('omits component defaults (the Value column prefills them)', () => {

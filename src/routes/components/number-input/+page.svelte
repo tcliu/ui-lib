@@ -1,6 +1,6 @@
 <script lang="ts">
   import FormField from '$lib/components/FormField.svelte'
-  import NumberInput from '$lib/components/NumberInput.svelte'
+  import NumberInput, { NUMBER_INPUT_RATIOS } from '$lib/components/NumberInput.svelte'
   import SelectDropdown from '$lib/components/SelectDropdown.svelte'
   import { getI18nContext } from '$lib/i18n/store.svelte'
   import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
@@ -8,7 +8,9 @@
   import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
   import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/playground/staged'
   import { enumField, textField, boolField, sizeField } from '$showcase/playground/snippet-field'
+  import { appliedRatios, componentRatiosField } from '$showcase/playground/text-input-ratios'
   import { type TriState } from '$showcase/playground/snippet-build'
+  import type { NumberInputRatioOverrides } from '$lib/components/NumberInput.svelte'
   import { buildNumberInputSnippet } from './demo-snippet'
 
   const i18n = getI18nContext()
@@ -27,6 +29,7 @@
     step: staged('1'),
     placeholder: staged(''),
     size: staged('md'),
+    ratios: staged({} as NumberInputRatioOverrides),
     variant: staged('bordered'),
     disabled: staged('no' as TriState),
     hideOutline: staged('no' as TriState),
@@ -79,6 +82,7 @@
     const value = applied(pg.size)
     return value === undefined ? undefined : parseSizeValue(value)
   })
+  const demoRatios = $derived(appliedRatios(pg.ratios))
   const showControls = $derived(appliedFlag(pg.showControls))
   const hideOutline = $derived(appliedFlag(pg.hideOutline))
   const demoVariant = $derived(
@@ -117,6 +121,7 @@
       step: pg.step,
       placeholder: pg.placeholder,
       size: pg.size,
+      ratios: pg.ratios,
       variant: pg.variant,
       disabled: pg.disabled,
       hideOutline: pg.hideOutline,
@@ -153,6 +158,7 @@
     { name: 'max', type: 'number?', defaultValue: '—', note: 'Upper clamp on typing, blur, and step.', editor: 'number', clearable: true, ...eye(pg.max), onChange: value => stage(pg.max, value), toggle: eyeToggle(pg.max), sync: { kind: 'number' } },
     { name: 'min', type: 'number?', defaultValue: '—', note: 'Lower clamp on blur and step (and on typing when a longer entry could not fit).', editor: 'number', clearable: true, ...eye(pg.min), onChange: value => stage(pg.min, value), toggle: eyeToggle(pg.min), sync: { kind: 'number' } },
     textField({ name: 'placeholder', type: 'string?', defaultValue: '—', note: 'Native placeholder.', clearable: true, ...eye(pg.placeholder) }),
+    componentRatiosField({ base: NUMBER_INPUT_RATIOS, type: 'NumberInputRatioOverrides?', note: 'Partial override of the field and stepper-column ratios; the line box follows the font.', value: pg.ratios }),
     boolField({ name: 'showControls', defaultValue: 'true', note: 'Renders the stepper buttons; hiding them leaves the box and chrome untouched.', ...eyeFlag(pg.showControls) }),
     sizeField({ note: 'Control scale; numbers are icon-scale pixels scaled by fixed ratios.', ...eye(pg.size) }),
     { name: 'step', type: 'number?', defaultValue: '1', editorDefaultValue: '1', note: 'Arrow/wheel step; decimals preserved.', editor: 'number', clearable: true, ...eye(pg.step), onChange: value => stage(pg.step, value), placeholder: '1', toggle: eyeToggle(pg.step), sync: { kind: 'number' } },
@@ -234,6 +240,7 @@
         inputStyle={applied(pg.inputStyle) || undefined}
         placeholder={applied(pg.placeholder) || undefined}
         size={demoSize}
+        ratios={demoRatios}
         {disabled}
         {showControls}
         variant={demoVariant}

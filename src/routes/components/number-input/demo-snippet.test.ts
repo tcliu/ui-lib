@@ -13,6 +13,7 @@ function state(overrides: Partial<NumberInputSnippetState> = {}): NumberInputSni
     step: staged('', true),
     placeholder: staged('', true),
     size: staged('', true),
+    ratios: staged({}),
     variant: staged('', true),
     disabled: staged('', true),
     hideOutline: staged('', true),
@@ -36,7 +37,8 @@ describe('buildNumberInputSnippet', () => {
     expect(source).toContain('let value = $state("5")')
     expect(source).toContain('<NumberInput bind:value={value} ariaLabel={applyLabel}')
     expect(source).not.toContain('min=')
-    expect(source).not.toContain('size=')
+    expect(source).not.toMatch(/^\s*size=/m)
+    expect(source).not.toMatch(/^\s*ratios=/m)
     expect(source).not.toContain('disabled')
     expect(source).not.toContain('showControls=')
     expect(source).not.toContain('decrementLabel=')
@@ -44,6 +46,13 @@ describe('buildNumberInputSnippet', () => {
     expect(source).not.toContain('id=')
     expect(source).not.toContain('inputStyle=')
     expect(source).not.toContain('className=')
+  })
+
+  it('emits a partial ratios override while its eye is on', () => {
+    expect(buildNumberInputSnippet(state())).not.toContain('ratios=')
+    expect(buildNumberInputSnippet(state({ ratios: staged({ padX: 0.75 }, true) }))).toContain(
+      'ratios={{"padX":0.75}}',
+    )
   })
 
   it('emits bounds, placeholder, disabled, and the stepless treatment', () => {

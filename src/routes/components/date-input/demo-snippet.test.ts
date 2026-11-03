@@ -16,6 +16,7 @@ const base = {
   closeOnSelect: staged('' as TriState),
   highlightRange: staged('' as TriState),
   size: staged(''),
+  ratios: staged({}),
 }
 
 describe('buildDateInputSnippet', () => {
@@ -28,6 +29,7 @@ describe('buildDateInputSnippet', () => {
     expect(source).toContain('value={value}')
     expect(source).toContain('onChange={next => (value = next)}')
     expect(source).not.toContain('size=')
+    expect(source).not.toContain('ratios=')
     expect(source).not.toContain('format=')
   })
 
@@ -103,5 +105,13 @@ describe('buildDateInputSnippet', () => {
     expect(typeof component).toBe('function')
     const pair = await createSnippetComponent(buildDateInputSnippet({ ...base, range: staged('yes', true) }), {})
     expect(typeof pair).toBe('function')
+  })
+})
+
+describe('DateInput ratios snippet', () => {
+  it('emits a partial override while its eye is on', () => {
+    expect(
+      buildDateInputSnippet({ ...base, ratios: staged({ padX: 0.75 }, true) }),
+    ).toContain('ratios={{"padX":0.75}}')
   })
 })

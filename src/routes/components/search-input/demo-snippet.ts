@@ -9,7 +9,9 @@ import {
   textAttrLine,
   type TriState,
 } from '$showcase/playground/snippet-build'
+import { ratiosAttrLine } from '$showcase/playground/text-input-ratios'
 import type { Staged } from '$showcase/playground/staged'
+import type { SearchInputRatioOverrides } from '$lib/components/SearchInput.svelte'
 
 export interface SearchInputSnippetState {
   ariaLabel: Staged<string>
@@ -18,6 +20,7 @@ export interface SearchInputSnippetState {
   query: Staged<string>
   placeholder: Staged<string>
   size: Staged<string>
+  ratios: Staged<SearchInputRatioOverrides>
   wrapperClass: Staged<string>
   inputClass: Staged<string>
   clearable: Staged<TriState>
@@ -32,7 +35,7 @@ export const STYLED_INPUT =
   'w-56 rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 pl-7 text-sm text-cyan-200 outline-none focus-visible:border-cyan-500'
 
 export function buildSearchInputSnippet(state: SearchInputSnippetState): string {
-  const { ariaLabel, query, placeholder, size, wrapperClass, inputClass, clearable, clearLabel, clearPlacement, defaultValue, hideOutline } = state
+  const { ariaLabel, query, placeholder, size, ratios, wrapperClass, inputClass, clearable, clearLabel, clearPlacement, defaultValue, hideOutline } = state
   const lines = [
     '<script>',
     // JSON.stringify keeps the literal valid no matter what the query holds.
@@ -48,6 +51,7 @@ export function buildSearchInputSnippet(state: SearchInputSnippetState): string 
     // Enum rows prefill their component default in the Value column; the
     // builder omits the default so Show-code stays minimal.
     ...sizeAttrLine(size, '    '),
+    ...ratiosAttrLine(ratios, '    '),
     ...textAttrLine('wrapperClass', wrapperClass, '    '),
     ...textAttrLine('inputClass', inputClass, '    '),
     ...boolAttrLine('clearable', clearable, 'no', '    '),

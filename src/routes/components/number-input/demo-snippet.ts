@@ -2,7 +2,9 @@
 // the playground form state: the section regenerates the editor text from this,
 // so the editor always shows the markup behind the demo above.
 import { boolAttrLine, enumAttrLine, escapeAttr, sizeAttrLine, textAttrLine, type TriState } from '$showcase/playground/snippet-build'
+import { ratiosAttrLine } from '$showcase/playground/text-input-ratios'
 import type { Staged } from '$showcase/playground/staged'
+import type { NumberInputRatioOverrides } from '$lib/components/NumberInput.svelte'
 
 export interface NumberInputSnippetState {
   // Bound value, seeded as script-local state (like the stage size) so the
@@ -15,6 +17,7 @@ export interface NumberInputSnippetState {
   step: Staged<string>
   placeholder: Staged<string>
   size?: Staged<string>
+  ratios: Staged<NumberInputRatioOverrides>
   variant?: Staged<string>
   disabled: Staged<TriState>
   hideOutline: Staged<TriState>
@@ -58,6 +61,7 @@ export function buildNumberInputSnippet(state: NumberInputSnippetState): string 
     step,
     placeholder,
     size,
+    ratios,
     variant,
     disabled,
     hideOutline,
@@ -95,6 +99,7 @@ export function buildNumberInputSnippet(state: NumberInputSnippetState): string 
     ...textAttrLine('inputStyle', inputStyle),
     ...textAttrLine('placeholder', placeholder),
     ...(size ? sizeAttrLine(size) : []),
+    ...ratiosAttrLine(ratios),
     ...(variant ? enumAttrLine('variant', variant, 'bordered') : []),
     ...boolAttrLine('disabled', disabled, 'no'),
     ...boolAttrLine('hideOutline', hideOutline, 'no'),

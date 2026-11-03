@@ -2,13 +2,15 @@
   import { onMount } from 'svelte'
   import type { HTMLInputAttributes } from 'svelte/elements'
   import { getI18nContext } from '$lib/i18n/store.svelte'
-  import PasswordInput from '$lib/components/PasswordInput.svelte'
+  import PasswordInput, { PASSWORD_INPUT_RATIOS } from '$lib/components/PasswordInput.svelte'
   import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
   import { parseSizeValue } from '$showcase/playground/size-input'
   import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
   import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, stage, staged } from '$showcase/playground/staged'
   import { enumField, textField, boolField, sizeField } from '$showcase/playground/snippet-field'
+  import { appliedRatios, componentRatiosField } from '$showcase/playground/text-input-ratios'
   import { type TriState } from '$showcase/playground/snippet-build'
+  import type { PasswordInputRatioOverrides } from '$lib/components/PasswordInput.svelte'
   import { buildPasswordInputSnippet } from './demo-snippet'
 
   const i18n = getI18nContext()
@@ -21,6 +23,7 @@
     value: staged('', true),
     placeholder: staged(''),
     size: staged('md'),
+    ratios: staged({} as PasswordInputRatioOverrides),
     showLabel: staged(''),
     hideLabel: staged(''),
     disabled: staged('no' as TriState),
@@ -64,6 +67,7 @@
     const value = applied(pg.size)
     return value === undefined ? undefined : parseSizeValue(value)
   })
+  const demoRatios = $derived(appliedRatios(pg.ratios))
 
   function clearPlayground() {
     pg = structuredClone(INITIAL)
@@ -76,6 +80,7 @@
       showLabel: pg.showLabel,
       hideLabel: pg.hideLabel,
       size: pg.size,
+      ratios: pg.ratios,
       disabled: pg.disabled,
       hideOutline: pg.hideOutline,
       required: pg.required,
@@ -106,6 +111,7 @@
     textField({ name: 'id', type: 'string?', defaultValue: '—', note: 'Native input id.', clearable: true, ...eye(pg.id) }),
     textField({ name: 'name', type: 'string?', defaultValue: '—', note: 'Native input name.', clearable: true, ...eye(pg.name) }),
     textField({ name: 'placeholder', type: 'string?', defaultValue: '—', note: 'Placeholder text.', clearable: true, ...eye(pg.placeholder) }),
+    componentRatiosField({ base: PASSWORD_INPUT_RATIOS, type: 'PasswordInputRatioOverrides?', note: 'Partial override of the field and eye-toggle ratios; the line box follows the font.', value: pg.ratios }),
     boolField({ name: 'required', defaultValue: 'false', note: 'Native required flag.', ...eyeFlag(pg.required) }),
     textField({ name: 'showLabel', type: 'string?', defaultValue: '—', note: 'Toggle label when hidden; falls back to the locale.', clearable: true, ...eye(pg.showLabel) }),
     sizeField({ note: 'Control scale; numbers are icon-scale pixels scaled by fixed ratios.', ...eye(pg.size) }),
@@ -130,6 +136,7 @@
       bind:value={pg.value.value}
       placeholder={applied(pg.placeholder) || 'Password'}
       size={demoSize}
+      ratios={demoRatios}
       showLabel={applied(pg.showLabel) || undefined}
       hideLabel={applied(pg.hideLabel) || undefined}
       {disabled}

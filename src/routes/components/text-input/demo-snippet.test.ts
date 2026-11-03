@@ -9,6 +9,7 @@ function state(overrides: Partial<TextInputSnippetState> = {}): TextInputSnippet
     value: staged(''),
     placeholder: staged(''),
     size: staged(''),
+    ratios: staged({}),
     disabled: staged('', true),
     hideOutline: staged('', true),
     readonly: staged('', true),
@@ -42,6 +43,7 @@ describe('buildTextInputSnippet', () => {
     expect(source).not.toContain('placeholder=')
     // `size={` only appears when a size is set.
     expect(source).not.toMatch(/^\s*size=/m)
+    expect(source).not.toMatch(/^\s*ratios=/m)
     expect(source).not.toContain('disabled')
     expect(source).not.toContain('hideOutline')
     expect(source).not.toContain('readonly')
@@ -222,6 +224,21 @@ describe('buildTextInputSnippet', () => {
   it('emits a numeric size as an expression and omits invalid sizes', () => {
     expect(buildTextInputSnippet(state({ size: staged('14', true) }))).toContain('size={14}')
     expect(buildTextInputSnippet(state({ size: staged('huge') }))).not.toMatch(/^\s*size=/m)
+  })
+
+  it('emits a partial ratios override as an inline object expression', () => {
+    const off = buildTextInputSnippet(state({ ratios: staged({ font: 0.5 }) }))
+    expect(off).not.toMatch(/^\s*ratios=/m)
+    const on = buildTextInputSnippet(state({ ratios: staged({ font: 0.5, clearButton: 0.7 }, true) }))
+    expect(on).toContain('ratios={{"font":0.5,"clearButton":0.7}}')
+  })
+
+  it('compiles the generated snippet with a ratios override', { timeout: 30000 }, async () => {
+    const component = await createSnippetComponent(
+      buildTextInputSnippet(state({ ratios: staged({ padX: 0.75 }, true) })),
+      { applyLabel: 'Name' },
+    )
+    expect(typeof component).toBe('function')
   })
 
   it('seeds the bound value as script-local state', () => {

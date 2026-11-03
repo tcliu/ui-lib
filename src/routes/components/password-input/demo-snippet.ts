@@ -2,7 +2,9 @@
 // over the playground form state: the section regenerates the editor text from
 // this, so the editor always shows the markup behind the demo above.
 import { boolAttrLine, enumAttrLine, escapeAttr, sizeAttrLine, textAttrLine, type TriState } from '$showcase/playground/snippet-build'
+import { ratiosAttrLine } from '$showcase/playground/text-input-ratios'
 import type { Staged } from '$showcase/playground/staged'
+import type { PasswordInputRatioOverrides } from '$lib/components/PasswordInput.svelte'
 
 export interface PasswordInputSnippetState {
   // Bound value, seeded as script-local state (like the stage size) so the
@@ -12,6 +14,7 @@ export interface PasswordInputSnippetState {
   showLabel: Staged<string>
   hideLabel: Staged<string>
   size?: Staged<string>
+  ratios: Staged<PasswordInputRatioOverrides>
   disabled: Staged<TriState>
   hideOutline: Staged<TriState>
   required: Staged<TriState>
@@ -32,6 +35,7 @@ export function buildPasswordInputSnippet(state: PasswordInputSnippetState): str
     showLabel,
     hideLabel,
     size,
+    ratios,
     disabled,
     hideOutline,
     required,
@@ -60,6 +64,7 @@ export function buildPasswordInputSnippet(state: PasswordInputSnippetState): str
     ...textAttrLine('showLabel', showLabel),
     ...textAttrLine('hideLabel', hideLabel),
     ...(size ? sizeAttrLine(size) : []),
+    ...ratiosAttrLine(ratios),
     ...boolAttrLine('disabled', disabled, 'no'),
     ...boolAttrLine('hideOutline', hideOutline, 'no'),
     ...boolAttrLine('required', required, 'no'),

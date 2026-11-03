@@ -9,6 +9,8 @@
   import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/playground/staged'
   import { enumField, textField, boolField, sizeField, snippetField } from '$showcase/playground/snippet-field'
   import { type TriState } from '$showcase/playground/snippet-build'
+  import { appliedRatios, componentRatiosField } from '$showcase/playground/text-input-ratios'
+  import { TEXT_INPUT_RATIOS, type TextInputRatioOverrides } from '$lib/components/text-input-metrics'
   import {
     buildTextInputSnippet,
     adornmentClassName,
@@ -28,6 +30,7 @@
     ariaLabel: staged('Apply', true),
     placeholder: staged(''),
     size: staged('md'),
+    ratios: staged({} as TextInputRatioOverrides),
     disabled: staged('no' as TriState),
     hideOutline: staged('no' as TriState),
     readonly: staged('no' as TriState),
@@ -77,6 +80,7 @@
     const value = applied(pg.size)
     return value === undefined ? undefined : parseSizeValue(value)
   })
+  const demoRatios = $derived(appliedRatios(pg.ratios))
   const disabled = $derived(appliedFlag(pg.disabled))
   const hideOutline = $derived(appliedFlag(pg.hideOutline))
   const readonly = $derived(appliedFlag(pg.readonly))
@@ -105,6 +109,7 @@
       value: pg.value,
       placeholder: pg.placeholder,
       size: pg.size,
+      ratios: pg.ratios,
       disabled: pg.disabled,
       hideOutline: pg.hideOutline,
       readonly: pg.readonly,
@@ -168,6 +173,12 @@
     }),
     textField({ name: 'name', type: 'string?', defaultValue: '—', note: 'Native input name.', clearable: true, ...eye(pg.name) }),
     textField({ name: 'placeholder', type: 'string?', defaultValue: '—', note: 'Native placeholder.', clearable: true, ...eye(pg.placeholder) }),
+    componentRatiosField({
+      base: TEXT_INPUT_RATIOS,
+      type: 'TextInputRatioOverrides?',
+      note: 'Partial override of the field’s tunable ratios (font, radius, paddings, the clear box and gutter, and the trailer gap); the editor opens on the shared defaults, omitted keys keep them, the line box follows the font, and the clear inset follows padX.',
+      value: pg.ratios,
+    }),
     boolField({ name: 'readonly', defaultValue: 'false', note: 'Read-only input.', ...eyeFlag(pg.readonly) }),
     boolField({ name: 'required', defaultValue: 'false', note: 'Native required flag.', ...eyeFlag(pg.required) }),
     sizeField({ note: 'Control scale; numbers are icon-scale pixels interpolated between the steps.', ...eye(pg.size) }),
@@ -251,6 +262,7 @@
         ariaLabel={demoAriaLabel}
         placeholder={applied(pg.placeholder) || undefined}
         size={demoSize}
+        ratios={demoRatios}
         {disabled}
         {readonly}
         {required}

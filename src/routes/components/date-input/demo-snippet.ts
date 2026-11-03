@@ -14,6 +14,8 @@ import { DATE_STAGE_CONTENT } from '$showcase/shell/date-stage'
 import { boolAttrLine, escapeAttr, type TriState } from '$showcase/playground/snippet-build'
 import { sizeAttributeFragment } from '$showcase/playground/size-input'
 import type { Staged } from '$showcase/playground/staged'
+import { ratiosAttributeFragment } from '$showcase/playground/text-input-ratios'
+import type { PickerRatioOverrides } from '$lib/components/date-input-metrics'
 
 export interface DateInputSnippetState {
   value: Staged<string>
@@ -26,6 +28,7 @@ export interface DateInputSnippetState {
   closeOnSelect: Staged<TriState>
   highlightRange: Staged<TriState>
   size: Staged<string>
+  ratios: Staged<PickerRatioOverrides>
 }
 
 export function buildDateInputSnippet({
@@ -39,12 +42,14 @@ export function buildDateInputSnippet({
   closeOnSelect,
   highlightRange,
   size,
+  ratios,
 }: DateInputSnippetState): string {
   const indent = '  '
   const isRange = range.on && range.value === 'yes'
   const formatAttr = format.on && format.value && format.value !== DEFAULT_DATE_FORMAT ? ` format="${escapeAttr(format.value)}"` : ''
   const sizeAttr = size.on && size.value && size.value !== 'md' ? sizeAttributeFragment(size.value) : ''
   const placeholderAttr = placeholder.on && placeholder.value ? ` placeholder="${escapeAttr(placeholder.value)}"` : ''
+  const ratiosAttr = ratiosAttributeFragment(ratios)
   const flags = [
     ...(isRange ? ['range'] : boolAttrLine('range', range, '', '')),
     ...boolAttrLine('time', time, '', ''),
@@ -58,14 +63,14 @@ export function buildDateInputSnippet({
         `${indent}from={from}`,
         `${indent}to={to}`,
         `${indent}onFrom={next => (from = next)}`,
-        `${indent}onTo={next => (to = next)}${formatAttr}${sizeAttr} />`,
+        `${indent}onTo={next => (to = next)}${formatAttr}${sizeAttr}${ratiosAttr} />`,
         `<span class="text-sm text-slate-400">range: {from || '—'} – {to || '—'}</span>`,
       ]
     : [
         '<DateInput',
         ...flags,
         `${indent}value={value}`,
-        `${indent}onChange={next => (value = next)}${formatAttr}${sizeAttr}${placeholderAttr} />`,
+        `${indent}onChange={next => (value = next)}${formatAttr}${sizeAttr}${placeholderAttr}${ratiosAttr} />`,
         `<span class="text-sm text-slate-400">value: {value || '—'}</span>`,
       ]
   return [

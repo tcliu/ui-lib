@@ -6,6 +6,8 @@
 
 import { boolAttrLine, sizeAttrLine, textAttrLine, type TriState } from '$showcase/playground/snippet-build'
 import type { Staged } from '$showcase/playground/staged'
+import { ratiosAttrLine } from '$showcase/playground/text-input-ratios'
+import type { FieldRatioOverrides } from '$lib/components/input-chrome'
 
 // Default value shared by the page and the snippet so the static demo and the
 // Show-code source start from the same text.
@@ -17,6 +19,7 @@ export const DEFAULT_MAX_WIDTH = '480'
 export interface EditableTextSnippetState {
   value: Staged<string>
   size: Staged<string>
+  ratios: Staged<FieldRatioOverrides>
   copyable: Staged<TriState>
   className: Staged<string>
   maxWidth: Staged<string>
@@ -37,7 +40,7 @@ function numberLine(name: string, pair: Staged<string>): string[] {
   return Number.isFinite(parsed) ? [`    ${name}={${parsed}}`] : []
 }
 
-export function buildEditableTextSnippet({ value, size, copyable, className, maxWidth }: EditableTextSnippetState): string {
+export function buildEditableTextSnippet({ value, size, ratios, copyable, className, maxWidth }: EditableTextSnippetState): string {
   return [
     '<script>',
     `  let value = $state('${escapeScriptString(value.value || DEFAULT_TEXT)}')`,
@@ -49,6 +52,7 @@ export function buildEditableTextSnippet({ value, size, copyable, className, max
     // Size, className, and maxWidth rows prefill their component defaults in the
     // Value column; the builder omits the defaults so Show-code stays minimal.
     ...sizeAttrLine(size, '    '),
+    ...ratiosAttrLine(ratios, '    '),
     ...boolAttrLine('copyable', copyable, 'no', '    '),
     ...(className.value !== DEFAULT_CLASS_NAME ? textAttrLine('className', className, '    ') : []),
     ...(maxWidth.value !== '' && maxWidth.value !== DEFAULT_MAX_WIDTH ? numberLine('maxWidth', maxWidth) : []),

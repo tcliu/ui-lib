@@ -10,6 +10,7 @@ function state(overrides: Partial<SelectDropdownSnippetState> = {}): SelectDropd
     value: staged('two', true),
     defaultValue: staged('', true),
     size: staged('', true),
+    ratios: staged({}),
     filterable: staged('', true),
     allowCustomValue: staged('', true),
     buttonClass: staged('', true),
@@ -33,10 +34,18 @@ describe('buildSelectDropdownSnippet', () => {
     expect(source).not.toContain('stageWidth')
     expect(source).toContain('ariaLabel="default"')
     expect(source).not.toMatch(/^\s*size=/m)
+    expect(source).not.toMatch(/^\s*ratios=/m)
     expect(source).not.toContain('filterable')
     expect(source).not.toContain('controlClass=')
     expect(source).not.toContain('clearable')
     expect(source).not.toContain('align=')
+  })
+
+  it('emits a partial ratios override while its eye is on', () => {
+    expect(buildSelectDropdownSnippet(state())).not.toContain('ratios=')
+    expect(
+      buildSelectDropdownSnippet(state({ ratios: staged({ padX: 0.75 }, true) })),
+    ).toContain('ratios={{"padX":0.75}}')
   })
 
   it('emits size, flags, text overrides, and align while set', () => {

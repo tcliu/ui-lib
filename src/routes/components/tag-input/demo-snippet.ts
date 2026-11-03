@@ -9,6 +9,8 @@
 // snippet carries only the demo content the page authors inside that frame.
 
 import { boolAttrLine, enumAttrLine, escapeText, sizeAttrLine, textAttrLine, type TriState } from '$showcase/playground/snippet-build'
+import { ratiosAttrLine } from '$showcase/playground/text-input-ratios'
+import type { TagInputRatioOverrides } from '$lib/components/TagInput.svelte'
 import type { Staged } from '$showcase/playground/staged'
 
 export const TAG_STAGE_DEFAULT_WIDTH = 560
@@ -22,6 +24,7 @@ export interface TagInputSnippetState {
   defaultValue: Staged<string[]>
   placeholder: Staged<string>
   size: Staged<string>
+  ratios: Staged<TagInputRatioOverrides>
   palette: Staged<string>
   disabled: Staged<TriState>
   clearable: Staged<TriState>
@@ -55,7 +58,7 @@ export function parseTagListJson(text: string): string[] | null {
 }
 
 export function buildTagInputSnippet(state: TagInputSnippetState): string {
-  const { value, options, defaultValue, placeholder, size, palette, disabled, clearable, clearLabel, clearPlacement, id, chipClass, chip, option } = state
+  const { value, options, defaultValue, placeholder, size, ratios, palette, disabled, clearable, clearLabel, clearPlacement, id, chipClass, chip, option } = state
   // The frame is shell chrome, so the component sits at the snippet root with
   // its attributes one step in; the tag lists are script-local state.
   // JSON.stringify keeps the seeded lists valid no matter what the tags hold.
@@ -83,6 +86,7 @@ export function buildTagInputSnippet(state: TagInputSnippetState): string {
     // The size row prefills its component default in the Value column; the
     // builder omits the default so Show-code stays minimal.
     ...sizeAttrLine(size, indent),
+    ...ratiosAttrLine(ratios, indent),
     ...(palette.on && palette.value ? [`${indent}palette={altPalette}`] : []),
     ...boolAttrLine('disabled', disabled, 'no', indent),
     ...boolAttrLine('clearable', clearable, 'no', indent),

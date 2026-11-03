@@ -5,7 +5,9 @@
 // The resize harness is ShowcasePage-owned chrome (its `stage` prop), so the
 // snippet carries only the demo content the page authors inside that frame.
 import { boolAttrLine, enumAttrLine, sizeAttrLine, textAttrLine, type TriState } from '$showcase/playground/snippet-build'
+import { ratiosAttrLine } from '$showcase/playground/text-input-ratios'
 import type { Staged } from '$showcase/playground/staged'
+import type { SelectRatioOverrides } from '$lib/components/select-dropdown-styles'
 
 export const SELECT_STAGE_DEFAULT_WIDTH = 560
 export const SELECT_STAGE_MIN_WIDTH = 240
@@ -18,6 +20,7 @@ export interface SelectDropdownSnippetState {
   value: Staged<string>
   defaultValue: Staged<string>
   size: Staged<string>
+  ratios: Staged<SelectRatioOverrides>
   filterable: Staged<TriState>
   allowCustomValue: Staged<TriState>
   buttonClass: Staged<string>
@@ -36,7 +39,7 @@ export interface SelectDropdownSnippetState {
 // sibling demos reuse them; this builder only emits source.
 
 export function buildSelectDropdownSnippet(state: SelectDropdownSnippetState): string {
-  const { ariaLabel, buttonLabel, value, defaultValue, size, filterable, allowCustomValue, buttonClass, controlClass, optionClass, emptyLabel, clearable, clearLabel, align, autoPlace, panelClass } = state
+  const { ariaLabel, buttonLabel, value, defaultValue, size, ratios, filterable, allowCustomValue, buttonClass, controlClass, optionClass, emptyLabel, clearable, clearLabel, align, autoPlace, panelClass } = state
   // The frame is shell chrome, so the component sits at the snippet root with
   // its attributes one step in; the committed value is script-local state.
   // Each eye-gated override emits only while its toggle is on (the committed
@@ -53,6 +56,7 @@ export function buildSelectDropdownSnippet(state: SelectDropdownSnippetState): s
     // Enum rows prefill their component default in the Value column; the
     // builder omits the default so Show-code stays minimal.
     ...sizeAttrLine(size, indent),
+    ...ratiosAttrLine(ratios, indent),
     ...boolAttrLine('filterable', filterable, 'no', indent),
     ...boolAttrLine('allowCustomValue', allowCustomValue, 'no', indent),
     ...textAttrLine('buttonClass', buttonClass, indent),

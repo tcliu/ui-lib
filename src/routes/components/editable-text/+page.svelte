@@ -6,6 +6,8 @@
   import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/playground/staged'
   import { textField, boolField, sizeField } from '$showcase/playground/snippet-field'
   import { type TriState } from '$showcase/playground/snippet-build'
+  import { appliedRatios, componentRatiosField } from '$showcase/playground/text-input-ratios'
+  import { FIELD_RATIOS, type FieldRatioOverrides } from '$lib/components/input-chrome'
   import { DEFAULT_CLASS_NAME, DEFAULT_MAX_WIDTH, DEFAULT_TEXT, buildEditableTextSnippet } from './demo-snippet'
   import { parseSizeValue } from '$showcase/playground/size-input'
 
@@ -16,6 +18,7 @@
   const INITIAL = {
     value: staged(DEFAULT_TEXT, true),
     size: staged('md'),
+    ratios: staged({} as FieldRatioOverrides),
     copyable: staged('no' as TriState),
     // Both are at the component default, so their eyes start off; the demo
     // renders the same and Show-code stays minimal.
@@ -41,6 +44,7 @@
     const value = applied(pg.size)
     return value === undefined ? undefined : parseSizeValue(value)
   })
+  const demoRatios = $derived(appliedRatios(pg.ratios))
   const copyable = $derived(appliedFlag(pg.copyable))
   const demoClassName = $derived(applied(pg.className) || undefined)
   const demoMaxWidth = $derived.by(() => {
@@ -57,6 +61,7 @@
     buildEditableTextSnippet({
       value: pg.value,
       size: pg.size,
+      ratios: pg.ratios,
       copyable: pg.copyable,
       className: pg.className,
       maxWidth: pg.maxWidth,
@@ -68,6 +73,7 @@
     textField({ name: 'className', type: 'string?', defaultValue: "'text-slate-200'", note: 'Classes for the display label.', editorDefaultValue: 'text-slate-200', clearable: true, placeholder: 'text-slate-200', ...eye(pg.className) }),
     boolField({ name: 'copyable', defaultValue: 'false', note: 'Adds a copy button beside the label.', ...eyeFlag(pg.copyable) }),
     { name: 'maxWidth', type: 'number?', defaultValue: '480', editorDefaultValue: '480', note: 'Maximum input width in px; the field also stops at the viewport edge.', editor: 'number', clearable: true, ...eye(pg.maxWidth), onChange: value => stage(pg.maxWidth, value), placeholder: '480', toggle: eyeToggle(pg.maxWidth), sync: { kind: 'number' } },
+    componentRatiosField({ base: FIELD_RATIOS, type: 'FieldRatioOverrides?', note: 'Partial override of the label and field ratios (font, radius, paddings); both line boxes follow the font.', value: pg.ratios }),
     sizeField({ note: 'Text size for the label and the input.', ...eye(pg.size) }),
     { name: 'text', type: 'string', defaultValue: '—', note: 'Displayed value; double-click or use the edit button to change it (required); the eye resets to the default.', editor: 'text', clearable: true, ...eye(pg.value), onChange: value => stage(pg.value, value), toggle: eyeResetToggle(pg.value, () => (pg.value.value = DEFAULT_TEXT)), sync: { kind: 'script', attr: 'value' } },
     { name: 'onChange', type: '(text: string) => void | boolean', defaultValue: '—', note: 'Called with the committed value; return false to reject it and keep editing.' },
@@ -95,6 +101,7 @@
           pg.value.value = next
         }}
         size={demoSize}
+        ratios={demoRatios}
         {copyable}
         className={demoClassName}
         maxWidth={demoMaxWidth} />

@@ -8,6 +8,7 @@ function state(overrides: Partial<AutoCompleteSnippetState> = {}): AutoCompleteS
     ariaLabel: staged('default', true),
     value: staged('Two'),
     size: staged('', true),
+    ratios: staged({}),
     placeholder: staged('', true),
     disabled: staged('', true),
     clearable: staged('', true),
@@ -27,6 +28,7 @@ describe('buildAutoCompleteSnippet', () => {
   it('emits content-only markup and omits unset overrides', () => {
     const source = buildAutoCompleteSnippet(state())
     // The resize harness is ShowcasePage-owned chrome, never in the snippet.
+    expect(source).not.toContain('ratios=')
     expect(source).not.toContain('<Resizable')
     expect(source).not.toContain('stageWidth')
     expect(source).toContain('ariaLabel="default"')
@@ -141,5 +143,13 @@ describe('buildAutoCompleteSnippet', () => {
   it('compiles the generated stage snippet', { timeout: 30000 }, async () => {
     const component = await createSnippetComponent(buildAutoCompleteSnippet(state()), SCOPE)
     expect(typeof component).toBe('function')
+  })
+})
+
+describe('AutoComplete ratios snippet', () => {
+  it('emits a partial override while its eye is on', () => {
+    expect(buildAutoCompleteSnippet(state({ ratios: staged({ padX: 0.75 }, true) }))).toContain(
+      'ratios={{"padX":0.75}}',
+    )
   })
 })

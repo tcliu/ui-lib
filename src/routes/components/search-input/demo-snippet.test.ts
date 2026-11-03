@@ -9,6 +9,7 @@ function state(overrides: Partial<SearchInputSnippetState> = {}): SearchInputSni
     query: staged(''),
     placeholder: staged('', true),
     size: staged('', true),
+    ratios: staged({}),
     wrapperClass: staged('', true),
     inputClass: staged('', true),
     clearable: staged('', true),
@@ -27,6 +28,7 @@ describe('buildSearchInputSnippet', () => {
     expect(source).not.toContain('placeholder=')
     // `onResize={` also contains "size=", so match the attribute at line start.
     expect(source).not.toMatch(/^\s*size=/m)
+    expect(source).not.toMatch(/^\s*ratios=/m)
     expect(source).not.toContain('wrapperClass=')
     expect(source).not.toContain('inputClass=')
     expect(source).not.toContain('hideOutline')
@@ -41,6 +43,13 @@ describe('buildSearchInputSnippet', () => {
     expect(source).toContain('size="lg"')
     expect(source).toContain('wrapperClass="w-64"')
     expect(source).toContain('inputClass="italic"')
+  })
+
+  it('emits a partial ratios override while its eye is on', () => {
+    expect(buildSearchInputSnippet(state())).not.toContain('ratios=')
+    expect(buildSearchInputSnippet(state({ ratios: staged({ padX: 0.75 }, true) }))).toContain(
+      'ratios={{"padX":0.75}}',
+    )
   })
 
   it('omits clearable lines while unset and emits them while set', () => {

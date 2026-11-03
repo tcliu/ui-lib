@@ -8,6 +8,8 @@
   import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/playground/staged'
   import { type TriState } from '$showcase/playground/snippet-build'
   import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
+  import { appliedRatios, componentRatiosField } from '$showcase/playground/text-input-ratios'
+  import { SELECT_RATIOS, type SelectRatioOverrides } from '$lib/components/select-dropdown-styles'
   import {
     buildSelectDropdownSnippet,
     SELECT_STAGE_DEFAULT_WIDTH,
@@ -53,6 +55,7 @@
     ariaLabel: staged('default', true),
     buttonLabel: staged(''),
     size: staged('md'),
+    ratios: staged({} as SelectRatioOverrides),
     filterable: staged('no' as TriState),
     allowCustomValue: staged('no' as TriState),
     buttonClass: staged(''),
@@ -84,6 +87,7 @@
     const value = applied(pg.size)
     return value === undefined ? undefined : parseSizeValue(value)
   })
+  const demoRatios = $derived(appliedRatios(pg.ratios))
   const filterable = $derived(appliedFlag(pg.filterable))
   const allowCustomValue = $derived(appliedFlag(pg.allowCustomValue))
   const clearable = $derived(appliedFlag(pg.clearable))
@@ -113,6 +117,7 @@
       value: pg.value,
       defaultValue: pg.defaultValue,
       size: pg.size,
+      ratios: pg.ratios,
       filterable: pg.filterable,
       allowCustomValue: pg.allowCustomValue,
       buttonClass: pg.buttonClass,
@@ -164,6 +169,12 @@
       toggle: eyeResetToggle(pg.options, () => (pg.options.value = DEFAULT_OPTIONS)),
     }),
     textField({ name: 'panelClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the floating panel classes.', clearable: true, ...eye(pg.panelClass) }),
+    componentRatiosField({
+      base: SELECT_RATIOS,
+      type: 'SelectRatioOverrides?',
+      note: 'Partial override of the trigger and option-row ratios (font, paddings, the chevron’s own gutter, min-width, gap, icon); the line box follows the font and the gutter is independent of padX.',
+      value: pg.ratios,
+    }),
     sizeField({ note: 'Control scale; numbers are icon-scale pixels interpolated between the steps.', ...eye(pg.size) }),
     {
       name: 'onClear',
@@ -194,6 +205,7 @@
       defaultValue={demoDefaultValue}
       ariaLabel={applied(pg.ariaLabel) || undefined}
       size={demoSize}
+      ratios={demoRatios}
       {filterable}
       {allowCustomValue}
       buttonClass={demoButtonClass}

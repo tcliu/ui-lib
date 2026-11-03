@@ -2,7 +2,9 @@
 // the playground form state: the section regenerates the editor text from this,
 // so the editor always shows the markup behind the demo above.
 import { boolAttrLine, escapeAttr, sizeAttrLine, textAttrLine, type TriState } from '$showcase/playground/snippet-build'
+import { ratiosAttrLine } from '$showcase/playground/text-input-ratios'
 import type { Staged } from '$showcase/playground/staged'
+import type { FieldRatioOverrides } from '$lib/components/input-chrome'
 
 export interface TextAreaSnippetState {
   ariaLabel: Staged<string>
@@ -12,6 +14,7 @@ export interface TextAreaSnippetState {
   placeholder: Staged<string>
   rows: Staged<string>
   size: Staged<string>
+  ratios: Staged<FieldRatioOverrides>
   disabled: Staged<TriState>
   hideOutline: Staged<TriState>
   readonly: Staged<TriState>
@@ -30,7 +33,7 @@ function rowsLine(pair: Staged<string>, indent: string): string[] {
 }
 
 export function buildTextAreaSnippet(state: TextAreaSnippetState): string {
-  const { ariaLabel, value, placeholder, rows, size, disabled, hideOutline, readonly, id, inputClass } = state
+  const { ariaLabel, value, placeholder, rows, size, ratios, disabled, hideOutline, readonly, id, inputClass } = state
   const attributeIndent = '    '
   const lines = [
     '<script>',
@@ -50,6 +53,7 @@ export function buildTextAreaSnippet(state: TextAreaSnippetState): string {
     // builder omits the default so Show-code stays minimal.
     ...(rows.on && rows.value !== '3' ? rowsLine(rows, attributeIndent) : []),
     ...sizeAttrLine(size, attributeIndent),
+    ...ratiosAttrLine(ratios, attributeIndent),
     ...boolAttrLine('disabled', disabled, 'no', attributeIndent),
     ...boolAttrLine('hideOutline', hideOutline, 'no', attributeIndent),
     ...boolAttrLine('readonly', readonly, 'no', attributeIndent),

@@ -1,15 +1,17 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import FormField from '$lib/components/FormField.svelte'
-  import SearchInput from '$lib/components/SearchInput.svelte'
+  import SearchInput, { SEARCH_INPUT_RATIOS } from '$lib/components/SearchInput.svelte'
   import SelectDropdown from '$lib/components/SelectDropdown.svelte'
   import { getI18nContext } from '$lib/i18n/store.svelte'
   import ShowcasePage from '$showcase/shell/ShowcasePage.svelte'
   import { parseSizeValue } from '$showcase/playground/size-input'
   import { enumField, textField, boolField, sizeField } from '$showcase/playground/snippet-field'
+  import { appliedRatios, componentRatiosField } from '$showcase/playground/text-input-ratios'
   import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '$showcase/playground/staged'
   import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
   import { type TriState } from '$showcase/playground/snippet-build'
+  import type { SearchInputRatioOverrides } from '$lib/components/SearchInput.svelte'
   import { STYLED_INPUT, STYLED_WRAPPER, buildSearchInputSnippet } from './demo-snippet'
 
   const i18n = getI18nContext()
@@ -24,6 +26,7 @@
     ariaLabel: staged('Apply', true),
     placeholder: staged('Search...'),
     size: staged('md'),
+    ratios: staged({} as SearchInputRatioOverrides),
     styled: '',
     wrapperClass: staged(''),
     inputClass: staged(''),
@@ -69,6 +72,7 @@
     const value = applied(pg.size)
     return value === undefined ? undefined : parseSizeValue(value)
   })
+  const demoRatios = $derived(appliedRatios(pg.ratios))
   const demoWrapperClass = $derived(applied(pg.wrapperClass) || undefined)
   const demoInputClass = $derived(applied(pg.inputClass) || undefined)
 
@@ -88,6 +92,7 @@
       query: pg.query,
       placeholder: pg.placeholder,
       size: pg.size,
+      ratios: pg.ratios,
       wrapperClass: pg.wrapperClass,
       inputClass: pg.inputClass,
       clearable: pg.clearable,
@@ -112,6 +117,7 @@
     textField({ name: 'inputClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the default input classes.', clearable: true, ...eye(pg.inputClass) }),
     { name: 'inputRef', type: 'HTMLInputElement | null', defaultValue: 'null', note: 'Bindable native input.' },
     textField({ name: 'placeholder', type: 'string?', defaultValue: "'Search...'", note: 'Native placeholder.', editorDefaultValue: 'Search...', clearable: true, placeholder: 'Search...', ...eye(pg.placeholder) }),
+    componentRatiosField({ base: SEARCH_INPUT_RATIOS, type: 'SearchInputRatioOverrides?', note: 'Partial override of the field and search-icon ratios; the gutter derives from the icon inset, glyph, and gap.', value: pg.ratios }),
     sizeField({ note: 'Box, text, and icon scale together; numbers are icon-scale pixels interpolated between the steps.', ...eye(pg.size) }),
     { name: 'value', type: 'string', defaultValue: '—', note: 'Bindable search text; the eye resets it to empty.', editor: 'text', clearable: true, ...eye(pg.query), onChange: value => stage(pg.query, value), toggle: eyeResetToggle(pg.query, () => (pg.query.value = '')), sync: { kind: 'script', attr: 'query' } },
     textField({ name: 'wrapperClass', type: 'string?', defaultValue: "''", note: 'Extra classes for the outer wrapper.', editorDefaultValue: '', clearable: true, ...eye(pg.wrapperClass) }),
@@ -188,6 +194,7 @@
         onkeydown={handleKeydown}
         placeholder={demoPlaceholder}
         size={demoSize}
+        ratios={demoRatios}
         wrapperClass={demoWrapperClass}
         inputClass={demoInputClass}
         hideOutline={hideOutline}

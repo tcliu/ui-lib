@@ -8,6 +8,8 @@
   import { type SyncableFieldConfig } from '$showcase/playground/snippet-sync'
   import { boolField, sizeField, textField } from '$showcase/playground/snippet-field'
   import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, stage, staged } from '$showcase/playground/staged'
+  import { appliedRatios, componentRatiosField } from '$showcase/playground/text-input-ratios'
+  import { PICKER_RATIOS, type PickerRatioOverrides } from '$lib/components/date-input-metrics'
   import { buildDateInputSnippet } from './demo-snippet'
 
   // Customizer playground state. The single value and the range pair are
@@ -27,6 +29,7 @@
     closeOnSelect: staged('no' as TriState),
     highlightRange: staged('no' as TriState),
     size: staged('md'),
+    ratios: staged({} as PickerRatioOverrides),
     stageWidth: DATE_STAGE_DEFAULT_WIDTH,
   }
   let pg = $state(structuredClone(INITIAL))
@@ -37,6 +40,7 @@
     const value = applied(pg.size)
     return value === undefined ? undefined : parseSizeValue(value)
   })
+  const demoRatios = $derived(appliedRatios(pg.ratios))
   // The flags drive which prop set the demo and Show-code carry: an eye off
   // omits the prop, keeping the committed value for re-applying.
   const demoRange = $derived(appliedFlag(pg.range))
@@ -60,6 +64,7 @@
       closeOnSelect: pg.closeOnSelect,
       highlightRange: pg.highlightRange,
       size: pg.size,
+      ratios: pg.ratios,
     }),
   )
 
@@ -86,6 +91,7 @@
     boolField({ name: 'highlightRange', defaultValue: 'false', note: 'Highlight the days between the two ends in each end’s calendar, so the range reads as one span; the ends stay the selected days. Applies while `range` is on.', ...eyeFlag(pg.highlightRange) }),
     textField({ name: 'placeholder', type: 'string?', defaultValue: '—', note: 'Prompt shown while the single field is empty; defaults to the shared message. A range pair names each field after its own end.', clearable: true, ...eye(pg.placeholder) }),
     boolField({ name: 'range', defaultValue: 'false', note: 'Render a from/to pair of independent fields, each behaving as the single field with its own calendar.', ...eyeFlag(pg.range) }),
+    componentRatiosField({ base: PICKER_RATIOS, type: 'PickerRatioOverrides?', note: 'Partial override of the field-gutter and calendar ratios; the field text follows the picker font and paddings.', value: pg.ratios }),
     sizeField({ note: 'Control scale; numbers are icon-scale pixels. Scales every field and its calendar.', ...eye(pg.size) }),
     boolField({ name: 'time', defaultValue: 'false', note: 'Edit a date-time: every panel gains an hour/minute/second row, and a range pairs two date-time fields. A segment stepped past its range carries into the next unit (23:59:59 + 1s rolls the date).', ...eyeFlag(pg.time) }),
     {
@@ -164,7 +170,8 @@
           closeOnSelect={demoCloseOnSelect}
           highlightRange={demoHighlightRange}
           format={demoFormat}
-          size={demoSize} />
+          size={demoSize}
+          ratios={demoRatios} />
         <span class="text-sm text-slate-400">range: {pg.from.value || '—'} – {pg.to.value || '—'}</span>
       {:else}
         <DateInput
@@ -176,7 +183,8 @@
           highlightRange={demoHighlightRange}
           format={demoFormat}
           placeholder={demoPlaceholder}
-          size={demoSize} />
+          size={demoSize}
+          ratios={demoRatios} />
         <span class="text-sm text-slate-400">value: {pg.value.value || '—'}</span>
       {/if}
     </div>

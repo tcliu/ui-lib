@@ -13,6 +13,7 @@ function state(overrides: Partial<TagInputSnippetState> = {}): TagInputSnippetSt
     clearPlacement: staged('', true),
     placeholder: staged('', true),
     size: staged('', true),
+    ratios: staged({}),
     palette: staged('', true),
     disabled: staged('', true),
     id: staged('', true),
@@ -27,6 +28,7 @@ describe('buildTagInputSnippet', () => {
   it('emits content-only markup and omits unset overrides', () => {
     const source = buildTagInputSnippet(state())
     // The resize harness is ShowcasePage-owned chrome, never in the snippet.
+    expect(source).not.toContain('ratios=')
     expect(source).not.toContain('<Resizable')
     expect(source).not.toContain('stageWidth')
     expect(source).toContain('let value = $state(["svelte","kit"]);')
@@ -154,5 +156,13 @@ describe('buildTagInputSnippet', () => {
   it('compiles the generated snippet', { timeout: 30000 }, async () => {
     const component = await createSnippetComponent(buildTagInputSnippet(state()), {})
     expect(typeof component).toBe('function')
+  })
+})
+
+describe('TagInput ratios snippet', () => {
+  it('emits a partial override while its eye is on', () => {
+    expect(buildTagInputSnippet(state({ ratios: staged({ padX: 0.75 }, true) }))).toContain(
+      'ratios={{"padX":0.75}}',
+    )
   })
 })

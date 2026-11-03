@@ -6,6 +6,7 @@ function state(overrides: Partial<EditableTextSnippetState> = {}): EditableTextS
   return {
     value: staged(''),
     size: staged('', true),
+    ratios: staged({}),
     copyable: staged('', true),
     className: staged(''),
     maxWidth: staged('', true),
@@ -26,6 +27,7 @@ describe('buildEditableTextSnippet', () => {
   it('omits unset size, className, maxWidth, and copyable', () => {
     const source = buildEditableTextSnippet(state())
     expect(source).not.toContain('size=')
+    expect(source).not.toContain('ratios=')
     expect(source).not.toContain('className=')
     expect(source).not.toContain('maxWidth=')
     expect(source).not.toContain('copyable')
@@ -82,5 +84,13 @@ describe('buildEditableTextSnippet', () => {
 
   it('omits the staged maxWidth while its eye is off', () => {
     expect(buildEditableTextSnippet(state({ maxWidth: staged('240') }))).not.toContain('maxWidth=')
+  })
+})
+
+describe('EditableText ratios snippet', () => {
+  it('emits a partial override while its eye is on', () => {
+    expect(buildEditableTextSnippet(state({ ratios: staged({ padX: 0.75 }, true) }))).toContain(
+      'ratios={{"padX":0.75}}',
+    )
   })
 })
