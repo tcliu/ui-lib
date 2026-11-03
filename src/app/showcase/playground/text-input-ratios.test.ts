@@ -12,7 +12,7 @@ import {
 } from './text-input-ratios'
 
 describe('parseRatiosJson', () => {
-  it('accepts a partial object of finite shared ratios', () => {
+  it('accepts a partial object of positive shared ratios', () => {
     expect(parseRatiosJson(TEXT_INPUT_RATIOS, '{"font":0.5,"padX":0.75}')).toEqual({ font: 0.5, padX: 0.75 })
     expect(parseRatiosJson(TEXT_INPUT_RATIOS, '{}')).toEqual({})
   })
@@ -25,6 +25,12 @@ describe('parseRatiosJson', () => {
     expect(parseRatiosJson(TEXT_INPUT_RATIOS, '{"font":null}')).toBeNull()
     expect(parseRatiosValue(TEXT_INPUT_RATIOS, [0.5])).toBeNull()
     expect(parseRatiosJson(TEXT_INPUT_RATIOS, 'not json')).toBeNull()
+  })
+
+  it('rejects zero and negative ratios that would render invalid lengths', () => {
+    expect(parseRatiosJson(TEXT_INPUT_RATIOS, '{"font":0}')).toBeNull()
+    expect(parseRatiosJson(TEXT_INPUT_RATIOS, '{"padX":-1}')).toBeNull()
+    expect(parseRatiosJson(TEXT_INPUT_RATIOS, '{"padX":0.5,"padY":0}')).toBeNull()
   })
 })
 
@@ -109,5 +115,23 @@ describe('componentRatiosField', () => {
     expect(read([])).toBeUndefined()
     expect(read([['ratios', { kind: 'bare' }]])).toBeUndefined()
     expect(read([['ratios', { kind: 'expression', value: '{"padX":0.75}' }]])).toBe('{"padX":0.75}')
+  })
+
+  it('clears the staged override when the write-back restores every default', () => {
+    const value = staged({}, true)
+    const row = field(value)
+    const defaults = JSON.parse(row.value ?? '') as Record<string, number>
+
+    row.sync?.set?.('{"font":0.5}')
+    expect(value.value).toEqual({ font: 0.5 })
+
+    // An invalid write-back leaves the committed override alone.
+    row.sync?.set?.('{"padX":0}')
+    expect(value.value).toEqual({ font: 0.5 })
+
+    // An all-default write-back is no override: nothing stays staged (the eye's
+    // state is the caller's to manage, so it is not asserted here).
+    row.sync?.set?.(JSON.stringify(defaults))
+    expect(value.value).toEqual({})
   })
 })

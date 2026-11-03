@@ -170,7 +170,7 @@
       defaultValue: 'built-in',
       note: 'Per-tag colour classes; replaces the built-in palette.', editor: 'enum', options: paletteOptions, clearLabel: 'Clear palette', ...eye(pg.palette), onChange: value => stage(pg.palette, value), toggle: eyeToggle(pg.palette), sync: { kind: 'scopeReset', scopeRef: 'altPalette' } },
     textField({ name: 'placeholder', type: 'string?', defaultValue: '—', note: 'Placeholder text.', clearable: true, ...eye(pg.placeholder) }),
-    componentRatiosField({ base: TAG_INPUT_RATIOS, type: 'TagInputRatioOverrides?', note: 'Partial override of the tag-row ratios (font, paddings, gap, inner input padding); the line box and the clear inset follow their base.', value: pg.ratios }),
+    componentRatiosField({ base: TAG_INPUT_RATIOS, type: 'TagInputRatioOverrides?', note: 'Partial override of the tag-row ratios (font, paddings, gap, inner input padding, and the clear cross\'s gutter); the line box follows the font and the clear inset follows padX.', value: pg.ratios }),
     sizeField({ note: 'Control scale; numbers are icon-scale pixels interpolated between the steps.', ...eye(pg.size) }),
     jsonField({
       name: 'value',

@@ -8,12 +8,13 @@ import { applied, eyeToggle, stage } from './staged'
 import { jsonField } from './snippet-field'
 import type { SyncableFieldConfig } from './snippet-sync'
 
-const DEFAULT_INVALID = 'Invalid ratios JSON. Use an object of finite numbers keyed by the shared ratio names.'
+const DEFAULT_INVALID = 'Invalid ratios JSON. Use an object of positive numbers keyed by the shared ratio names.'
 
 // Validate a parsed override against a base ratio set: a plain object whose
-// keys are all base ratio names and whose values are finite numbers. Returns
-// null for anything else, so the dialog can block OK instead of applying a
-// partial shape.
+// keys are all base ratio names and whose values are positive finite numbers.
+// Returns null for anything else, so the dialog can block OK instead of
+// applying a partial shape or a zero/negative ratio (which yields an unusable
+// metric such as a zero font size or a negative padding).
 export function parseRatiosValue<T extends Record<string, number>>(base: T, value: unknown): Partial<T> | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return null
@@ -24,7 +25,7 @@ export function parseRatiosValue<T extends Record<string, number>>(base: T, valu
     if (!keys.includes(key as keyof T)) {
       return null
     }
-    if (typeof raw !== 'number' || !Number.isFinite(raw)) {
+    if (typeof raw !== 'number' || !Number.isFinite(raw) || raw <= 0) {
       return null
     }
     ratios[key] = raw
@@ -86,23 +87,27 @@ export function componentRatiosField<T extends Record<string, number>>({
   note,
   value,
 }: RatioFieldOptions<T>): SyncableFieldConfig {
+  // One commit path for the dialog and the Show-code write-back: keep only the
+  // keys that differ from the base defaults, so a key left at its default (or a
+  // draft confirmed untouched) drops back to unset instead of staging the
+  // defaults as an override; a real change re-applies the eye through `stage`.
+  const commit = (draft: string) => {
+    const parsed = parseRatiosJson(base, draft)
+    if (!parsed) return
+    const next = ratiosOverride(base, parsed)
+    if (Object.keys(next).length === 0) {
+      value.value = {}
+      return
+    }
+    stage(value, next)
+  }
+
   return jsonField({
     name: 'ratios',
     type,
     note,
     value: ratiosSeed(base, value.value),
-    onChange: draft => {
-      const parsed = parseRatiosJson(base, draft)
-      if (!parsed) return
-      const next = ratiosOverride(base, parsed)
-      // An all-default draft is no override: clear the committed object without
-      // touching the eye, so an untouched confirm never turns it on.
-      if (Object.keys(next).length === 0) {
-        value.value = {}
-        return
-      }
-      stage(value, next)
-    },
+    onChange: commit,
     dialog: {
       valid: draft => parseRatiosJson(base, draft) !== null,
       invalidMessage: DEFAULT_INVALID,
@@ -117,16 +122,7 @@ export function componentRatiosField<T extends Record<string, number>>({
         if (!attr) return undefined
         return attr.kind === 'expression' ? attr.value : undefined
       },
-      set: text => {
-        const parsed = parseRatiosJson(base, text)
-        if (!parsed) return
-        const next = ratiosOverride(base, parsed)
-        if (Object.keys(next).length === 0) {
-          value.value = {}
-          return
-        }
-        stage(value, next)
-      },
+      set: commit,
     },
   })
 }
