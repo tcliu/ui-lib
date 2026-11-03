@@ -63,17 +63,25 @@ describe('TagInput dimension ratios', () => {
     expect(num(styleOf(), 'tag-font')).toBeCloseTo(17.5)
   })
 
-  it('merges a partial ratios override and carries the clear inset', () => {
+  it('merges a partial ratios override and carries the clear slot', () => {
     instance = mount(TagInput, {
       target,
-      props: { value: ['svelte'], options: [], size: 16, clearable: true, ratios: { padX: 0.75, padY: 0.5, gap: 0.5 } },
+      props: {
+        value: ['svelte'],
+        options: [],
+        size: 16,
+        clearable: true,
+        ratios: { padX: 0.75, padY: 0.5, gap: 0.5, clearGutter: 2 },
+      },
     })
     flushSync()
     const style = styleOf()
     expect(num(style, 'tag-pad-x')).toBeCloseTo(12)
     expect(num(style, 'tag-pad-y')).toBeCloseTo(8)
     expect(num(style, 'tag-gap')).toBeCloseTo(8)
-    // The cross's inset follows the resolved padding.
+    // The cross's inset follows the resolved padding, while its gutter is part of
+    // the set.
     expect(num(style, 'clear-inset')).toBeCloseTo(12)
+    expect(num(style, 'clear-gutter')).toBeCloseTo(32)
   })
 })

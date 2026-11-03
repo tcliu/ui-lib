@@ -6,8 +6,9 @@
   import EditIcon from '$lib/icons/EditIcon.svelte'
   import type { SizeInput } from '$lib/size-scale'
   import { copyToClipboard } from './copy-to-clipboard'
-  import { FIELD_RATIOS, INPUT_LEADING, INPUT_METRIC_CLASS, type FieldRatioOverrides } from './input-chrome'
+  import { FIELD_RATIOS, INPUT_METRIC_CLASS, type FieldRatioOverrides } from './input-chrome'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
+  import { fieldOverrides, withLine } from './text-input-metrics'
   import TextInput from './TextInput.svelte'
   import { getI18nContext } from '$lib/i18n/store.svelte'
   const i18n = getI18nContext()
@@ -186,21 +187,11 @@
   // the edit field derive their line box from the font, so one font override
   // keeps them on one height.
   const resolvedRatios = $derived({ ...FIELD_RATIOS, ...ratios })
-  const metrics = $derived(
-    dimensionMetrics(size, {
-      ...resolvedRatios,
-      line: resolvedRatios.font * INPUT_LEADING,
-    }),
-  )
+  const metrics = $derived(dimensionMetrics(size, withLine(resolvedRatios)))
   const sizeStyle = $derived(sizeVarStyle('input', metrics))
   // The edit field rides the same metrics; TextInput derives its own line from
   // the font, so it takes only the tunable subset.
-  const fieldRatios = $derived({
-    font: resolvedRatios.font,
-    radius: resolvedRatios.radius,
-    padX: resolvedRatios.padX,
-    padY: resolvedRatios.padY,
-  })
+  const fieldRatios = $derived(fieldOverrides(resolvedRatios))
   const metricClass = INPUT_METRIC_CLASS
   // The edit field rides TextInput, which emits the same `--input-*` vars for
   // the shared size, so the field needs only its measured width on top.

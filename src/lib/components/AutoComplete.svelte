@@ -3,10 +3,10 @@
   import { TEXT_INPUT_RATIOS } from './text-input-metrics'
 
   // The field and the option panel share one ratio set: the field's tunable
-  // metrics — including the clear affordance it renders — plus the panel's own
-  // min-width, gap, and icon slot. The field's trailer gap is left out: this
-  // composite renders no trailer row, so the key would tune nothing. Both line
-  // boxes derive from the font, so the shared font retune carries them too.
+  // metrics — including the clear affordance and the outside row's gap it
+  // renders when `clearPlacement` is `outside` — plus the panel's own min-width,
+  // gap, and icon slot. Both line boxes derive from the font, so the shared
+  // font retune carries them too.
   export const AUTOCOMPLETE_RATIOS = {
     font: TEXT_INPUT_RATIOS.font,
     radius: TEXT_INPUT_RATIOS.radius,
@@ -15,6 +15,7 @@
     clearButton: TEXT_INPUT_RATIOS.clearButton,
     clearGutter: TEXT_INPUT_RATIOS.clearGutter,
     clearBox: TEXT_INPUT_RATIOS.clearBox,
+    trailerGap: TEXT_INPUT_RATIOS.trailerGap,
     // The panel's own keys keep the shared select names.
     minW: SELECT_RATIOS.minW,
     gap: SELECT_RATIOS.gap,
@@ -35,8 +36,7 @@
   import ListboxPanel from './ListboxPanel.svelte'
   import { DEFAULT_PANEL_CLASS, SELECT_BOX_UTILITIES, OPTION_BASE } from './select-dropdown-styles'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
-  import { INPUT_LEADING } from './input-chrome'
-  import type { TextInputRatioOverrides } from './text-input-metrics'
+  import { fieldOverrides, withLine, type TextInputRatioOverrides } from './text-input-metrics'
   import type { SelectOption } from './SelectDropdown.svelte'
   import type { ClearableProps } from './clearable-props'
 
@@ -62,9 +62,8 @@
     placeholder?: string
     size?: SizeInput
     // Partial override of the field and panel metric ratios (font, radius,
-    // paddings, the clear affordance, and the panel's min-width, gap, and icon
-    // slot); omitted keys keep the shared defaults. The field has no trailer
-    // row, so there is no trailer gap to tune.
+    // paddings, the clear affordance, the outside row's gap, and the panel's
+    // min-width, gap, and icon slot); omitted keys keep the shared defaults.
     ratios?: AutoCompleteRatioOverrides
     inputRef?: HTMLInputElement | null
     disabled?: boolean
@@ -136,31 +135,27 @@
   }
 
   // The option panel is the shared `SelectDropdown` chrome: its rows consume
-  // the same `--sel-*` box metrics, so both surfaces read alike.
+  // the same `--sel-*` box metrics, so both surfaces read alike. The panel keeps
+  // its own three keys; the field metrics it does not render stay out of the
+  // emitted vars.
   const resolvedRatios = $derived({ ...AUTOCOMPLETE_RATIOS, ...ratios })
   const panelMetrics = $derived(
-    dimensionMetrics(size, {
-      font: resolvedRatios.font,
-      line: resolvedRatios.font * INPUT_LEADING,
-      padX: resolvedRatios.padX,
-      padY: resolvedRatios.padY,
-      minW: resolvedRatios.minW,
-      gap: resolvedRatios.gap,
-      icon: resolvedRatios.icon,
-    }),
+    dimensionMetrics(
+      size,
+      withLine({
+        font: resolvedRatios.font,
+        padX: resolvedRatios.padX,
+        padY: resolvedRatios.padY,
+        minW: resolvedRatios.minW,
+        gap: resolvedRatios.gap,
+        icon: resolvedRatios.icon,
+      }),
+    ),
   )
   const panelStyle = $derived(sizeVarStyle('sel', panelMetrics))
-  // The field rides the same font, radius, paddings, and clear affordance as the
-  // panel's rows; `trailerGap` is not part of the set, so nothing is dropped.
-  const fieldRatios: TextInputRatioOverrides = $derived({
-    font: resolvedRatios.font,
-    radius: resolvedRatios.radius,
-    padX: resolvedRatios.padX,
-    padY: resolvedRatios.padY,
-    clearButton: resolvedRatios.clearButton,
-    clearGutter: resolvedRatios.clearGutter,
-    clearBox: resolvedRatios.clearBox,
-  })
+  // The field rides the same font, radius, paddings, clear affordance, and
+  // trailer gap as the panel's rows.
+  const fieldRatios: TextInputRatioOverrides = $derived(fieldOverrides(resolvedRatios))
 
   const resolvedPanelClass = $derived(panelClass ?? DEFAULT_PANEL_CLASS)
   const resolvedOptionRowClass = $derived(`${SELECT_BOX_UTILITIES} ${OPTION_BASE}`)

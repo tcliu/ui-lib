@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { dimensionMetrics } from './size-metrics'
 import { SELECT_RATIOS, SELECT_TRIGGER_UTILITIES } from './select-dropdown-styles'
 import { INPUT_LEADING, INPUT_RATIOS } from './input-chrome'
+import { withLine } from './text-input-metrics'
 
 describe('SelectDropdown size metrics', () => {
   it('scales every metric by one constant ratio of the size', () => {
@@ -47,7 +48,7 @@ describe('SelectDropdown size metrics', () => {
     expect(SELECT_RATIOS.padY).toBe(INPUT_RATIOS.padY)
     for (const px of [12, 14, 16, 18, 20]) {
       const input = dimensionMetrics(px, INPUT_RATIOS)
-      const select = dimensionMetrics(px, { ...SELECT_RATIOS, line: SELECT_RATIOS.font * INPUT_LEADING })
+      const select = dimensionMetrics(px, withLine(SELECT_RATIOS))
       // Both boxes carry the same 1px border, so equal line + padding is equal
       // height.
       expect(select.line + 2 * select.padY).toBeCloseTo(input.line + 2 * input.padY)

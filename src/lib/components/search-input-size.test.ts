@@ -64,12 +64,13 @@ describe('SearchInput dimension ratios', () => {
     instance = mount(SearchInput, {
       target,
       props: {
-        value: '',
+        value: 'x',
         ariaLabel: 'Search',
         size: 16,
+        clearable: true,
         // `padX` is a field ratio the composite must forward to its inner
         // `TextInput`; the icon keys size the leading glyph and its gutter.
-        ratios: { font: 0.5, padX: 0.75, iconLeft: 0.5, icon: 0.5, iconGap: 0.5 },
+        ratios: { font: 0.5, padX: 0.75, iconLeft: 0.5, icon: 0.5, iconGap: 0.5, clearButton: 0.5 },
       },
     })
     flushSync()
@@ -80,5 +81,10 @@ describe('SearchInput dimension ratios', () => {
     // The gutter derives from inset + glyph + gap.
     expect(num(style, 'search-pad-left')).toBeCloseTo(24)
     expect(Number(target.querySelector('svg')?.getAttribute('width'))).toBeCloseTo(8 * ICON_RATIO)
+    // The clear keys are part of this composite's set, so they reach the field.
+    const clearStyle = Array.from(target.querySelectorAll('[style]'))
+      .map(element => element.getAttribute('style') ?? '')
+      .join(';')
+    expect(num(clearStyle, 'clear-button')).toBeCloseTo(8)
   })
 })

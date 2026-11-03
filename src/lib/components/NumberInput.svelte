@@ -19,7 +19,7 @@
   import TextInput from './TextInput.svelte'
   import { getI18nContext } from '$lib/i18n/store.svelte'
   import type { SizeInput } from '$lib/size-scale'
-  import type { TextInputRatioOverrides } from './text-input-metrics'
+  import { fieldOverrides, type TextInputRatioOverrides } from './text-input-metrics'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
   import type { ClearableProps } from './clearable-props'
   const i18n = getI18nContext()
@@ -113,16 +113,7 @@
     }),
   )
   const numStyle = $derived(sizeVarStyle('num', numMetrics))
-  const fieldRatios: TextInputRatioOverrides = $derived({
-    font: resolvedRatios.font,
-    radius: resolvedRatios.radius,
-    padX: resolvedRatios.padX,
-    padY: resolvedRatios.padY,
-    clearButton: resolvedRatios.clearButton,
-    clearGutter: resolvedRatios.clearGutter,
-    clearBox: resolvedRatios.clearBox,
-    trailerGap: resolvedRatios.trailerGap,
-  })
+  const fieldRatios: TextInputRatioOverrides = $derived(fieldOverrides(resolvedRatios))
 
   // A trailing stepper column is overlaid on the input's right gutter, so the
   // box keeps exactly TextInput's height instead of growing to the steppers.

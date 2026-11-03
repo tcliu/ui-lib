@@ -1,14 +1,17 @@
 <script module lang="ts">
-  import { INPUT_LEADING, INPUT_RATIOS } from './input-chrome'
+  import { INPUT_RATIOS } from './input-chrome'
 
   // Container ratios: the field's font (its line box derives from it), its own
-  // wider padding, the tag gap, and the inner input's tighter vertical padding.
+  // wider padding, the tag gap, the inner input's tighter vertical padding, and
+  // the clear cross's gutter. The cross itself is a shared `Button`, so its box
+  // derives from the button (and therefore scales with the tag size).
   export const TAG_INPUT_RATIOS = {
     font: INPUT_RATIOS.font,
     padX: 0.625,
     padY: 0.375,
     gap: 0.375,
     inputPadY: 0.125,
+    clearGutter: 1.875,
   }
   export type TagInputRatios = typeof TAG_INPUT_RATIOS
   export type TagInputRatioOverrides = Partial<TagInputRatios>
@@ -16,7 +19,7 @@
 
 <script lang="ts">
   import { flushSync, tick, type Snippet } from 'svelte'
-  import Button from '$lib/components/Button.svelte'
+  import Button, { iconOnlyBoxPx } from '$lib/components/Button.svelte'
   import Chip from '$lib/components/Chip.svelte'
   import ListboxPanel from '$lib/components/ListboxPanel.svelte'
   import TextInput from '$lib/components/TextInput.svelte'
@@ -27,6 +30,7 @@
   import { getI18nContext } from '$lib/i18n/store.svelte'
   import { type SizeInput } from '$lib/size-scale'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
+  import { withLine } from './text-input-metrics'
   import type { ClearableProps } from './clearable-props'
 
   interface Props extends ClearableProps {
@@ -45,9 +49,10 @@
     disabled?: boolean
     id?: string
     size?: SizeInput
-    // Partial override of the container's metric ratios (font, line, both
-    // paddings, gap, and the inner input's vertical padding); omitted keys keep
-    // the shared defaults. The clear cross's inset follows `padX`.
+    // Partial override of the container's metric ratios (font, both paddings,
+    // gap, the inner input's vertical padding, and the clear cross's gutter);
+    // omitted keys keep the shared defaults. The line box follows `font` and the
+    // clear inset follows `padX`; the cross's box derives from the shared button.
     ratios?: TagInputRatioOverrides
     chipClass?: string | ((tag: string) => string)
     // Colour classes per tag when `chipClass` is not given; replaces the
@@ -126,13 +131,25 @@
 
   // Every metric is a fixed ratio of the size dimension, so each keeps a
   // constant metric:dimension ratio across the whole range. The container pads
-  // like a text field (padX matches --input-pad-x); the chips size themselves
-  // from the same dimension (their metrics live in `Chip`), and the input rides
-  // tighter type so mixed content stays compact. The row's line box follows the
-  // font, so one font retune carries its height.
+  // wider than a text field (`padX` exceeds `--input-pad-x`, so the tag row
+  // keeps its own inset); the chips size themselves from the same dimension
+  // (their metrics live in `Chip`), and the input rides tighter type so mixed
+  // content stays compact. The row's line box follows the font, so one font
+  // retune carries its height.
   const resolvedRatios = $derived({ ...TAG_INPUT_RATIOS, ...ratios })
+  // The container's own `--tag-*` vars: its text row only. The clear slot's keys
+  // stay out of this prefix (they ride `--clear-*`, like every clearable field).
   const metrics = $derived(
-    dimensionMetrics(size, { ...resolvedRatios, line: resolvedRatios.font * INPUT_LEADING }),
+    dimensionMetrics(
+      size,
+      withLine({
+        font: resolvedRatios.font,
+        padX: resolvedRatios.padX,
+        padY: resolvedRatios.padY,
+        gap: resolvedRatios.gap,
+        inputPadY: resolvedRatios.inputPadY,
+      }),
+    ),
   )
   const style = $derived(sizeVarStyle('tag', metrics))
 
@@ -267,12 +284,14 @@
   const outsideField = $derived(clearable && placement === 'outside')
   const clearInside = $derived(showClear && insideField)
 
-  // Inside-clear metrics: the icon is the size dimension itself, the inset
-  // matches the box's horizontal padding, and the gutter reserves room for
-  // both, so chips never run under the overlay. The gutter is reserved
-  // whenever the inside clear is configured, not only while tags show the
-  // button, so the content keeps the same width filled and at default.
-  const clearMetrics = $derived(dimensionMetrics(size, { inset: resolvedRatios.padX, gutter: 1.875, box: 1 }))
+  // Inside-clear metrics: the cross's inset matches the box's horizontal
+  // padding, and the gutter reserves room for the cross, so chips never run under
+  // the overlay. The gutter is reserved whenever the inside clear is configured,
+  // not only while tags show the button, so the content keeps the same width
+  // filled and at default.
+  const clearMetrics = $derived(
+    dimensionMetrics(size, { inset: resolvedRatios.padX, gutter: resolvedRatios.clearGutter }),
+  )
   const clearStyle = $derived(sizeVarStyle('clear', clearMetrics))
   const boxStyle = $derived(
     [style, insideField ? clearStyle : '', insideField ? 'padding-right:var(--clear-gutter)' : '']
@@ -379,10 +398,11 @@
   <CloseIcon />
 {/snippet}
 {#snippet clearControl()}
-  <!-- Ghost keeps the tiny cross unobtrusive; the cross is one fixed step
-      rather than the field's own size. -->
+  <!-- Ghost keeps the tiny cross unobtrusive; it takes the tag row's size so the
+       cross and the slot reserved below it stay one box at every step. -->
   <Button
     variant="ghost"
+    {size}
     icon={closeIcon}
     ariaLabel={resolvedClearLabel}
     onClick={handleClear} />
@@ -459,7 +479,7 @@
       <span
         aria-hidden="true"
         class="shrink-0"
-        style={`width:${clearMetrics.box}px;height:${clearMetrics.box}px`}></span>
+        style={`width:${iconOnlyBoxPx(size)}px;height:${iconOnlyBoxPx(size)}px`}></span>
     {/if}
   </div>
 {:else}

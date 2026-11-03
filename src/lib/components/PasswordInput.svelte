@@ -21,7 +21,7 @@
   import EyeSlashIcon from '$lib/icons/EyeSlashIcon.svelte'
   import { getI18nContext } from '$lib/i18n/store.svelte'
   import type { SizeInput } from '$lib/size-scale'
-  import type { TextInputRatioOverrides } from './text-input-metrics'
+  import { fieldOverrides, type TextInputRatioOverrides } from './text-input-metrics'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
   import type { ClearableProps } from './clearable-props'
   const i18n = getI18nContext()
@@ -85,16 +85,7 @@
     }),
   )
   const pwdStyle = $derived(sizeVarStyle('pwd', pwdMetrics))
-  const fieldRatios: TextInputRatioOverrides = $derived({
-    font: resolvedRatios.font,
-    radius: resolvedRatios.radius,
-    padX: resolvedRatios.padX,
-    padY: resolvedRatios.padY,
-    clearButton: resolvedRatios.clearButton,
-    clearGutter: resolvedRatios.clearGutter,
-    clearBox: resolvedRatios.clearBox,
-    trailerGap: resolvedRatios.trailerGap,
-  })
+  const fieldRatios: TextInputRatioOverrides = $derived(fieldOverrides(resolvedRatios))
 
   // The toggle overlays the field's right edge, so the input reserves that
   // gutter. A standalone literal the scanner can extract: glued to a `${`

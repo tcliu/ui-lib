@@ -65,12 +65,18 @@ describe('NumberInput size', () => {
     await remount(NumberInput, {
       value: '5',
       ariaLabel: 'x',
-      ratios: { font: 0.5, stepperIcon: 0.5, stepperGutter: 2 },
+      clearable: true,
+      ratios: { font: 0.5, stepperIcon: 0.5, stepperGutter: 2, clearBox: 1.5 },
     })
     const frame = target.firstElementChild
     expect(frame?.getAttribute('style')).toContain('--num-icon: 8px')
     expect(frame?.getAttribute('style')).toContain('--num-pad-right: 32px')
     expect(target.querySelector('input')?.getAttribute('style')).toContain('--input-font: 8px')
+    // The clear keys are part of this composite's set, so they reach the field.
+    const style = Array.from(target.querySelectorAll('[style]'))
+      .map(element => element.getAttribute('style') ?? '')
+      .join(';')
+    expect(style).toContain('--clear-box: 24px')
   })
 })
 
@@ -94,10 +100,19 @@ describe('PasswordInput size', () => {
   })
 
   it('merges a partial override over the field and the toggle metrics', async () => {
-    await remount(PasswordInput, { value: '', ratios: { font: 0.5, icon: 0.5, box: 3 } })
+    await remount(PasswordInput, {
+      value: 'x',
+      clearable: true,
+      ratios: { font: 0.5, icon: 0.5, box: 3, clearGutter: 2 },
+    })
     expect(target.querySelector('.relative')?.getAttribute('style')).toContain('--pwd-icon: 8px')
     expect(target.querySelector('.relative')?.getAttribute('style')).toContain('--pwd-box: 48px')
     expect(target.querySelector('input')?.getAttribute('style')).toContain('--input-font: 8px')
+    // The clear keys are part of this composite's set, so they reach the field.
+    const style = Array.from(target.querySelectorAll('[style]'))
+      .map(element => element.getAttribute('style') ?? '')
+      .join(';')
+    expect(style).toContain('--clear-gutter: 32px')
   })
 
   it('keeps the reveal tooltip reachable while the field is disabled', async () => {

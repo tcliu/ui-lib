@@ -22,7 +22,7 @@
     type SelectRatioOverrides,
   } from './select-dropdown-styles'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
-  import { INPUT_LEADING } from './input-chrome'
+  import { withLine } from './text-input-metrics'
   import type { ClearableProps } from './clearable-props'
   import { getI18nContext } from '$lib/i18n/store.svelte'
 
@@ -56,9 +56,9 @@
     // existing callers are unchanged.
     allowCustomValue?: boolean
     size?: SizeInput
-    // Partial override of the trigger's metric ratios (font, line, both
-    // paddings, the chevron's own gutter, min-width, gap, and icon slot);
-    // omitted keys keep the shared defaults.
+    // Partial override of the trigger's metric ratios (font, both paddings, the
+    // chevron's own gutter, min-width, gap, and icon slot); omitted keys keep
+    // the shared defaults. The line box follows `font`.
     ratios?: SelectRatioOverrides
     onSelect: (value: string) => void
     buttonClass?: string
@@ -115,9 +115,7 @@
   // constant metric:dimension ratio across the range; the icon slot is the
   // dimension itself (ratio 1) and the line box follows the font.
   const resolvedRatios = $derived({ ...SELECT_RATIOS, ...ratios })
-  const metrics = $derived(
-    dimensionMetrics(size, { ...resolvedRatios, line: resolvedRatios.font * INPUT_LEADING }),
-  )
+  const metrics = $derived(dimensionMetrics(size, withLine(resolvedRatios)))
   // The chevron's right gutter is its own metric (`chevronGap`), so it can be
   // tuned without moving the label's `padX` inset.
   const style = $derived(sizeVarStyle('sel', metrics))

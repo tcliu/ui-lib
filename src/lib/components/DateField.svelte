@@ -33,8 +33,7 @@
     type DateSpan,
   } from './date-input-core'
   import { PICKER_RATIOS, type DateInputTheme, type PickerRatioOverrides } from './date-input-metrics'
-  import { INPUT_LEADING } from './input-chrome'
-  import type { TextInputRatioOverrides } from './text-input-metrics'
+  import { fieldOverrides, withLine, type TextInputRatioOverrides } from './text-input-metrics'
   import { createCalendarGrid } from './use-calendar-grid.svelte'
   import { createDateTextField } from './use-date-text-field.svelte'
   import { createTimeSegments } from './use-time-segments.svelte'
@@ -89,16 +88,10 @@
   const resolvedRatios = $derived({ ...PICKER_RATIOS, ...ratios })
   // The picker's line box follows its font, so a font retune carries the panel
   // rows and the field's calendar affordance with it.
-  const metrics = $derived(
-    dimensionMetrics(size, { ...resolvedRatios, line: resolvedRatios.font * INPUT_LEADING }),
-  )
-  // The field text rides the picker's font, radius, and paddings.
-  const fieldRatios: TextInputRatioOverrides = $derived({
-    font: resolvedRatios.font,
-    radius: resolvedRatios.radius,
-    padX: resolvedRatios.padX,
-    padY: resolvedRatios.padY,
-  })
+  const metrics = $derived(dimensionMetrics(size, withLine(resolvedRatios)))
+  // The field text rides the picker's font, radius, and paddings; the picker
+  // carries no field clear/trailer keys, so those stay out of the subset.
+  const fieldRatios: TextInputRatioOverrides = $derived(fieldOverrides(resolvedRatios))
 
   // A value that does not parse strictly under `valueFormat` reads as unset
   // rather than poisoning comparisons.

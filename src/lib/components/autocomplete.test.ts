@@ -202,6 +202,29 @@ describe('AutoComplete ratios', () => {
     expect(Number(/--clear-gutter:\s*([\d.]+)/.exec(style)?.[1])).toBeCloseTo(48)
     expect(Number(/--clear-box:\s*([\d.]+)/.exec(style)?.[1])).toBeCloseTo(32)
   })
+
+  it('tunes the outside row gap an outside clear renders', () => {
+    instance = mount(AutoComplete, {
+      target,
+      props: {
+        value: 'Two',
+        options: ['a', 'b'],
+        ariaLabel: 'Country',
+        onSelect: () => {},
+        size: 16,
+        clearable: true,
+        clearPlacement: 'outside',
+        ratios: { trailerGap: 1 },
+      },
+    })
+    flushSync()
+    // `clearPlacement="outside"` makes TextInput render the trailer row, so the
+    // gap key must be part of the set and reach it.
+    const gapStyle = [...target.querySelectorAll<HTMLElement>('[style]')]
+      .map(element => element.style.gap)
+      .find(Boolean)
+    expect(gapStyle).toBe('16px')
+  })
 })
 
 describe('AutoComplete keyboard behavior', () => {

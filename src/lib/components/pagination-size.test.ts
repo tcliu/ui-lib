@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushSync, mount, unmount } from 'svelte'
 import Pagination from './Pagination.svelte'
-import { INPUT_RATIOS } from './input-chrome'
+import { INPUT_LEADING } from './input-chrome'
 import { SELECT_RATIOS } from './select-dropdown-styles'
 
 // Same DOM stubs as the other component tests: jsdom lacks ResizeObserver,
@@ -50,11 +50,11 @@ describe('Pagination numeric size', () => {
       props: { total: 100, pageSize: 10, currentPage: 1, size: 14, onPageChange: () => {}, onPageSizeChange: () => {} },
     })
     flushSync()
-    // Numeric sizes scale every metric by a constant ratio; the page font and
-    // the select line/padY the block height derives from stay in lockstep.
+    // Numeric sizes scale every metric by a constant ratio; the page line
+    // derives from the select trigger's own font, so the block height tracks it.
     const nav = target.querySelector('nav')
     expect(nav?.getAttribute('style')).toContain(`--pg-font: ${14 * SELECT_RATIOS.font}px`)
-    expect(nav?.getAttribute('style')).toContain(`--pg-line: ${14 * INPUT_RATIOS.line}px`)
+    expect(nav?.getAttribute('style')).toContain(`--pg-line: ${14 * (SELECT_RATIOS.font * INPUT_LEADING)}px`)
     expect(nav?.getAttribute('style')).toContain(`--pg-pad-y: ${14 * SELECT_RATIOS.padY}px`)
     // The block height matches the page-size dropdown trigger's box.
     expect(nav?.getAttribute('style')).toContain(
@@ -62,6 +62,8 @@ describe('Pagination numeric size', () => {
     )
     const trigger = target.querySelector('[aria-label="Page size"]')
     expect(trigger?.getAttribute('style')).toContain(`--sel-font: ${14 * SELECT_RATIOS.font}px`)
+    // Both sides derive the line from that one font, so they cannot drift.
+    expect(trigger?.getAttribute('style')).toContain(`--sel-line: ${14 * (SELECT_RATIOS.font * INPUT_LEADING)}px`)
   })
 
   it('renders named sizes through the same var path', () => {

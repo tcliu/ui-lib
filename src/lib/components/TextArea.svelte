@@ -5,10 +5,10 @@
     FIELD_RATIOS,
     INPUT_CHROME,
     INPUT_CHROME_NO_OUTLINE,
-    INPUT_LEADING,
     INPUT_METRIC_CLASS,
     type FieldRatioOverrides,
   } from './input-chrome'
+  import { withLine } from './text-input-metrics'
 
   interface Props {
     value: string
@@ -55,13 +55,9 @@
   }: Props = $props()
 
   const resolvedRatios = $derived({ ...FIELD_RATIOS, ...ratios })
-  const metrics = $derived(
-    dimensionMetrics(size, {
-      ...resolvedRatios,
-      // Derived, not overridden: the editor's row height follows its font.
-      line: resolvedRatios.font * INPUT_LEADING,
-    }),
-  )
+  // The editor's line box follows its font through the shared helper, so a font
+  // retune carries its row height.
+  const metrics = $derived(dimensionMetrics(size, withLine(resolvedRatios)))
   const style = $derived(sizeVarStyle('input', metrics))
 
   // Non-positive or fractional rows fall back to the default; only the page

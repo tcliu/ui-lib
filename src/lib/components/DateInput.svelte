@@ -22,7 +22,7 @@
     type DateSpan,
   } from './date-input-core'
   import { PICKER_RATIOS, type DateInputTheme, type PickerRatioOverrides } from './date-input-metrics'
-  import { INPUT_LEADING } from './input-chrome'
+  import { withLine } from './text-input-metrics'
 
   const i18n = getI18nContext()
 
@@ -41,10 +41,10 @@
     onFrom?: (value: string) => void
     onTo?: (value: string) => void
     size?: SizeInput
-    // Partial override of the field gutter and calendar ratios (font, line,
-    // paddings, icon, gaps, panel width/padding, navigation and cell sizes);
-    // omitted keys keep the shared defaults. The field text follows the same
-    // font and paddings.
+    // Partial override of the field gutter and calendar ratios (font, paddings,
+    // icon, gaps, panel width/padding, navigation and cell sizes); omitted keys
+    // keep the shared defaults. The field text follows the same font and
+    // paddings, and the line box follows `font`.
     ratios?: PickerRatioOverrides
     // Single-mode prompt and accessible name (defaults to the shared "Select
     // date" / "Select date and time" message); a range pair names each field
@@ -83,9 +83,7 @@
   const resolvedRatios = $derived({ ...PICKER_RATIOS, ...ratios })
   // The picker's line box follows its font, so a font retune carries the panel
   // rows and the field's calendar affordance with it.
-  const metrics = $derived(
-    dimensionMetrics(size, { ...resolvedRatios, line: resolvedRatios.font * INPUT_LEADING }),
-  )
+  const metrics = $derived(dimensionMetrics(size, withLine(resolvedRatios)))
   const inputStyle = $derived(sizeVarStyle('pick', metrics))
   const displayFormat = $derived(format ?? (time ? DEFAULT_DATETIME_FORMAT : DEFAULT_DATE_FORMAT))
   const closeOnPick = $derived(closeOnSelect ?? !time)

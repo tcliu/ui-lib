@@ -10,10 +10,9 @@
     INPUT_CHROME,
     INPUT_CHROME_NO_OUTLINE,
     INPUT_EMBEDDED,
-    INPUT_LEADING,
     INPUT_METRIC_CLASS,
   } from './input-chrome'
-  import { TEXT_INPUT_RATIOS, type TextInputRatioOverrides } from './text-input-metrics'
+  import { TEXT_INPUT_RATIOS, withLine, type TextInputRatioOverrides } from './text-input-metrics'
   import type { ClearableProps } from './clearable-props'
 
   const i18n = getI18nContext()
@@ -96,15 +95,18 @@
   }: Props = $props()
 
   const resolvedRatios = $derived({ ...TEXT_INPUT_RATIOS, ...ratios })
+  // The field's own text metrics (no clear/trailer keys leak into `--input-*`);
+  // the line box derives from the font through the shared helper.
   const metrics = $derived(
-    dimensionMetrics(size, {
-      font: resolvedRatios.font,
-      // Derived, not overridden: the row height follows the field's font.
-      line: resolvedRatios.font * INPUT_LEADING,
-      radius: resolvedRatios.radius,
-      padX: resolvedRatios.padX,
-      padY: resolvedRatios.padY,
-    }),
+    dimensionMetrics(
+      size,
+      withLine({
+        font: resolvedRatios.font,
+        radius: resolvedRatios.radius,
+        padX: resolvedRatios.padX,
+        padY: resolvedRatios.padY,
+      }),
+    ),
   )
   const style = $derived(sizeVarStyle('input', metrics))
 
