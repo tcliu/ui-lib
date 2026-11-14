@@ -1,7 +1,7 @@
 // Show-code source for the TextArea demo section. Pure string building over
 // the playground form state: the section regenerates the editor text from this,
 // so the editor always shows the markup behind the demo above.
-import { boolAttrLine, escapeAttr, sizeAttrLine, textAttrLine, type TriState } from '#showcase/playground/snippet-build.js'
+import { boolAttrLine, enumAttrLine, escapeAttr, sizeAttrLine, textAttrLine, type TriState } from '#showcase/playground/snippet-build.js'
 import { ratiosAttrLine } from '#showcase/playground/text-input-ratios.js'
 import type { Staged } from '#showcase/playground/staged.js'
 import type { FieldRatioOverrides } from '#lib/components/input-chrome.js'
@@ -20,6 +20,8 @@ export interface TextAreaSnippetState {
   readonly: Staged<TriState>
   id: Staged<string>
   inputClass: Staged<string>
+  variant: Staged<string>
+  className: Staged<string>
 }
 
 // A rows line: omitted while the eye is off, unset, or non-numeric (the demo
@@ -33,7 +35,7 @@ function rowsLine(pair: Staged<string>, indent: string): string[] {
 }
 
 export function buildTextAreaSnippet(state: TextAreaSnippetState): string {
-  const { ariaLabel, value, placeholder, rows, size, ratios, disabled, hideOutline, readonly, id, inputClass } = state
+  const { ariaLabel, value, placeholder, rows, size, ratios, disabled, hideOutline, readonly, id, inputClass, variant, className } = state
   const attributeIndent = '    '
   const lines = [
     '<script>',
@@ -59,6 +61,11 @@ export function buildTextAreaSnippet(state: TextAreaSnippetState): string {
     ...boolAttrLine('readonly', readonly, 'no', attributeIndent),
     ...textAttrLine('id', id, attributeIndent),
     ...textAttrLine('inputClass', inputClass, attributeIndent),
+    // Enum rows prefill their component default in the Value column; the
+    // builder omits the default so Show-code stays minimal.
+    ...enumAttrLine('variant', variant, 'bordered', attributeIndent),
+    // Extra classes append after the base chrome, like the shared TextInput.
+    ...textAttrLine('className', className, attributeIndent),
     '  />',
     `  <span class="text-sm text-slate-400">value: {value || '—'}</span>`,
     '</div>',

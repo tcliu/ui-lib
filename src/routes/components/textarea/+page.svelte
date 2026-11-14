@@ -5,7 +5,7 @@
   import { parseSizeValue } from '#showcase/playground/size-input.js'
   import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
   import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
-  import { textField, boolField, sizeField } from '#showcase/playground/snippet-field.js'
+  import { enumField, textField, boolField, sizeField } from '#showcase/playground/snippet-field.js'
   import { type TriState } from '#showcase/playground/snippet-build.js'
   import { appliedRatios, componentRatiosField } from '#showcase/playground/text-input-ratios.js'
   import { FIELD_RATIOS, type FieldRatioOverrides } from '#lib/components/input-chrome.js'
@@ -29,8 +29,15 @@
     readonly: staged('no' as TriState),
     id: staged(''),
     inputClass: staged(''),
+    variant: staged('bordered'),
+    className: staged(''),
   }
   let pg = $state(structuredClone(INITIAL))
+
+  const variantOptions = [
+    { value: 'bordered', label: 'bordered' },
+    { value: 'embedded', label: 'embedded' },
+  ]
 
   function asRows(value: string): number | undefined {
     if (value.trim() === '') {
@@ -53,6 +60,10 @@
   const disabled = $derived(appliedFlag(pg.disabled))
   const hideOutline = $derived(appliedFlag(pg.hideOutline))
   const readonly = $derived(appliedFlag(pg.readonly))
+  const demoVariant = $derived(
+    (applied(pg.variant) || undefined) as 'bordered' | 'embedded' | undefined,
+  )
+  const demoClassName = $derived(applied(pg.className) || undefined)
 
   function clearPlayground() {
     pg = structuredClone(INITIAL)
@@ -71,6 +82,8 @@
       readonly: pg.readonly,
       id: pg.id,
       inputClass: pg.inputClass,
+      variant: pg.variant,
+      className: pg.className,
     }),
   )
 
@@ -80,6 +93,7 @@
   // TextInput's.
   const fields: SyncableFieldConfig[] = $derived([
     { name: 'ariaLabel', type: 'string', defaultValue: '—', note: 'Required accessible name.', editor: 'text', clearable: true, ...eye(pg.ariaLabel), onChange: value => stage(pg.ariaLabel, value), toggle: eyeToggle(pg.ariaLabel), sync: { kind: 'scopeText', scopeRef: 'applyLabel' } },
+    textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes appended after the base chrome; an embedded field takes its text rules here.', editorDefaultValue: '', clearable: true, ...eye(pg.className) }),
     boolField({ name: 'disabled', defaultValue: 'false', note: 'Disables the field.', ...eyeFlag(pg.disabled) }),
     boolField({ name: 'hideOutline', defaultValue: 'false', note: 'Drops the field’s border and focus border while keeping its surface, padding, and text metrics.', ...eyeFlag(pg.hideOutline) }),
     textField({ name: 'id', type: 'string?', defaultValue: '—', note: 'Native textarea id.', clearable: true, ...eye(pg.id) }),
@@ -96,6 +110,7 @@
     { name: 'rows', type: 'number?', defaultValue: '3', editorDefaultValue: '3', note: 'Visible text rows.', editor: 'number', clearable: true, ...eye(pg.rows), onChange: value => stage(pg.rows, value), placeholder: '3', toggle: eyeToggle(pg.rows), sync: { kind: 'number', pattern: /^\d+$/ } },
     sizeField({ note: 'Control scale; numbers are icon-scale pixels interpolated between the steps.', ...eye(pg.size) }),
     { name: 'value', type: 'string', defaultValue: '—', note: 'Bindable field value; the eye resets it to empty.', editor: 'text', clearable: true, ...eye(pg.value), onChange: value => stage(pg.value, value), toggle: eyeResetToggle(pg.value, () => (pg.value.value = '')), sync: { kind: 'script' } },
+    enumField({ name: 'variant', type: "'bordered' | 'embedded'", defaultValue: "'bordered'", note: 'Chrome variant; embedded drops the border, the background, and the focus ring for a field rendered inside another surface.', options: variantOptions, placeholder: 'bordered', clearLabel: 'Clear variant', ...eye(pg.variant) }),
     { name: 'onblur', type: '(event: FocusEvent) => void', defaultValue: '—', note: 'Blur callback.' },
     { name: 'onfocus', type: '(event: FocusEvent) => void', defaultValue: '—', note: 'Focus callback.' },
     { name: 'oninput', type: '(event: Event) => void', defaultValue: '—', note: 'Input callback.' },
@@ -125,7 +140,9 @@
         {readonly}
         hideOutline={hideOutline}
         id={applied(pg.id) || undefined}
-        inputClass={applied(pg.inputClass) || undefined} />
+        inputClass={applied(pg.inputClass) || undefined}
+        variant={demoVariant}
+        className={demoClassName} />
       <span class="text-sm text-slate-400">value: {pg.value.value || '—'}</span>
     </div>
   </ShowcasePage>

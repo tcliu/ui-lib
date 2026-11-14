@@ -4,7 +4,7 @@
   import ShowcasePage from '#showcase/shell/ShowcasePage.svelte'
   import ShowcaseStage from '#showcase/shell/ShowcaseStage.svelte'
   import { parseSizeValue } from '#showcase/playground/size-input.js'
-  import { textField, boolField, sizeField, jsonField, snippetDialog } from '#showcase/playground/snippet-field.js'
+  import { enumField, textField, boolField, sizeField, jsonField, snippetDialog } from '#showcase/playground/snippet-field.js'
   import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
   import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
   import {
@@ -43,6 +43,7 @@
     loading: staged('no' as TriState),
     fillHeight: staged('no' as TriState),
     bodyScroll: staged('no' as TriState),
+    bordered: staged('yes' as TriState),
     placeholder: staged('Search...'),
     emptyMessage: staged('No rows'),
     pageSizeText: '',
@@ -61,6 +62,7 @@
     tableClassName: staged('min-w-0'),
     storageKey: staged(''),
     storagePrefix: staged(''),
+    variant: staged('data'),
     size: staged('md'),
     // Bound demo state: the eye resets these to their defaults, and the
     // binding stays, so they start applied.
@@ -93,10 +95,12 @@
   const loading = $derived(appliedFlag(pg.loading))
   const fillHeight = $derived(appliedFlag(pg.fillHeight))
   const bodyScroll = $derived(appliedFlag(pg.bodyScroll))
+  const bordered = $derived(appliedFlag(pg.bordered))
   const demoSize = $derived.by(() => {
     const value = applied(pg.size)
     return value === undefined ? undefined : parseSizeValue(value)
   })
+  const demoVariant = $derived((applied(pg.variant) || undefined) as 'data' | 'docs' | undefined)
   const stagePaneClass = $derived(
     pg.fillHeight.on && pg.fillHeight.value === 'yes' ? TABLE_STAGE_PANE_FILL : TABLE_STAGE_PANE,
   )
@@ -246,6 +250,7 @@
       loading: pg.loading,
       fillHeight: pg.fillHeight,
       bodyScroll: pg.bodyScroll,
+      bordered: pg.bordered,
       placeholder: pg.placeholder,
       emptyMessage: pg.emptyMessage,
       trailing: TRAILING_SUFFIX,
@@ -260,6 +265,7 @@
       tableClassName: pg.tableClassName,
       storageKey: pg.storageKey,
       storagePrefix: pg.storagePrefix,
+      variant: pg.variant,
       resetWidthsSignal: pg.resetWidthsText,
       size: pg.size,
     }),
@@ -277,6 +283,7 @@
   const fields: SyncableFieldConfig[] = $derived([
     boolField({ name: 'allSelected', defaultValue: '—', note: 'Header checkbox checked state. Interaction override; unset follows the selection.', ...eyeFlag(pg.allSelected) }),
     boolField({ name: 'bodyScroll', type: 'boolean?', defaultValue: 'false', note: 'Fixed header band with a body-only scrollport (needs fillHeight).', ...eyeFlag(pg.bodyScroll), onChange: applyBodyScroll }),
+    boolField({ name: 'bordered', defaultValue: 'true', note: 'Card chrome (border, rounding, backdrop) on the viewer container.', ...eyeFlag(pg.bordered) }),
     // Eye-free by design: the entries derive from the live hidden-column set
     // (interaction state outside the curated form), so there is no staged
     // eye to apply — the dialog edits the checked set directly.
@@ -408,6 +415,7 @@
     textField({ name: 'storageKey', type: 'string?', defaultValue: '—', note: 'Persists resized widths under this key.', clearable: true, ...eye(pg.storageKey) }),
     textField({ name: 'storagePrefix', type: 'string?', defaultValue: '—', note: 'App-owned localStorage prefix for the persisted widths; the package prefix stays the read fallback.', clearable: true, ...eye(pg.storagePrefix) }),
     textField({ name: 'tableClassName', type: 'string?', defaultValue: "'min-w-0'", note: 'Extra classes for the table element; raise the minimum width when columns need a horizontal scroll floor.', editorDefaultValue: 'min-w-0', clearable: true, placeholder: 'min-w-0', ...eye(pg.tableClassName) }),
+    enumField({ name: 'variant', type: "'data' | 'docs'", defaultValue: "'data'", note: 'Presentation: the paged viewer, or the static docs table with a plain wrapper, non-sticky header, and no row hover.', options: ['data', 'docs'].map(value => ({ value, label: value })), placeholder: 'data', clearLabel: 'Clear variant', ...eye(pg.variant) }),
     {
       name: 'columns',
       type: 'DataTableColumn<T>[]',
@@ -417,12 +425,6 @@
     { name: 'pagination', type: 'DataTablePagination?', defaultValue: '—', note: 'Footer config: total/pageSize/currentPage plus onPageChange gate the footer; onPageSizeChange adds the page-size selector; pageSizeOptions customizes its choices; labels overrides the aria labels; trailing is a snippet pinned to the row’s right edge.' },
     { name: 'rowId', type: '(row: T) => string', defaultValue: '—', note: 'Stable key per row.' },
     { name: 'selectedIds', type: 'Set<string>?', defaultValue: '—', note: 'Selected row ids; managed by the caller.' },
-    {
-      name: 'variant',
-      type: "'data' | 'docs'",
-      defaultValue: "'data'",
-      note: 'Docs presentation: plain overflow wrapper, non-sticky header, no row hover.',
-    },
     {
       name: 'onResetColumns',
       type: '() => void',
@@ -447,12 +449,25 @@
       defaultValue: '—',
       note: 'Sort handler; or bind sortKey/sortDirection.',
     },
+    { name: 'onToggleAll', type: '() => void', defaultValue: '—', note: 'Select-all handler for the header checkbox.' },
     { name: 'onToggleColumn', type: '(key, checked) => void', defaultValue: '—', note: 'Column visibility handler.' },
+    {
+      name: 'onToggleSelection',
+      type: '(id: string, checked: boolean) => void',
+      defaultValue: '—',
+      note: 'Row-selection handler; pair with selectedIds.',
+    },
     {
       name: 'resizeAriaLabel',
       type: '(column) => string',
       defaultValue: '—',
       note: 'Accessible name for the resize handles.',
+    },
+    {
+      name: 'rowSelectAriaLabel',
+      type: '(row: T) => string',
+      defaultValue: '—',
+      note: 'Accessible name for each selectable row checkbox.',
     },
     {
       name: 'sortAriaLabel',
@@ -556,12 +571,14 @@
         {dense}
         {fillHeight}
         {bodyScroll}
+        bordered={bordered}
         {resizable}
         resizeAriaLabel={column => `Resize ${column.header}`}
         containerClassName={applied(pg.containerClassName) || undefined}
         tableClassName={applied(pg.tableClassName) || undefined}
         storageKey={applied(pg.storageKey) || undefined}
         storagePrefix={applied(pg.storagePrefix) || undefined}
+        variant={demoVariant}
         size={demoSize}
         resetWidthsSignal={demoResetWidths}
         {loading} />

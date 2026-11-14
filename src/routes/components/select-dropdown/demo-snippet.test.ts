@@ -11,8 +11,10 @@ function state(overrides: Partial<SelectDropdownSnippetState> = {}): SelectDropd
     defaultValue: staged('', true),
     size: staged('', true),
     ratios: staged({}),
+    variant: staged(''),
     filterable: staged('', true),
     allowCustomValue: staged('', true),
+    hideOutline: staged('', true),
     buttonClass: staged('', true),
     controlClass: staged('', true),
     optionClass: staged('', true),
@@ -35,7 +37,9 @@ describe('buildSelectDropdownSnippet', () => {
     expect(source).toContain('ariaLabel="default"')
     expect(source).not.toMatch(/^\s*size=/m)
     expect(source).not.toMatch(/^\s*ratios=/m)
+    expect(source).not.toContain('variant=')
     expect(source).not.toContain('filterable')
+    expect(source).not.toContain('hideOutline')
     expect(source).not.toContain('controlClass=')
     expect(source).not.toContain('clearable')
     expect(source).not.toContain('align=')
@@ -52,8 +56,10 @@ describe('buildSelectDropdownSnippet', () => {
     const source = buildSelectDropdownSnippet(
       state({
         size: staged('lg', true),
+        variant: staged('embedded', true),
         filterable: staged('yes', true),
         allowCustomValue: staged('yes', true),
+        hideOutline: staged('yes', true),
         buttonClass: staged('w-40', true),
         controlClass: staged('w-40', true),
         optionClass: staged('italic', true),
@@ -66,8 +72,10 @@ describe('buildSelectDropdownSnippet', () => {
       }),
     )
     expect(source).toContain('size="lg"')
+    expect(source).toContain('variant="embedded"')
     expect(source).toContain('  filterable\n')
     expect(source).toContain('  allowCustomValue\n')
+    expect(source).toContain('  hideOutline\n')
     expect(source).toContain('buttonClass="w-40"')
     expect(source).toContain('controlClass="w-40"')
     expect(source).toContain('optionClass="italic"')
@@ -83,16 +91,20 @@ describe('buildSelectDropdownSnippet', () => {
     const source = buildSelectDropdownSnippet(
       state({
         size: staged('md', true),
+        variant: staged('bordered', true),
         filterable: staged('no', true),
         allowCustomValue: staged('no', true),
+        hideOutline: staged('no', true),
         clearable: staged('no', true),
         align: staged('left', true),
         autoPlace: staged('yes', true),
       }),
     )
     expect(source).not.toMatch(/^\s*size=/m)
+    expect(source).not.toContain('variant=')
     expect(source).not.toContain('filterable')
     expect(source).not.toContain('allowCustomValue')
+    expect(source).not.toContain('hideOutline')
     expect(source).not.toContain('clearable')
     expect(source).not.toContain('align=')
     expect(source).not.toContain('autoPlace')
@@ -101,6 +113,20 @@ describe('buildSelectDropdownSnippet', () => {
   it('emits a numeric size as an expression and omits invalid sizes', () => {
     expect(buildSelectDropdownSnippet(state({ size: staged('14', true) }))).toContain('size={14}')
     expect(buildSelectDropdownSnippet(state({ size: staged('huge', true) }))).not.toMatch(/^\s*size=/m)
+  })
+
+  it('emits a non-default variant and omits the bordered default', () => {
+    expect(buildSelectDropdownSnippet(state({ variant: staged('embedded', true) }))).toContain(
+      '  variant="embedded"',
+    )
+    expect(buildSelectDropdownSnippet(state({ variant: staged('bordered', true) }))).not.toContain('variant=')
+    expect(buildSelectDropdownSnippet(state({ variant: staged('embedded') }))).not.toContain('variant=')
+  })
+
+  it('emits hideOutline while applied and omits it unset, off, or at the default', () => {
+    expect(buildSelectDropdownSnippet(state({ hideOutline: staged('yes', true) }))).toContain('  hideOutline\n')
+    expect(buildSelectDropdownSnippet(state({ hideOutline: staged('no', true) }))).not.toContain('hideOutline')
+    expect(buildSelectDropdownSnippet(state({ hideOutline: staged('yes') }))).not.toContain('hideOutline')
   })
 
   it('omits staged dropdown props while their eyes are off', () => {
@@ -133,10 +159,11 @@ describe('buildSelectDropdownSnippet', () => {
 
   it('omits staged flags while their eyes are off', () => {
     const off = buildSelectDropdownSnippet(
-      state({ filterable: staged('yes'), allowCustomValue: staged('yes'), clearable: staged('yes'), autoPlace: staged('no') }),
+      state({ filterable: staged('yes'), allowCustomValue: staged('yes'), hideOutline: staged('yes'), clearable: staged('yes'), autoPlace: staged('no') }),
     )
     expect(off).not.toContain('filterable')
     expect(off).not.toContain('allowCustomValue')
+    expect(off).not.toContain('hideOutline')
     expect(off).not.toContain('clearable')
     expect(off).not.toContain('autoPlace')
   })

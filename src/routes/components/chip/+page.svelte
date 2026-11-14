@@ -1,13 +1,14 @@
 <script lang="ts">
   import Chip from '#lib/components/Chip.svelte'
+  import { CHIP_APPEARANCES, CHIP_COLORS, type ChipAppearance, type ChipColor } from '#lib/chip-variants.js'
   import { getI18nContext } from '#lib/i18n/store.svelte.js'
   import ShowcasePage from '#showcase/shell/ShowcasePage.svelte'
   import { parseSizeValue } from '#showcase/playground/size-input.js'
   import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
-  import { textField, boolField, sizeField } from '#showcase/playground/snippet-field.js'
+  import { enumField, textField, boolField, sizeField } from '#showcase/playground/snippet-field.js'
   import { applied, appliedFlag, eye, eyeFlag, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
   import { type TriState } from '#showcase/playground/snippet-build.js'
-  import { DEFAULT_CHIP_CLASS, buildChipSnippet } from './demo-snippet'
+  import { buildChipSnippet } from './demo-snippet'
 
   const i18n = getI18nContext()
 
@@ -19,8 +20,11 @@
   const INITIAL = {
     label: staged('Default', true),
     chipClass: staged(''),
+    variant: staged('cyan'),
+    appearance: staged('soft'),
     size: staged('md'),
     removable: staged('no' as TriState),
+    active: staged('no' as TriState),
     removed: false,
     ariaLabel: staged(''),
     disabled: staged('no' as TriState),
@@ -32,7 +36,9 @@
   let pg = $state(structuredClone(INITIAL))
 
   const demoLabel = $derived(applied(pg.label) || i18n.t('showcase.default'))
-  const demoChipClass = $derived(applied(pg.chipClass) || DEFAULT_CHIP_CLASS)
+  const demoChipClass = $derived(applied(pg.chipClass) || undefined)
+  const demoVariant = $derived((applied(pg.variant) || undefined) as ChipColor | undefined)
+  const demoAppearance = $derived((applied(pg.appearance) || undefined) as ChipAppearance | undefined)
   const demoSize = $derived.by(() => {
     const value = applied(pg.size)
     return value === undefined ? undefined : parseSizeValue(value)
@@ -41,6 +47,10 @@
   // The removable mode is a prop, so the Value cell drives it; turning it on
   // restores a chip the demo already removed.
   const removable = $derived(appliedFlag(pg.removable) === true)
+  // The active row implies toggle mode: passing `onclick` renders the pill as
+  // a pressable button, and this row carries its pressed state.
+  const toggleMode = $derived(pg.active.on)
+  const chipActive = $derived(pg.active.value === 'yes')
   const demoAriaLabel = $derived(applied(pg.ariaLabel) || undefined)
   const demoRemoveButtonClass = $derived(applied(pg.removeButtonClass) || undefined)
   const demoRemoveButtonStyle = $derived(applied(pg.removeButtonStyle) || undefined)
@@ -51,12 +61,18 @@
     pg = structuredClone(INITIAL)
   }
 
+  const colorOptions = CHIP_COLORS.map(value => ({ value, label: value }))
+  const appearanceOptions = CHIP_APPEARANCES.map(value => ({ value, label: value }))
+
   const code = $derived.by(() =>
     buildChipSnippet({
       label: pg.label,
       chipClass: pg.chipClass,
+      variant: pg.variant,
+      appearance: pg.appearance,
       size: pg.size,
       removable: pg.removable,
+      active: pg.active,
       removeLabel: pg.ariaLabel,
       disabled: pg.disabled,
       removeButtonClass: pg.removeButtonClass,
@@ -67,10 +83,12 @@
   )
 
   
-  // `chipClass` is always emitted (falling back to the default), so the
-  // default literal maps back to unset.
+  // Editable rows first (primitives, data, and snippets, A–Z), then the
+  // function props (A–Z).
   const fields: SyncableFieldConfig[] = $derived([
-    { name: 'chipClass', type: 'string', defaultValue: '—', note: 'Color and shape classes.', editor: 'text', clearable: true, ...eye(pg.chipClass), onChange: value => stage(pg.chipClass, value), toggle: eyeToggle(pg.chipClass), sync: { kind: 'text', unsetValues: [DEFAULT_CHIP_CLASS] } },
+    boolField({ name: 'active', defaultValue: 'false', note: 'Pressed state in toggle mode; applying it renders the pill as a pressable button (the removable row is then ignored).', ...eyeFlag(pg.active) }),
+    enumField({ name: 'appearance', type: "'soft' | 'solid' | 'outline'", defaultValue: "'soft'", note: 'Named pill presentation: soft tints the fill, solid fills it, outline keeps it transparent. A caller `chipClass` wins.', options: appearanceOptions, placeholder: 'soft', clearLabel: 'Clear appearance', ...eye(pg.appearance) }),
+    textField({ name: 'chipClass', type: 'string?', defaultValue: '—', note: 'Full pill class override; wins over the named variant and appearance.', clearable: true, ...eye(pg.chipClass) }),
     boolField({ name: 'disabled', defaultValue: 'false', note: 'Disables the remove button. Applies in removable mode.', ...eyeFlag(pg.disabled) }),
     { name: 'label', type: 'string', defaultValue: '—', note: 'Pill text.', editor: 'text', clearable: true, ...eye(pg.label), onChange: value => stage(pg.label, value), toggle: eyeToggle(pg.label), sync: { kind: 'scopeText', scopeRef: 'defaultLabel' } },
     textField({ name: 'removeButtonClass', type: 'string?', defaultValue: "''", note: 'Extra classes for the remove button. Applies in removable mode.', editorDefaultValue: '', clearable: true, ...eye(pg.removeButtonClass) }),
@@ -80,7 +98,9 @@
     sizeField({ note: 'Control scale; numbers are icon-scale pixels. Chip owns its size-scaled padding, font, and line.', ...eye(pg.size) }),
     textField({ name: 'style', type: 'string?', defaultValue: "''", note: 'Inline style for the pill.', editorDefaultValue: '', clearable: true, ...eye(pg.style) }),
     textField({ name: 'tooltip', type: 'string?', defaultValue: '—', note: 'Tooltip text for the pill.', clearable: true, ...eye(pg.tooltip) }),
+    enumField({ name: 'variant', type: "'cyan' | 'sky' | 'violet' | 'amber' | 'fuchsia' | 'emerald' | 'rose' | 'neutral'", defaultValue: "'cyan'", note: 'Named chip color; `chipClass` wins when both are set.', options: colorOptions, placeholder: 'cyan', clearLabel: 'Clear variant', ...eye(pg.variant) }),
     { name: 'onRemove', type: '() => void', defaultValue: '—', note: 'Handler for the remove affordance; the cross renders when the chip is removable.' },
+    { name: 'onclick', type: '() => void', defaultValue: '—', note: 'Toggle handler; passing it renders the pill as a pressable button (the active row’s mode).' },
   ])
 
   // With an unset label the demo reads the localized default from scope, which
@@ -99,10 +119,23 @@
     scopeRefresh={() => [demoLabel]}
     scopeRefreshWhen={() => pg.label.value === ''}
   >
-    {#if removable}
+    {#if toggleMode}
+      <Chip
+        label={demoLabel}
+        variant={demoVariant}
+        appearance={demoAppearance}
+        chipClass={demoChipClass}
+        size={demoSize}
+        active={chipActive}
+        onclick={() => stage(pg.active, chipActive ? 'no' : 'yes')}
+        style={demoStyle}
+        tooltip={demoTooltip} />
+    {:else if removable}
       {#if !pg.removed}
         <Chip
           label={demoLabel}
+          variant={demoVariant}
+          appearance={demoAppearance}
           chipClass={demoChipClass}
           size={demoSize}
           removable
@@ -115,6 +148,6 @@
           onRemove={() => (pg.removed = true)} />
       {/if}
     {:else}
-      <Chip label={demoLabel} chipClass={demoChipClass} size={demoSize} style={demoStyle} tooltip={demoTooltip} />
+      <Chip label={demoLabel} variant={demoVariant} appearance={demoAppearance} chipClass={demoChipClass} size={demoSize} style={demoStyle} tooltip={demoTooltip} />
     {/if}
   </ShowcasePage>

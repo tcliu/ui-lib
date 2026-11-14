@@ -27,6 +27,7 @@ function state(overrides: Partial<ButtonSnippetState> = {}): ButtonSnippetState 
     tooltipAlign: staged('', true),
     buttonType: staged('', true),
     focusRing: staged('', true),
+    form: staged(''),
     preventFocusSteal: staged('', true),
     ...overrides,
   }
@@ -88,6 +89,11 @@ describe('buildButtonSnippet', () => {
   it('emits the boolean form of the popup kind as an expression', () => {
     expect(buildButtonSnippet(state({ ariaHaspopup: staged('true', true) }))).toContain('ariaHaspopup={true}')
     expect(buildButtonSnippet(state({ ariaHaspopup: staged('false', true) }))).toContain('ariaHaspopup={false}')
+  })
+
+  it('emits the form id only while its eye is on', () => {
+    expect(buildButtonSnippet(state({ form: staged('checkout', true) }))).toContain('form="checkout"')
+    expect(buildButtonSnippet(state({ form: staged('checkout') }))).not.toContain('form=')
   })
 
   it('omits staged dropdown props while their eyes are off', () => {

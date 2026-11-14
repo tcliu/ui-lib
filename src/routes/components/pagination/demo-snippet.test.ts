@@ -8,6 +8,7 @@ const base = {
   pageSizeOptions: staged([...DEFAULT_PAGE_SIZE_OPTIONS]),
   className: staged('', true),
   trailing: staged(''),
+  variant: staged(''),
 }
 
 describe('buildPaginationSnippet', () => {
@@ -55,6 +56,14 @@ describe('buildPaginationSnippet', () => {
   it('escapes quotes in a label value', () => {
     const source = buildPaginationSnippet({ ...base, labels: staged({ previous: 'Go "back"' }, true) })
     expect(source).toContain('labels={{ previous: "Go &quot;back&quot;" }}')
+  })
+
+  it('emits a non-default variant and omits the numbered default', () => {
+    expect(buildPaginationSnippet({ ...base, variant: staged('compact', true) })).toContain(
+      '  variant="compact"',
+    )
+    expect(buildPaginationSnippet({ ...base, variant: staged('numbered', true) })).not.toContain('variant=')
+    expect(buildPaginationSnippet({ ...base, variant: staged('compact') })).not.toContain('variant=')
   })
 
   it('validates labels drafts as known-field string objects', () => {

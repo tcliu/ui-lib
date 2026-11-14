@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import { staged } from '#showcase/playground/staged.js'
-import { DEFAULT_CHIP_CLASS, buildChipSnippet, type ChipSnippetState } from './demo-snippet'
+import { buildChipSnippet, type ChipSnippetState } from './demo-snippet'
 
 function state(overrides: Partial<ChipSnippetState> = {}): ChipSnippetState {
   return {
     removable: staged('', true),
+    active: staged(''),
     label: staged('', true),
     chipClass: staged('', true),
+    variant: staged('cyan'),
+    appearance: staged('soft'),
     size: staged(''),
     removeLabel: staged(''),
     disabled: staged('', true),
@@ -19,10 +22,29 @@ function state(overrides: Partial<ChipSnippetState> = {}): ChipSnippetState {
 }
 
 describe('buildChipSnippet', () => {
-  it('renders a static chip with the default class while unset', () => {
+  it('renders a toggle chip with a script-local pressed state while active', () => {
+    const offChip = buildChipSnippet(state({ active: staged('no', true) }))
+    expect(offChip).toContain('let active = $state(false)')
+    expect(offChip).toContain('  active={active}')
+    expect(offChip).toContain('onclick={() => (active = !active)}')
+    expect(offChip).not.toContain('removable')
+    const onChip = buildChipSnippet(state({ active: staged('yes', true) }))
+    expect(onChip).toContain('let active = $state(true)')
+  })
+
+  it('prefers the toggle branch over the removable one', () => {
+    const source = buildChipSnippet(state({ active: staged('yes', true), removable: staged('yes', true) }))
+    expect(source).toContain('onclick={() => (active = !active)}')
+    expect(source).not.toContain('{#if !removed}')
+    expect(source).not.toContain('onRemove=')
+  })
+
+  it('renders a static chip with the named look defaults while unset', () => {
     const source = buildChipSnippet(state())
     expect(source).toContain('label={defaultLabel}')
-    expect(source).toContain(`chipClass="${DEFAULT_CHIP_CLASS}"`)
+    expect(source).not.toContain('chipClass=')
+    expect(source).not.toContain('variant=')
+    expect(source).not.toContain('appearance=')
     expect(source).not.toContain('onRemove=')
     expect(source).not.toContain('onClick=')
     expect(source).not.toContain('removable')
@@ -31,6 +53,34 @@ describe('buildChipSnippet', () => {
     expect(source).not.toContain('style=')
     expect(source).not.toContain('tooltip=')
     expect(source).not.toContain('size=')
+  })
+
+  it('omits the default variant and appearance while their eyes are on', () => {
+    const source = buildChipSnippet(state({ variant: staged('cyan', true), appearance: staged('soft', true) }))
+    expect(source).not.toContain('variant=')
+    expect(source).not.toContain('appearance=')
+  })
+
+  it('emits a non-default variant and appearance in both branches', () => {
+    const staticChip = buildChipSnippet(state({ variant: staged('rose', true), appearance: staged('solid', true) }))
+    expect(staticChip).toContain('  variant="rose"')
+    expect(staticChip).toContain('  appearance="solid"')
+    const removableChip = buildChipSnippet(state({ removable: staged('yes', true), variant: staged('amber', true), appearance: staged('outline', true) }))
+    expect(removableChip).toContain('    variant="amber"')
+    expect(removableChip).toContain('    appearance="outline"')
+  })
+
+  it('omits a non-default variant and appearance while their eyes are off', () => {
+    const source = buildChipSnippet(state({ variant: staged('rose'), appearance: staged('solid') }))
+    expect(source).not.toContain('variant=')
+    expect(source).not.toContain('appearance=')
+  })
+
+  it('emits a caller chipClass only while set, beside the named look', () => {
+    const source = buildChipSnippet(state({ chipClass: staged('text-cyan-200', true), variant: staged('rose', true) }))
+    expect(source).toContain('  chipClass="text-cyan-200"')
+    expect(source).toContain('  variant="rose"')
+    expect(buildChipSnippet(state({ chipClass: staged('text-cyan-200') }))).not.toContain('chipClass=')
   })
 
   it('wraps the removable chip in a removed guard', () => {
@@ -82,12 +132,13 @@ describe('buildChipSnippet', () => {
     expect(applied).toContain('tooltip="Pill tip"')
   })
 
-  it('falls back to the scope label and default class and omits the flag while their eyes are off', () => {
-    const off = buildChipSnippet(state({ removable: staged('yes', true), label: staged('Draft'), chipClass: staged('text-cyan-200'), disabled: staged('yes') }))
+  it('falls back to the scope label and omits the look and flag while their eyes are off', () => {
+    const off = buildChipSnippet(state({ removable: staged('yes', true), label: staged('Draft'), chipClass: staged('text-cyan-200'), variant: staged('rose'), appearance: staged('solid'), disabled: staged('yes') }))
     expect(off).not.toContain('label="Draft"')
     expect(off).toContain('label={defaultLabel}')
     expect(off).not.toContain('chipClass="text-cyan-200"')
-    expect(off).toContain(`chipClass="${DEFAULT_CHIP_CLASS}"`)
+    expect(off).not.toContain('variant=')
+    expect(off).not.toContain('appearance=')
     expect(off).not.toContain('disabled')
   })
 })

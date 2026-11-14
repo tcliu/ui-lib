@@ -2,7 +2,7 @@
 // the playground form state: the section regenerates the editor text from
 // this, so the editor always shows the markup behind the demo above.
 
-import { enumAttrLine, escapeAttr, escapeRawLine, textAttrLine } from '#showcase/playground/snippet-build.js'
+import { boolAttrLine, enumAttrLine, escapeAttr, escapeRawLine, textAttrLine, type TriState } from '#showcase/playground/snippet-build.js'
 import type { Staged } from '#showcase/playground/staged.js'
 
 export interface BaseDialogSnippetState {
@@ -16,6 +16,8 @@ export interface BaseDialogSnippetState {
   // Raw header markup committed from the row's code dialog; empty renders the
   // title fallback below.
   header: Staged<string>
+  ariaLabel: Staged<string>
+  dismissDisabled: Staged<TriState>
 }
 
 export const STYLED_PANEL = 'border-cyan-500/40'
@@ -158,6 +160,8 @@ export function buildBaseDialogSnippet({
   title,
   closeLabel,
   header,
+  ariaLabel,
+  dismissDisabled,
 }: BaseDialogSnippetState): string {
   // The eye toggle off means no children are applied. Otherwise custom
   // children render from their parsed segments (buttons gain the dismiss
@@ -192,10 +196,12 @@ export function buildBaseDialogSnippet({
     '  <BaseDialog',
     ...(title.on && title.value ? [`    title="${escapeAttr(title.value)}"`] : ['    title={dialogTitle}']),
     ...textAttrLine('closeLabel', closeLabel, '    '),
+    ...textAttrLine('ariaLabel', ariaLabel, '    '),
     ...textAttrLine('className', className, '    '),
     ...enumAttrLine('widthVariant', widthVariant, 'md', '    '),
     ...enumAttrLine('heightVariant', heightVariant, 'auto', '    '),
     ...textAttrLine('size', size, '    '),
+    ...boolAttrLine('dismissDisabled', dismissDisabled, 'no', '    '),
     ...childLines,
     '{/if}',
   ]

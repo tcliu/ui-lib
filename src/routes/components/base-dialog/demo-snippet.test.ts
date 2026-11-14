@@ -27,11 +27,26 @@ function state(overrides: Partial<BaseDialogSnippetState> = {}): BaseDialogSnipp
     title: staged('', true),
     closeLabel: staged('', true),
     header: staged('', false),
+    ariaLabel: staged(''),
+    dismissDisabled: staged('', true),
     ...overrides,
   }
 }
 
 describe('buildBaseDialogSnippet', () => {
+  it('emits ariaLabel and dismissDisabled when staged on', () => {
+    const on = buildBaseDialogSnippet(
+      state({ ariaLabel: staged('Dialog', true), dismissDisabled: staged('yes', true) }),
+    )
+    expect(on).toContain('ariaLabel="Dialog"')
+    expect(on).toContain('dismissDisabled')
+    const off = buildBaseDialogSnippet(
+      state({ ariaLabel: staged('Dialog'), dismissDisabled: staged('yes') }),
+    )
+    expect(off).not.toContain('ariaLabel=')
+    expect(off).not.toContain('dismissDisabled')
+  })
+
   it('renders the titled dialog with the given children while set', () => {
     const source = buildBaseDialogSnippet(state())
     expect(source).toContain('title={dialogTitle}')

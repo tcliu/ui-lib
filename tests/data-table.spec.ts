@@ -303,3 +303,21 @@ test('showcase: a DataTable column resize handle widens its column', async ({ pa
   expect(settled).toBeGreaterThanOrEqual(startWidth + 30)
 })
 
+
+test('showcase: the DataTable variant Value cell switches to the docs layout', async ({ page }) => {
+  await page.goto('/components/data-table')
+  await page.waitForLoadState('networkidle')
+  const demo = showcaseDemo(page)
+  const header = demo.locator('thead th').first()
+
+  // Data viewer: a sticky header and separated borders.
+  await expect(header).toHaveCSS('position', 'sticky')
+  await expect(demo.locator('table')).toHaveCSS('border-collapse', 'separate')
+
+  await page.getByRole('combobox', { name: 'variant value', exact: true }).click()
+  await page.getByRole('option', { name: 'docs' }).click()
+
+  // Docs table: no sticky band, collapsed borders, no row hover.
+  await expect(header).toHaveCSS('position', 'static')
+  await expect(demo.locator('table')).toHaveCSS('border-collapse', 'collapse')
+})

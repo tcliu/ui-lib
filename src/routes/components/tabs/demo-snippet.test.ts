@@ -9,6 +9,7 @@ function state(overrides: Partial<TabsSnippetState> = {}): TabsSnippetState {
     ariaLabel: staged('', true),
     pathname: staged(''),
     size: staged(''),
+    variant: staged(''),
     ...overrides,
   }
 }
@@ -80,6 +81,12 @@ describe('buildTabsSnippet', () => {
     expect(buildTabsSnippet(state({ size: staged('18', true) }))).toContain('  size={18}')
     expect(buildTabsSnippet(state({ size: staged('md', true) }))).not.toContain('size=')
     expect(buildTabsSnippet(state({ size: staged('lg') }))).not.toContain('size=')
+  })
+
+  it('emits a non-default variant and omits the segmented default', () => {
+    expect(buildTabsSnippet(state({ variant: staged('underline', true) }))).toContain('  variant="underline"')
+    expect(buildTabsSnippet(state({ variant: staged('segmented', true) }))).not.toContain('variant=')
+    expect(buildTabsSnippet(state({ variant: staged('underline') }))).not.toContain('variant=')
   })
 
   it('reads the scope label while the staged ariaLabel eye is off', () => {

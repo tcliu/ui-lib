@@ -2,7 +2,7 @@
 // playground form state: the section regenerates the editor text from this, so
 // the editor always shows the markup behind the demo above.
 
-import { sizeAttrLine, textAttrLine } from '#showcase/playground/snippet-build.js'
+import { enumAttrLine, sizeAttrLine, textAttrLine } from '#showcase/playground/snippet-build.js'
 import type { Staged } from '#showcase/playground/staged.js'
 
 export interface TabsSnippetState {
@@ -11,11 +11,12 @@ export interface TabsSnippetState {
   ariaLabel: Staged<string>
   pathname: Staged<string>
   size: Staged<string>
+  variant: Staged<string>
 }
 
 export const STYLED_HEADER = 'flex w-full items-center gap-2 rounded-lg border border-cyan-500/40 p-2'
 
-export function buildTabsSnippet({ routeMode, className, ariaLabel, pathname, size }: TabsSnippetState): string {
+export function buildTabsSnippet({ routeMode, className, ariaLabel, pathname, size, variant }: TabsSnippetState): string {
   const overviewPath = routeMode ? '#overview' : 'overview'
   const detailsPath = routeMode ? '#details' : 'details'
   const pathnameAttr = textAttrLine('pathname', pathname)
@@ -37,6 +38,8 @@ export function buildTabsSnippet({ routeMode, className, ariaLabel, pathname, si
     // A literal pathname wins; unset, route mode reads the path from scope.
     ...(pathnameAttr.length ? pathnameAttr : routeMode ? ['  pathname={routePath}'] : []),
     ...textAttrLine('className', className),
+    // The variant row prefills its `segmented` default; the builder omits it.
+    ...enumAttrLine('variant', variant, 'segmented'),
     // The size row prefills its `md` default; the builder omits it.
     ...sizeAttrLine(size),
     // A custom label renders as a literal; unset, the nav reads the scope label.

@@ -11,7 +11,7 @@
 
 import { DEFAULT_DATE_FORMAT } from '#lib/components/date-input-core.js'
 import { DATE_STAGE_CONTENT } from '#showcase/shell/date-stage.js'
-import { boolAttrLine, escapeAttr, type TriState } from '#showcase/playground/snippet-build.js'
+import { boolAttrLine, enumAttrLine, escapeAttr, type TriState } from '#showcase/playground/snippet-build.js'
 import { sizeAttributeFragment } from '#showcase/playground/size-input.js'
 import type { Staged } from '#showcase/playground/staged.js'
 import { ratiosAttributeFragment } from '#showcase/playground/text-input-ratios.js'
@@ -27,6 +27,8 @@ export interface DateInputSnippetState {
   placeholder: Staged<string>
   closeOnSelect: Staged<TriState>
   highlightRange: Staged<TriState>
+  variant: Staged<string>
+  hideOutline: Staged<TriState>
   size: Staged<string>
   ratios: Staged<PickerRatioOverrides>
 }
@@ -41,6 +43,8 @@ export function buildDateInputSnippet({
   placeholder,
   closeOnSelect,
   highlightRange,
+  variant,
+  hideOutline,
   size,
   ratios,
 }: DateInputSnippetState): string {
@@ -54,7 +58,9 @@ export function buildDateInputSnippet({
     ...(isRange ? ['range'] : boolAttrLine('range', range, '', '')),
     ...boolAttrLine('time', time, '', ''),
     ...boolAttrLine('closeOnSelect', closeOnSelect, '', ''),
+    ...boolAttrLine('hideOutline', hideOutline, 'no', ''),
     ...boolAttrLine('highlightRange', highlightRange, '', ''),
+    ...enumAttrLine('variant', variant, 'bordered', ''),
   ].map(line => `${indent}${line}`)
   const body = isRange
     ? [

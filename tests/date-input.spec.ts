@@ -230,6 +230,33 @@ test('showcase: the DateInput size Value cell scales the picker', async ({ page 
   await expect(demo.locator('[style*="--pick-font"]').first()).toHaveAttribute('style', /--pick-font:\s*15\.75px/)
 })
 
+test('showcase: the DateInput variant and hideOutline Value cells drive each field chrome', async ({ page }) => {
+  await page.goto('/components/date-input')
+  await page.waitForLoadState('networkidle')
+
+  const demo = showcaseDemo(page)
+  const field = demo.getByRole('textbox')
+  // Bordered is the default: the shared surface and outline.
+  await expect(field).toHaveClass(/bg-slate-950/)
+  await expect(field).toHaveClass(/border-slate-700/)
+
+  // hideOutline keeps the surface and drops only the border.
+  await page.getByRole('checkbox', { name: 'hideOutline value', exact: true }).check({ force: true })
+  await expect(field).toHaveClass(/bg-slate-950/)
+  await expect(field).not.toHaveClass(/border-slate-700/)
+
+  // Embedded hands the whole box to the caller, on both ends of a range too.
+  await page.getByRole('combobox', { name: 'variant value', exact: true }).click()
+  await page.getByRole('option', { name: 'embedded' }).click()
+  await expect(field).toHaveClass(/bg-transparent/)
+  await expect(field).not.toHaveClass(/bg-slate-950/)
+
+  await page.getByRole('checkbox', { name: 'range value', exact: true }).check({ force: true })
+  for (const end of await demo.getByRole('textbox').all()) {
+    await expect(end).toHaveClass(/bg-transparent/)
+  }
+})
+
 test('showcase: the DateInput format Value cell drives the field text', async ({ page }) => {
   await page.goto('/components/date-input')
   await page.waitForLoadState('networkidle')

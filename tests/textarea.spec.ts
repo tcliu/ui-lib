@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { snippetEditor } from './helpers'
+import { showcaseDemo, snippetEditor } from './helpers'
 
 test('showcase: the Textarea rows eye stages the number in Show-code', async ({ page }) => {
   await page.goto('/components/textarea')
@@ -25,4 +25,24 @@ test('showcase: the Textarea rows eye stages the number in Show-code', async ({ 
   await page.getByRole('button', { name: 'Apply rows' }).click()
   await expect(editor).toContainText('rows={5}')
   await page.getByRole('button', { name: 'Hide code' }).click()
+})
+
+test('showcase: the Textarea variant cell switches to the embedded chrome', async ({ page }) => {
+  await page.goto('/components/textarea')
+  await page.waitForLoadState('networkidle')
+
+  const demo = showcaseDemo(page)
+  const field = demo.locator('textarea')
+  await expect(field).toHaveCSS('border-top-width', '1px')
+
+  // `embedded` hands the box to the caller: no border and no surface.
+  await page.getByRole('combobox', { name: 'variant value', exact: true }).click()
+  await page.getByRole('option', { name: 'embedded' }).click()
+  await expect(field).toHaveCSS('border-top-width', '0px')
+  await expect(field).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
+
+  // `className` appends after the base chrome, so the embedded field takes the
+  // caller's own text rules.
+  await page.getByRole('textbox', { name: 'className value', exact: true }).fill('italic')
+  await expect(field).toHaveCSS('font-style', 'italic')
 })

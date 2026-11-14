@@ -11,9 +11,10 @@ export interface ToastSnippetState {
   size: Staged<string>
   action: string
   closeLabel: Staged<string>
+  variant: Staged<string>
 }
 
-export function buildToastSnippet({ message, toastType, position, size, action, closeLabel }: ToastSnippetState): string {
+export function buildToastSnippet({ message, toastType, position, size, action, closeLabel, variant }: ToastSnippetState): string {
   // Unset, each text prop falls back to the scope value the demo reads.
   const messageAttr = textAttrLine('message', message, '    ')
   const closeLabelAttr = textAttrLine('closeLabel', closeLabel, '    ')
@@ -27,6 +28,8 @@ export function buildToastSnippet({ message, toastType, position, size, action, 
     ...enumAttrLine('type', toastType, 'info', '    '),
     ...enumAttrLine('position', position, 'bottom-right', '    '),
     ...sizeAttrLine(size, '    '),
+    // The variant row prefills its `soft` default; the builder omits it.
+    ...enumAttrLine('variant', variant, 'soft', '    '),
     ...(action ? [`    action={{ label: "${escapeAttr(action)}", onClick: () => (actionTaken = actionLabel) }}`] : []),
     '    onClose={() => (open = false)} />',
     '{/if}',

@@ -55,6 +55,8 @@
     ratios: staged({} as AutoCompleteRatioOverrides),
     placeholder: staged(''),
     disabled: staged('no' as TriState),
+    variant: staged('bordered'),
+    hideOutline: staged('no' as TriState),
     clearable: staged('no' as TriState),
     clearLabel: staged('Clear'),
     clearPlacement: staged('auto'),
@@ -91,10 +93,19 @@
   const autoPlace = $derived(appliedFlag(pg.autoPlace))
   const demoAlign = $derived((applied(pg.align) || undefined) as 'left' | 'right' | undefined)
   const demoPanelClass = $derived(applied(pg.panelClass) || undefined)
+  const hideOutline = $derived(appliedFlag(pg.hideOutline))
+  const demoVariant = $derived(
+    (applied(pg.variant) || undefined) as 'bordered' | 'embedded' | undefined,
+  )
 
   const alignOptions = [
     { value: 'left', label: 'left' },
     { value: 'right', label: 'right' },
+  ]
+
+  const variantOptions = [
+    { value: 'bordered', label: 'bordered' },
+    { value: 'embedded', label: 'embedded' },
   ]
 
   function clearPlayground() {
@@ -109,6 +120,8 @@
       ratios: pg.ratios,
       placeholder: pg.placeholder,
       disabled: pg.disabled,
+      variant: pg.variant,
+      hideOutline: pg.hideOutline,
       clearable: pg.clearable,
       clearLabel: pg.clearLabel,
       clearPlacement: pg.clearPlacement,
@@ -135,6 +148,7 @@
     boolField({ name: 'clearable', defaultValue: 'false', note: 'Appends a cross button that clears the value.', ...eyeFlag(pg.clearable) }),
     textField({ name: 'defaultValue', type: 'string?', defaultValue: "''", note: 'Baseline the clear button compares against; the cross hides while the value matches it.', editorDefaultValue: '', clearable: true, ...eye(pg.defaultValue) }),
     boolField({ name: 'disabled', defaultValue: 'false', note: 'Disables the field; the panel never opens.', ...eyeFlag(pg.disabled) }),
+    boolField({ name: 'hideOutline', defaultValue: 'false', note: 'Drops the bordered field’s border and focus border while keeping its surface, padding, and text metrics.', ...eyeFlag(pg.hideOutline) }),
     jsonField({
       name: 'options',
       type: '(string | { value: string; label?: string })[]',
@@ -154,6 +168,7 @@
     componentRatiosField({ base: AUTOCOMPLETE_RATIOS, type: 'AutoCompleteRatioOverrides?', note: 'Partial override of the field and panel ratios; the panel line follows the font.', value: pg.ratios }),
     sizeField({ note: 'Field scale; numbers are icon-scale pixels interpolated between the steps.', ...eye(pg.size) }),
     { name: 'value', type: 'string', defaultValue: '—', note: 'Bindable input text; free-typed text persists; the eye resets to the default text.', editor: 'text', clearable: true, ...eye(pg.value), onChange: value => stage(pg.value, value), toggle: eyeResetToggle(pg.value, () => (pg.value.value = 'Two')), sync: { kind: 'script', attr: 'value' } },
+    enumField({ name: 'variant', type: "'bordered' | 'embedded'", defaultValue: "'bordered'", note: 'Chrome variant; embedded drops the border, the background, and the focus ring for a field rendered inside another surface.', options: variantOptions, placeholder: 'bordered', clearLabel: 'Clear variant', ...eye(pg.variant) }),
     { name: 'inputRef', type: 'HTMLInputElement | null', defaultValue: 'null', note: 'Bindable native input element.' },
     { name: 'onClear', type: '() => void', defaultValue: 'clears value', note: 'Clear handler; falls back to clearing the bound value when omitted.' },
     { name: 'onSelect', type: '(value: string) => void', defaultValue: '—', note: "Called with the chosen option's value when an option is picked." }
@@ -180,8 +195,10 @@
       ratios={demoRatios}
       placeholder={demoPlaceholder}
       disabled={disabled}
+      hideOutline={hideOutline}
       align={demoAlign}
       autoPlace={autoPlace}
+      variant={demoVariant}
       panelClass={demoPanelClass}
       clearable={clearable}
       clearLabel={demoClearLabel}

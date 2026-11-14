@@ -6,8 +6,9 @@
   import { getI18nContext } from '#lib/i18n/store.svelte.js'
   import ShowcasePage from '#showcase/shell/ShowcasePage.svelte'
   import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
-  import { enumField, textField, snippetDialog, snippetField } from '#showcase/playground/snippet-field.js'
-  import { applied, eye, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
+  import { enumField, textField, boolField, snippetDialog, snippetField } from '#showcase/playground/snippet-field.js'
+  import { applied, appliedFlag, eye, eyeFlag, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
+  import { type TriState } from '#showcase/playground/snippet-build.js'
   import { buildHeaderLine, parseHeaderMarkup } from '#showcase/playground/snippet-header.js'
   import {
     DISMISS_HANDLER,
@@ -34,6 +35,8 @@
     title: staged(''),
     closeLabel: staged(''),
     header: staged(''),
+    ariaLabel: staged(''),
+    dismissDisabled: staged('no' as TriState),
   }
   let pg = $state(structuredClone(INITIAL))
   // The children row edits the inner markup the dialog lays out (demo data,
@@ -114,6 +117,8 @@
   // scope ref); the labels stay absent so component defaults apply.
   const demoTitle = $derived(applied(pg.title) || i18n.t('showcase.dialogTitle'))
   const demoCloseLabel = $derived(applied(pg.closeLabel) || undefined)
+  const demoAriaLabel = $derived(applied(pg.ariaLabel) || undefined)
+  const demoDismissDisabled = $derived(appliedFlag(pg.dismissDisabled))
   // Canonical slot markup resolved from the title, matching the row seed
   // while unset.
   const canonicalHeader = $derived(buildHeaderLine({ text: demoTitle, inner: demoTitle }))
@@ -134,11 +139,14 @@
       title: pg.title,
       closeLabel: pg.closeLabel,
       header: { value: headerMarkup, on: pg.header.on },
+      ariaLabel: pg.ariaLabel,
+      dismissDisabled: pg.dismissDisabled,
     }),
   )
 
   
   const fields: SyncableFieldConfig[] = $derived([
+    textField({ name: 'ariaLabel', type: 'string?', defaultValue: 'locale', note: 'Accessible name used only when neither title nor header labels the dialog.', clearable: true, ...eye(pg.ariaLabel) }),
     snippetField({
       name: 'children',
       note: 'Dialog body content; committing applies it, and the dialog edits its paragraph, buttons, and their onClick handlers.',
@@ -169,6 +177,7 @@
     }),
     textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes for the dialog panel.', editorDefaultValue: '', clearable: true, ...eye(pg.className) }),
     textField({ name: 'closeLabel', type: 'string?', defaultValue: 'locale', note: 'Overrides the close accessible name.', clearable: true, ...eye(pg.closeLabel) }),
+    boolField({ name: 'dismissDisabled', defaultValue: 'false', note: 'Blocks Escape, overlay, and close-icon dismissal while keeping the footer buttons active.', ...eyeFlag(pg.dismissDisabled) }),
     snippetField({
       name: 'header',
       note: 'Copyable title heading; one Copyable line, committing applies it. The plain title keeps rendering while off.',
@@ -234,6 +243,8 @@
         widthVariant={demoWidthVariant}
         heightVariant={demoHeightVariant}
         size={demoSize}
+        ariaLabel={demoAriaLabel}
+        dismissDisabled={demoDismissDisabled}
         onCancel={() => (pg.open = false)}
         children={pg.children.on ? dialogChildren : undefined}>
       </BaseDialog>

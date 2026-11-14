@@ -40,6 +40,7 @@
     tooltipAlign: staged('center'),
     type: staged('button'),
     focusRing: staged('yes' as TriState),
+    form: staged(''),
     preventFocusSteal: staged('no' as TriState),
   }
   let pg = $state(structuredClone(INITIAL))
@@ -108,6 +109,7 @@
       tooltipAlign: pg.tooltipAlign,
       buttonType: pg.type,
       focusRing: pg.focusRing,
+      form: pg.form,
       preventFocusSteal: pg.preventFocusSteal,
     }),
   )
@@ -131,6 +133,7 @@
     textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes appended to the button.', editorDefaultValue: '', clearable: true, ...eye(pg.className) }),
     boolField({ name: 'disabled', defaultValue: 'false', note: 'Native disabled + reduced opacity.', ...eyeFlag(pg.disabled) }),
     boolField({ name: 'focusRing', defaultValue: 'true', note: 'Keyboard focus ring; disable only when focus stays visible another way.', ...eyeFlag(pg.focusRing) }),
+    textField({ name: 'form', type: 'string?', defaultValue: '—', note: 'Id of the form the button submits, for a button rendered outside it.', clearable: true, ...eye(pg.form) }),
     snippetField({
       name: 'icon',
       note: 'Leading icon; icon-only when no children. Button sizes it from its own size, so the glyph stays bare.',
@@ -197,6 +200,7 @@
       tooltipAlign={demoTooltipAlign}
       type={demoType}
       focusRing={demoFocusRing}
+      form={applied(pg.form) || undefined}
       preventFocusSteal={demoPreventFocusSteal}
       onClick={() => (pg.clicks += 1)}
       children={pg.label.on ? demoChildren : undefined} />

@@ -21,8 +21,10 @@ export interface SelectDropdownSnippetState {
   defaultValue: Staged<string>
   size: Staged<string>
   ratios: Staged<SelectRatioOverrides>
+  variant: Staged<string>
   filterable: Staged<TriState>
   allowCustomValue: Staged<TriState>
+  hideOutline: Staged<TriState>
   buttonClass: Staged<string>
   controlClass: Staged<string>
   optionClass: Staged<string>
@@ -39,7 +41,7 @@ export interface SelectDropdownSnippetState {
 // sibling demos reuse them; this builder only emits source.
 
 export function buildSelectDropdownSnippet(state: SelectDropdownSnippetState): string {
-  const { ariaLabel, buttonLabel, value, defaultValue, size, ratios, filterable, allowCustomValue, buttonClass, controlClass, optionClass, emptyLabel, clearable, clearLabel, align, autoPlace, panelClass } = state
+  const { ariaLabel, buttonLabel, value, defaultValue, size, ratios, variant, filterable, allowCustomValue, hideOutline, buttonClass, controlClass, optionClass, emptyLabel, clearable, clearLabel, align, autoPlace, panelClass } = state
   // The frame is shell chrome, so the component sits at the snippet root with
   // its attributes one step in; the committed value is script-local state.
   // Each eye-gated override emits only while its toggle is on (the committed
@@ -57,8 +59,10 @@ export function buildSelectDropdownSnippet(state: SelectDropdownSnippetState): s
     // builder omits the default so Show-code stays minimal.
     ...sizeAttrLine(size, indent),
     ...ratiosAttrLine(ratios, indent),
+    ...enumAttrLine('variant', variant, 'bordered', indent),
     ...boolAttrLine('filterable', filterable, 'no', indent),
     ...boolAttrLine('allowCustomValue', allowCustomValue, 'no', indent),
+    ...boolAttrLine('hideOutline', hideOutline, 'no', indent),
     ...textAttrLine('buttonClass', buttonClass, indent),
     ...textAttrLine('controlClass', controlClass, indent),
     ...textAttrLine('optionClass', optionClass, indent),

@@ -10,6 +10,7 @@ function state(overrides: Partial<ToastSnippetState> = {}): ToastSnippetState {
     size: staged(''),
     action: '',
     closeLabel: staged(''),
+    variant: staged(''),
     ...overrides,
   }
 }
@@ -62,6 +63,17 @@ describe('buildToastSnippet', () => {
     expect(off).not.toContain('type=')
     expect(off).not.toContain('position=')
     expect(off).not.toMatch(/^\s*size=/m)
+  })
+
+  it('emits a non-default variant and omits the soft default', () => {
+    expect(buildToastSnippet(state({ variant: staged('solid', true) }))).toContain(
+      '    variant="solid"',
+    )
+    expect(buildToastSnippet(state({ variant: staged('outline', true) }))).toContain(
+      '    variant="outline"',
+    )
+    expect(buildToastSnippet(state({ variant: staged('soft', true) }))).not.toMatch(/^\s+variant=/m)
+    expect(buildToastSnippet(state({ variant: staged('solid') }))).not.toMatch(/^\s+variant=/m)
   })
 
   it('omits staged text props while their eyes are off and keeps the scope fallbacks', () => {

@@ -5,7 +5,7 @@
 // Single-quoted lines throughout: backticks and ${} inside them stay literal,
 // so no escaping.
 
-import { boolAttrLine, escapeText, sizeAttrLine, textAttrLine, type TriState } from '#showcase/playground/snippet-build.js'
+import { boolAttrLine, enumAttrLine, escapeText, sizeAttrLine, textAttrLine, type TriState } from '#showcase/playground/snippet-build.js'
 import { stageStaticCloseLines, stageStaticOpenLines } from '#showcase/shell/resizable-stage.js'
 import type { Staged } from '#showcase/playground/staged.js'
 
@@ -157,6 +157,7 @@ export interface DataTableSnippetState {
   loading: Staged<TriState>
   fillHeight: Staged<TriState>
   bodyScroll: Staged<TriState>
+  bordered: Staged<TriState>
   placeholder: Staged<string>
   emptyMessage: Staged<string>
   trailing: string
@@ -173,6 +174,7 @@ export interface DataTableSnippetState {
   tableClassName: Staged<string>
   storageKey: Staged<string>
   storagePrefix: Staged<string>
+  variant: Staged<string>
   resetWidthsSignal: Staged<string>
   size: Staged<string>
 }
@@ -189,6 +191,7 @@ export function buildDataTableSnippet({
   loading,
   fillHeight,
   bodyScroll,
+  bordered,
   placeholder,
   emptyMessage,
   trailing,
@@ -203,6 +206,7 @@ export function buildDataTableSnippet({
   tableClassName,
   storageKey,
   storagePrefix,
+  variant,
   resetWidthsSignal,
   size,
 }: DataTableSnippetState): string {
@@ -293,6 +297,7 @@ export function buildDataTableSnippet({
     ...boolAttrLine('dense', dense, 'no', '      '),
     ...boolAttrLine('fillHeight', fillHeight, 'no', '      '),
     ...boolAttrLine('bodyScroll', bodyScroll, 'no', '      '),
+    ...boolAttrLine('bordered', bordered, 'yes', '      '),
     ...boolAttrLine('resizable', resizable, 'no', '      '),
     ...(resizable.on && resizable.value === 'yes' ? ['      resizeAriaLabel={column => `Resize ${column.header}`}'] : []),
     ...boolAttrLine('loading', loading, 'no', '      '),
@@ -300,6 +305,8 @@ export function buildDataTableSnippet({
     ...textAttrLine('tableClassName', tableClassName, '      '),
     ...textAttrLine('storageKey', storageKey, '      '),
     ...textAttrLine('storagePrefix', storagePrefix, '      '),
+    // The variant row prefills its `data` default; the builder omits it.
+    ...enumAttrLine('variant', variant, 'data', '      '),
     // The size row prefills its component default in the Value column; the
     // builder omits the default so Show-code stays minimal.
     ...sizeAttrLine(size, '      '),

@@ -23,6 +23,7 @@
     ariaLabel: staged(''),
     tooltip: staged(''),
     children: staged(''),
+    copyText: staged(''),
     size: staged('md'),
   }
   let pg = $state(structuredClone(INITIAL))
@@ -33,6 +34,7 @@
   const demoAriaLabel = $derived(applied(pg.ariaLabel) || undefined)
   const demoTooltip = $derived(applied(pg.tooltip) || undefined)
   const demoText = $derived(applied(pg.text) || 'Copy me')
+  const demoCopyText = $derived(applied(pg.copyText) || undefined)
   const demoSize = $derived.by(() => {
     const value = applied(pg.size)
     return value === undefined ? undefined : parseSizeValue(value)
@@ -56,6 +58,7 @@
       ariaLabel: pg.ariaLabel,
       tooltip: pg.tooltip,
       children: pg.children,
+      copyText: pg.copyText,
       size: pg.size,
     }),
   )
@@ -79,6 +82,7 @@
     }),
     textField({ name: 'containerClass', type: 'string?', defaultValue: "''", note: 'Extra classes for the wrapper.', editorDefaultValue: '', clearable: true, ...eye(pg.containerClass) }),
     enumField({ name: 'copyPosition', type: "'inline' | 'top-right'", defaultValue: "'inline'", note: 'Copy button placement.', options: positionOptions, placeholder: 'inline', clearLabel: 'Clear copy position', ...eye(pg.position) }),
+    textField({ name: 'copyText', type: 'string?', defaultValue: 'text', note: 'Value placed on the clipboard; defaults to text.', clearable: true, placeholder: 'text', ...eye(pg.copyText) }),
     sizeField({ note: 'Copy button scale; numbers are icon-scale pixels interpolated between the steps.', ...eye(pg.size) }),
     { name: 'text', type: 'string?', defaultValue: '—', note: 'Text to render (or wrap children instead).', editor: 'text', clearable: true, ...eye(pg.text), onChange: value => stage(pg.text, value), toggle: eyeToggle(pg.text), sync: { kind: 'text', unsetValues: ['Copy me'] } },
     textField({ name: 'textClass', type: 'string?', defaultValue: "'text-slate-400'", note: 'Classes for the rendered text.', editorDefaultValue: 'text-slate-400', clearable: true, placeholder: 'text-slate-400', ...eye(pg.textClass) }),
@@ -102,6 +106,7 @@
   >
     <Copyable
       text={demoText}
+      copyText={demoCopyText}
       size={demoSize}
       copyPosition={demoPosition}
       textClass={demoTextClass}

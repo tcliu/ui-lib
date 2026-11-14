@@ -11,6 +11,8 @@ function state(overrides: Partial<AutoCompleteSnippetState> = {}): AutoCompleteS
     ratios: staged({}),
     placeholder: staged('', true),
     disabled: staged('', true),
+    variant: staged('bordered'),
+    hideOutline: staged(''),
     clearable: staged('', true),
     clearLabel: staged('', true),
     clearPlacement: staged('', true),
@@ -82,6 +84,8 @@ describe('buildAutoCompleteSnippet', () => {
       state({
         size: staged('md', true),
         disabled: staged('no', true),
+        variant: staged('bordered', true),
+        hideOutline: staged('no', true),
         align: staged('left', true),
         autoPlace: staged('yes', true),
         clearable: staged('no', true),
@@ -90,10 +94,28 @@ describe('buildAutoCompleteSnippet', () => {
     )
     expect(source).not.toMatch(/^\s*size=/m)
     expect(source).not.toContain('disabled')
+    expect(source).not.toContain('variant=')
+    expect(source).not.toContain('hideOutline')
     expect(source).not.toContain('align=')
     expect(source).not.toContain('autoPlace')
     expect(source).not.toContain('clearable')
     expect(source).not.toContain('clearPlacement=')
+  })
+
+  it('emits a non-default variant and an applied hideOutline, and omits them otherwise', () => {
+    const embedded = buildAutoCompleteSnippet(
+      state({ variant: staged('embedded', true), hideOutline: staged('yes', true) }),
+    )
+    expect(embedded).toContain('variant="embedded"')
+    expect(embedded).toContain('  hideOutline\n')
+
+    // The defaults and an unset eye stay out.
+    expect(
+      buildAutoCompleteSnippet(state({ variant: staged('embedded'), hideOutline: staged('yes') })),
+    ).not.toContain('variant=')
+    expect(
+      buildAutoCompleteSnippet(state({ variant: staged('embedded'), hideOutline: staged('yes') })),
+    ).not.toContain('hideOutline')
   })
 
   it('omits staged dropdown props while their eyes are off', () => {

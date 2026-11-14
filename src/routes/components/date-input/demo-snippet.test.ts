@@ -15,6 +15,8 @@ const base = {
   placeholder: staged(''),
   closeOnSelect: staged('' as TriState),
   highlightRange: staged('' as TriState),
+  variant: staged(''),
+  hideOutline: staged('' as TriState),
   size: staged(''),
   ratios: staged({}),
 }
@@ -98,6 +100,59 @@ describe('buildDateInputSnippet', () => {
     expect(buildDateInputSnippet({ ...base, placeholder: staged('', true) })).not.toContain('placeholder=')
     // A range pair names its own ends, so the single-field prompt never rides it.
     expect(buildDateInputSnippet({ ...base, range: staged('yes', true), placeholder: staged('Pick a day', true) })).not.toContain('placeholder=')
+  })
+
+  it('emits a non-default variant and an applied hideOutline in both forms', () => {
+    const overridden = buildDateInputSnippet({
+      ...base,
+      variant: staged('embedded', true),
+      hideOutline: staged('yes', true),
+    })
+    expect(overridden).toContain('  variant="embedded"')
+    expect(overridden).toContain('  hideOutline\n')
+
+    // The defaults and an unset eye stay out of Show-code.
+    const defaults = buildDateInputSnippet({
+      ...base,
+      variant: staged('bordered', true),
+      hideOutline: staged('no', true),
+    })
+    expect(defaults).not.toContain('variant=')
+    expect(defaults).not.toContain('hideOutline')
+    const off = buildDateInputSnippet({
+      ...base,
+      variant: staged('embedded'),
+      hideOutline: staged('yes'),
+    })
+    expect(off).not.toContain('variant=')
+    expect(off).not.toContain('hideOutline')
+
+    // An explicit false rounds to the same omitted default.
+    expect(buildDateInputSnippet({ ...base, hideOutline: staged('no', true) })).not.toContain(
+      'hideOutline',
+    )
+
+    // Both props ride the range pair too (the page forwards them to each field).
+    const pair = buildDateInputSnippet({
+      ...base,
+      range: staged('yes', true),
+      variant: staged('embedded', true),
+      hideOutline: staged('yes', true),
+    })
+    expect(pair).toContain('  variant="embedded"')
+    expect(pair).toContain('  hideOutline\n')
+  })
+
+  it('compiles the generated snippet with the embedded variant', { timeout: 30000 }, async () => {
+    const component = await createSnippetComponent(
+      buildDateInputSnippet({
+        ...base,
+        variant: staged('embedded', true),
+        hideOutline: staged('yes', true),
+      }),
+      {},
+    )
+    expect(typeof component).toBe('function')
   })
 
   it('compiles the generated snippet', { timeout: 30000 }, async () => {

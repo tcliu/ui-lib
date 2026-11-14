@@ -28,10 +28,12 @@
     size: staged('md'),
     action: '',
     closeLabel: staged(''),
+    variant: staged('soft'),
   }
   let pg = $state(structuredClone(INITIAL))
 
   const typeOptions = ['success', 'info', 'warning', 'error'].map(value => ({ value, label: value }))
+  const variantOptions = ['soft', 'solid', 'outline'].map(value => ({ value, label: value }))
   const sizeOptions = [
     { value: 'xs', label: 'xs' },
     { value: 'sm', label: 'sm' },
@@ -52,6 +54,9 @@
     const value = applied(pg.size)
     return value === undefined ? undefined : parseSizeValue(value)
   })
+  const demoVariant = $derived(
+    (applied(pg.variant) || undefined) as 'soft' | 'solid' | 'outline' | undefined,
+  )
   const demoMessage = $derived(applied(pg.message) || i18n.t('showcase.default'))
   const demoCloseLabel = $derived(applied(pg.closeLabel) || i18n.t('common.close'))
   const demoAction = $derived(
@@ -70,6 +75,7 @@
       size: pg.size,
       action: pg.action,
       closeLabel: pg.closeLabel,
+      variant: pg.variant,
     }),
   )
 
@@ -80,6 +86,7 @@
     enumField({ name: 'position', type: "'top-right' | 'top-center' | 'bottom-right' | 'bottom-center'", defaultValue: "'bottom-right'", note: 'Viewport edge the toast docks to.', options: positionOptions, placeholder: 'bottom-right', clearLabel: 'Clear position', ...eye(pg.position) }),
     sizeField({ note: 'Text scale; every metric is a fixed ratio of the size.', ...eye(pg.size) }),
     enumField({ name: 'type', type: "'success' | 'info' | 'warning' | 'error'", defaultValue: "'info'", note: 'Accent treatment.', options: typeOptions, placeholder: 'info', clearLabel: 'Clear type', ...eye(pg.type) }),
+    enumField({ name: 'variant', type: "'soft' | 'solid' | 'outline'", defaultValue: "'soft'", note: 'Presentation: tinted surface, filled with the type color, or a dark surface with a type-colored frame.', options: variantOptions, placeholder: 'soft', clearLabel: 'Clear variant', ...eye(pg.variant) }),
     { name: 'action', type: '{ label: string; onClick: () => void }?', defaultValue: '—', note: 'Action button; renders only when set.' },
     { name: 'onClose', type: '() => void', defaultValue: '—', note: 'Dismiss handler (button and Escape).' },
   ])
@@ -143,6 +150,7 @@
         position={demoPosition}
         size={demoSize}
         action={demoAction}
+        variant={demoVariant}
         onClose={() => (pg.open = false)} />
     {/if}
     <span class="text-sm text-slate-400">action: {pg.actionTaken || '—'}</span>

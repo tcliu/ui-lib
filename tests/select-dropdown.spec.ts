@@ -168,6 +168,31 @@ test('showcase: the SelectDropdown options eye resets to the defaults', async ({
   await expect(demo).toContainText('two value: two')
 })
 
+test('showcase: the SelectDropdown variant and hideOutline cells restyle the trigger', async ({ page }) => {
+  await page.goto('/components/select-dropdown')
+  await page.waitForLoadState('networkidle')
+
+  const demo = showcaseDemo(page)
+  const trigger = demo.locator('button[role="combobox"]')
+  await expect(trigger).toHaveCSS('border-top-width', '1px')
+
+  // `embedded` hands the box to the caller: no border and no surface.
+  await page.getByRole('combobox', { name: 'variant value', exact: true }).click()
+  await page.getByRole('option', { name: 'embedded' }).click()
+  await expect(trigger).toHaveCSS('border-top-width', '0px')
+  await expect(trigger).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
+
+  // Back to the default bordered box.
+  await page.getByRole('combobox', { name: 'variant value', exact: true }).click()
+  await page.getByRole('option', { name: 'bordered' }).click()
+  await expect(trigger).toHaveCSS('border-top-width', '1px')
+
+  // `hideOutline` keeps the surface but drops the border.
+  await page.getByRole('checkbox', { name: 'hideOutline value' }).check({ force: true })
+  await expect(trigger).toHaveCSS('border-top-width', '0px')
+  await expect(trigger).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
+})
+
 test('showcase: double-clicking the filterable SelectDropdown selects the whole value', async ({ page }) => {
   await page.goto('/components/select-dropdown')
   await page.waitForLoadState('networkidle')

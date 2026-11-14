@@ -8,7 +8,7 @@
   import { parseSizeValue } from '#showcase/playground/size-input.js'
   import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
   import { applied, eye, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
-  import { textField, sizeField } from '#showcase/playground/snippet-field.js'
+  import { enumField, textField, sizeField } from '#showcase/playground/snippet-field.js'
   import { buildTabsSnippet } from './demo-snippet'
 
   const i18n = getI18nContext()
@@ -32,10 +32,13 @@
     ariaLabel: staged('Components', true),
     pathname: staged(''),
     size: staged('md'),
+    variant: staged('segmented'),
   }
   let pg = $state(structuredClone(INITIAL))
 
   const modeOptions = [{ value: 'yes', label: 'Route mode' }]
+
+  const variants = ['segmented', 'underline']
 
   const sizeOptions = [
     { value: 'xs', label: 'xs' },
@@ -51,13 +54,16 @@
     const value = applied(pg.size)
     return value === undefined ? undefined : parseSizeValue(value)
   })
+  const demoVariant = $derived(
+    (applied(pg.variant) || undefined) as 'segmented' | 'underline' | undefined,
+  )
 
   function clearPlayground() {
     pg = structuredClone(INITIAL)
   }
 
   const code = $derived.by(() =>
-    buildTabsSnippet({ routeMode: pg.routeMode, className: pg.className, ariaLabel: pg.ariaLabel, pathname: pg.pathname, size: pg.size }),
+    buildTabsSnippet({ routeMode: pg.routeMode, className: pg.className, ariaLabel: pg.ariaLabel, pathname: pg.pathname, size: pg.size, variant: pg.variant }),
   )
 
   // The page owns the preview so the shell can host the code toggle (and the
@@ -75,6 +81,7 @@
     textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes appended to the header row.', editorDefaultValue: '', clearable: true, ...eye(pg.className) }),
     textField({ name: 'pathname', type: 'string?', defaultValue: '—', note: 'Route mode: active path drives link rendering.', clearable: true, ...eye(pg.pathname) }),
     sizeField({ note: 'Control scale; numbers are icon-scale pixels. Scales the nav and tab text and chrome.', ...eye(pg.size) }),
+    enumField({ name: 'variant', type: "'segmented' | 'underline'", defaultValue: "'segmented'", note: 'Presentation: pill row in a bordered nav, or a baseline strip with a bottom accent per active tab.', options: variants.map(value => ({ value, label: value })), placeholder: 'segmented', clearLabel: 'Clear variant', ...eye(pg.variant) }),
     // Read-only: the generic demo state object has no literal editor.
     { name: 'state', type: 'TState', defaultValue: '—', note: 'Passed to the toolbar/content snippets.' },
     { name: 'tabs', type: 'Tab<TState>[]', defaultValue: '—', note: 'Label, path, optional toolbar snippet, content snippet.' },
@@ -168,5 +175,6 @@
       pathname={applied(pg.pathname) || (pg.routeMode ? pg.routePath : undefined)}
       className={applied(pg.className) || undefined}
       ariaLabel={applied(pg.ariaLabel) || i18n.t('showcase.components')}
+      variant={demoVariant}
       size={demoSize} />
   </ShowcasePage>

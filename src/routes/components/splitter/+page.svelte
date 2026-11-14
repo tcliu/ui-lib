@@ -139,6 +139,7 @@
     enumField({ name: 'orientation', type: "'vertical' | 'horizontal'", defaultValue: "'vertical'", note: 'Vertical splits left/right; horizontal splits top/bottom.', options: orientationOptions, placeholder: 'vertical', clearLabel: 'Clear orientation', ...eye(pgOrientation), onChange: applyOrientation }),
     enumField({ name: 'unit', type: "'px' | '%'", defaultValue: "'px'", note: 'Unit for the value, drag delta, and arrow-key step.', options: unitOptions, placeholder: 'px', clearLabel: 'Clear unit', ...eye(pgUnit), onChange: applyUnit }),
     { name: 'value', type: 'number', defaultValue: '—', note: 'Divider position in pixels or percent; drive it from onChange (the seed reads it from scope).', editor: 'number', value: String(pgSplit), onChange: applySplit },
+    { name: 'getContainer', type: '() => HTMLElement | null', defaultValue: '—', note: 'Explicit flex container that establishes the % basis; unset measures the wrapper’s parent.' },
     { name: 'onChange', type: '(value: number) => void', defaultValue: '—', note: 'Fires while dragging and on arrow-key nudges.' },
     { name: 'onDragEnd', type: '() => void', defaultValue: '—', note: 'Fires after a drag or keyboard nudge completes.' },
   ])

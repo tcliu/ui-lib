@@ -56,8 +56,10 @@
     buttonLabel: staged(''),
     size: staged('md'),
     ratios: staged({} as SelectRatioOverrides),
+    variant: staged('bordered'),
     filterable: staged('no' as TriState),
     allowCustomValue: staged('no' as TriState),
+    hideOutline: staged('no' as TriState),
     buttonClass: staged(''),
     controlClass: staged(''),
     optionClass: staged(''),
@@ -88,8 +90,12 @@
     return value === undefined ? undefined : parseSizeValue(value)
   })
   const demoRatios = $derived(appliedRatios(pg.ratios))
+  const demoVariant = $derived(
+    (applied(pg.variant) || undefined) as 'bordered' | 'embedded' | undefined,
+  )
   const filterable = $derived(appliedFlag(pg.filterable))
   const allowCustomValue = $derived(appliedFlag(pg.allowCustomValue))
+  const hideOutline = $derived(appliedFlag(pg.hideOutline))
   const clearable = $derived(appliedFlag(pg.clearable))
   const autoPlace = $derived(appliedFlag(pg.autoPlace))
   const demoAlign = $derived((applied(pg.align) || undefined) as 'left' | 'right' | undefined)
@@ -106,6 +112,11 @@
     { value: 'right', label: 'right' },
   ]
 
+  const variantOptions = [
+    { value: 'bordered', label: 'bordered' },
+    { value: 'embedded', label: 'embedded' },
+  ]
+
   function clearPlayground() {
     pg = structuredClone(INITIAL)
   }
@@ -118,8 +129,10 @@
       defaultValue: pg.defaultValue,
       size: pg.size,
       ratios: pg.ratios,
+      variant: pg.variant,
       filterable: pg.filterable,
       allowCustomValue: pg.allowCustomValue,
+      hideOutline: pg.hideOutline,
       buttonClass: pg.buttonClass,
       controlClass: pg.controlClass,
       optionClass: pg.optionClass,
@@ -153,6 +166,7 @@
     textField({ name: 'defaultValue', type: 'string?', defaultValue: "''", note: 'Baseline the clear button compares against: the option value (not its label); the cross hides while the committed value matches it.', editorDefaultValue: '', clearable: true, ...eye(pg.defaultValue) }),
     textField({ name: 'emptyLabel', type: 'string?', defaultValue: '—', note: 'Shown when the filtered list is empty.', clearable: true, ...eye(pg.emptyLabel) }),
     boolField({ name: 'filterable', defaultValue: 'false', note: 'Renders a combobox input with filtering.', ...eyeFlag(pg.filterable) }),
+    boolField({ name: 'hideOutline', defaultValue: 'false', note: 'Drops the bordered trigger’s border, hover tint, and focus border while keeping its surface, metrics, and text rules.', ...eyeFlag(pg.hideOutline) }),
     textField({ name: 'optionClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the option row classes.', clearable: true, ...eye(pg.optionClass) }),
     jsonField({
       name: 'options',
@@ -176,6 +190,7 @@
       value: pg.ratios,
     }),
     sizeField({ note: 'Control scale; numbers are icon-scale pixels interpolated between the steps.', ...eye(pg.size) }),
+    enumField({ name: 'variant', type: "'bordered' | 'embedded'", defaultValue: "'bordered'", note: 'Chrome variant; embedded drops the border, surface, and focus styles for a trigger inside another surface.', options: variantOptions, placeholder: 'bordered', clearLabel: 'Clear variant', ...eye(pg.variant) }),
     {
       name: 'onClear',
       type: '() => void',
@@ -206,8 +221,10 @@
       ariaLabel={applied(pg.ariaLabel) || undefined}
       size={demoSize}
       ratios={demoRatios}
+      variant={demoVariant}
       {filterable}
       {allowCustomValue}
+      {hideOutline}
       buttonClass={demoButtonClass}
       controlClass={demoControlClass}
       optionClass={demoOptionClass}

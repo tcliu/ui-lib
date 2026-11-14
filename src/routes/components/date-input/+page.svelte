@@ -6,7 +6,7 @@
   import { parseSizeValue } from '#showcase/playground/size-input.js'
   import type { TriState } from '#showcase/playground/snippet-build.js'
   import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
-  import { boolField, sizeField, textField } from '#showcase/playground/snippet-field.js'
+  import { boolField, enumField, sizeField, textField } from '#showcase/playground/snippet-field.js'
   import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, stage, staged } from '#showcase/playground/staged.js'
   import { appliedRatios, componentRatiosField } from '#showcase/playground/text-input-ratios.js'
   import { PICKER_RATIOS, type PickerRatioOverrides } from '#lib/components/date-input-metrics.js'
@@ -28,6 +28,8 @@
     placeholder: staged(''),
     closeOnSelect: staged('no' as TriState),
     highlightRange: staged('no' as TriState),
+    variant: staged('bordered'),
+    hideOutline: staged('no' as TriState),
     size: staged('md'),
     ratios: staged({} as PickerRatioOverrides),
     stageWidth: DATE_STAGE_DEFAULT_WIDTH,
@@ -47,6 +49,15 @@
   const demoTime = $derived(appliedFlag(pg.time))
   const demoCloseOnSelect = $derived(appliedFlag(pg.closeOnSelect))
   const demoHighlightRange = $derived(appliedFlag(pg.highlightRange))
+  const hideOutline = $derived(appliedFlag(pg.hideOutline))
+  const demoVariant = $derived(
+    (applied(pg.variant) || undefined) as 'bordered' | 'embedded' | undefined,
+  )
+
+  const variantOptions = [
+    { value: 'bordered', label: 'bordered' },
+    { value: 'embedded', label: 'embedded' },
+  ]
 
   function clearPlayground() {
     pg = structuredClone(INITIAL)
@@ -63,6 +74,8 @@
       placeholder: pg.placeholder,
       closeOnSelect: pg.closeOnSelect,
       highlightRange: pg.highlightRange,
+      variant: pg.variant,
+      hideOutline: pg.hideOutline,
       size: pg.size,
       ratios: pg.ratios,
     }),
@@ -88,6 +101,7 @@
       toggle: eyeResetToggle(pg.from, () => (pg.from.value = '')),
       sync: { kind: 'script', attr: 'from', unsetAbsent: true },
     },
+    boolField({ name: 'hideOutline', defaultValue: 'false', note: 'Drops each bordered field’s border and focus border while keeping its surface, padding, and text metrics.', ...eyeFlag(pg.hideOutline) }),
     boolField({ name: 'highlightRange', defaultValue: 'false', note: 'Highlight the days between the two ends in each end’s calendar, so the range reads as one span; the ends stay the selected days. Applies while `range` is on.', ...eyeFlag(pg.highlightRange) }),
     textField({ name: 'placeholder', type: 'string?', defaultValue: '—', note: 'Prompt shown while the single field is empty; defaults to the shared message. A range pair names each field after its own end.', clearable: true, ...eye(pg.placeholder) }),
     boolField({ name: 'range', defaultValue: 'false', note: 'Render a from/to pair of independent fields, each behaving as the single field with its own calendar.', ...eyeFlag(pg.range) }),
@@ -120,6 +134,7 @@
       toggle: eyeResetToggle(pg.value, () => (pg.value.value = '')),
       sync: { kind: 'script', attr: 'value', unsetAbsent: true },
     },
+    enumField({ name: 'variant', type: "'bordered' | 'embedded'", defaultValue: "'bordered'", note: 'Chrome variant; embedded drops each field’s border, the background, and the focus ring for a picker rendered inside another surface.', options: variantOptions, placeholder: 'bordered', clearLabel: 'Clear variant', ...eye(pg.variant) }),
     {
       name: 'theme',
       type: 'DateInputTheme?',
@@ -169,6 +184,8 @@
           onTo={value => (pg.to.value = value)}
           closeOnSelect={demoCloseOnSelect}
           highlightRange={demoHighlightRange}
+          variant={demoVariant}
+          hideOutline={hideOutline}
           format={demoFormat}
           size={demoSize}
           ratios={demoRatios} />
@@ -181,6 +198,8 @@
           onChange={value => (pg.value.value = value)}
           closeOnSelect={demoCloseOnSelect}
           highlightRange={demoHighlightRange}
+          variant={demoVariant}
+          hideOutline={hideOutline}
           format={demoFormat}
           placeholder={demoPlaceholder}
           size={demoSize}

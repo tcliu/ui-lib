@@ -27,6 +27,7 @@ const base: DataTableSnippetState = {
   loading: staged('', true),
   fillHeight: staged('', true),
   bodyScroll: staged('', true),
+  bordered: staged('', true),
   placeholder: staged(''),
   emptyMessage: staged(''),
   trailing: '',
@@ -41,6 +42,7 @@ const base: DataTableSnippetState = {
   tableClassName: staged(''),
   storageKey: staged(''),
   storagePrefix: staged(''),
+  variant: staged(''),
   resetWidthsSignal: staged('', true),
   size: staged('', true),
 }
@@ -110,6 +112,12 @@ describe('buildDataTableSnippet', () => {
     expect(buildDataTableSnippet({ ...base, size: staged('huge', true) })).not.toMatch(/^\s*size=/m)
   })
 
+  it('emits a non-default variant and omits the data default', () => {
+    expect(buildDataTableSnippet({ ...base, variant: staged('docs', true) })).toContain('      variant="docs"')
+    expect(buildDataTableSnippet({ ...base, variant: staged('data', true) })).not.toContain('variant=')
+    expect(buildDataTableSnippet({ ...base, variant: staged('docs') })).not.toContain('variant=')
+  })
+
   it('adds selection wiring only while selectable', () => {
     const source = buildDataTableSnippet({ ...base, selectable: staged('yes', true) })
     expect(source).toContain('\n      selectable\n')
@@ -170,6 +178,12 @@ describe('buildDataTableSnippet', () => {
   it('emits the bodyScroll flag when set', () => {
     const source = buildDataTableSnippet({ ...base, bodyScroll: staged('yes', true) })
     expect(source).toContain('\n      bodyScroll\n')
+  })
+
+  it('emits bordered only when it differs from the default', () => {
+    expect(buildDataTableSnippet({ ...base, bordered: staged('no', true) })).toContain('\n      bordered={false}\n')
+    expect(buildDataTableSnippet({ ...base, bordered: staged('yes', true) })).not.toContain('bordered=')
+    expect(buildDataTableSnippet({ ...base, bordered: staged('no') })).not.toContain('bordered=')
   })
 
   it('escapes placeholder quotes for the attribute', () => {
@@ -285,6 +299,7 @@ describe('buildDataTableSnippet', () => {
       resizable: staged('yes'),
       fillHeight: staged('yes'),
       bodyScroll: staged('yes'),
+      bordered: staged('yes'),
       showPagination: staged('yes'),
     })
     for (const flag of [

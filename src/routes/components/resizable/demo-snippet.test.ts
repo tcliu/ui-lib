@@ -11,7 +11,7 @@ import {
   type ResizableSnippetState,
 } from './demo-snippet'
 
-const unset: ResizableSnippetState = { minWidth: staged('', true), minHeight: staged('', true), maxWidth: staged('', true), maxHeight: staged('', true), contentClass: staged(''), className: staged('', true) }
+const unset: ResizableSnippetState = { minWidth: staged('', true), minHeight: staged('', true), maxWidth: staged('', true), maxHeight: staged('', true), contentClass: staged(''), className: staged('', true), pointerOnlyHandles: staged('', true) }
 
 describe('parseBound', () => {
   it('treats empty and non-numeric text as unset', () => {
@@ -120,6 +120,11 @@ describe('buildResizableSnippet', () => {
   it('omits the staged className while its eye is off and emits it when on', () => {
     expect(buildResizableSnippet({ ...unset, className: staged('frame-x') })).not.toContain('className=')
     expect(buildResizableSnippet({ ...unset, className: staged('frame-x', true) })).toContain('className="frame-x"')
+  })
+
+  it('emits pointerOnlyHandles only while its eye is on', () => {
+    expect(buildResizableSnippet({ ...unset, pointerOnlyHandles: staged('yes', true) })).toContain('pointerOnlyHandles')
+    expect(buildResizableSnippet({ ...unset, pointerOnlyHandles: staged('yes') })).not.toContain('pointerOnlyHandles')
   })
 })
 

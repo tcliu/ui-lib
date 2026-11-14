@@ -13,12 +13,13 @@ export interface CopyableSnippetState {
   ariaLabel: Staged<string>
   tooltip: Staged<string>
   children: Staged<string>
+  copyText: Staged<string>
   size: Staged<string>
 }
 
 // Element text for the children span below.
 
-export function buildCopyableSnippet({ text, copyPosition, textClass, containerClass, ariaLabel, tooltip, children, size }: CopyableSnippetState): string {
+export function buildCopyableSnippet({ text, copyPosition, textClass, containerClass, ariaLabel, tooltip, children, copyText, size }: CopyableSnippetState): string {
   const hasChildren = children.on && children.value !== ''
   const resolvedText = text.on && text.value ? text.value : 'Copy me'
   return [
@@ -28,6 +29,7 @@ export function buildCopyableSnippet({ text, copyPosition, textClass, containerC
     // builder omits the defaults so Show-code stays minimal.
     ...sizeAttrLine(size),
     ...enumAttrLine('copyPosition', copyPosition, 'inline'),
+    ...textAttrLine('copyText', copyText),
     ...textAttrLine('textClass', textClass),
     ...textAttrLine('containerClass', containerClass),
     ...textAttrLine('ariaLabel', ariaLabel),

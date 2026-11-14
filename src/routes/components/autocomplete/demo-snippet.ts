@@ -21,6 +21,8 @@ export interface AutoCompleteSnippetState {
   ratios: Staged<AutoCompleteRatioOverrides>
   placeholder: Staged<string>
   disabled: Staged<TriState>
+  variant: Staged<string>
+  hideOutline: Staged<TriState>
   clearable: Staged<TriState>
   clearLabel: Staged<string>
   clearPlacement: Staged<string>
@@ -31,7 +33,7 @@ export interface AutoCompleteSnippetState {
 }
 
 export function buildAutoCompleteSnippet(state: AutoCompleteSnippetState): string {
-  const { ariaLabel, value, size, ratios, placeholder, disabled, clearable, clearLabel, clearPlacement, defaultValue, align, autoPlace, panelClass } = state
+  const { ariaLabel, value, size, ratios, placeholder, disabled, variant, hideOutline, clearable, clearLabel, clearPlacement, defaultValue, align, autoPlace, panelClass } = state
   // The frame is shell chrome, so the component sits at the snippet root with
   // its attributes one step in; the bound value is script-local state.
   const indent = '  '
@@ -44,7 +46,9 @@ export function buildAutoCompleteSnippet(state: AutoCompleteSnippetState): strin
     ...ratiosAttrLine(ratios, indent),
     ...textAttrLine('placeholder', placeholder, indent),
     ...boolAttrLine('disabled', disabled, 'no', indent),
+    ...boolAttrLine('hideOutline', hideOutline, 'no', indent),
     ...enumAttrLine('align', align, 'left', indent),
+    ...enumAttrLine('variant', variant, 'bordered', indent),
     ...boolAttrLine('autoPlace', autoPlace, 'yes', indent),
     ...textAttrLine('panelClass', panelClass, indent),
     ...boolAttrLine('clearable', clearable, 'no', indent),

@@ -62,6 +62,28 @@ test('showcase: the AutoComplete live demo filters and accepts a suggestion', as
   await expect(snippetError(page)).toHaveCount(0)
 })
 
+test('showcase: the AutoComplete variant and hideOutline Value cells drive the field chrome', async ({ page }) => {
+  await page.goto('/components/autocomplete')
+  await page.waitForLoadState('networkidle')
+
+  const demo = showcaseDemo(page)
+  const input = demo.locator('input[role="combobox"]')
+  // Bordered is the default: the shared surface and outline.
+  await expect(input).toHaveClass(/bg-slate-950/)
+  await expect(input).toHaveClass(/border-slate-700/)
+
+  // hideOutline keeps the surface and drops only the border.
+  await page.getByRole('checkbox', { name: 'hideOutline value', exact: true }).check({ force: true })
+  await expect(input).toHaveClass(/bg-slate-950/)
+  await expect(input).not.toHaveClass(/border-slate-700/)
+
+  // Embedded hands the whole box to the caller: no border, no surface.
+  await page.getByRole('combobox', { name: 'variant value', exact: true }).click()
+  await page.getByRole('option', { name: 'embedded' }).click()
+  await expect(input).toHaveClass(/bg-transparent/)
+  await expect(input).not.toHaveClass(/bg-slate-950/)
+})
+
 test('showcase: the AutoComplete options eye resets to the defaults', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.goto('/components/autocomplete')

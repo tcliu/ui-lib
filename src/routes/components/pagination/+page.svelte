@@ -7,7 +7,7 @@
   import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
   import type { SnippetAttribute } from '#showcase/playground/snippet-attributes.js'
   import { applied, eye, eyeResetToggle, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
-  import { textField, sizeField, jsonField, snippetField } from '#showcase/playground/snippet-field.js'
+  import { enumField, textField, sizeField, jsonField, snippetField } from '#showcase/playground/snippet-field.js'
   import { CUSTOM_LABELS, DEFAULT_PAGE_SIZE_OPTIONS, LABEL_FIELDS, buildPaginationSnippet, parseLabelsJson, parseLabelsValue, parsePageSizeOptionsJson } from './demo-snippet'
   import { parseSizeValue } from '#showcase/playground/size-input.js'
   import type { PaginationLabels } from '#lib/components/pagination-labels.js'
@@ -34,10 +34,13 @@
     labels: staged({} as PaginationLabels),
     className: staged(''),
     trailing: staged(''),
+    variant: staged('numbered'),
   }
   let pg = $state(structuredClone(INITIAL))
 
   const customOptions = [{ value: 'yes', label: 'Custom' }]
+
+  const variantOptions = ['numbered', 'compact'].map(value => ({ value, label: value }))
 
   const sizeOptions = [
     { value: 'xs', label: 'xs' },
@@ -52,6 +55,9 @@
     return value === undefined ? undefined : parseSizeValue(value)
   })
   const demoClassName = $derived(applied(pg.className) || undefined)
+  const demoVariant = $derived(
+    (applied(pg.variant) || undefined) as 'numbered' | 'compact' | undefined,
+  )
   const hasCustomLabels = $derived(LABEL_FIELDS.some(field => pg.labels.value[field]))
 
   function handlePageSizeChange(size: number) {
@@ -145,6 +151,7 @@
       pageSizeOptions: pg.pageSizeOptions,
       className: pg.className,
       trailing: pg.trailing,
+      variant: pg.variant,
     }),
   )
 
@@ -190,6 +197,7 @@
       onChange: value => stage(pg.trailing, value),
       toggle: eyeToggle(pg.trailing),
     }),
+    enumField({ name: 'variant', type: "'numbered' | 'compact'", defaultValue: "'numbered'", note: 'Presentation: paged blocks with the page-size selector, or previous/next around a “Page X of Y” summary without it.', options: variantOptions, placeholder: 'numbered', clearLabel: 'Clear variant', ...eye(pg.variant) }),
     { name: 'onPageChange', type: '(page: number) => void', defaultValue: '—', note: 'Called on page change.' },
     { name: 'onPageSizeChange', type: '(size: number) => void', defaultValue: '—', note: 'Called on page-size change.' },
   ])
@@ -260,6 +268,7 @@
       size={demoSize}
       labels={applied(pg.labels)}
       className={demoClassName}
+      variant={demoVariant}
       trailing={applied(pg.trailing) ? demoTrailing : undefined}
       onPageChange={page => (pg.currentPage = page)}
       onPageSizeChange={handlePageSizeChange} />

@@ -2,8 +2,9 @@
   import Resizable from '#lib/components/Resizable.svelte'
   import ShowcasePage from '#showcase/shell/ShowcasePage.svelte'
   import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
-  import { applied, eye, eyeResetToggle, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
-  import { textField, snippetDialog, snippetField } from '#showcase/playground/snippet-field.js'
+  import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
+  import { textField, boolField, snippetDialog, snippetField } from '#showcase/playground/snippet-field.js'
+  import { type TriState } from '#showcase/playground/snippet-build.js'
   import {
     RESIZABLE_CONTENT,
     RESIZABLE_DEFAULT_HEIGHT,
@@ -38,6 +39,9 @@
   let pgHeight = $state(RESIZABLE_DEFAULT_HEIGHT)
   // Unset, the container renders no extra classes.
   let pgClassName = $state(staged(''))
+  // Pointer-only handles stay out of the tab order; totals are still announced
+  // by the pointer drag.
+  let pgPointerOnlyHandles = $state(staged('no' as TriState))
 
   const minWidth = $derived.by(() => {
     const value = applied(pgMinWidth)
@@ -61,6 +65,7 @@
   const demoContentClass = $derived(pgChildren.value || RESIZABLE_CONTENT)
   const childrenMarkup = $derived(buildResizableChildrenMarkup(demoContentClass))
   const demoClassName = $derived(applied(pgClassName) || undefined)
+  const pointerOnlyHandles = $derived(appliedFlag(pgPointerOnlyHandles) === true)
 
   // The size cells ride the live interaction state, so drags refresh them;
   // the seed reads the size from scope, so they carry no snippet sync. Empty
@@ -94,6 +99,8 @@
     pgHeight = RESIZABLE_DEFAULT_HEIGHT
     pgClassName.value = ''
     pgClassName.on = false
+    pgPointerOnlyHandles.value = 'no'
+    pgPointerOnlyHandles.on = false
   }
 
   const code = $derived.by(() =>
@@ -104,6 +111,7 @@
       maxHeight: pgMaxHeight,
       contentClass: pgChildren,
       className: pgClassName,
+      pointerOnlyHandles: pgPointerOnlyHandles,
     }),
   )
 
@@ -156,6 +164,7 @@
     } } },
     { name: 'minHeight', type: 'number?', defaultValue: '0', editorDefaultValue: '0', note: 'Lower clamp for the container height.', editor: 'number', clearable: true, ...eye(pgMinHeight), onChange: value => stage(pgMinHeight, value), placeholder: '0', toggle: eyeToggle(pgMinHeight), sync: { kind: 'number' } },
     { name: 'minWidth', type: 'number?', defaultValue: '0', editorDefaultValue: '0', note: 'Lower clamp for the container width.', editor: 'number', clearable: true, ...eye(pgMinWidth), onChange: value => stage(pgMinWidth, value), placeholder: '0', toggle: eyeToggle(pgMinWidth), sync: { kind: 'number' } },
+    boolField({ name: 'pointerOnlyHandles', defaultValue: 'false', note: 'Keeps the drag handles out of the tab order; pointer drags still work.', ...eyeFlag(pgPointerOnlyHandles) }),
     { name: 'width', type: 'number', defaultValue: '—', note: 'Container width in pixels; drive it from onResize.', editor: 'number', value: String(pgWidth), onChange: applyWidthText }, // No eye: required live state driving onResize; omission would break the demo.
     { name: 'onResize', type: '(width: number, height?: number) => void', defaultValue: '—', note: 'Fires while dragging and on arrow-key nudges (`height` is `undefined` in width-only mode).' },
   ])
@@ -193,7 +202,8 @@
         {minHeight}
         {maxWidth}
         {maxHeight}
-        className={demoClassName}>
+        className={demoClassName}
+        {pointerOnlyHandles}>
         <div class={demoContentClass}>{sizeLabel}</div>
       </Resizable>
     </div>

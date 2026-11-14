@@ -4,7 +4,7 @@
 // $state in the snippet (seeded from scope) so the live instance is resizable,
 // matching the static demo.
 
-import { escapeAttr, textAttrLine, unescapeAttr } from '#showcase/playground/snippet-build.js'
+import { boolAttrLine, escapeAttr, textAttrLine, unescapeAttr, type TriState } from '#showcase/playground/snippet-build.js'
 import type { Staged } from '#showcase/playground/staged.js'
 
 export const RESIZABLE_DEFAULT_WIDTH = 320
@@ -32,6 +32,7 @@ export interface ResizableSnippetState {
   // renders and only the class varies.
   contentClass: Staged<string>
   className: Staged<string>
+  pointerOnlyHandles: Staged<TriState>
 }
 
 // A playground bound: empty or non-numeric text means unset, so the cleared
@@ -92,7 +93,7 @@ export function parseResizableChildrenMarkup(draft: string): string | null {
   return unescapeAttr(match[1] ?? '')
 }
 
-export function buildResizableSnippet({ minWidth, minHeight, maxWidth, maxHeight, contentClass, className }: ResizableSnippetState): string {
+export function buildResizableSnippet({ minWidth, minHeight, maxWidth, maxHeight, contentClass, className, pointerOnlyHandles }: ResizableSnippetState): string {
   return [
     '<script>',
     '  let width = $state(initialWidth)',
@@ -109,6 +110,7 @@ export function buildResizableSnippet({ minWidth, minHeight, maxWidth, maxHeight
     ...boundLine('minHeight', minHeight, '0').map(line => `  ${line}`),
     ...maxBoundLine('maxWidth', maxWidth).map(line => `  ${line}`),
     ...maxBoundLine('maxHeight', maxHeight).map(line => `  ${line}`),
+    ...boolAttrLine('pointerOnlyHandles', pointerOnlyHandles, 'no', '    '),
     ...textAttrLine('className', className, '    '),
     '  >',
     `    <div class="${escapeAttr(contentClass.value || RESIZABLE_CONTENT)}">{contentLabel}</div>`,

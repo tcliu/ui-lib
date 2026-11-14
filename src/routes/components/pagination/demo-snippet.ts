@@ -3,7 +3,7 @@
 // this, so the editor always shows the markup behind the demo above. The
 // paging interaction state (total, pageSize, currentPage) reads from scope,
 // so it has no sync write-back on the page.
-import { escapeAttr, escapeText, sizeAttrLine, textAttrLine } from '#showcase/playground/snippet-build.js'
+import { enumAttrLine, escapeAttr, escapeText, sizeAttrLine, textAttrLine } from '#showcase/playground/snippet-build.js'
 import type { Staged } from '#showcase/playground/staged.js'
 import type { PaginationLabels } from '#lib/components/pagination-labels.js'
 
@@ -16,6 +16,7 @@ export interface PaginationSnippetState {
   pageSizeOptions: Staged<number[]>
   className: Staged<string>
   trailing: Staged<string>
+  variant: Staged<string>
 }
 
 export const STYLED_CLASS = 'rounded-lg border border-cyan-500/40 p-2'
@@ -128,6 +129,7 @@ export function buildPaginationSnippet({
   pageSizeOptions,
   className,
   trailing,
+  variant,
 }: PaginationSnippetState): string {
   const hasTrailing = trailing.on && trailing.value !== ''
   const lines = [
@@ -139,6 +141,8 @@ export function buildPaginationSnippet({
     // The size prefills its component default in the Value column; the
     // builder omits the default so Show-code stays minimal.
     ...sizeAttrLine(size),
+    // The variant row prefills its `numbered` default; the builder omits it.
+    ...enumAttrLine('variant', variant, 'numbered'),
     ...labelsLine(labels),
     ...textAttrLine('className', className),
     ...(hasTrailing ? ['  trailing={trailing}'] : []),

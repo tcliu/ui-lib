@@ -76,6 +76,7 @@
     componentRatiosField({ base: FIELD_RATIOS, type: 'FieldRatioOverrides?', note: 'Partial override of the label and field ratios (font, radius, paddings); both line boxes follow the font.', value: pg.ratios }),
     sizeField({ note: 'Text size for the label and the input.', ...eye(pg.size) }),
     { name: 'text', type: 'string', defaultValue: '—', note: 'Displayed value; double-click or use the edit button to change it (required); the eye resets to the default.', editor: 'text', clearable: true, ...eye(pg.value), onChange: value => stage(pg.value, value), toggle: eyeResetToggle(pg.value, () => (pg.value.value = DEFAULT_TEXT)), sync: { kind: 'script', attr: 'value' } },
+    { name: 'onActivate', type: '() => void', defaultValue: '—', note: 'Fires when the field enters edit mode.' },
     { name: 'onChange', type: '(text: string) => void | boolean', defaultValue: '—', note: 'Called with the committed value; return false to reject it and keep editing.' },
   ])
 

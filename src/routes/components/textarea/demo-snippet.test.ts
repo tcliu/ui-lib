@@ -18,6 +18,8 @@ function state(overrides: Partial<TextAreaSnippetState> = {}): TextAreaSnippetSt
     readonly: staged('', true),
     id: staged(''),
     inputClass: staged(''),
+    variant: staged(''),
+    className: staged(''),
     ...overrides,
   }
 }
@@ -33,11 +35,13 @@ describe('buildTextAreaSnippet', () => {
     expect(source).not.toContain('disabled')
     expect(source).not.toContain('hideOutline')
     expect(source).not.toContain('id=')
+    expect(source).not.toContain('className=')
+    expect(source).not.toContain('variant=')
   })
 
-  it('emits placeholder, rows, size, flags, id, and inputClass', () => {
+  it('emits placeholder, rows, size, flags, id, inputClass, variant, and className', () => {
     const source = buildTextAreaSnippet(
-      state({ ariaLabel: staged('Notes', true), placeholder: staged('Write…', true), rows: staged('5', true), size: staged('lg', true), disabled: staged('yes', true), hideOutline: staged('yes', true), readonly: staged('yes', true), id: staged('notes', true), inputClass: staged('ml-2', true) }),
+      state({ ariaLabel: staged('Notes', true), placeholder: staged('Write…', true), rows: staged('5', true), size: staged('lg', true), disabled: staged('yes', true), hideOutline: staged('yes', true), readonly: staged('yes', true), id: staged('notes', true), inputClass: staged('ml-2', true), variant: staged('embedded', true), className: staged('italic', true) }),
     )
     expect(source).toContain('ariaLabel="Notes"')
     expect(source).toContain('placeholder="Write…"')
@@ -48,15 +52,18 @@ describe('buildTextAreaSnippet', () => {
     expect(source).toContain('  readonly\n')
     expect(source).toContain('id="notes"')
     expect(source).toContain('inputClass="ml-2"')
+    expect(source).toContain('variant="embedded"')
+    expect(source).toContain('className="italic"')
   })
 
   it('omits component defaults (the Value column prefills them)', () => {
-    const source = buildTextAreaSnippet(state({ rows: staged('3', true), size: staged('md', true), disabled: staged('no', true), hideOutline: staged('no', true), readonly: staged('no', true) }))
+    const source = buildTextAreaSnippet(state({ rows: staged('3', true), size: staged('md', true), disabled: staged('no', true), hideOutline: staged('no', true), readonly: staged('no', true), variant: staged('bordered', true) }))
     expect(source).not.toContain('rows=')
     expect(source).not.toMatch(/^\s*size=/m)
     expect(source).not.toContain('disabled')
     expect(source).not.toContain('hideOutline')
     expect(source).not.toContain('readonly')
+    expect(source).not.toContain('variant=')
   })
 
   it('omits non-numeric rows', () => {
@@ -100,6 +107,22 @@ describe('buildTextAreaSnippet', () => {
     expect(off).not.toMatch(/^\s*size=/m)
     const on = buildTextAreaSnippet(state({ size: staged('lg', true) }))
     expect(on).toContain('size="lg"')
+  })
+
+  it('emits a non-default variant and omits the bordered default', () => {
+    expect(buildTextAreaSnippet(state({ variant: staged('embedded', true) }))).toContain(
+      '    variant="embedded"',
+    )
+    expect(buildTextAreaSnippet(state({ variant: staged('bordered', true) }))).not.toContain('variant=')
+    expect(buildTextAreaSnippet(state({ variant: staged('embedded') }))).not.toContain('variant=')
+  })
+
+  it('omits className while its eye is off and emits it while on', () => {
+    expect(buildTextAreaSnippet(state({ className: staged('italic') }))).not.toContain('className=')
+    expect(buildTextAreaSnippet(state({ className: staged('', true) }))).not.toContain('className=')
+    expect(buildTextAreaSnippet(state({ className: staged('italic', true) }))).toContain(
+      'className="italic"',
+    )
   })
 
   it('round-trips a multiline value through script state', () => {

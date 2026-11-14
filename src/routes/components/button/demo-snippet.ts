@@ -24,6 +24,7 @@ export interface ButtonSnippetState {
   tooltipAlign: Staged<string>
   buttonType: Staged<string>
   focusRing: Staged<TriState>
+  form: Staged<string>
   preventFocusSteal: Staged<TriState>
 }
 
@@ -54,6 +55,7 @@ export function buildButtonSnippet({
   tooltipAlign,
   buttonType,
   focusRing,
+  form,
   preventFocusSteal,
 }: ButtonSnippetState): string {
   const lines = [
@@ -80,6 +82,7 @@ export function buildButtonSnippet({
     ...enumAttrLine('tooltipAlign', tooltipAlign, 'center'),
     ...enumAttrLine('type', buttonType, 'button'),
     ...boolAttrLine('focusRing', focusRing, 'yes'),
+    ...textAttrLine('form', form),
     ...boolAttrLine('preventFocusSteal', preventFocusSteal, 'no'),
     ...(label.on
       ? ['  onClick={() => (clicks += 1)}>{label} ({clicks})']

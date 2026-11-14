@@ -170,6 +170,27 @@ test('showcase: the Pagination labels editor updates the demo and snippet', asyn
   await expect(page.getByRole('dialog')).toHaveCount(0)
 })
 
+// The compact variant replaces the numbered blocks with a previous/next pair
+// around one "Page X of Y" summary and drops the page-size selector.
+test('showcase: the Pagination variant Value cell switches to the compact summary', async ({ page }) => {
+  await page.goto('/components/pagination')
+  await page.waitForLoadState('networkidle')
+
+  const demo = showcaseDemo(page)
+  await page.getByRole('combobox', { name: 'variant value', exact: true }).click()
+  await page.getByRole('option', { name: 'compact' }).click()
+
+  await expect(demo).toContainText('Page 3 of 20')
+  await expect(demo.getByRole('button', { name: '20', exact: true })).toHaveCount(0)
+  await expect(demo.getByRole('combobox', { name: 'Page size' })).toHaveCount(0)
+
+  // Back to the default numbered blocks restores the page buttons and selector.
+  await page.getByRole('combobox', { name: 'variant value', exact: true }).click()
+  await page.getByRole('option', { name: 'numbered' }).click()
+  await expect(demo.getByRole('button', { name: '20', exact: true })).toBeVisible()
+  await expect(demo.getByRole('combobox', { name: 'Page size' })).toBeVisible()
+})
+
 test('showcase: the Pagination labels eye applies and unapplies the map', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.goto('/components/pagination')
