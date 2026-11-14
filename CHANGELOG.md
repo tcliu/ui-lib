@@ -5,6 +5,38 @@ version has one section, newest first; the format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-11-14
+
+### Added
+
+- `Tabs` takes `variant` (`segmented` default, `underline`), replacing the
+  second tab component.
+- `Chip` takes named `variant` (`cyan` default, plus sky, violet, amber,
+  fuchsia, emerald, rose, and neutral) and `appearance` (`soft` default,
+  `solid`, `outline`) tokens; `chipClass` stays the full override.
+- `Pagination` takes `variant` (`numbered` default, `compact` summary).
+- `Toast` takes `variant` (`soft` default, `solid`, `outline`) beside its
+  severity `type`.
+- A showcase props coverage gate in `npm run check`: every prop a component
+  declares has a props-table row, and every primitive-typed row has an editor.
+
+### Changed
+
+- `TextInput`, `NumberInput`, `SelectDropdown`, and `TextArea` share one
+  `variant` axis (`bordered` default, `embedded`); `AutoComplete`, `DateInput`,
+  and `DateField` forward it, so a field no longer re-declares another
+  control's chrome.
+- `TagInput`'s default palette cycles the shared chip tokens instead of keeping
+  a second palette.
+- Every primitive prop in the showcase props tables is editable, including the
+  previously read-only Chip `active`, Copyable `copyText`, Button `form`,
+  Resizable `pointerOnlyHandles`, DataTable `bordered`, and BaseDialog
+  `ariaLabel` and `dismissDisabled`.
+
+### Fixed
+
+- `DataTable` and `DataGrid` sort arrows sit on a 4px gap.
+
 ## [0.3.0] - 2026-11-03
 
 ### Changed
