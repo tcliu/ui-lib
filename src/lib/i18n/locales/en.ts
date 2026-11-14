@@ -29,6 +29,7 @@ export const en = {
     next: 'Next page',
     label: 'Pagination',
     current: 'Current page',
+    pageOf: 'Page {page} of {total}',
   },
   tabs: {
     label: 'Tabs',

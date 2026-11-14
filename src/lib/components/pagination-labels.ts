@@ -7,4 +7,7 @@ export interface PaginationLabels {
   pageSize?: string
   current?: string
   nav?: string
+  // Compact-variant summary; `{page}` and `{total}` are replaced with the
+  // current page and the page count.
+  pageOf?: string
 }

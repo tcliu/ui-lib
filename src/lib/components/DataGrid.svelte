@@ -298,7 +298,7 @@
                   <span class="flex w-full items-center justify-center gap-1.5 text-center">
                     <span>{columnLabels?.[ci] ?? columnLetter(ci)}</span>
                     <span
-                      class="flex flex-col gap-0.5 text-slate-400 transition-opacity {isSortActive
+                      class="flex flex-col gap-1 text-slate-400 transition-opacity {isSortActive
                         ? 'opacity-100'
                         : '[@media(hover:hover)]:opacity-0'} group-hover:opacity-100 focus-within:opacity-100">
                       <button

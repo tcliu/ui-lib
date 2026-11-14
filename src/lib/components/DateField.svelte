@@ -59,6 +59,12 @@
     // Accessible name for the calendar affordance inside the field.
     actionLabel: string
     theme?: DateInputTheme
+    // Chrome variant forwarded to the shared text field: `bordered` (default)
+    // or `embedded` for a field inside another surface.
+    variant?: 'bordered' | 'embedded'
+    // Drop the bordered field's outline while keeping its surface, metrics,
+    // and text rules.
+    hideOutline?: boolean
     // Keep the panel open after a pick, so the time can be set.
     closeOnSelect?: boolean
     // The pair's other end (a range field): the day it holds and the action
@@ -80,6 +86,8 @@
     label,
     actionLabel,
     theme = {},
+    variant = 'bordered',
+    hideOutline = false,
     closeOnSelect = true,
     sibling,
     highlight,
@@ -288,6 +296,8 @@
     placeholder={label}
     {size}
     ratios={fieldRatios}
+    {variant}
+    {hideOutline}
     inputStyle="width:{fieldWidth}"
     className="pr-[calc(var(--pick-pad-x)+var(--pick-icon)+var(--pick-gap))]"
     trailing={calendarButton}

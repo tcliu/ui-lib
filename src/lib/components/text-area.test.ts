@@ -37,6 +37,19 @@ describe('TextArea', () => {
     expect(render().classList.contains('h-full')).toBe(true)
   })
 
+  it('drops the border, surface, and metrics in the embedded variant', () => {
+    const area = render({ variant: 'embedded' })
+    expect(area.className).toContain('bg-transparent')
+    expect(area.className).not.toContain('border-slate-700')
+    expect(area.className).not.toContain('bg-slate-950')
+    expect(area.className).not.toContain('rounded-[var(--input-radius)]')
+  })
+
+  it('appends the caller className after the base', () => {
+    const area = render({ variant: 'embedded', className: 'text-slate-100' })
+    expect(area.className).toContain('text-slate-100')
+  })
+
   it('binds the value both ways', () => {
     const area = render({ value: 'one\ntwo' })
     expect(area.value).toBe('one\ntwo')

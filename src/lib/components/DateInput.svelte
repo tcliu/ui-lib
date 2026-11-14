@@ -54,6 +54,12 @@
     // a date, or a date-time when `time` is set.
     format?: string
     theme?: DateInputTheme
+    // Chrome variant forwarded to each field: `bordered` (default) or
+    // `embedded` for a picker inside another surface.
+    variant?: 'bordered' | 'embedded'
+    // Drop the bordered field's outline while keeping its surface, metrics,
+    // and text rules.
+    hideOutline?: boolean
     // Close the panel after a day pick; defaults to closing, except when a
     // field edits a time, where the pick only starts the entry.
     closeOnSelect?: boolean
@@ -76,6 +82,8 @@
     placeholder,
     format,
     theme = {},
+    variant = 'bordered',
+    hideOutline = false,
     closeOnSelect,
     highlightRange = false,
   }: Props = $props()
@@ -164,6 +172,8 @@
       label={fromLabel}
       actionLabel={`${fromLabel}: ${calendarLabel}`}
       {theme}
+      {variant}
+      {hideOutline}
       closeOnSelect={closeOnPick}
       sibling={fromSibling}
       highlight={span} />
@@ -179,6 +189,8 @@
       label={toLabel}
       actionLabel={`${toLabel}: ${calendarLabel}`}
       {theme}
+      {variant}
+      {hideOutline}
       closeOnSelect={closeOnPick}
       sibling={toSibling}
       highlight={span} />
@@ -193,6 +205,8 @@
       label={message}
       actionLabel={calendarLabel}
       {theme}
+      {variant}
+      {hideOutline}
       closeOnSelect={closeOnPick} />
   {/if}
 </div>

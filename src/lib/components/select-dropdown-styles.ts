@@ -57,8 +57,18 @@ export const DEFAULT_PANEL_CLASS =
 // while keyboard focus draws a ring with the border transparent, so a hovered
 // trigger and the focused trigger are never mistaken for each other — a
 // pointer can hover one while focus sits on another.
-export const TRIGGER_BASE =
-  'inline-flex cursor-pointer items-center justify-between gap-2 rounded-md border border-slate-700 bg-slate-950 text-left text-slate-100 outline-none transition motion-reduce:transition-none hover:border-cyan-500'
+const TRIGGER_LAYOUT =
+  'inline-flex cursor-pointer items-center justify-between gap-2 text-left outline-none transition motion-reduce:transition-none'
+export const TRIGGER_BASE = `${TRIGGER_LAYOUT} rounded-md border border-slate-700 bg-slate-950 text-slate-100 hover:border-cyan-500`
+// The bordered surface without its outline: the surface and text rules stay,
+// while the border, its hover tint, and its focus color drop, for a trigger
+// that sits inside a caller-owned row without drawing a second box.
+export const TRIGGER_NO_OUTLINE = `${TRIGGER_LAYOUT} bg-slate-950 text-slate-100`
+// The chrome of a trigger embedded in another surface (a toolbar, a table
+// cell): the container owns the border, surface, and focus ring, so the
+// trigger drops all three and leaves the text rules to its context, like the
+// shared embedded text field.
+export const TRIGGER_EMBEDDED = `${TRIGGER_LAYOUT} bg-transparent`
 export const OPTION_BASE =
   'flex w-full cursor-pointer items-center justify-between gap-2 rounded-md text-left outline-none transition-none max-phone:min-h-11'
 export const EMPTY_BASE = 'text-slate-400'

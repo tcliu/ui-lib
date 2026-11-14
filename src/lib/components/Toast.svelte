@@ -1,6 +1,7 @@
 <script module lang="ts">
   export type ToastPosition = 'top-right' | 'top-center' | 'bottom-right' | 'bottom-center'
   export type ToastType = 'success' | 'info' | 'warning' | 'error'
+  export type ToastVariant = 'soft' | 'solid' | 'outline'
 </script>
 
 <script lang="ts">
@@ -16,6 +17,9 @@
     position?: ToastPosition
     size?: SizeInput
     type?: ToastType
+    // Presentation: `soft` (default) tints the surface, `solid` fills it, and
+    // `outline` keeps a dark surface with a type-colored frame.
+    variant?: ToastVariant
     // The action button renders only when an action is set.
     action?: { label: string; onClick: () => void }
     onClose: () => void
@@ -28,6 +32,7 @@
     position = 'bottom-right',
     size = 'md',
     type = 'info',
+    variant = 'soft',
     onClose,
   }: Props = $props()
 
@@ -49,7 +54,7 @@
   const toastMetrics = $derived(dimensionMetrics(size, TOAST_RATIOS))
   const toastStyle = $derived(sizeVarStyle('toast', toastMetrics))
 
-  const typeClasses: Record<ToastType, string> = {
+  const SOFT: Record<ToastType, string> = {
     success:
       'border border-transparent border-l-8 border-l-[var(--toast-success-border)] bg-[var(--toast-success-bg)] text-[var(--toast-success-fg)]',
     info: 'border border-transparent border-l-8 border-l-[var(--toast-info-border)] bg-[var(--toast-info-bg)] text-[var(--toast-info-fg)]',
@@ -57,6 +62,30 @@
       'border border-transparent border-l-8 border-l-[var(--toast-warning-border)] bg-[var(--toast-warning-bg)] text-[var(--toast-warning-fg)]',
     error:
       'border border-transparent border-l-8 border-l-[var(--toast-error-border)] bg-[var(--toast-error-bg)] text-[var(--toast-error-fg)]',
+  }
+
+  // A solid toast fills the whole surface with the type's own background and
+  // keeps its paired foreground token, so the ink is never a remapped grade.
+  const SOLID: Record<ToastType, string> = {
+    success: 'border border-[var(--toast-success-border)] bg-[var(--toast-success-bg)] text-[var(--toast-success-fg)]',
+    info: 'border border-[var(--toast-info-border)] bg-[var(--toast-info-bg)] text-[var(--toast-info-fg)]',
+    warning: 'border border-[var(--toast-warning-border)] bg-[var(--toast-warning-bg)] text-[var(--toast-warning-fg)]',
+    error: 'border border-[var(--toast-error-border)] bg-[var(--toast-error-bg)] text-[var(--toast-error-fg)]',
+  }
+
+  // An outline toast keeps the page surface and lets the type-colored frame
+  // carry the severity.
+  const OUTLINE: Record<ToastType, string> = {
+    success: 'border border-[var(--toast-success-border)] border-l-8 bg-slate-950/95 text-slate-100',
+    info: 'border border-[var(--toast-info-border)] border-l-8 bg-slate-950/95 text-slate-100',
+    warning: 'border border-[var(--toast-warning-border)] border-l-8 bg-slate-950/95 text-slate-100',
+    error: 'border border-[var(--toast-error-border)] border-l-8 bg-slate-950/95 text-slate-100',
+  }
+
+  const variantClasses: Record<ToastVariant, Record<ToastType, string>> = {
+    soft: SOFT,
+    solid: SOLID,
+    outline: OUTLINE,
   }
 
   // Escape dismisses the toast. Dialogs consume Escape first in the capture
@@ -80,7 +109,7 @@
   role="status"
   aria-live="polite"
   style={toastStyle}
-  class={`fixed z-40 flex items-start gap-3 rounded-md px-4 py-3 shadow-lg shadow-slate-950/25 backdrop-blur-sm ${typeClasses[type]} ${positionClasses[position]}`}>
+  class={`fixed z-40 flex items-start gap-3 rounded-md px-4 py-3 shadow-lg shadow-slate-950/25 backdrop-blur-sm ${variantClasses[variant][type]} ${positionClasses[position]}`}>
   <p class="min-w-0 flex-1 font-medium text-[length:var(--toast-font)] leading-[var(--toast-line)]">{message}</p>
   {#if action}
     <Button variant="ghost" {size} onClick={action.onClick} className="shrink-0 px-2.5 py-1.5 font-semibold">

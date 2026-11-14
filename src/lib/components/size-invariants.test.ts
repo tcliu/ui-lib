@@ -182,7 +182,7 @@ const CASES: ComponentCase[] = [
   },
   {
     name: 'Tabs',
-    keys: ['tabs-font', 'tabs-pad-x', 'tabs-pad-y', 'tabs-radius', 'tabs-nav-pad', 'tabs-nav-radius'],
+    keys: ['tabs-font', 'tabs-pad-x', 'tabs-pad-y', 'tabs-radius', 'tabs-underline-radius', 'tabs-nav-pad', 'tabs-nav-radius'],
     render: size => renderStyle(TabsHarness, { size }),
   },
   {

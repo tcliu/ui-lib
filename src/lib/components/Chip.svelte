@@ -2,13 +2,20 @@
   import Tooltip from './Tooltip.svelte'
   import CloseIcon from '#lib/icons/CloseIcon.svelte'
   import { getI18nContext } from '#lib/i18n/store.svelte.js'
-  import { type SizeInput } from '#lib/size-scale.js'
+  import type { SizeInput } from '#lib/size-scale.js'
+  import { chipVariantClass, type ChipAppearance, type ChipColor } from '#lib/chip-variants.js'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
   const i18n = getI18nContext()
 
   interface Props {
     label: string
-    chipClass: string
+    // A caller-supplied class owns the whole pill (shape included). Omit it to
+    // use the named `variant`/`appearance` tokens below.
+    chipClass?: string
+    // Named color and presentation for the pill; `chipClass` wins when both are
+    // set, so existing callers keep their custom look.
+    variant?: ChipColor
+    appearance?: ChipAppearance
     size?: SizeInput
     style?: string
     removeLabel?: string
@@ -23,8 +30,8 @@
     removable?: boolean
     onRemove?: () => void
     // Toggle mode: renders an `aria-pressed` button instead of the static
-    // pill. `chipClass` supplies the color; the pressed frame swaps border
-    // weight while the invisible-bold grid keeps the width stable.
+    // pill. The variant (or `chipClass`) supplies the color; the pressed frame
+    // swaps border weight while the invisible-bold grid keeps the width stable.
     active?: boolean
     onclick?: () => void
   }
@@ -32,6 +39,8 @@
   let {
     label,
     chipClass,
+    variant = 'cyan',
+    appearance = 'soft',
     size = 'md',
     style = '',
     removeLabel,
@@ -55,10 +64,11 @@
   // Every metric is a fixed ratio of the size dimension, calibrated so the
   // default `md` reproduces the pill's current metrics: a 12px label, 8/2
   // padding, a 4px label→remove gap, and the 7.3px remove cross. Chip owns the
-  // size-scaled spacing; `chipClass` supplies color and shape (radius) only.
-  // The remove cross's icon size is 0.5625 of the size dimension (9px at `md`),
-  // and `resolveIconPx` renders the cross at 0.8125 of that (7.3px), because a
-  // glyph fills its box and the shared icon ratio trims the artwork inside it.
+  // size-scaled spacing; the variant (or a caller `chipClass`) supplies color
+  // and shape (radius) only. The remove cross's icon size is 0.5625 of the size
+  // dimension (9px at `md`), and `resolveIconPx` renders the cross at 0.8125 of
+  // that (7.3px), because a glyph fills its box and the shared icon ratio trims
+  // the artwork inside it.
   const CHIP_RATIOS = {
     font: 0.75,
     line: 1,
@@ -70,6 +80,9 @@
 
   const metrics = $derived(dimensionMetrics(size, CHIP_RATIOS))
   const chipStyle = $derived(sizeVarStyle('chip', metrics))
+
+  // A caller class wins, keeping the pre-variant call sites byte-identical.
+  const resolvedChipClass = $derived(chipClass ?? chipVariantClass(variant, appearance))
 </script>
 
 <span class={tooltip ? 'group relative inline-flex' : 'inline-flex'} style={chipStyle}>
@@ -79,14 +92,14 @@
       aria-pressed={active}
       {onclick}
       {disabled}
-      class={`inline-flex w-fit cursor-pointer items-center gap-[var(--chip-gap)] rounded-full px-[var(--chip-pad-x)] py-[var(--chip-pad-y)] text-[length:var(--chip-font)] leading-[var(--chip-line)] transition disabled:cursor-not-allowed ${chipClass} ${active ? 'border-2 font-semibold opacity-100' : 'm-px border opacity-70 hover:opacity-100'}`}>
+      class={`inline-flex w-fit cursor-pointer items-center gap-[var(--chip-gap)] rounded-full px-[var(--chip-pad-x)] py-[var(--chip-pad-y)] text-[length:var(--chip-font)] leading-[var(--chip-line)] transition disabled:cursor-not-allowed ${resolvedChipClass} ${active ? 'border-2 font-semibold opacity-100' : 'm-px border opacity-70 hover:opacity-100'}`}>
       <span class="grid">
         <span class="col-start-1 row-start-1 {active ? 'font-semibold' : ''}">{label}</span>
         <span class="invisible col-start-1 row-start-1 font-semibold" aria-hidden="true">{label}</span>
       </span>
     </button>
   {:else}
-    <span {style} class={`${chipClass} inline-flex items-center gap-[var(--chip-gap)] px-[var(--chip-pad-x)] py-[var(--chip-pad-y)] text-[length:var(--chip-font)] leading-[var(--chip-line)]`}>
+    <span {style} class={`${resolvedChipClass} inline-flex items-center gap-[var(--chip-gap)] px-[var(--chip-pad-x)] py-[var(--chip-pad-y)] text-[length:var(--chip-font)] leading-[var(--chip-line)]`}>
       {label}
       {#if showRemove}
         <button

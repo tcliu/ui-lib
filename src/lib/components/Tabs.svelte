@@ -19,6 +19,10 @@
     pathname?: string
     ariaLabel?: string
     className?: string
+    // Presentation variant. `segmented` (default) is the pill row inside a
+    // bordered nav; `underline` is the bordered baseline strip where each tab
+    // carries a bottom accent on the active one.
+    variant?: 'segmented' | 'underline'
     size?: SizeInput
   }
 
@@ -28,19 +32,55 @@
     pathname,
     ariaLabel,
     className = '',
+    variant = 'segmented',
     size = 'md',
   }: Props<TState> = $props()
 
   // Fixed ratios of the size dimension, calibrated so `md` reproduces the
   // original tab bar: a 14px label, 12/8 tab padding, an 8px tab radius, and the
-  // nav's 4px padding and 12px radius.
-  const TABS_RATIOS = { font: 0.875, padX: 0.75, padY: 0.5, radius: 0.5, navPad: 0.25, navRadius: 0.75 }
+  // nav's 4px padding and 12px radius. The underline variant's top-corner radius
+  // is its own ratio (6px at `md`), matching its reference strip.
+  const TABS_RATIOS = {
+    font: 0.875,
+    padX: 0.75,
+    padY: 0.5,
+    radius: 0.5,
+    underlineRadius: 0.375,
+    navPad: 0.25,
+    navRadius: 0.75,
+  }
 
   const metrics = $derived(dimensionMetrics(size, TABS_RATIOS))
   const tabsStyle = $derived(sizeVarStyle('tabs', metrics))
 
-  // Built-in header row classes; `className` appends to these.
-  const HEADER_ROW_CLASS = 'sticky top-0 z-10 flex w-full flex-wrap items-center justify-between gap-2 bg-transparent pb-3'
+  const isUnderline = $derived(variant === 'underline')
+
+  // Built-in header row classes; `className` appends to these. The underline
+  // strip owns the baseline, so it sits flush with it instead of reserving the
+  // segmented row's bottom padding.
+  const HEADER_ROW_CLASS = 'sticky top-0 z-10 flex w-full flex-wrap items-center justify-between gap-2 bg-transparent'
+  const headerRowClass = $derived(`${HEADER_ROW_CLASS} ${isUnderline ? 'items-end border-b border-slate-800 mb-3' : 'pb-3'} ${className}`)
+
+  const NAV_CLASS =
+    'inline-flex rounded-[var(--tabs-nav-radius)] border border-slate-700 bg-slate-950 p-[var(--tabs-nav-pad)]'
+  const UNDERLINE_NAV_CLASS = 'flex min-w-0 flex-1 flex-wrap items-end gap-[var(--tabs-nav-pad)]'
+
+  function tabClass(active: boolean): string {
+    const base =
+      'text-[length:var(--tabs-font)] font-medium transition outline-none focus-visible:ring-2 motion-reduce:transition-none'
+    if (isUnderline) {
+      return `${base} inline-flex items-center rounded-t-[var(--tabs-underline-radius)] border-b-2 px-[var(--tabs-pad-x)] py-[var(--tabs-pad-y)] focus-visible:ring-inset focus-visible:ring-cyan-500/45 ${
+        active
+          ? 'border-cyan-500 text-slate-200 hover:bg-slate-900/60'
+          : 'border-transparent text-slate-400 hover:bg-slate-900/60 hover:text-cyan-300 focus-visible:text-cyan-300'
+      }`
+    }
+    return `${base} rounded-[var(--tabs-radius)] px-[var(--tabs-pad-x)] py-[var(--tabs-pad-y)] focus-visible:ring-cyan-500 ${
+      active
+        ? 'bg-cyan-500 text-onaccent'
+        : 'text-slate-300 hover:text-cyan-300 focus-visible:text-cyan-300'
+    }`
+  }
 
   // Derived (not a plain const) so locale switches re-resolve the label.
   const resolvedAriaLabel = $derived(ariaLabel ?? i18n.t('tabs.label'))
@@ -51,8 +91,8 @@
 </script>
 
 <div class="flex min-h-0 flex-1 flex-col" style={tabsStyle}>
-  <div class={`${HEADER_ROW_CLASS} ${className}`}>
-    <nav aria-label={resolvedAriaLabel} class="inline-flex rounded-[var(--tabs-nav-radius)] border border-slate-700 bg-slate-950 p-[var(--tabs-nav-pad)]">
+  <div class={headerRowClass}>
+    <nav aria-label={resolvedAriaLabel} class={isUnderline ? UNDERLINE_NAV_CLASS : NAV_CLASS}>
       {#each tabs as tab}
         {#if pathname !== undefined}
           <a
@@ -63,7 +103,7 @@
                 event.preventDefault()
               }
             }}
-            class={`rounded-[var(--tabs-radius)] px-[var(--tabs-pad-x)] py-[var(--tabs-pad-y)] text-[length:var(--tabs-font)] font-medium transition outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 motion-reduce:transition-none ${tab.path === pathname ? 'bg-cyan-500 text-onaccent' : 'text-slate-300 hover:text-cyan-300 focus-visible:text-cyan-300'}`}>
+            class={tabClass(tab.path === pathname)}>
             {tab.label}
           </a>
         {:else}
@@ -71,7 +111,7 @@
             type="button"
             aria-pressed={tab.path === activeTab?.path}
             onclick={() => (activePath = tab.path)}
-            class={`rounded-[var(--tabs-radius)] px-[var(--tabs-pad-x)] py-[var(--tabs-pad-y)] text-[length:var(--tabs-font)] font-medium transition outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 motion-reduce:transition-none ${tab.path === activeTab?.path ? 'bg-cyan-500 text-onaccent' : 'text-slate-300 hover:text-cyan-300 focus-visible:text-cyan-300'}`}>
+            class={tabClass(tab.path === activeTab?.path)}>
             {tab.label}
           </button>
         {/if}

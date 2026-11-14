@@ -67,6 +67,12 @@
     ratios?: AutoCompleteRatioOverrides
     inputRef?: HTMLInputElement | null
     disabled?: boolean
+    // Chrome variant forwarded to the shared text field: `bordered` (default)
+    // or `embedded` for a field inside another surface.
+    variant?: 'bordered' | 'embedded'
+    // Drop the bordered field's outline while keeping its surface, metrics,
+    // and text rules.
+    hideOutline?: boolean
   }
 
   let {
@@ -87,6 +93,8 @@
     align = 'left',
     autoPlace = true,
     panelClass,
+    variant = 'bordered',
+    hideOutline = false,
   }: Props = $props()
 
   let id = $props.id()
@@ -320,6 +328,8 @@
     {ariaLabel}
     {size}
     ratios={fieldRatios}
+    {variant}
+    {hideOutline}
     {defaultValue}
     {clearable}
     {clearLabel}

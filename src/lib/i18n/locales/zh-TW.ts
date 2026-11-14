@@ -29,6 +29,7 @@ export const zhTW = {
     next: '下一頁',
     label: '分頁',
     current: '目前頁',
+    pageOf: '第 {page} / {total} 頁',
   },
   tabs: {
     label: '頁籤',

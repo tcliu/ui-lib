@@ -17,6 +17,8 @@
     SELECT_TRIGGER_UTILITIES,
     SELECT_RATIOS,
     TRIGGER_BASE,
+    TRIGGER_EMBEDDED,
+    TRIGGER_NO_OUTLINE,
     OPTION_BASE,
     EMPTY_BASE,
     type SelectRatioOverrides,
@@ -60,6 +62,13 @@
     // chevron's own gutter, min-width, gap, and icon slot); omitted keys keep
     // the shared defaults. The line box follows `font`.
     ratios?: SelectRatioOverrides
+    // Chrome variant: `bordered` (default) is the shared trigger box;
+    // `embedded` drops the border, surface, and focus styles for a trigger
+    // inside another surface.
+    variant?: 'bordered' | 'embedded'
+    // Drop the bordered trigger's outline (border, hover tint, focus border)
+    // while keeping its surface, metrics, and text rules.
+    hideOutline?: boolean
     onSelect: (value: string) => void
     buttonClass?: string
     controlClass?: string
@@ -83,6 +92,8 @@
     onSelect,
     size = 'md',
     ratios,
+    variant = 'bordered',
+    hideOutline = false,
     buttonClass,
     controlClass,
     optionClass,
@@ -125,16 +136,26 @@
   // rides — staying lighter affordances that still scale with the control.
   const affordanceSize = $derived(metrics.icon * 0.625)
 
-  const triggerBoxClass = $derived(`${SELECT_TRIGGER_UTILITIES} ${TRIGGER_BASE}`)
+  const triggerBoxClass = $derived(
+    `${SELECT_TRIGGER_UTILITIES} ${
+      variant === 'embedded' ? TRIGGER_EMBEDDED : hideOutline ? TRIGGER_NO_OUTLINE : TRIGGER_BASE
+    }`,
+  )
+  // The border and focus treatments belong to the bordered chrome together;
+  // `embedded` and `hideOutline` leave them to the caller, like the shared
+  // text-field chrome.
+  const outlined = $derived(variant === 'bordered' && !hideOutline)
 
   const resolvedButtonClass = $derived(
     buttonClass ??
-      `${triggerBoxClass} focus-visible:border-transparent focus-visible:ring-2 focus-visible:ring-cyan-500`,
+      `${triggerBoxClass} ${outlined ? 'focus-visible:border-transparent focus-visible:ring-2 focus-visible:ring-cyan-500' : ''}`.trim(),
   )
 
   const resolvedButtonStyle = $derived(buttonClass ? undefined : style)
 
-  const resolvedControlClass = $derived(controlClass ?? `${triggerBoxClass} focus-within:border-cyan-500`)
+  const resolvedControlClass = $derived(
+    controlClass ?? `${triggerBoxClass} ${outlined ? 'focus-within:border-cyan-500' : ''}`.trim(),
+  )
 
   const resolvedControlStyle = $derived(controlClass ? undefined : style)
 

@@ -112,6 +112,10 @@ Project-specific development conventions for the UI Library web app.
   field uses that base instead of re-declaring it. A field drops its outline with
   `hideOutline` (the base's borderless surface, padding, and text metrics) rather
   than a custom `inputClass`, and every input-family control forwards it.
+  `TextInput`, `NumberInput`, `SelectDropdown`, and `TextArea` take the same
+  `variant` (`bordered` default, `embedded`); composites (`AutoComplete`,
+  `DateInput`/`DateField`) forward both, so a field never re-declares another
+  component's chrome.
 - A text-field control's metrics live in its own exported ratio set built over
   the shared ones (`FIELD_RATIOS` for the text metrics, `TEXT_INPUT_RATIOS` for a
   field with its clear affordance and outside-row gap), exposed as one partial
@@ -152,13 +156,17 @@ Project-specific development conventions for the UI Library web app.
   select sits level with a `TextInput` in one row; never tune the select padding
   beside the input's.
 - `Pagination`'s page blocks match the page-size dropdown trigger's height (same select line, vertical padding, and 1px border), so the row's controls sit level rather than from a hand-tuned block ratio; a page cell sizes in CSS alone — square at rest, widened only by its own label — and the active cell (the jump field) shares the page buttons' box for the same text and puts the caret at the end on focus/click (`caretAtEnd`).
+- `Pagination` takes `variant` (`numbered` default, `compact` summary): compact keeps previous/next around the `pagination.pageOf` summary and omits the page-size selector; labels.pageOf substitutes `{page}` and `{total}`.
 - A dialog panel's footprint is `BaseDialog`'s `widthVariant`/`heightVariant` (or the `size` shorthand setting both; explicit variant wins), not a `SizeInput` metric scale. Mechanism in `ARCHITECTURE.md`.
 - Size svg primitives (icons, spinner) take `size` attributes, never classes.
 - A sized control's icon slot is the size dimension itself (`icon` ratio `1`), while the glyph renders at the shared `ICON_RATIO` (`0.8125`), keeping the optical size the filled-viewBox glyphs were normalized from.
 - An in-field affordance glyph rides a trimmed share of the icon slot rather than the whole slot — the dropdown trigger's chevron and its clear cross and a clearable field's cross at `0.625×`, the number steppers at `0.75×`, the date panel's clear cross at `0.8×`, the search icon at `0.9×` — so it reads lighter than the label while still scaling with the control.
 - `ChipDropdown` scales on the shared size axis (its ratios calibrated so `md` reproduces the original chip's label, padding, and gaps, with its chevron on `SelectDropdown`'s `0.625×` affordance share) and reserves the clear slot while holding its own label width, so clearing never resizes it.
 - `Chip` owns its size-scaled spacing (padding, font, line, gap) on the shared axis; `chipClass` supplies color and the static pill's shape (radius), so a caller passes `size` instead of baking padding/font into the class.
+- A chip color is a named `variant` (`cyan` default, sky/violet/amber/fuchsia/emerald/rose/neutral) with `appearance` (`soft` default, `solid`, `outline`) from `chip-variants.ts`; `chipClass` stays the full override for a custom pill, and `TagInput`'s default palette cycles the same tokens instead of keeping a second palette.
 - `FormField` and `Tabs` scale their own chrome on the shared axis — `FormField`: label, gaps, and inline label column; `Tabs`: nav/tab text, padding, and radius; the controls slotted into a `FormField` stay the caller's to size.
+- `Tabs` takes `variant` (`segmented` default, `underline` baseline strip) instead of a second tab component; both presentations ride the shared size axis.
+- `Toast` takes a presentation `variant` (`soft` default, `solid`, `outline`) beside its severity `type`; soft tints, solid fills with the type's `--toast-*` bg/fg tokens (never a remapped slate grade), and outline keeps the page surface with a type-colored frame.
 - The date input is one control: a single `DateField` owns the shared `TextInput` field and the calendar, and `DateInput` composes one field or a `range` pair with a separator — each field behaving as the single field, so a range and a time coexist — so the calendar, the `size` axis, the dayjs `format` pattern, and the `theme` live in the one field.
 - A range pair hands the focus to the empty end when the other one is filled and keeps its two instants in order (a commit on the wrong side exchanges the ends); mechanism in `ARCHITECTURE.md`.
 - A date field edits its value as text: filter to the pattern's characters, parse strictly on commit, revert anything else; a field whose pattern carries clock tokens also takes it in part, defaulting the missing units. Mechanism in `ARCHITECTURE.md`.

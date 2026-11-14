@@ -24,6 +24,10 @@
     pageSizeOptions?: number[]
     // Per-field label overrides; each unset field falls back to its i18n key.
     labels?: PaginationLabels
+    // Presentation. `numbered` (default) is the paged blocks with the
+    // page-size selector; `compact` is previous/next around a "Page X of Y"
+    // summary and omits the page-size selector.
+    variant?: 'numbered' | 'compact'
     // Arbitrary trailing content pinned to the pagination row's right edge
     // (e.g. a row total). Omitted when undefined.
     trailing?: Snippet
@@ -39,6 +43,7 @@
     onPageSizeChange,
     pageSizeOptions = [10, 20, 50],
     labels,
+    variant = 'numbered',
     trailing,
   }: Props = $props()
 
@@ -77,6 +82,13 @@
   const totalPages = $derived(Math.max(1, Math.ceil(total / pageSize)))
   const canGoPrev = $derived(currentPage > 1)
   const canGoNext = $derived(currentPage < totalPages)
+  // The compact summary substitutes the caller's placeholders, or resolves the
+  // translated template with the live page numbers.
+  const resolvedPageOfLabel = $derived(
+    labels?.pageOf
+      ? labels.pageOf.replace(/\{page\}/g, String(currentPage)).replace(/\{total\}/g, String(totalPages))
+      : i18n.t('pagination.pageOf', { page: currentPage, total: totalPages }),
+  )
 
   const iconButtonClass =
     'relative inline-flex h-[var(--pg-btn)] w-[var(--pg-btn)] items-center justify-center rounded-md border border-slate-700 bg-slate-950 font-semibold text-slate-100 outline-none transition hover:border-cyan-500 hover:text-cyan-300 focus-visible:border-cyan-500 focus-visible:text-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-500 disabled:cursor-not-allowed disabled:opacity-40'
@@ -211,36 +223,40 @@
     <ChevronLeftIcon size={pgIconPx} />
   </button>
 
-  {#if showStartEllipsis}
-    <button type="button" onclick={() => goToPage(1)} class={pageButtonClass}>1</button>
-    <span class={`inline-flex ${pageButtonBox} items-center justify-center font-semibold text-slate-500`}
-      >…</span>
-  {/if}
-
-  {#each pageNumbers as pageNum (pageNum)}
-    {#if pageNum === currentPage}
-      <NumberInput
-        bind:this={pageJumpInput}
-        bind:value={pageJumpInputValue}
-        {size}
-        min={1}
-        max={totalPages}
-        onblur={handlePageInputBlur}
-        onkeydown={handlePageInputKeydown}
-        ariaLabel={resolvedCurrentPageLabel}
-        showControls={false}
-        variant="embedded"
-        caretAtEnd
-        className={jumpInputClass} />
-    {:else}
-      <button type="button" onclick={() => goToPage(pageNum)} class={pageButtonClass}>{pageNum}</button>
+  {#if variant === 'compact'}
+    <span class="px-[var(--pg-pad-x)] font-semibold text-slate-300">{resolvedPageOfLabel}</span>
+  {:else}
+    {#if showStartEllipsis}
+      <button type="button" onclick={() => goToPage(1)} class={pageButtonClass}>1</button>
+      <span class={`inline-flex ${pageButtonBox} items-center justify-center font-semibold text-slate-500`}
+        >…</span>
     {/if}
-  {/each}
 
-  {#if showEndEllipsis}
-    <span class={`inline-flex ${pageButtonBox} items-center justify-center font-semibold text-slate-500`}
-      >…</span>
-    <button type="button" onclick={() => goToPage(totalPages)} class={pageButtonClass}>{totalPages}</button>
+    {#each pageNumbers as pageNum (pageNum)}
+      {#if pageNum === currentPage}
+        <NumberInput
+          bind:this={pageJumpInput}
+          bind:value={pageJumpInputValue}
+          {size}
+          min={1}
+          max={totalPages}
+          onblur={handlePageInputBlur}
+          onkeydown={handlePageInputKeydown}
+          ariaLabel={resolvedCurrentPageLabel}
+          showControls={false}
+          variant="embedded"
+          caretAtEnd
+          className={jumpInputClass} />
+      {:else}
+        <button type="button" onclick={() => goToPage(pageNum)} class={pageButtonClass}>{pageNum}</button>
+      {/if}
+    {/each}
+
+    {#if showEndEllipsis}
+      <span class={`inline-flex ${pageButtonBox} items-center justify-center font-semibold text-slate-500`}
+        >…</span>
+      <button type="button" onclick={() => goToPage(totalPages)} class={pageButtonClass}>{totalPages}</button>
+    {/if}
   {/if}
 
   <button
@@ -252,7 +268,7 @@
     <ChevronRightIcon size={pgIconPx} />
   </button>
 
-  {#if onPageSizeChange}
+  {#if variant === 'numbered' && onPageSizeChange}
     <div class="flex items-center gap-1.5">
       <span>{resolvedPageSizeLabel}</span>
       <div class="relative">

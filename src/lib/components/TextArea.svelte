@@ -5,6 +5,7 @@
     FIELD_RATIOS,
     INPUT_CHROME,
     INPUT_CHROME_NO_OUTLINE,
+    INPUT_EMBEDDED,
     INPUT_METRIC_CLASS,
     type FieldRatioOverrides,
   } from './input-chrome'
@@ -26,6 +27,14 @@
     inputRef?: HTMLTextAreaElement | null
     // Replaces the whole textarea class string (the override owns the metrics).
     inputClass?: string
+    // Chrome variant: `bordered` (default) is the shared chrome; `embedded` is
+    // the chrome-less base for a textarea inside another surface (the container
+    // owns the border, the background, and the focus ring). The caller supplies
+    // the text rules through `className`, like the shared `TextInput`.
+    variant?: 'bordered' | 'embedded'
+    // Extra classes appended after the base: for an embedded field, the text
+    // rules and metrics it owns.
+    className?: string
     // Drop the bordered chrome's outline (border and focus border) while
     // keeping its surface, metrics, and text rules.
     hideOutline?: boolean
@@ -47,6 +56,8 @@
     rows = 3,
     inputRef = $bindable(null),
     inputClass,
+    variant = 'bordered',
+    className = '',
     hideOutline = false,
     oninput,
     onkeydown,
@@ -65,11 +76,15 @@
   const safeRows = $derived(Number.isInteger(rows) && rows > 0 ? rows : 3)
 
   // Fills the container height by default (like the code editors); an
-  // `inputClass` override owns the metrics and drops the fill.
-  const resolvedClass = $derived(
-    inputClass ??
-      `${hideOutline ? INPUT_CHROME_NO_OUTLINE : INPUT_CHROME} h-full resize-y ${INPUT_METRIC_CLASS}`,
+  // `inputClass` override owns the metrics and drops the fill. The embedded
+  // variant drops the border, surface, and focus color together, like the
+  // shared text-field chrome.
+  const baseClass = $derived(
+    variant === 'embedded'
+      ? `${INPUT_EMBEDDED} h-full resize-y`
+      : `${hideOutline ? INPUT_CHROME_NO_OUTLINE : INPUT_CHROME} h-full resize-y ${INPUT_METRIC_CLASS}`,
   )
+  const resolvedClass = $derived(`${inputClass ?? baseClass}${className ? ` ${className}` : ''}`)
 </script>
 
 <textarea

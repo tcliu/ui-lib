@@ -233,6 +233,14 @@ describe('TagInput chip colours', () => {
     expect(classes[0]).not.toBe(classes[1])
   })
 
+  it('builds the default palette from the shared chip tokens', () => {
+    render({ value: ['svelte', 'kit'], options: [] })
+    for (const className of chipClasses()) {
+      expect(className).toContain('rounded-full')
+      expect(className).toMatch(/text-(cyan|sky|violet|amber|fuchsia|emerald|rose|slate)-200/)
+    }
+  })
+
   it('replaces the default palette through the palette prop', () => {
     render({ value: ['svelte', 'kit'], options: [], palette: ['border-fuchsia-700'] })
     for (const className of chipClasses()) {

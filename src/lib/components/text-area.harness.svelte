@@ -9,9 +9,32 @@
     disabled?: boolean
     readonly?: boolean
     ratios?: FieldRatioOverrides
+    variant?: 'bordered' | 'embedded'
+    className?: string
+    hideOutline?: boolean
   }
 
-  let { value = '', ariaLabel = 'Notes', rows, disabled, readonly, ratios }: Props = $props()
+  let {
+    value = '',
+    ariaLabel = 'Notes',
+    rows,
+    disabled,
+    readonly,
+    ratios,
+    variant,
+    className,
+    hideOutline,
+  }: Props = $props()
 </script>
 
-<TextArea bind:value {ariaLabel} {rows} {disabled} {readonly} {ratios} placeholder="Write…" />
+<TextArea
+  bind:value
+  {ariaLabel}
+  {rows}
+  {disabled}
+  {readonly}
+  {ratios}
+  {variant}
+  {className}
+  {hideOutline}
+  placeholder="Write…" />

@@ -343,7 +343,12 @@ of building a parallel control.
   their adornment (eye toggle, search icon, steppers)
   through its `leading`/`trailing` snippets; every input-family control forwards
   `hideOutline`, which drops the bordered outline while keeping the surface,
-  padding, and text metrics. `TextArea` is a `<textarea>`, so it
+  padding, and text metrics. The same family carries one `variant` axis —
+  `bordered` (default) or `embedded` — so `TextInput`, `NumberInput`,
+  `SelectDropdown`, and `TextArea` drop the border, surface, and focus ring
+  together for a field inside another surface; composites (`AutoComplete`,
+  `DateInput`/`DateField`) forward both props to their inner field instead of
+  re-declaring chrome. `TextArea` is a `<textarea>`, so it
   cannot compose an `<input>` and imports the same base directly, adding
   `h-full` so it fills its container height by default. A wrapper sets
   its adornment metrics on the frame with `wrapperStyle` and clears the adornment
@@ -454,6 +459,9 @@ of building a parallel control.
   (falling back to the fixed square where unsupported), so the active cell
   matches a page button holding the same text, and `caretAtEnd` places its
   caret after the value on focus and click so typing replaces the page number.
+  `variant="compact"` keeps the previous/next buttons around the
+  `pagination.pageOf` summary (`{page}`/`{total}` labels) and omits the numbered
+  blocks and page-size selector, so a tight footer still navigates.
   `ChipDropdown`'s `CHIP_RATIOS` make
   every metric — the label font and line, padding, the label→chevron and
   chip→clear-slot gaps, the chevron slot, the clear cross, and the label height
@@ -465,9 +473,13 @@ of building a parallel control.
   search field (with a size-scaled row min-width flooring the content-fit panel
   at the original 256px at `md`), so the option panel resizes with the chip like
   `SelectDropdown`'s. `Chip` scales its own padding, font, line, and label→remove
-  gap (and the remove cross) from the dimension, leaving `chipClass` to carry
-  color and the static pill's shape. `FormField` scales its label, gaps, and
-  inline label column; `Tabs` scales the nav and tab text, padding, and radius.
+  gap (and the remove cross) from the dimension; its named `variant` (color) and
+  `appearance` (`soft`/`solid`/`outline`) come from `chip-variants.ts`, while a
+  caller `chipClass` still owns the whole custom pill. `FormField` scales its label, gaps, and
+  inline label column; `Tabs` scales the nav and tab text, padding, and radius in
+  both presentations and exposes `variant` for the default segmented pill row or
+  the underline baseline strip (each tab carrying the active bottom accent, its
+  top-corner radius on its own ratio).
   `Buttons` scales the gap between the buttons from the dimension.
   The date input shares one `PICKER_RATIOS` set (`date-input-metrics.ts`) covering
   the field's calendar gutter and the panel (width/padding, nav buttons, day
@@ -527,9 +539,10 @@ of building a parallel control.
   `role="menu"` listbox over the shared interaction core, with rows taking
   focus (unlike the never-focused listbox rows) and the phone sheet as the
   narrow-viewport presentation (`MenuSheet` is that sheet).
-- **TagInput** — models `string[]` and colours tags from a built-in per-tag
-  palette (override with `palette` or `chipClass`, whose function form overrides
-  per tag and owns the whole chip class string, shape included); an app with
+- **TagInput** — models `string[]` and colours tags from the shared chip color
+  tokens in a built-in per-tag palette (override with `palette` or `chipClass`,
+  whose function form overrides per tag and owns the whole chip class string,
+  shape included); an app with
   a richer tag object maps it to `string[]` at the call site and supplies the
   per-tag colour through `chipStyle` (the chip) and `optionDotStyle` (the dot
   before the option label), keeping its own colour model out of the markup. It
@@ -741,6 +754,13 @@ of building a parallel control.
   scaling with `size`) and stacks below sm. The inline track is an arbitrary
   value driven by `--ff-inline-col`, not a theme token, so a consuming app need
   not define an app-private grid-columns entry.
+- **Toast** — one message surface with two independent axes: `type` (severity:
+  `success`/`info`/`warning`/`error`) and `variant` (`soft` default, `solid`,
+  `outline`). Soft tints the type's background behind a thick left bar, solid
+  fills with the type's `--toast-*` background and its paired foreground (never
+  a remapped slate grade), and outline keeps the page surface with a
+  type-colored frame. The toast portals to `document.body` in sheet mode so no
+  ancestor stacking context clips it.
 - **Tooltip** — plain-text hints use the `tooltip` prop with the shared
   `Tooltip` component. A `tooltip` on a disabled `Button` rides the
   non-disabled wrapper. The component leaves only a hidden anchor in its

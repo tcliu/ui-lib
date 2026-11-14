@@ -21,6 +21,7 @@
   import { flushSync, tick, type Snippet } from 'svelte'
   import Button, { iconOnlyBoxPx } from '#lib/components/Button.svelte'
   import Chip from '#lib/components/Chip.svelte'
+  import { CHIP_COLORS, chipVariantClass } from '#lib/chip-variants.js'
   import ListboxPanel from '#lib/components/ListboxPanel.svelte'
   import TextInput from '#lib/components/TextInput.svelte'
   import CloseIcon from '#lib/icons/CloseIcon.svelte'
@@ -97,18 +98,13 @@
   const i18n = getI18nContext()
 
   // Built-in per-tag chip colours: a deterministic palette so tags read
-  // distinctly with zero config. `chipClass` overrides it (a function per tag,
-  // a string for all), and `palette` replaces it wholesale. The palette keeps
-  // the pill frame; a caller-supplied `chipClass` owns the whole class string
-  // (shape included), so a caller with its own chip shape passes it unchanged.
-  const DEFAULT_TAG_COLORS = [
-    'border-orange-700 bg-orange-950/50 text-orange-200',
-    'border-cyan-700 bg-cyan-950/50 text-cyan-200',
-    'border-violet-700 bg-violet-950/50 text-violet-200',
-    'border-emerald-700 bg-emerald-950/50 text-emerald-200',
-    'border-rose-700 bg-rose-950/50 text-rose-200',
-    'border-sky-700 bg-sky-950/50 text-sky-200',
-  ]
+  // distinctly with zero config, built from the shared chip color tokens.
+  // `chipClass` overrides it (a function per tag, a string for all), and
+  // `palette` replaces it wholesale. The default palette carries the pill frame
+  // with each token; a caller-supplied `chipClass` owns the whole class string
+  // (shape included), so a caller with its own chip shape passes it unchanged,
+  // while a caller `palette` is color-only and gets the shared frame prefixed.
+  const DEFAULT_TAG_COLORS = CHIP_COLORS.map(color => chipVariantClass(color, 'soft'))
 
   const CHIP_FRAME = 'rounded-full border'
 
@@ -125,8 +121,10 @@
   function resolveChipClass(tag: string): string {
     if (typeof chipClass === 'function') return chipClass(tag)
     if (chipClass) return chipClass
-    const colors = palette && palette.length > 0 ? palette : DEFAULT_TAG_COLORS
-    return `${CHIP_FRAME} ${colors[hashTag(tag) % colors.length]}`
+    if (palette && palette.length > 0) {
+      return `${CHIP_FRAME} ${palette[hashTag(tag) % palette.length]}`
+    }
+    return DEFAULT_TAG_COLORS[hashTag(tag) % DEFAULT_TAG_COLORS.length]
   }
 
   // Every metric is a fixed ratio of the size dimension, so each keeps a

@@ -500,7 +500,7 @@
               <span class={centerHeader ? 'min-w-0 overflow-hidden break-words text-ellipsis' : ''}
                 >{column.header}</span>
               <span
-                class="flex flex-col gap-0.5 {centerHeader
+                class="flex flex-col gap-1 {centerHeader
                   ? 'absolute top-1/2 right-0 -translate-y-1/2'
                   : ''} text-slate-400 transition-opacity {isActive
                   ? 'opacity-100'

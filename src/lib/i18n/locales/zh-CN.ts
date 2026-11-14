@@ -29,6 +29,7 @@ export const zhCN = {
     next: '下一页',
     label: '分页',
     current: '当前页',
+    pageOf: '第 {page} / {total} 页',
   },
   tabs: {
     label: '标签页',
