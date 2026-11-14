@@ -248,7 +248,7 @@ Project-specific development conventions for the UI Library web app.
 - The shell owns the snippet preview: a page passes `scope`/`sync` (plus `scopeRefresh`/`scopeRefreshWhen` when its snippet reads scope keys the seed omits) to `ShowcasePage` rather than constructing a `SnippetPreview` itself.
 - Seed a dialog-backed Value cell from the fallback-resolved demo value, not the raw override; map the untouched default back to unset on commit.
 - A dialog-backed row must round-trip every editable facet its dialog presents, with `dialog.valid` rejecting any shape it cannot reproduce; cover each with a round-trip spec.
-- Before closing a props-table task, re-audit all rows, not just the requested type: every editor-less primitive-typed row is made editable or its read-only reason recorded.
+- Close a props-table task only once `npm run check` passes: its showcase props gate fails on any destructured prop without a row or any primitive-typed row without an editor, so a request-scoped audit cannot pass.
 - A playground preset that derives other props fills their panel fields from the shared builder constants, so demo, Show-code, and live render stay identical.
 - Every `size` prop gets a settings-panel control.
 - A settings-panel control that drives several props at once is a preset: it writes them, so the props table mirrors it (the Buttons page's size sets the row's gap and every button's size).

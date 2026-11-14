@@ -891,6 +891,14 @@ scrollport, lets the shell host the code toggle and `Reset` (fired through
 `onReset`), and appends an editable Value column so the props table drives the
 live demo.
 
+**Props coverage gate.** `tools/check-showcase-props.mjs` (run by `npm run check`)
+compares each registered page's `fields` rows against the props its component
+destructures in `$props()`: a declared prop with no row fails, as does a
+primitive-typed row with no editor. Function, data, and DOM-ref rows stay
+read-only, and snippet rows edit through their markup dialog, so the table
+cannot drift from the component surface and a request-scoped audit cannot leave
+a gap green.
+
 **Adding a page.**
 
 1. Add `{ slug, name }` to `SHOWCASE_COMPONENTS` and the slug to its group(s) in

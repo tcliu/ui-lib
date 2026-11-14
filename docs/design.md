@@ -38,16 +38,19 @@ The showcase is an `AppShell` two-pane view:
   `SHOWCASE_COMPONENT_GROUPS`; relatedness is symmetric by construction).
 - **Every page is converted**: the shell hosts the Show-code toggle and Reset
   beside the page title, and the props table appends an editable
-  **Value** column that shows and sets each prop's current value (`options`
-  edits as JSON through an edit dialog; a snippet edits as text or, when its
-  own markup is the demo content, through a markup dialog, and a snippet row
-  also carries an eye toggle that applies or unapplies it). Single-prop
-  editing lives in that column, so the config panel keeps only Reset plus
-  editors for demo data no single prop covers. An overlay or placement demo
-  renders inside a resizable stage so its placement can be inspected as the
-  container narrows; the frame clips with a margin so a control flush at its edge
-  keeps its focus ring, and the frame's invisible resize handles stay out of the
-  tab order (keyboard resizing belongs to the Resizable demo).
+  **Value** column that shows and sets each prop's current value; every prop
+  the component declares has a row — primitives edit inline, snippets through
+  their dialog, and functions stay read-only (`options` edits as JSON through
+  an edit dialog; a snippet edits as text or, when its own markup is the demo
+  content, through a markup dialog, and a snippet row also carries an eye
+  toggle that applies or unapplies it).
+  Single-prop editing lives in that column, so the config panel keeps only
+  Reset plus editors for demo data no single prop covers. An overlay or
+  placement demo renders inside a resizable stage so its placement can be
+  inspected as the container narrows; the frame clips with a margin so a
+  control flush at its edge keeps its focus ring, and the frame's invisible
+  resize handles stay out of the tab order (keyboard resizing belongs to the
+  Resizable demo).
 
 In `auto` mode the picker floats as an overlay above the dimmed content when
 the shell container narrows below the 768px container breakpoint, and docks
