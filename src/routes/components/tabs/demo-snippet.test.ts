@@ -83,10 +83,10 @@ describe('buildTabsSnippet', () => {
     expect(buildTabsSnippet(state({ size: staged('lg') }))).not.toContain('size=')
   })
 
-  it('emits a non-default variant and omits the segmented default', () => {
-    expect(buildTabsSnippet(state({ variant: staged('underline', true) }))).toContain('  variant="underline"')
-    expect(buildTabsSnippet(state({ variant: staged('segmented', true) }))).not.toContain('variant=')
-    expect(buildTabsSnippet(state({ variant: staged('underline') }))).not.toContain('variant=')
+  it('emits a non-default variant and omits the underline default', () => {
+    expect(buildTabsSnippet(state({ variant: staged('segmented', true) }))).toContain('  variant="segmented"')
+    expect(buildTabsSnippet(state({ variant: staged('underline', true) }))).not.toContain('variant=')
+    expect(buildTabsSnippet(state({ variant: staged('segmented') }))).not.toContain('variant=')
   })
 
   it('reads the scope label while the staged ariaLabel eye is off', () => {

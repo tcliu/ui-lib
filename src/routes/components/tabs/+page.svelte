@@ -32,7 +32,7 @@
     ariaLabel: staged('Components', true),
     pathname: staged(''),
     size: staged('md'),
-    variant: staged('segmented'),
+    variant: staged('underline'),
   }
   let pg = $state(structuredClone(INITIAL))
 
@@ -81,7 +81,7 @@
     textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes appended to the header row.', editorDefaultValue: '', clearable: true, ...eye(pg.className) }),
     textField({ name: 'pathname', type: 'string?', defaultValue: '—', note: 'Route mode: active path drives link rendering.', clearable: true, ...eye(pg.pathname) }),
     sizeField({ note: 'Control scale; numbers are icon-scale pixels. Scales the nav and tab text and chrome.', ...eye(pg.size) }),
-    enumField({ name: 'variant', type: "'segmented' | 'underline'", defaultValue: "'segmented'", note: 'Presentation: pill row in a bordered nav, or a baseline strip with a bottom accent per active tab.', options: variants.map(value => ({ value, label: value })), placeholder: 'segmented', clearLabel: 'Clear variant', ...eye(pg.variant) }),
+    enumField({ name: 'variant', type: "'segmented' | 'underline'", defaultValue: "'underline'", note: 'Presentation: a baseline strip with a bottom accent per active tab, or a pill row in a bordered nav.', options: variants.map(value => ({ value, label: value })), placeholder: 'underline', clearLabel: 'Clear variant', ...eye(pg.variant) }),
     // Read-only: the generic demo state object has no literal editor.
     { name: 'state', type: 'TState', defaultValue: '—', note: 'Passed to the toolbar/content snippets.' },
     { name: 'tabs', type: 'Tab<TState>[]', defaultValue: '—', note: 'Label, path, optional toolbar snippet, content snippet.' },
