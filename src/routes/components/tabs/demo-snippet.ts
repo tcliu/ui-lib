@@ -38,8 +38,8 @@ export function buildTabsSnippet({ routeMode, className, ariaLabel, pathname, si
     // A literal pathname wins; unset, route mode reads the path from scope.
     ...(pathnameAttr.length ? pathnameAttr : routeMode ? ['  pathname={routePath}'] : []),
     ...textAttrLine('className', className),
-    // The variant row prefills its `segmented` default; the builder omits it.
-    ...enumAttrLine('variant', variant, 'segmented'),
+    // The variant row prefills its `underline` default; the builder omits it.
+    ...enumAttrLine('variant', variant, 'underline'),
     // The size row prefills its `md` default; the builder omits it.
     ...sizeAttrLine(size),
     // A custom label renders as a literal; unset, the nav reads the scope label.

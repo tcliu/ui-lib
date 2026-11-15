@@ -5,6 +5,13 @@ version has one section, newest first; the format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- `Tabs`'s default `variant` is `underline`; the segmented pill row is opt-in
+  with `variant="segmented"`.
+
 ## [0.3.1] - 2026-11-14
 
 ### Added

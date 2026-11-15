@@ -477,9 +477,9 @@ of building a parallel control.
   `appearance` (`soft`/`solid`/`outline`) come from `chip-variants.ts`, while a
   caller `chipClass` still owns the whole custom pill. `FormField` scales its label, gaps, and
   inline label column; `Tabs` scales the nav and tab text, padding, and radius in
-  both presentations and exposes `variant` for the default segmented pill row or
-  the underline baseline strip (each tab carrying the active bottom accent, its
-  top-corner radius on its own ratio).
+  both presentations and exposes `variant` for the default underline baseline
+  strip or the segmented pill row (each tab carrying the active bottom accent,
+  its top-corner radius on its own ratio).
   `Buttons` scales the gap between the buttons from the dimension.
   The date input shares one `PICKER_RATIOS` set (`date-input-metrics.ts`) covering
   the field's calendar gutter and the panel (width/padding, nav buttons, day

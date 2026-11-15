@@ -19,9 +19,9 @@
     pathname?: string
     ariaLabel?: string
     className?: string
-    // Presentation variant. `segmented` (default) is the pill row inside a
-    // bordered nav; `underline` is the bordered baseline strip where each tab
-    // carries a bottom accent on the active one.
+    // Presentation variant. `underline` (default) is the bordered baseline
+    // strip where each tab carries a bottom accent on the active one;
+    // `segmented` is the pill row inside a bordered nav.
     variant?: 'segmented' | 'underline'
     size?: SizeInput
   }
@@ -32,7 +32,7 @@
     pathname,
     ariaLabel,
     className = '',
-    variant = 'segmented',
+    variant = 'underline',
     size = 'md',
   }: Props<TState> = $props()
 
