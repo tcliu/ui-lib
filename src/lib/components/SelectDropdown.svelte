@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { flushSync, tick } from 'svelte'
+  import { flushSync, tick, type Snippet } from 'svelte'
   import { useListbox } from '#lib/actions/use-listbox.svelte.js'
   import { isModifiedNavKey } from '#lib/actions/listbox-keynav.js'
   import Button from '#lib/components/Button.svelte'
@@ -10,7 +10,7 @@
   import ChevronDownIcon from '#lib/icons/ChevronDownIcon.svelte'
   import CloseIcon from '#lib/icons/CloseIcon.svelte'
   import type { DropdownPanelProps } from '#lib/dropdown-chrome.js'
-  import type { SizeInput } from '#lib/size-scale.js'
+  import { ICON_RATIO, type SizeInput } from '#lib/size-scale.js'
   import {
     DEFAULT_PANEL_CLASS,
     SELECT_BOX_UTILITIES,
@@ -74,9 +74,18 @@
     controlClass?: string
     optionClass?: string
     emptyLabel?: string
-    // No `clearPlacement`: the trigger is a button, not a text field, so the
-    // clear sits on its own right edge. `onClear` falls back to selecting the
-    // default value.
+    // Content rendered in the trigger's flex row before the text/label. The
+    // caller owns its size and look (a leading search icon or glyph); it takes
+    // its own space and pushes the text, so both trigger paths render it alike.
+    leading?: Snippet
+    // Content rendered outside the trigger, after it (and after the clear
+    // affordance), in a size-scaled row. The trigger gives up no room to it;
+    // the caller owns its look and behaviour.
+    trailer?: Snippet
+    // No `trailing` and no `clearPlacement`: the trigger's right edge belongs
+    // to the built-in chevron, so the clear sits on its own right edge and a
+    // caller adornment goes in `leading` (inside) or `trailer` (outside).
+    // `onClear` falls back to selecting the default value.
   }
 
   let {
@@ -98,6 +107,8 @@
     controlClass,
     optionClass,
     emptyLabel,
+    leading,
+    trailer,
     clearable = false,
     clearLabel,
     onClear,
@@ -126,15 +137,54 @@
   // constant metric:dimension ratio across the range; the icon slot is the
   // dimension itself (ratio 1) and the line box follows the font.
   const resolvedRatios = $derived({ ...SELECT_RATIOS, ...ratios })
-  const metrics = $derived(dimensionMetrics(size, withLine(resolvedRatios)))
-  // The chevron's right gutter is its own metric (`chevronGap`), so it can be
-  // tuned without moving the label's `padX` inset.
-  const style = $derived(sizeVarStyle('sel', metrics))
+  // The text box takes the shared field metrics (`--input-*`), exactly as
+  // `TextInput` emits them; only the select's own min-width, chevron gutters,
+  // clear-row gap, and icon slot stay in the `--sel-*` namespace.
+  const fieldMetrics = $derived(
+    dimensionMetrics(
+      size,
+      withLine({
+        font: resolvedRatios.font,
+        padX: resolvedRatios.padX,
+        padY: resolvedRatios.padY,
+      }),
+    ),
+  )
+  const selectMetrics = $derived(
+    dimensionMetrics(size, {
+      minW: resolvedRatios.minW,
+      chevronGap: resolvedRatios.chevronGap,
+      chevronTextGap: resolvedRatios.chevronTextGap,
+      gap: resolvedRatios.gap,
+      icon: resolvedRatios.icon,
+    }),
+  )
+  const style = $derived(
+    [sizeVarStyle('input', fieldMetrics), sizeVarStyle('sel', selectMetrics)].join(';'),
+  )
   // The trigger's direction marker and its clear cross ride a trimmed share of
   // the icon slot: at the full dimension each reads as loud as the label beside
   // it, so they take 0.625 of it — the same share `TextInput`'s clear cross
   // rides — staying lighter affordances that still scale with the control.
-  const affordanceSize = $derived(metrics.icon * 0.625)
+  const affordanceSize = $derived(selectMetrics.icon * 0.625)
+  // The chevron's laid-out box is the rendered glyph (its affordance slot times
+  // the shared icon ratio); a filterable field reserves that glyph plus the
+  // text gap in its right gutter.
+  const chevronGlyph = $derived(affordanceSize * ICON_RATIO)
+  // The filterable field's frame stretches to the trigger box (so the trailing
+  // chevron sits at the box edge even when `min-w` floors it) and carries the
+  // glyph and text-gap metrics the input's right gutter consumes. They ride the
+  // frame rather than the caller-overridable box, so a `controlClass` override
+  // cannot drop them.
+  const filterFrameStyle = $derived(
+    [
+      'flex:1 1 auto',
+      'min-width:0',
+      `--sel-chevron-glyph:${chevronGlyph}px`,
+      `--sel-chevron-text-gap:${selectMetrics.chevronTextGap}px`,
+    ].join(';'),
+  )
+  const filterInputGutter = 'pr-[calc(var(--sel-chevron-glyph)+var(--sel-chevron-text-gap))]'
 
   const triggerBoxClass = $derived(
     `${SELECT_TRIGGER_UTILITIES} ${
@@ -576,9 +626,17 @@
   {#snippet triggerChevron()}
     <ChevronDownIcon size={affordanceSize} className="shrink-0 text-slate-400" />
   {/snippet}
+  {#snippet fieldChevron()}
+    <!-- The filterable trigger's trailing adornment: the field frame stretches
+         to the trigger box, so `right-0` holds the box's own right edge. -->
+    <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center">
+      {@render triggerChevron()}
+    </span>
+  {/snippet}
   {#snippet triggerControl()}
     {#if filterable}
       <label class={resolvedControlClass} style={resolvedControlStyle}>
+        {#if leading}{@render leading()}{/if}
         <TextInput
           bind:inputRef
           bind:value={filterText}
@@ -598,8 +656,9 @@
           oninput={handleControlInput}
           onkeydown={handleControlKeydown}
           variant="embedded"
-          className="field-sizing-content min-w-0 text-left" />
-        {@render triggerChevron()}
+          className={`field-sizing-content min-w-0 text-left ${filterInputGutter}`}
+          wrapperStyle={filterFrameStyle}
+          trailing={fieldChevron} />
       </label>
     {:else}
       <button
@@ -617,9 +676,10 @@
         onkeydown={handleControlKeydown}
         class={resolvedButtonClass}
         style={resolvedButtonStyle}>
+        {#if leading}{@render leading()}{/if}
         <!-- The label row keeps the line height even with an empty label (a
              cleared value), so clearing the selection never trims the trigger. -->
-        <span class="min-h-[var(--sel-line)] min-w-0 flex-1 truncate">{resolvedButtonLabel}</span>
+        <span class="min-h-[var(--input-line)] min-w-0 flex-1 truncate">{resolvedButtonLabel}</span>
         {@render triggerChevron()}
       </button>
     {/if}
@@ -627,17 +687,22 @@
   {#snippet closeIcon()}
     <CloseIcon />
   {/snippet}
-  {#if showClear}
-    <!-- The clear affordance scales with the control: its gap is a ratio of the
-      size and its icon box rides the trimmed affordance size. -->
-    <span class="inline-flex items-center" style={`gap:${metrics.gap}px`}>
+  {#if showClear || trailer}
+    <!-- The trigger row hosts the clear affordance and/or a caller trailer
+      after the trigger; its gap is a ratio of the size. The clear affordance's
+      icon box rides the trimmed affordance size, so it scales with the
+      control. -->
+    <span class="inline-flex items-center" style={`gap:${selectMetrics.gap}px`}>
       {@render triggerControl()}
-      <Button
-        variant="ghost"
-        size={affordanceSize}
-        icon={closeIcon}
-        ariaLabel={resolvedClearLabel}
-        onClick={handleClear} />
+      {#if showClear}
+        <Button
+          variant="ghost"
+          size={affordanceSize}
+          icon={closeIcon}
+          ariaLabel={resolvedClearLabel}
+          onClick={handleClear} />
+      {/if}
+      {#if trailer}{@render trailer()}{/if}
     </span>
   {:else}
     {@render triggerControl()}

@@ -61,8 +61,10 @@
     // its absolute placement and the matching gutter offset.
     leading?: Snippet
     trailing?: Snippet
-    // Metric custom properties for the adornments, set on the wrapping frame so
-    // both the input's gutter class and the adornment inherit them.
+    // Style for the wrapping frame (rendered when the field has an adornment or
+    // an inside clear): metric custom properties the input's gutter class and
+    // the adornment inherit, plus any frame-level layout a composite needs (the
+    // filterable select stretches it so a trailing chevron holds the box edge).
     wrapperStyle?: string
     // Content rendered outside the field area, after it, in a size-scaled row.
     // The field gives up no room to it; the caller owns its look and behaviour.

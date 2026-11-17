@@ -15,6 +15,8 @@ function state(overrides: Partial<SelectDropdownSnippetState> = {}): SelectDropd
     filterable: staged('', true),
     allowCustomValue: staged('', true),
     hideOutline: staged('', true),
+    leading: staged('', true),
+    trailer: staged('', true),
     buttonClass: staged('', true),
     controlClass: staged('', true),
     optionClass: staged('', true),
@@ -183,8 +185,37 @@ describe('buildSelectDropdownSnippet', () => {
     expect(quoted).toContain('let value = $state("a\\"b")')
   })
 
+  it('emits leading and trailer snippets while their eyes are on', () => {
+    const source = buildSelectDropdownSnippet(
+      state({ leading: staged('Find', true), trailer: staged('12 items', true) }),
+    )
+    expect(source).toContain('{#snippet leading()}')
+    expect(source).toContain('<span class="shrink-0 text-sm text-slate-500">Find</span>')
+    expect(source).toContain('{#snippet trailer()}')
+    expect(source).toContain('<span class="shrink-0 text-sm text-slate-500">12 items</span>')
+    expect(source).toContain('</SelectDropdown>')
+  })
+
+  it('omits the snippet blocks while their eyes are off', () => {
+    const off = buildSelectDropdownSnippet(
+      state({ leading: staged('Find'), trailer: staged('12 items') }),
+    )
+    expect(off).not.toContain('{#snippet leading()}')
+    expect(off).not.toContain('{#snippet trailer()}')
+    expect(off).not.toContain('</SelectDropdown>')
+    expect(off).toContain('onSelect={next => (value = next)} />')
+  })
+
   it('compiles the generated snippet', { timeout: 30000 }, async () => {
     const component = await createSnippetComponent(buildSelectDropdownSnippet(state()), {})
+    expect(typeof component).toBe('function')
+  })
+
+  it('compiles the generated snippet with adornment snippets', { timeout: 30000 }, async () => {
+    const source = buildSelectDropdownSnippet(
+      state({ leading: staged('Find', true), trailer: staged('12 items', true) }),
+    )
+    const component = await createSnippetComponent(source, {})
     expect(typeof component).toBe('function')
   })
 })

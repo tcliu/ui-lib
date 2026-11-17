@@ -4,13 +4,17 @@
 //
 // The resize harness is ShowcasePage-owned chrome (its `stage` prop), so the
 // snippet carries only the demo content the page authors inside that frame.
-import { boolAttrLine, enumAttrLine, sizeAttrLine, textAttrLine, type TriState } from '#showcase/playground/snippet-build.js'
+import { boolAttrLine, enumAttrLine, escapeText, sizeAttrLine, textAttrLine, type TriState } from '#showcase/playground/snippet-build.js'
 import { ratiosAttrLine } from '#showcase/playground/text-input-ratios.js'
-import type { Staged } from '#showcase/playground/staged.js'
+import { applied, type Staged } from '#showcase/playground/staged.js'
 import type { SelectRatioOverrides } from '#lib/components/select-dropdown-styles.js'
 
 export const SELECT_STAGE_DEFAULT_WIDTH = 560
 export const SELECT_STAGE_MIN_WIDTH = 240
+
+// The demo's leading/trailer content sits in flow (the trigger's flex row or
+// the trailer row), so it is only styled — no absolute placement or gutter.
+export const ADORNMENT_SPAN = 'shrink-0 text-sm text-slate-500'
 
 export interface SelectDropdownSnippetState {
   ariaLabel: Staged<string>
@@ -25,6 +29,10 @@ export interface SelectDropdownSnippetState {
   filterable: Staged<TriState>
   allowCustomValue: Staged<TriState>
   hideOutline: Staged<TriState>
+  // Adornment text rendered through the leading/trailer snippets; edited
+  // through FieldTable's snippet dialogs, like the options-json lists.
+  leading: Staged<string>
+  trailer: Staged<string>
   buttonClass: Staged<string>
   controlClass: Staged<string>
   optionClass: Staged<string>
@@ -41,7 +49,10 @@ export interface SelectDropdownSnippetState {
 // sibling demos reuse them; this builder only emits source.
 
 export function buildSelectDropdownSnippet(state: SelectDropdownSnippetState): string {
-  const { ariaLabel, buttonLabel, value, defaultValue, size, ratios, variant, filterable, allowCustomValue, hideOutline, buttonClass, controlClass, optionClass, emptyLabel, clearable, clearLabel, align, autoPlace, panelClass } = state
+  const { ariaLabel, buttonLabel, value, defaultValue, size, ratios, variant, filterable, allowCustomValue, hideOutline, leading, trailer, buttonClass, controlClass, optionClass, emptyLabel, clearable, clearLabel, align, autoPlace, panelClass } = state
+  const appliedLeading = applied(leading) ?? ''
+  const appliedTrailer = applied(trailer) ?? ''
+  const hasSnippets = appliedLeading !== '' || appliedTrailer !== ''
   // The frame is shell chrome, so the component sits at the snippet root with
   // its attributes one step in; the committed value is script-local state.
   // Each eye-gated override emits only while its toggle is on (the committed
@@ -73,7 +84,22 @@ export function buildSelectDropdownSnippet(state: SelectDropdownSnippetState): s
     ...boolAttrLine('autoPlace', autoPlace, 'yes', indent),
     ...textAttrLine('panelClass', panelClass, indent),
     `${indent}options={options}`,
-    `${indent}onSelect={next => (value = next)} />`,
+    `${indent}onSelect={next => (value = next)}${hasSnippets ? '>' : ' />'}`,
+    ...(appliedLeading
+      ? [
+          `${indent}{#snippet leading()}`,
+          `${indent}  <span class="${ADORNMENT_SPAN}">${escapeText(appliedLeading)}</span>`,
+          `${indent}{/snippet}`,
+        ]
+      : []),
+    ...(appliedTrailer
+      ? [
+          `${indent}{#snippet trailer()}`,
+          `${indent}  <span class="${ADORNMENT_SPAN}">${escapeText(appliedTrailer)}</span>`,
+          `${indent}{/snippet}`,
+        ]
+      : []),
+    ...(hasSnippets ? ['</SelectDropdown>'] : []),
   ]
   return [
     '<script>',

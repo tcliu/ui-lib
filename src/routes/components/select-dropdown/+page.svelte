@@ -4,13 +4,14 @@
   import ShowcasePage from '#showcase/shell/ShowcasePage.svelte'
   import { parseSizeValue } from '#showcase/playground/size-input.js'
   import { parseOptionArrayJson } from '#showcase/playground/option-json.js'
-  import { enumField, textField, boolField, sizeField, jsonField } from '#showcase/playground/snippet-field.js'
+  import { enumField, textField, boolField, sizeField, jsonField, snippetField } from '#showcase/playground/snippet-field.js'
   import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
   import { type TriState } from '#showcase/playground/snippet-build.js'
   import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
   import { appliedRatios, componentRatiosField } from '#showcase/playground/text-input-ratios.js'
   import { SELECT_RATIOS, type SelectRatioOverrides } from '#lib/components/select-dropdown-styles.js'
   import {
+    ADORNMENT_SPAN,
     buildSelectDropdownSnippet,
     SELECT_STAGE_DEFAULT_WIDTH,
     SELECT_STAGE_MIN_WIDTH,
@@ -60,6 +61,7 @@
     filterable: staged('no' as TriState),
     allowCustomValue: staged('no' as TriState),
     hideOutline: staged('no' as TriState),
+    leading: staged('', true),
     buttonClass: staged(''),
     controlClass: staged(''),
     optionClass: staged(''),
@@ -69,6 +71,7 @@
     align: staged('left'),
     autoPlace: staged('yes' as TriState),
     panelClass: staged(''),
+    trailer: staged('', true),
     stageWidth: SELECT_STAGE_DEFAULT_WIDTH,
   }
   let pg = $state(structuredClone(INITIAL))
@@ -133,6 +136,8 @@
       filterable: pg.filterable,
       allowCustomValue: pg.allowCustomValue,
       hideOutline: pg.hideOutline,
+      leading: pg.leading,
+      trailer: pg.trailer,
       buttonClass: pg.buttonClass,
       controlClass: pg.controlClass,
       optionClass: pg.optionClass,
@@ -167,6 +172,13 @@
     textField({ name: 'emptyLabel', type: 'string?', defaultValue: '—', note: 'Shown when the filtered list is empty.', clearable: true, ...eye(pg.emptyLabel) }),
     boolField({ name: 'filterable', defaultValue: 'false', note: 'Renders a combobox input with filtering.', ...eyeFlag(pg.filterable) }),
     boolField({ name: 'hideOutline', defaultValue: 'false', note: 'Drops the bordered trigger’s border, hover tint, and focus border while keeping its surface, metrics, and text rules.', ...eyeFlag(pg.hideOutline) }),
+    snippetField({
+      name: 'leading',
+      note: 'Content rendered in the trigger before the text; it sits in flow and is sized by the caller (a leading search icon or glyph).',
+      value: pg.leading.value,
+      onChange: value => stage(pg.leading, value),
+      toggle: eyeToggle(pg.leading),
+    }),
     textField({ name: 'optionClass', type: 'string?', defaultValue: 'built-in', note: 'Replaces the option row classes.', clearable: true, ...eye(pg.optionClass) }),
     jsonField({
       name: 'options',
@@ -186,10 +198,17 @@
     componentRatiosField({
       base: SELECT_RATIOS,
       type: 'SelectRatioOverrides?',
-      note: 'Partial override of the trigger and option-row ratios (font, paddings, the chevron’s own gutter, min-width, gap, icon); the line box follows the font and the gutter is independent of padX.',
+      note: 'Partial override of the trigger and option-row ratios (font, paddings, the chevron’s border gutter and label gap, min-width, gap, icon); the line box follows the font and both chevron metrics stay independent of padX.',
       value: pg.ratios,
     }),
     sizeField({ note: 'Control scale; numbers are icon-scale pixels interpolated between the steps.', ...eye(pg.size) }),
+    snippetField({
+      name: 'trailer',
+      note: 'Content rendered outside the trigger, after it (and after the clear affordance).',
+      value: pg.trailer.value,
+      onChange: value => stage(pg.trailer, value),
+      toggle: eyeToggle(pg.trailer),
+    }),
     enumField({ name: 'variant', type: "'bordered' | 'embedded'", defaultValue: "'bordered'", note: 'Chrome variant; embedded drops the border, surface, and focus styles for a trigger inside another surface.', options: variantOptions, placeholder: 'bordered', clearLabel: 'Clear variant', ...eye(pg.variant) }),
     {
       name: 'onClear',
@@ -201,6 +220,14 @@
   ])
 
 </script>
+
+{#snippet demoLeading()}
+  <span class={ADORNMENT_SPAN}>{pg.leading.value}</span>
+{/snippet}
+
+{#snippet demoTrailer()}
+  <span class={ADORNMENT_SPAN}>{pg.trailer.value}</span>
+{/snippet}
 
 <ShowcasePage
     {fields}
@@ -225,6 +252,7 @@
       {filterable}
       {allowCustomValue}
       {hideOutline}
+      leading={applied(pg.leading) ? demoLeading : undefined}
       buttonClass={demoButtonClass}
       controlClass={demoControlClass}
       optionClass={demoOptionClass}
@@ -234,6 +262,7 @@
       align={demoAlign}
       {autoPlace}
       panelClass={demoPanelClass}
+      trailer={applied(pg.trailer) ? demoTrailer : undefined}
       options={pg.options.value}
       onSelect={next => (pg.value.value = next)} />
     <span class="text-sm text-slate-400">value: {pg.value.value}</span>

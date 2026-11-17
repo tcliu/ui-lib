@@ -1,4 +1,4 @@
-import { FIELD_RATIOS } from './input-chrome'
+import { FIELD_RATIOS, INPUT_PAD_X_CLASS, INPUT_TEXT_METRIC_CLASS } from './input-chrome'
 
 // Numeric sizes are positions on the shared scale (`$lib/size-scale`): names
 // are aliases for its steps and every metric below interpolates from the
@@ -20,6 +20,11 @@ export const SELECT_RATIOS = {
   // of the text padding: the marker sits closer to the border than the label's
   // `padX` inset, and a padding retune leaves it where it is.
   chevronGap: 0.4,
+  // The label→chevron gap. The filterable trigger renders the chevron as the
+  // field's trailing adornment, so the input reserves the glyph plus this gap;
+  // the button trigger uses the same ratio as its flex gap, keeping both
+  // presentations on one metric.
+  chevronTextGap: 0.5,
   minW: 7,
   gap: 0.375,
   icon: 1,
@@ -29,17 +34,19 @@ export type SelectRatios = typeof SELECT_RATIOS
 // A caller's override is partial: omitted keys keep the shared defaults.
 export type SelectRatioOverrides = Partial<SelectRatios>
 
-// The var-driven box metrics shared by the trigger boxes, the option rows, and
-// the empty row; the element's inline style carries the values.
+// The box metrics shared by the trigger boxes, the option rows, and the empty
+// row: the shared text-field chrome (`--input-*`) plus the select's own
+// minimum width (`--sel-min-w`). The values ride the element's inline style, so
+// a trigger and a text field can never drift apart.
 export const SELECT_BOX_UTILITIES =
-  'min-w-[var(--sel-min-w)] text-[length:var(--sel-font)] leading-[var(--sel-line)] py-[var(--sel-pad-y)] px-[var(--sel-pad-x)]'
+  `min-w-[var(--sel-min-w)] ${INPUT_TEXT_METRIC_CLASS} ${INPUT_PAD_X_CLASS}`
 
 // The trigger box shares the box metrics but carries an asymmetric right
 // padding: the chevron sits inside its own gutter, published as
 // `--sel-chevron-gap` from `SELECT_RATIOS.chevronGap`, so the marker's inset is
 // tuned independently of the label's `padX` inset.
 export const SELECT_TRIGGER_UTILITIES =
-  'min-w-[var(--sel-min-w)] text-[length:var(--sel-font)] leading-[var(--sel-line)] py-[var(--sel-pad-y)] pl-[var(--sel-pad-x)] pr-[var(--sel-chevron-gap)]'
+  `min-w-[var(--sel-min-w)] ${INPUT_TEXT_METRIC_CLASS} pl-[var(--input-pad-x)] pr-[var(--sel-chevron-gap)]`
 
 // Default floating panel chrome; a `panelClass` override replaces it. The
 // per-size min-width lives on the trigger and option rows (see
@@ -58,7 +65,7 @@ export const DEFAULT_PANEL_CLASS =
 // trigger and the focused trigger are never mistaken for each other — a
 // pointer can hover one while focus sits on another.
 const TRIGGER_LAYOUT =
-  'inline-flex cursor-pointer items-center justify-between gap-2 text-left outline-none transition motion-reduce:transition-none'
+  'inline-flex cursor-pointer items-center justify-between gap-[var(--sel-chevron-text-gap)] text-left outline-none transition motion-reduce:transition-none'
 export const TRIGGER_BASE = `${TRIGGER_LAYOUT} rounded-md border border-slate-700 bg-slate-950 text-slate-100 hover:border-cyan-500`
 // The bordered surface without its outline: the surface and text rules stay,
 // while the border, its hover tint, and its focus color drop, for a trigger

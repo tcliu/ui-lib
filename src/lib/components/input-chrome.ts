@@ -28,10 +28,23 @@ export const INPUT_CHROME_NO_OUTLINE = INPUT_SURFACE
 // field, so the caller adds them.
 export const INPUT_EMBEDDED = 'bg-transparent outline-none'
 
-// The `--input-*` metric classes; the size-metric custom properties they consume
-// are set inline by the component.
+// The text and vertical box metrics every text-like box shares: font, line, and
+// vertical padding. A box that draws its own asymmetric horizontal inset (a
+// select trigger reserving a chevron gutter) composes this with its own
+// `pl`/`pr` instead of the symmetric padding below.
+export const INPUT_TEXT_METRIC_CLASS =
+  'py-[var(--input-pad-y)] text-[length:var(--input-font)] leading-[var(--input-line)]'
+
+// The symmetric horizontal padding of a full field.
+export const INPUT_PAD_X_CLASS = 'px-[var(--input-pad-x)]'
+
+// The radius of a full field.
+export const INPUT_RADIUS_CLASS = 'rounded-[var(--input-radius)]'
+
+// The `--input-*` metric classes for a full text field; the size-metric custom
+// properties they consume are set inline by the component.
 export const INPUT_METRIC_CLASS =
-  'rounded-[var(--input-radius)] py-[var(--input-pad-y)] px-[var(--input-pad-x)] text-[length:var(--input-font)] leading-[var(--input-line)]'
+  `${INPUT_RADIUS_CLASS} ${INPUT_TEXT_METRIC_CLASS} ${INPUT_PAD_X_CLASS}`
 
 // The line box's leading over the label: the tuned 19px line at 13px text.
 // `line` derives from `font` through this share, so retuning the shared font

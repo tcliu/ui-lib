@@ -61,9 +61,9 @@ describe('Pagination numeric size', () => {
       '--pg-btn: calc(var(--pg-line) + 2 * var(--pg-pad-y) + 2px)',
     )
     const trigger = target.querySelector('[aria-label="Page size"]')
-    expect(trigger?.getAttribute('style')).toContain(`--sel-font: ${14 * SELECT_RATIOS.font}px`)
+    expect(trigger?.getAttribute('style')).toContain(`--input-font: ${14 * SELECT_RATIOS.font}px`)
     // Both sides derive the line from that one font, so they cannot drift.
-    expect(trigger?.getAttribute('style')).toContain(`--sel-line: ${14 * (SELECT_RATIOS.font * INPUT_LEADING)}px`)
+    expect(trigger?.getAttribute('style')).toContain(`--input-line: ${14 * (SELECT_RATIOS.font * INPUT_LEADING)}px`)
   })
 
   it('renders named sizes through the same var path', () => {
@@ -76,7 +76,7 @@ describe('Pagination numeric size', () => {
     expect(nav?.getAttribute('style')).toContain(`--pg-font: ${14 * SELECT_RATIOS.font}px`)
     // The inner dropdown resolves the sm dimension through the same var path.
     const trigger = target.querySelector('[aria-label="Page size"]')
-    expect(trigger?.getAttribute('style')).toContain(`--sel-font: ${14 * SELECT_RATIOS.font}px`)
+    expect(trigger?.getAttribute('style')).toContain(`--input-font: ${14 * SELECT_RATIOS.font}px`)
   })
 })
 

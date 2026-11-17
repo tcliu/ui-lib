@@ -241,3 +241,26 @@ describe('SelectDropdown filterable text selection', () => {
     expect([input.selectionStart, input.selectionEnd]).toEqual([0, input.value.length])
   })
 })
+
+describe('SelectDropdown filterable trigger chrome', () => {
+  it('renders the chevron as the field trailing adornment', () => {
+    instance = mount(Harness, { target })
+    flushSync()
+    const input = filterInput()
+    const label = input.closest('label')
+    const frame = input.parentElement
+    // The chevron lives inside the field frame (the trailing slot), not beside
+    // it as a flex sibling of the label.
+    expect(label?.querySelector(':scope > svg')).toBeNull()
+    expect(frame?.querySelector(':scope > span.absolute svg')).not.toBeNull()
+    // The input reserves the chevron glyph plus the label→chevron gap, and the
+    // frame carries those metrics and stretches to the trigger box.
+    expect(input.className).toContain(
+      'pr-[calc(var(--sel-chevron-glyph)+var(--sel-chevron-text-gap))]',
+    )
+    expect(frame?.style.flex).toBe('1 1 auto')
+    expect(frame?.style.getPropertyValue('min-width')).not.toBe('')
+    expect(frame?.style.getPropertyValue('--sel-chevron-glyph')).not.toBe('')
+    expect(label?.getAttribute('style')).toContain('--sel-chevron-gap:')
+  })
+})

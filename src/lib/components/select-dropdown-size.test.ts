@@ -11,6 +11,7 @@ describe('SelectDropdown size metrics', () => {
       padX: 14 * INPUT_RATIOS.padX,
       padY: 14 * INPUT_RATIOS.padY,
       chevronGap: 14 * SELECT_RATIOS.chevronGap,
+      chevronTextGap: 14 * SELECT_RATIOS.chevronTextGap,
       minW: 98,
       gap: 5.25,
       icon: 14,
@@ -21,6 +22,7 @@ describe('SelectDropdown size metrics', () => {
       expect(m.padX / px).toBeCloseTo(INPUT_RATIOS.padX)
       expect(m.padY / px).toBeCloseTo(INPUT_RATIOS.padY)
       expect(m.chevronGap / px).toBeCloseTo(SELECT_RATIOS.chevronGap)
+      expect(m.chevronTextGap / px).toBeCloseTo(SELECT_RATIOS.chevronTextGap)
       expect(m.minW / px).toBeCloseTo(7)
       expect(m.gap / px).toBeCloseTo(0.375)
       expect(m.icon / px).toBeCloseTo(1)
@@ -29,10 +31,11 @@ describe('SelectDropdown size metrics', () => {
 
   // The chevron's right gutter is its own size ratio, independent of the text
   // padding, so the marker's inset can be tuned without moving the label.
-  it('keeps the chevron gap its own size ratio', () => {
+  it('keeps the chevron gutters their own size ratios', () => {
     expect(SELECT_RATIOS).not.toHaveProperty('chevronInset')
     expect(SELECT_RATIOS.chevronGap).toBeGreaterThan(0)
-    expect(SELECT_TRIGGER_UTILITIES).toContain('pl-[var(--sel-pad-x)] pr-[var(--sel-chevron-gap)]')
+    expect(SELECT_RATIOS.chevronTextGap).toBeGreaterThan(0)
+    expect(SELECT_TRIGGER_UTILITIES).toContain('pl-[var(--input-pad-x)] pr-[var(--sel-chevron-gap)]')
   })
 
   // A trigger and a text field share a row, so their text lines and boxes must

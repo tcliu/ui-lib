@@ -174,8 +174,8 @@ describe('AutoComplete ratios', () => {
     combobox().focus()
     flushSync()
     const row = document.querySelector('[role=listbox] [role=option]')
-    expect(row?.getAttribute('style')).toContain('--sel-font: 8px')
-    expect(row?.getAttribute('style')).toContain('--sel-pad-x: 12px')
+    expect(row?.getAttribute('style')).toContain('--input-font: 8px')
+    expect(row?.getAttribute('style')).toContain('--input-pad-x: 12px')
     expect(row?.getAttribute('style')).toContain('--sel-min-w: 160px')
   })
 

@@ -210,7 +210,7 @@
       sync: { kind: 'script' },
     },
     enumField({ name: 'variant', type: "'bordered' | 'embedded'", defaultValue: "'bordered'", note: 'Chrome variant; embedded drops the border, the background, and the focus ring for a field rendered inside another surface.', options: variantOptions, placeholder: 'bordered', clearLabel: 'Clear variant', ...eye(pg.variant) }),
-    textField({ name: 'wrapperStyle', type: 'string?', defaultValue: '—', note: 'Metric custom properties for the adornments, set on the wrapping frame.', clearable: true, ...eye(pg.wrapperStyle) }),
+    textField({ name: 'wrapperStyle', type: 'string?', defaultValue: '—', note: 'Style for the wrapping frame: the adornments’ metric custom properties and any frame-level layout a composite supplies.', clearable: true, ...eye(pg.wrapperStyle) }),
     { name: 'inputRef', type: 'HTMLInputElement | null', defaultValue: 'null', note: 'Bindable native input.' },
     {
       name: 'onClear',

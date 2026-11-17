@@ -143,24 +143,24 @@
   }
 
   // The option panel is the shared `SelectDropdown` chrome: its rows consume
-  // the same `--sel-*` box metrics, so both surfaces read alike. The panel keeps
-  // its own three keys; the field metrics it does not render stay out of the
-  // emitted vars.
+  // the same `--input-*` text metrics and `--sel-min-w` floor, so both surfaces
+  // read alike. The field-only and select-only keys the panel does not render
+  // stay out of the emitted vars.
   const resolvedRatios = $derived({ ...AUTOCOMPLETE_RATIOS, ...ratios })
-  const panelMetrics = $derived(
+  const panelFieldMetrics = $derived(
     dimensionMetrics(
       size,
       withLine({
         font: resolvedRatios.font,
         padX: resolvedRatios.padX,
         padY: resolvedRatios.padY,
-        minW: resolvedRatios.minW,
-        gap: resolvedRatios.gap,
-        icon: resolvedRatios.icon,
       }),
     ),
   )
-  const panelStyle = $derived(sizeVarStyle('sel', panelMetrics))
+  const panelBoxMetrics = $derived(dimensionMetrics(size, { minW: resolvedRatios.minW }))
+  const panelStyle = $derived(
+    [sizeVarStyle('input', panelFieldMetrics), sizeVarStyle('sel', panelBoxMetrics)].join(';'),
+  )
   // The field rides the same font, radius, paddings, clear affordance, and
   // trailer gap as the panel's rows.
   const fieldRatios: TextInputRatioOverrides = $derived(fieldOverrides(resolvedRatios))

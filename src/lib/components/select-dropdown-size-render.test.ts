@@ -50,12 +50,12 @@ describe('SelectDropdown numeric size', () => {
     flushSync()
     // size 14 → font = INPUT_RATIOS.font × 14.
     const trigger = document.querySelector('button[role=combobox]')
-    expect(trigger?.getAttribute('style')).toContain(`--sel-font: ${14 * INPUT_RATIOS.font}px`)
+    expect(trigger?.getAttribute('style')).toContain(`--input-font: ${14 * INPUT_RATIOS.font}px`)
 
     trigger?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     flushSync()
     const row = document.querySelector('[role=listbox] [role=option]')
-    expect(row?.getAttribute('style')).toContain(`--sel-font: ${14 * INPUT_RATIOS.font}px`)
+    expect(row?.getAttribute('style')).toContain(`--input-font: ${14 * INPUT_RATIOS.font}px`)
     // The row references the min-width var rather than a literal class.
     expect(row?.getAttribute('class')).toContain('min-w-[var(--sel-min-w)]')
   })
@@ -81,8 +81,8 @@ describe('SelectDropdown numeric size', () => {
     flushSync()
     const trigger = document.querySelector('button[role=combobox]')
     const style = trigger?.getAttribute('style') ?? ''
-    expect(style).toContain('--sel-font: 8px')
-    expect(style).toContain('--sel-pad-x: 12px')
+    expect(style).toContain('--input-font: 8px')
+    expect(style).toContain('--input-pad-x: 12px')
     expect(style).toContain('--sel-min-w: 160px')
     // The gutter is its own ratio: a padding override leaves it at 0.4 × 16.
     expect(style).toContain('--sel-chevron-gap: 6.4px')
