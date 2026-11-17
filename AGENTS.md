@@ -94,6 +94,9 @@ Project-specific development conventions for the UI Library web app.
   palette.
 - `SelectDropdown` derives its trigger label from the committed value; pass
   `buttonLabel` only to override it.
+- `SelectDropdown` exposes `leading` (inside the trigger, before the text) and
+  `trailer` (outside the trigger); its `trailing` slot belongs to the built-in
+  chevron, so a caller never supplies a competing trailing adornment.
 - Spreadsheet editing stays one shared control (`DataGrid`); reuse it instead of
   forking a grid.
 - Tabular display stays one shared control (`DataTable`), with `FieldTable` for
@@ -200,7 +203,7 @@ Project-specific development conventions for the UI Library web app.
   the size step, and an icon inside a `Button`'s `icon` snippet carries no
   `size` because the button's box sizes the glyph. Per
   `~/.agents/references/ui-patterns.md` (Shared components).
-- Apply code changes in a separate branch and worktree under `.worktrees/` per `~/.agents/references/git.md`, unless the user opts for the current worktree.
+- Ask the user whether to apply code changes in the default worktree or a new branch/worktree under `.worktrees/` per `~/.agents/references/git.md`; never pick the location on their behalf.
 - Worktree deletion refuses targets with running processes; the explicit
   terminate-and-delete step (`--kill`) is in `ARCHITECTURE.md`.
 - Z ladder: sticky content `z-10`, drawer backdrop `z-30`, floating drawer and

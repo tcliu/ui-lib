@@ -315,7 +315,11 @@ of building a parallel control.
   (`INPUT_CHROME` surface/border/focus/disabled/read-only/motion,
   `INPUT_CHROME_NO_OUTLINE` the same surface without the border/focus border,
   `INPUT_EMBEDDED` the chrome-less base for a field inside another surface,
-  `INPUT_METRIC_CLASS` the `--input-*` metric classes, `FIELD_RATIOS` the
+  `INPUT_METRIC_CLASS` the `--input-*` metric classes (split into
+  `INPUT_TEXT_METRIC_CLASS` for the shared font/line/vertical padding,
+  `INPUT_PAD_X_CLASS` for the symmetric inset, and `INPUT_RADIUS_CLASS`, so a
+  box with its own asymmetric inset composes the text metrics without
+  re-declaring them), `FIELD_RATIOS` the
   tunable text ratios a field's `ratios` prop overrides — font, radius, and both
   paddings, with the font taken from `FONT_RATIO` — and `INPUT_RATIOS` the same
   set plus the line box derived through `INPUT_LEADING`). `text-input-metrics.ts`
@@ -369,10 +373,17 @@ of building a parallel control.
   the field never outgrows the host. An adornment over
   the field's border (the number steppers) paints no border of its own: it reserves
   the ring with a transparent border so the base border, focus, and disabled
-  colors stay in lockstep. `SelectDropdown`'s box shares the input chrome's
-  font, line, and both paddings (`INPUT_RATIOS`), so text, search, and select
-  sit on one box — the same height and text inset — in a shared row, and its
-  option rows (also `AutoComplete`'s) reuse that box; a date picker's
+  colors stay in lockstep. `SelectDropdown`'s trigger and option rows (also
+  `AutoComplete`'s) consume the input chrome's own text metric classes
+  (`INPUT_TEXT_METRIC_CLASS`, `INPUT_PAD_X_CLASS`) and emit the same
+  `--input-*` values, so text, search, and select sit on one box — the same
+  height and text inset — in a shared row. Its filterable trigger is the shared
+  `TextInput` (`embedded`) with the chevron in its `trailing` slot; the field
+  frame stretches to the trigger box so the marker holds the box edge while the
+  input reserves the glyph plus the label→chevron gap. The trigger also takes a
+  `leading` block (in flow, before the text) and a `trailer` block (outside the
+  trigger, after the clear affordance); its `trailing` slot stays internal to
+  the chevron, so a caller never supplies a competing trailing adornment. A date picker's
   single-mode field *is*
   this `TextInput` (with the calendar affordance in its `trailing` slot), and its
   range trigger reuses the same field font, line, and padding (`INPUT_RATIOS`),
@@ -428,9 +439,11 @@ of building a parallel control.
   metric is derived from its base rather than tuned beside it: `TextInput`'s
   in-field clear cross sits at `padX` (`--clear-inset`), so retuning the field
   padding carries the cross with it instead of shifting it by a constant
-  offset. `SelectDropdown`'s chevron gutter is deliberately its own
-  `chevronGap` ratio (emitted as `--sel-chevron-gap`), so the marker's inset can
-  be tuned without moving the label's `padX` inset. The helpers in
+  offset. `SelectDropdown`'s chevron keeps two independent ratios — the border
+  gutter (`chevronGap`, emitted as `--sel-chevron-gap`) and the label→chevron
+  gap (`chevronTextGap`, emitted as `--sel-chevron-text-gap`), which the
+  filterable input's gutter consumes alongside the glyph width — so a padding
+  retune moves neither. The helpers in
   `size-metrics.ts` (`resolveSize`, `dimensionMetrics`, `iconPadRatio`,
   `sizeVarStyle`) emit the metric custom properties on the inline style while a
   static utility set consumes them; the constant ratio means no per-step
@@ -665,12 +678,29 @@ of building a parallel control.
 - **DataTable / FieldTable** — `DataTable` models paged `rows` + `columns`; its
   `pagination` object (`total`, `pageSize`, `currentPage`, `onPageChange`,
   `onPageSizeChange`, `pageSizeOptions`, `labels`, `trailing`) is optional, and omitting it renders
-  no footer. The managed column-width engine lives in
-  `use-table-columns.svelte.ts`: pixel widths aligned by column key, the
-  persisted copy, the reset signal, and the shared `use-column-resize`; the
-  component keeps the DOM refs. A reset is a rising `resetWidthsSignal` number,
-  not a callback: the caller only tells the table that the saved widths should
-  drop, and a repeated bump still differs from the last value it saw.
+  no footer. Two contracts share one component: *controlled* mode, where the
+  caller supplies the page slice, the sort state, and the selection set, and
+  *managed* mode (`model`), where a `createTableModel` controller
+  (`use-table-model.svelte.ts`) owns the search filter, the sort order, the page
+  slice, the selection set, and the footer, and the component only renders them.
+  The controller's pipeline is fixed — filter (columns marked `searchable`, via
+  `searchValue` when the key is not a row property) -> sort (`sortValue`, else
+  the row property, with a numeric-aware locale compare and missing values last
+  in either direction) -> page — and it prunes the selection to the filtered
+  rows so a hidden row never stays selected. Its "another page exists" rule
+  gates the footer in managed mode, and managed mode marks every data column
+  sortable by default (`sortable: false` opts out), so a managed table only
+  declares its columns. The batch toolbar row (`toolbar`,
+  `batchActions`, `toolbarEnd`, and the built-in Export/Clear pair gated by
+  `selectionActions`) renders only when a caller supplies content, so passive
+  tables (`FieldTable`, docs, dashboard summaries) keep their current markup;
+  each snippet receives the selected rows and a clear-selection callback. The
+  managed column-width engine lives in `use-table-columns.svelte.ts`: pixel
+  widths aligned by column key, the persisted copy, the reset signal, and the
+  shared `use-column-resize`; the component keeps the DOM refs. A reset is a
+  rising `resetWidthsSignal` number, not a callback: the caller only tells the
+  table that the saved widths should drop, and a repeated bump still differs
+  from the last value it saw.
   `variant="docs"` swaps the viewer chrome for the static docs chrome.
   `bordered={false}` drops the viewer/split container chrome for borderless
   embedding. `FieldTable` rides on `DataTable` to render `FieldConfig[]`
