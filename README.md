@@ -48,6 +48,32 @@ persistence helpers:
 The package is consumed through a bundler: its compiled modules keep the
 source's extensionless relative imports.
 
+### Tables
+
+`DataTable` is a controlled presenter: you supply the page slice, the sort
+state, and the selection set. For a table that owns that state, pass a
+controller instead of wiring the four state machines per page:
+
+```svelte
+<script lang="ts">
+  import DataTable from '@codepg/ui-lib/components/DataTable.svelte'
+  import { createTableModel } from '@codepg/ui-lib/components/use-table-model.svelte'
+
+  const table = createTableModel({
+    rows: () => rows,
+    rowId: row => row.id,
+    columns: () => columns,
+    pageSize: 10,
+  })
+</script>
+
+<DataTable columns={columns} model={table} selectable />
+```
+
+The model owns the search filter (columns marked `searchable`), the sort (the
+column's `sortValue` or the row property), the page slice, and the selection,
+and `DataTable` adds the batch toolbar and the built-in Export/Clear pair.
+
 ### Editor
 
 `CodeEditor` and `LazyCodeEditor` are the only components with optional

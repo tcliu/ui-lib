@@ -125,6 +125,10 @@ export const en = {
     columnEditor: '{name} editor',
     apply: 'Apply {name}',
     unapply: 'Unapply {name}',
+    selected: '{count} selected',
+    export: 'Export',
+    exportSelected: 'Export selected',
+    clearSelection: 'Clear selection',
   },
   edit: {
     editText: 'Edit text',

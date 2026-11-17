@@ -125,6 +125,10 @@ export const zhCN = {
     columnEditor: '{name} 编辑器',
     apply: '应用 {name}',
     unapply: '取消应用 {name}',
+    selected: '已选择 {count} 项',
+    export: '导出',
+    exportSelected: '导出所选',
+    clearSelection: '清除选择',
   },
   edit: {
     editText: '编辑文本',

@@ -56,6 +56,7 @@
     chooserLabel: staged('Choose columns'),
     chooserResetLabel: staged('Reset columns'),
     selectAllAriaLabel: staged('Select all'),
+    selectionCountPosition: staged('end'),
     allSelected: staged('' as TriState),
     someSelected: staged('' as TriState),
     containerClassName: staged(''),
@@ -282,6 +283,7 @@
   // Value-column coupling lives in the appliers above.
   const fields: SyncableFieldConfig[] = $derived([
     boolField({ name: 'allSelected', defaultValue: '—', note: 'Header checkbox checked state. Interaction override; unset follows the selection.', ...eyeFlag(pg.allSelected) }),
+    { name: 'batchActions', type: 'Snippet<[T[], () => void]>?', defaultValue: '—', note: 'Batch actions in the toolbar row; receives the selected rows and a clear-selection callback.' },
     boolField({ name: 'bodyScroll', type: 'boolean?', defaultValue: 'false', note: 'Fixed header band with a body-only scrollport (needs fillHeight).', ...eyeFlag(pg.bodyScroll), onChange: applyBodyScroll }),
     boolField({ name: 'bordered', defaultValue: 'true', note: 'Card chrome (border, rounding, backdrop) on the viewer container.', ...eyeFlag(pg.bordered) }),
     // Eye-free by design: the entries derive from the live hidden-column set
@@ -308,6 +310,7 @@
     textField({ name: 'emptyMessage', type: 'string?', defaultValue: "'No rows'", note: 'Shown when rows is empty.', editorDefaultValue: 'No rows', clearable: true, placeholder: 'No rows', ...eye(pg.emptyMessage) }),
     boolField({ name: 'fillHeight', type: 'boolean?', defaultValue: 'false', note: 'Fills the parent; table body scrolls.', ...eyeFlag(pg.fillHeight), onChange: applyFillHeight }),
     boolField({ name: 'loading', defaultValue: 'false', note: 'Shows the spinner when there are no rows yet.', ...eyeFlag(pg.loading) }),
+    { name: 'model', type: 'TableModel<T>?', defaultValue: '—', note: 'Managed mode: a createTableModel controller supplies the filter, sort, page slice, selection, and footer; the model-backed props (rows, rowId, searchValue, sortKey, sortDirection, pagination, selectedIds, allSelected, someSelected) are then ignored.' },
     boolField({ name: 'resizable', defaultValue: 'false', note: 'Draggable column resize handles.', ...eyeFlag(pg.resizable) }),
     {
       name: 'resetWidthsSignal',
@@ -415,6 +418,8 @@
     textField({ name: 'storageKey', type: 'string?', defaultValue: '—', note: 'Persists resized widths under this key.', clearable: true, ...eye(pg.storageKey) }),
     textField({ name: 'storagePrefix', type: 'string?', defaultValue: '—', note: 'App-owned localStorage prefix for the persisted widths; the package prefix stays the read fallback.', clearable: true, ...eye(pg.storagePrefix) }),
     textField({ name: 'tableClassName', type: 'string?', defaultValue: "'min-w-0'", note: 'Extra classes for the table element; raise the minimum width when columns need a horizontal scroll floor.', editorDefaultValue: 'min-w-0', clearable: true, placeholder: 'min-w-0', ...eye(pg.tableClassName) }),
+    { name: 'toolbar', type: 'Snippet<[T[], () => void]>?', defaultValue: '—', note: 'Leading toolbar content in the batch row (operational buttons); receives the selected rows and a clear-selection callback.' },
+    { name: 'toolbarEnd', type: 'Snippet<[T[], () => void]>?', defaultValue: '—', note: 'Trailing toolbar content, after the built-in selection actions (typically Refresh).' },
     enumField({ name: 'variant', type: "'data' | 'docs'", defaultValue: "'data'", note: 'Presentation: the paged viewer, or the static docs table with a plain wrapper, non-sticky header, and no row hover.', options: ['data', 'docs'].map(value => ({ value, label: value })), placeholder: 'data', clearLabel: 'Clear variant', ...eye(pg.variant) }),
     {
       name: 'columns',
@@ -425,6 +430,14 @@
     { name: 'pagination', type: 'DataTablePagination?', defaultValue: '—', note: 'Footer config: total/pageSize/currentPage plus onPageChange gate the footer; onPageSizeChange adds the page-size selector; pageSizeOptions customizes its choices; labels overrides the aria labels; trailing is a snippet pinned to the row’s right edge.' },
     { name: 'rowId', type: '(row: T) => string', defaultValue: '—', note: 'Stable key per row.' },
     { name: 'selectedIds', type: 'Set<string>?', defaultValue: '—', note: 'Selected row ids; managed by the caller.' },
+    { name: 'selectionActions', type: 'false | { fileName?, rows? }', defaultValue: 'managed: on', note: 'Built-in Export/Clear pair: JSON of the selected rows with an optional export mapper. On by default in managed mode; opt-in in controlled mode, where Clear needs onClearSelection.' },
+    enumField({ name: 'selectionCountPosition', type: "'start' | 'end'", defaultValue: "'end'", note: 'Where the selected-count summary sits in the toolbar row.', options: ['start', 'end'].map(value => ({ value, label: value })), placeholder: 'end', clearLabel: 'Clear position', ...eye(pg.selectionCountPosition) }),
+    {
+      name: 'onClearSelection',
+      type: '() => void',
+      defaultValue: '—',
+      note: 'Controlled-mode handler for the built-in Clear action; managed mode clears through the model.',
+    },
     {
       name: 'onResetColumns',
       type: '() => void',
@@ -567,6 +580,7 @@
         allSelected={pg.allSelected.on ? (pg.allSelected.value === '' ? allRowsSelected : pg.allSelected.value === 'yes') : undefined}
         someSelected={pg.someSelected.on ? (pg.someSelected.value === '' ? someRowsSelected : pg.someSelected.value === 'yes') : undefined}
         selectAllAriaLabel={applied(pg.selectAllAriaLabel) || undefined}
+        selectionCountPosition={applied(pg.selectionCountPosition) === 'start' ? 'start' : undefined}
         rowSelectAriaLabel={row => `Select ${row.name}`}
         {dense}
         {fillHeight}

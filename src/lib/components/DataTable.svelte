@@ -9,8 +9,12 @@
   import type { SizeInput } from '#lib/size-scale.js'
   import CaretDownIcon from '#lib/icons/CaretDownIcon.svelte'
   import CaretUpIcon from '#lib/icons/CaretUpIcon.svelte'
+  import Button from './Button.svelte'
+  import CloseIcon from '#lib/icons/CloseIcon.svelte'
+  import ExportIcon from '#lib/icons/ExportIcon.svelte'
   import { createTableColumns, TABLE_MIN_COLUMN_WIDTH, TABLE_SELECT_COLUMN_WIDTH } from './use-table-columns.svelte'
   import { createTableScrollSync } from './use-table-scroll-sync.svelte'
+  import type { TableModel } from './use-table-model.svelte'
   import { resolveColumnWidths } from '#lib/components/column-helpers.js'
   import Tooltip from './Tooltip.svelte'
   import { getI18nContext } from '#lib/i18n/store.svelte.js'
@@ -48,6 +52,22 @@
     cell?: Snippet<[T]>
     sortable?: boolean
     searchable?: boolean
+    // Value the column is sorted by; defaults to `row[key]`. Read by the
+    // managed controller (`createTableModel`), so a computed cell sorts by its
+    // underlying value instead of its rendered markup.
+    sortValue?: (row: T) => unknown
+    // Value the search filter matches; defaults to `row[key]`. Read by the
+    // managed controller, so a column whose key is not a row property (an
+    // actions column, a formatted cell) can still be searchable.
+    searchValue?: (row: T) => string
+  }
+
+  // The built-in Export/Clear pair in the batch toolbar. `fileName` names the
+  // downloaded JSON; `rows` shapes the exported payload (the selected rows
+  // themselves by default).
+  export interface DataTableSelectionActions<T> {
+    fileName?: string
+    rows?: (rows: T[]) => unknown
   }
 
   // Pagination footer configuration: the data plus the callbacks the footer
@@ -67,9 +87,18 @@
   }
 
   interface Props<T> {
-    rows: T[]
-    rowId: (row: T) => string
+    // The current page's rows. Omitted in managed mode, where the model supplies
+    // the page slice.
+    rows?: T[]
+    // Stable key per row. Omitted in managed mode, where the model owns it.
+    rowId?: (row: T) => string
     columns: DataTableColumn<T>[]
+    // Managed mode: a `createTableModel` controller owns the search filter, the
+    // sort order, the page slice, and the selection set, and `DataTable` reads
+    // them from it. The model-backed props below (`rows`, `rowId`,
+    // `searchValue`, `sortKey`, `sortDirection`, `pagination`, `selectedIds`,
+    // `allSelected`, `someSelected`) are then ignored.
+    model?: TableModel<T>
     loading?: boolean
     emptyMessage?: string
     searchValue?: string
@@ -97,6 +126,20 @@
     someSelected?: boolean
     selectAllAriaLabel?: string
     rowSelectAriaLabel?: (row: T) => string
+    // Batch toolbar row, rendered above the search box when any of its content
+    // is supplied. Each snippet receives the selected rows and a
+    // clear-selection callback.
+    toolbar?: Snippet<[T[], () => void]>
+    batchActions?: Snippet<[T[], () => void]>
+    toolbarEnd?: Snippet<[T[], () => void]>
+    // Where the "N selected" summary sits in the toolbar row.
+    selectionCountPosition?: 'start' | 'end'
+    // The built-in Export/Clear pair. On by default in managed mode (JSON of the
+    // selected rows); in controlled mode it renders only when this is set, and
+    // clearing then needs `onClearSelection`. `false` hides it in either mode.
+    selectionActions?: false | DataTableSelectionActions<T>
+    // Controlled-mode clear handler for the built-in selection actions.
+    onClearSelection?: () => void
     // Pagination footer configuration. The footer renders only when the
     // object supplies `total`, `pageSize`, `currentPage`, and `onPageChange`;
     // `onPageSizeChange` is optional (without it the footer hides the
@@ -112,7 +155,8 @@
     bodyScroll?: boolean
     // Renders the pagination footer. Set false for short summary tables that
     // always fit one page (the dashboard breakdowns). Unset, the footer renders
-    // when `pagination` supplies its data and `onPageChange`; omitting it is the
+    // when `pagination` supplies its data and `onPageChange`; in managed mode it
+    // follows the model's "another page exists" rule. Omitting it is the
     // pagination-free (docs-table) mode. `onPageSizeChange` is optional.
     showPagination?: boolean
     // Compact header/cell padding for summary tables embedded in a panel.
@@ -152,6 +196,7 @@
     rows,
     rowId,
     columns,
+    model,
     loading = false,
     emptyMessage,
     searchValue = $bindable(''),
@@ -174,6 +219,12 @@
     someSelected = false,
     selectAllAriaLabel,
     rowSelectAriaLabel,
+    toolbar,
+    batchActions,
+    toolbarEnd,
+    selectionCountPosition = 'end',
+    selectionActions,
+    onClearSelection,
     pagination,
     containerClassName,
     tableClassName = 'min-w-0',
@@ -204,31 +255,111 @@
   const resolvedChooserResetLabel = $derived(chooserResetLabel ?? i18n.t('table.resetColumns'))
   const resolvedSelectAllAriaLabel = $derived(selectAllAriaLabel ?? i18n.t('table.selectAll'))
 
+  // --- Managed mode -------------------------------------------------------
+  //
+  // With a `model`, every controlled input below is read from the controller:
+  // the page slice, the row key, the search term, the sort state, the selection,
+  // and the footer. Without one, the component stays the controlled presenter it
+  // has always been.
+
+  const activeRows = $derived(model ? model.pageRows : (rows ?? []))
+  const activeRowId = $derived(
+    model?.rowId ?? rowId ?? ((row: T) => String(activeRows.indexOf(row))),
+  )
+  const activeSortKey = $derived(model ? model.sortKey : sortKey)
+  const activeSortDirection = $derived(model ? model.sortDirection : sortDirection)
+  const activeSelectedIds = $derived(model ? model.selectedIds : selectedIds)
+  const activeAllSelected = $derived(model ? model.allSelected : allSelected)
+  const activeSomeSelected = $derived(model ? model.someSelected : someSelected)
+  const activePagination = $derived(model ? model.pagination : pagination)
+
   // Pagination is configured when the object supplies its data and the
   // page-change handler, so omitting any of them renders no footer. An explicit
   // `showPagination` still wins, and `onPageSizeChange` stays optional: without
-  // it the footer renders but hides the page-size selector.
+  // it the footer renders but hides the page-size selector. In managed mode the
+  // footer follows the model's "another page exists" rule by default.
   const resolvedPagination = $derived.by(() => {
     if (
-      pagination?.total != null &&
-      pagination.pageSize != null &&
-      pagination.currentPage != null &&
-      pagination.onPageChange
+      activePagination?.total != null &&
+      activePagination.pageSize != null &&
+      activePagination.currentPage != null &&
+      activePagination.onPageChange
     ) {
       return {
-        total: pagination.total,
-        pageSize: pagination.pageSize,
-        currentPage: pagination.currentPage,
-        onPageChange: pagination.onPageChange,
-        onPageSizeChange: pagination.onPageSizeChange,
-        pageSizeOptions: pagination.pageSizeOptions,
-        labels: pagination.labels,
-        trailing: pagination.trailing,
+        total: activePagination.total,
+        pageSize: activePagination.pageSize,
+        currentPage: activePagination.currentPage,
+        onPageChange: activePagination.onPageChange,
+        onPageSizeChange: activePagination.onPageSizeChange,
+        pageSizeOptions: activePagination.pageSizeOptions,
+        labels: activePagination.labels,
+        trailing: activePagination.trailing,
       }
     }
     return null
   })
-  const showFooter = $derived((showPagination ?? resolvedPagination != null) && resolvedPagination != null)
+  const showFooter = $derived(
+    (showPagination ?? (model ? model.hasMorePages : resolvedPagination != null)) &&
+      resolvedPagination != null,
+  )
+
+  // --- Batch toolbar ------------------------------------------------------
+
+  // Enabled by default in managed mode, where the table owns the selection and
+  // can therefore act on it; opt-in in controlled mode, where a clear needs the
+  // caller's handler.
+  const resolvedSelectionActions = $derived(
+    selectionActions === false ? null : (selectionActions ?? (model ? {} : null)),
+  )
+  const selectedRows = $derived(
+    model
+      ? model.selectedRows
+      : activeRows.filter(row => activeSelectedIds?.has(activeRowId(row))),
+  )
+  const selectionCount = $derived(activeSelectedIds?.size ?? 0)
+  const showToolbarRow = $derived(
+    Boolean(toolbar || batchActions || toolbarEnd || resolvedSelectionActions),
+  )
+
+  function clearSelection(): void {
+    if (model) {
+      model.clearSelection()
+      return
+    }
+    onClearSelection?.()
+  }
+
+  function toggleSelection(id: string, checked: boolean): void {
+    if (model) {
+      model.toggleSelection(id, checked)
+      return
+    }
+    onToggleSelection?.(id, checked)
+  }
+
+  function toggleAll(): void {
+    if (model) {
+      model.toggleAll()
+      return
+    }
+    onToggleAll?.()
+  }
+
+  function exportSelection(): void {
+    if (selectedRows.length === 0) {
+      return
+    }
+    const payload = resolvedSelectionActions?.rows
+      ? resolvedSelectionActions.rows(selectedRows)
+      : selectedRows
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = resolvedSelectionActions?.fileName ?? 'selection.json'
+    link.click()
+    URL.revokeObjectURL(url)
+  }
 
   const isDocs = $derived(variant === 'docs')
   // Card chrome shared by the viewer containers; dropped when bordered is false.
@@ -289,7 +420,16 @@
     padHeaderForScrollbar: true,
   })
 
-  const resolvedColumns = $derived.by(() => resolveColumnWidths(columns))
+  const resolvedColumns = $derived.by(() => {
+    const widths = resolveColumnWidths(columns)
+    // A managed table can sort every data column out of the box (the console
+    // convention); a controlled one stays opt-in, and `sortable: false` always
+    // wins.
+    return widths.map(column => ({
+      ...column,
+      sortable: column.sortable ?? (model ? column.key !== 'actions' && column.header !== '' : false),
+    }))
+  })
 
   $effect(() => {
     const keys = columns.map(c => c.key)
@@ -351,8 +491,12 @@
     if (!column.sortable) {
       return
     }
-    sortKey = column.key
-    sortDirection = direction
+    if (model) {
+      model.setSort(column.key, direction)
+    } else {
+      sortKey = column.key
+      sortDirection = direction
+    }
     onSort?.(column.key, direction)
   }
 </script>
@@ -360,17 +504,70 @@
 <svelte:window onmouseup={tableColumns.resize.handleResizeMouseUp} onmousemove={tableColumns.resize.handleResizeMouseMove} />
 
 <div class="flex w-full min-w-0 flex-col gap-2 {fillHeight ? 'min-h-0 flex-1' : ''}">
+  {#if showToolbarRow}
+    <div class="flex min-h-8 shrink-0 flex-wrap items-center gap-1.5">
+      {#if toolbar}
+        {@render toolbar(selectedRows, clearSelection)}
+      {/if}
+      {#if selectionCountPosition === 'start'}
+        <span class="text-xs text-slate-400">{i18n.t('table.selected', { count: selectionCount })}</span>
+      {/if}
+      {#if batchActions}
+        {@render batchActions(selectedRows, clearSelection)}
+      {/if}
+      {#if resolvedSelectionActions}
+        <Button
+          variant="secondary"
+          ariaLabel={i18n.t('table.exportSelected')}
+          disabled={selectionCount === 0}
+          onClick={exportSelection}>
+          {#snippet icon()}<ExportIcon />{/snippet}
+          {i18n.t('table.export')}
+        </Button>
+        {#if model || onClearSelection}
+          <Button
+            variant="secondary"
+            ariaLabel={i18n.t('table.clearSelection')}
+            disabled={selectionCount === 0}
+            onClick={clearSelection}>
+            {#snippet icon()}<CloseIcon />{/snippet}
+            {i18n.t('table.clearSelection')}
+          </Button>
+        {/if}
+      {/if}
+      {#if toolbarEnd}
+        {@render toolbarEnd(selectedRows, clearSelection)}
+      {/if}
+      {#if selectionCountPosition === 'end'}
+        <span class="ml-auto text-xs text-slate-400"
+          >{i18n.t('table.selected', { count: selectionCount })}</span
+        >
+      {/if}
+    </div>
+  {/if}
+
   {#if showSearch || chooserColumns}
     <div class="flex flex-wrap items-center gap-2 {fillHeight ? 'shrink-0' : ''}">
       {#if showSearch}
-        <SearchInput
-          bind:value={searchValue}
-          {size}
-          oninput={onSearchInput}
-          onkeydown={onSearchKeydown}
-          ariaLabel={resolvedSearchAriaLabel}
-          placeholder={resolvedSearchPlaceholder}
-          wrapperClass="min-w-0 flex-1" />
+        {#if model}
+          <SearchInput
+            bind:value={model.searchValue}
+            {size}
+            oninput={onSearchInput}
+            onkeydown={onSearchKeydown}
+            ariaLabel={resolvedSearchAriaLabel}
+            placeholder={resolvedSearchPlaceholder}
+            wrapperClass="min-w-0 flex-1" />
+        {:else}
+          <SearchInput
+            bind:value={searchValue}
+            {size}
+            oninput={onSearchInput}
+            onkeydown={onSearchKeydown}
+            ariaLabel={resolvedSearchAriaLabel}
+            placeholder={resolvedSearchPlaceholder}
+            wrapperClass="min-w-0 flex-1" />
+        {/if}
       {/if}
       {#if chooserColumns}
         <ColumnChooser
@@ -407,7 +604,7 @@
   {/snippet}
 
   {#snippet tableBody()}
-    {#if loading && rows.length === 0}
+    {#if loading && activeRows.length === 0}
       <tr>
         <td colspan={columnCount} class="px-3 py-10">
           <div class="flex justify-center">
@@ -415,20 +612,20 @@
           </div>
         </td>
       </tr>
-    {:else if rows.length === 0}
+    {:else if activeRows.length === 0}
       <tr>
         <td colspan={columnCount} class="px-3 py-10 text-center text-sm text-slate-400">{resolvedEmptyMessage}</td>
       </tr>
     {:else}
-      {#each rows as row (rowId(row))}
+      {#each activeRows as row (activeRowId(row))}
         <tr class={bodyRowClass}>
           {#if selectable}
             <td class="border-b border-slate-800/50 px-3 py-2">
               <Checkbox
-                checked={selectedIds?.has(rowId(row)) ?? false}
+                checked={activeSelectedIds?.has(activeRowId(row)) ?? false}
                 {size}
                 ariaLabel={rowSelectAriaLabel?.(row) ?? i18n.t('table.selectRow')}
-                onChange={checked => onToggleSelection?.(rowId(row), checked)} />
+                onChange={checked => toggleSelection(activeRowId(row), checked)} />
             </td>
           {/if}
           {#each resolvedColumns as column (column.key)}
@@ -455,18 +652,18 @@
       {#if selectable}
         <th class="sticky top-0 z-10 w-10 border-b border-slate-800 bg-slate-900/95 px-3 py-2 backdrop-blur">
           <Checkbox
-            checked={allSelected}
-            indeterminate={someSelected && !allSelected}
+            checked={activeAllSelected}
+            indeterminate={activeSomeSelected && !activeAllSelected}
             {size}
             ariaLabel={resolvedSelectAllAriaLabel}
-            disabled={rows.length === 0}
-            onChange={() => onToggleAll?.()} />
+            disabled={activeRows.length === 0}
+            onChange={() => toggleAll()} />
         </th>
       {/if}
       {#each resolvedColumns as column, i (column.key)}
-        {@const isActive = sortKey === column.key}
-        {@const isAsc = isActive && sortDirection === 'asc'}
-        {@const isDesc = isActive && sortDirection === 'desc'}
+        {@const isActive = activeSortKey === column.key}
+        {@const isAsc = isActive && activeSortDirection === 'asc'}
+        {@const isDesc = isActive && activeSortDirection === 'desc'}
         {@const headerAlignStyle =
           column.headerAlign === 'center'
             ? 'text-align: center'

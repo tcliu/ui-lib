@@ -125,6 +125,10 @@ export const zhTW = {
     columnEditor: '{name} 編輯器',
     apply: '套用 {name}',
     unapply: '取消套用 {name}',
+    selected: '已選擇 {count} 項',
+    export: '匯出',
+    exportSelected: '匯出所選',
+    clearSelection: '清除選取',
   },
   edit: {
     editText: '編輯文字',
