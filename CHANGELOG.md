@@ -7,10 +7,45 @@ version has one section, newest first; the format follows
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-16
+
+### Added
+
+- `DataTable` managed mode: pass a `model` from `createTableModel`
+  (`components/use-table-model.svelte`) and the controller owns the search
+  filter, the sort order, the page slice, the selection set, and the footer,
+  while the component only renders them. The pipeline is filter (searchable
+  columns) -> sort (`sortValue`, or the row property; numeric-aware locale
+  compare, missing values last in either direction) -> page, the search term
+  resets the page, and the selection is pruned to the filtered rows. A managed
+  table marks every data column sortable by default (`sortable: false` opts
+  out), matching the list-table convention.
+- `DataTable` batch toolbar: `toolbar`, `batchActions`, and `toolbarEnd`
+  snippets over the selected rows plus a clear-selection callback, the
+  `selectionCountPosition` summary, and the built-in Export/Clear pair
+  (`selectionActions`, on by default in managed mode, with an optional
+  `fileName` and export mapper).
+- `DataTableColumn` takes `sortValue` and `searchValue` accessors, so a
+  computed cell sorts and filters by its underlying value instead of its
+  rendered markup.
+- Shared `table.selected`, `table.export`, `table.exportSelected`, and
+  `table.clearSelection` labels.
+- `SelectDropdown` takes `leading` and `trailer` snippets: a leading block in
+  the trigger's flex row and content outside the trigger. The trigger's
+  `trailing` slot stays internal to the chevron, so no caller adornment
+  competes with the marker.
+
 ### Changed
 
 - `Tabs`'s default `variant` is `underline`; the segmented pill row is opt-in
   with `variant="segmented"`.
+- `DataTable`'s `rows` and `rowId` are optional, because managed mode supplies
+  both; a custom footer in managed mode follows the model's "another page
+  exists" rule unless `showPagination` is set.
+- `SelectDropdown`'s trigger and option rows now consume the input chrome's own
+  `--input-*` text metrics instead of a parallel `--sel-*` set, and the
+  filterable trigger renders its chevron as the field's `trailing` adornment.
+  `SELECT_RATIOS` gains `chevronTextGap` for the label→chevron gap.
 
 ## [0.3.1] - 2026-11-14
 
