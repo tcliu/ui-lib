@@ -17,6 +17,7 @@ for how to write code in this project, see `AGENTS.md`.
 ui-lib/
 ├── src/
 │   ├── app.html                  # HTML shell, pre-paint theme script
+│   ├── env.ts                    # Runtime env declarations (`$app/env/private`)
 │   ├── routes/
 │   │   ├── +layout.svelte        # App shell: top bar, two-pane showcase, dev tag
 │   │   ├── +layout.server.ts     # Passes the DEV_TAG env to the layout
@@ -324,10 +325,15 @@ of building a parallel control.
   paddings, with the font taken from `FONT_RATIO` — and `INPUT_RATIOS` the same
   set plus the line box derived through `INPUT_LEADING`). `text-input-metrics.ts`
   carries the field's independent ratio set: `TEXT_INPUT_RATIOS` spreads
-  `FIELD_RATIOS` and adds the clear affordance's box and gutter plus the trailer
-  gap, and `TextInput` merges a caller's partial `ratios` override over it, with
-  the line box derived from `font` and the clear inset from `padX`. Two helpers
-  own the shared derivation and forwarding so no component repeats them:
+  `FIELD_RATIOS` and `CLEAR_RATIOS` (the clear affordance's trimmed button, its
+  reserved slot, and the gutter) and adds the trailer gap, and `TextInput` merges
+  a caller's partial `ratios` override over it, with the line box derived from
+  `font` and the clear inset from `padX`. A composite that renders the same clear
+  cross on its own edge spreads `CLEAR_RATIOS` too (`TAG_INPUT_RATIOS`,
+  `AUTOCOMPLETE_RATIOS`), so one definition sizes every clear cross. Three
+  helpers own the shared derivation and forwarding so no component repeats them:
+  `resolveClearMetrics` resolves the button, slot, gutter, and the padX-derived
+  inset for a control's own clear cross;
   `withLine` merges the font-derived line box into a resolved set, and
   `fieldOverrides` picks the field subset a composite hands its inner field from
   `TEXT_INPUT_RATIOS` (only the keys that set carries), so a new field metric
@@ -336,13 +342,13 @@ of building a parallel control.
   and picker derives it from its own font, so one font retune moves every row's
   height together. Every text-field-family control exposes the same
   partial `ratios` prop over its own base set (`FIELD_RATIOS` for
-  `TextArea`/`EditableText`, `TEXT_INPUT_RATIOS`, `SELECT_RATIOS`,
+  `EditableText`, `TEXT_INPUT_RATIOS`, `TEXT_AREA_RATIOS`, `SELECT_RATIOS`,
   `PICKER_RATIOS`, `TAG_INPUT_RATIOS`, and each composite's
   field-plus-adornment set), and a composite forwards the field subset to its
   inner `TextInput`, so one object tunes the field and its adornment together and
   its set carries only the keys it renders (a composite with no trailer row
-  leaves the trailer gap out; `AutoComplete` carries it because an outside clear
-  renders that row). `PasswordInput`, `SearchInput`,
+  leaves the trailer gap out; `AutoComplete` and `TextArea` carry it because an
+  outside clear renders that row). `PasswordInput`, `SearchInput`,
   and `NumberInput` compose `TextInput` and forward its `ratios` prop, passing
   their adornment (eye toggle, search icon, steppers)
   through its `leading`/`trailing` snippets; every input-family control forwards
@@ -354,7 +360,9 @@ of building a parallel control.
   `DateInput`/`DateField`) forward both props to their inner field instead of
   re-declaring chrome. `TextArea` is a `<textarea>`, so it
   cannot compose an `<input>` and imports the same base directly, adding
-  `h-full` so it fills its container height by default. A wrapper sets
+  `h-full` so it fills its container height by default. It takes the same
+  `ClearableProps` and renders the shared clear cross anchored to its first line,
+  so a multi-row editor never drifts the cross when it grows or is resized. A wrapper sets
   its adornment metrics on the frame with `wrapperStyle` and clears the adornment
   with an appended `className` gutter; a caller that owns the whole visual
   replaces the base with `inputClass`, while a field rendered inside another
@@ -394,6 +402,9 @@ of building a parallel control.
   a size-scaled gutter so text never runs under the inside button. The outside
   row reserves a matching slot while empty — the cross's own box (`--clear-box`
   plus its touch floor) — so the input keeps the same width empty and filled.
+  A multi-row field (`TextArea`) keeps the same clear affordance but anchors its
+  cross to the first line, not the field's height, so growing or resizing the
+  field never moves it.
   `trailer` renders
   caller content outside the field area, sharing the same size-scaled row the
   outside clear uses; a field whose right edge is already taken shifts the inside
@@ -430,6 +441,15 @@ of building a parallel control.
   box (`line + 2·padY`) equals the text field's row box
   (`INPUT_RATIOS.line + 2·INPUT_RATIOS.padY`), while its vertical padding stays
   at the original share, so the compact button still sits level beside a field.
+  `TagInput` derives the same way: its container padding carries only the
+  remainder of the field's padding (`INPUT_RATIOS.padY − inputPadY`), so the
+  inner input's share never adds height and an empty tag row matches a same-size
+  text field, with the chips staying inside that line box. Its clear cross
+  overlays the box's right edge on the shared text-field clear metrics
+  (`resolveClearMetrics` over `CLEAR_RATIOS`), so the tag row's cross matches a
+  same-size `TextInput`'s instead of taking the whole icon slot, and it anchors
+  to the first row rather than the box's height, so wrapping tags never drags it
+  down.
   Its icon-only padding is derived
   (`iconPadRatio`: `padY + (line − icon) / 2`, via `p-[var(--btn-icon-pad)]`), so
   a bordered icon-only box (`icon + 2·iconPad`) is the same height as a text
@@ -458,9 +478,10 @@ of building a parallel control.
   0.8125) — the text-like font ratio, so an `md` icon lands at 13px, the size of
   its label and the optical size the filled-viewBox glyphs were normalized from.
   An in-field affordance trims that slot rather than matching the label:
-  `SelectDropdown`'s trigger chevron and clear cross and `TextInput`'s clear
-  cross ride `0.625×` it, `NumberInput`'s steppers `0.75×`, `SearchInput`'s
-  leading search icon `0.9×`, and all still scale with the control.
+  `SelectDropdown`'s trigger chevron and clear cross, `TextInput`'s clear cross,
+  and `TagInput`'s clear cross ride `0.625×` it, `NumberInput`'s steppers
+  `0.75×`, `SearchInput`'s leading search icon `0.9×`, and all still scale with
+  the control.
   `Pagination`'s page blocks reuse the select trigger's line and vertical
   padding (plus its 1px border), so the numbered blocks, the jump input, and the
   page-size dropdown land on one height. Each block is content-sized — its own

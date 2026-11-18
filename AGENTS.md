@@ -44,6 +44,9 @@ Project-specific development conventions for the UI Library web app.
   must not import `$app/*`: the components import `#lib/app-environment.js`
   (an `esm-env` re-export) so `dist` carries no framework import, while the
   app-private showcase code may use `$app/env`.
+- Server code reads runtime env from `$app/env/private`, declared in
+  `src/env.ts` with `defineEnvVars`; never import `$env/*`, which carries only
+  the variables declared there.
 - Write the changelog entry for a version before bumping to it and publishing:
   the newest version section in `CHANGELOG.md` must name the manifest version,
   because `npm run publish:check` fails on a mismatch and a version is only
@@ -133,6 +136,7 @@ Project-specific development conventions for the UI Library web app.
   is what hands the box to the caller, so a stepper-less field keeps its bordered
   box — pair it with `hideOutline` for a borderless one.
 - A clearable field extends the shared `ClearableProps` group, never re-declaring it or hand-rolling a cross; mechanism in `ARCHITECTURE.md` (Input family).
+- A clearable multi-row field (`TagInput`, `TextArea`) anchors its cross to the first row/line rather than the field's height, so wrapping, growing, or resizing never moves it.
 - A `number` Value cell driving live interaction state (its setter ignores blank input) stays non-clearable.
 - A composite field uses `TextInput`'s `trailer` slot for content outside the
   field area rather than re-declaring an input.
@@ -243,7 +247,7 @@ Project-specific development conventions for the UI Library web app.
 - Declare a `text`/`number`/`tri` row and let `syncFieldsOf` derive its absent-attribute fallback; never hand-write a `sync.set` repeating it (`set` stays for a bespoke setter) — except an eye row prefilling a literal default, which takes a custom `read` (absent resolves to current state) and `set` (default maps back to unset) so compiling never stages the default into the form.
 - Model a curated playground prop as one `Staged<T>` pair (`staged(value, on)` from `#showcase/playground/staged.ts`), never a value plus an `On` flag: read it with `applied`/`appliedFlag`, wire a row with `eye`/`eyeFlag`/`eyeToggle`/`eyeResetToggle`, commit in place with `stage`, and never reassign the pair. Mechanism in `ARCHITECTURE.md`.
 - A Show-code builder takes the pair per prop and applies the eye gate once through a shared `#showcase/playground/snippet-build.ts` attribute-line helper, so the page passes its state straight through instead of flattening `value`/`on` at the call site.
-- A `text`/`number` Value cell with a Value editor sets `clearable`; `TextArea` has no clearable.
+- A `text`/`number` Value cell with a Value editor sets `clearable`; the long-value `TextArea` cell keeps its absolute-fill layout and adds no clear slot.
 - A Value cell's Type takes a `?` suffix only when the prop is optional, so a required value keeps the bare type.
 - A Value input's placeholder is the literal default when the prop has one, otherwise absent, never a meta-hint like `(none)` or `(built-in)`.
 - Build a dialog-backed prop row with the shared `snippetField`/`jsonField`/`eyeToggle`/`eyeResetToggle`/`snippetDialog` helpers rather than inline row literals; the row's seed and commit stay page-specific. Mechanism in `ARCHITECTURE.md`.

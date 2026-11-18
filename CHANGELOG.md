@@ -7,7 +7,7 @@ version has one section, newest first; the format follows
 
 ## [Unreleased]
 
-## [0.4.0] - 2026-11-16
+## [0.4.0] - 2026-11-18
 
 ### Added
 
@@ -34,6 +34,11 @@ version has one section, newest first; the format follows
   the trigger's flex row and content outside the trigger. The trigger's
   `trailing` slot stays internal to the chevron, so no caller adornment
   competes with the marker.
+- `TextArea` takes the shared `ClearableProps` (`clearable`, `clearLabel`,
+  `clearPlacement`, `onClear`) plus `defaultValue`: the shared clear cross
+  overlays the first line, reserves the same gutter and outside slot as
+  `TextInput`, and resets to the baseline, with the same disabled/read-only
+  behavior.
 
 ### Changed
 
@@ -45,10 +50,24 @@ version has one section, newest first; the format follows
 - `DataTable`'s managed controller defaults to 20 rows per page, and
   `Pagination` (so the table footer) offers `100` as its last default page-size
   choice: `[10, 20, 50, 100]`.
+- `Pagination`'s footer gaps scale with `size`: the row gap and the extra
+  section gap before the page-size group replace fixed utilities, and the
+  section gap takes a 20% trim.
 - `SelectDropdown`'s trigger and option rows now consume the input chrome's own
   `--input-*` text metrics instead of a parallel `--sel-*` set, and the
   filterable trigger renders its chevron as the field's `trailing` adornment.
   `SELECT_RATIOS` gains `chevronTextGap` for the label→chevron gap.
+
+### Fixed
+
+- `TagInput` renders at the same height as a same-size `TextInput` or
+  `SelectDropdown` trigger: the container's vertical padding now carries the
+  remainder of the shared field padding instead of adding the inner input's
+  share on top of it, so an empty tag row no longer sits taller than the fields
+  beside it, and the empty and filled boxes keep one height.
+- `TagInput`'s clear cross rides the shared `TextInput` clear affordance: the
+  same trimmed button inside its reserved slot and gutter, anchored to the first
+  tag row so wrapping tags never move or enlarge it.
 
 ## [0.3.1] - 2026-11-14
 
