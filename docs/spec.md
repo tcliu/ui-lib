@@ -29,6 +29,10 @@ organized, see `ARCHITECTURE.md`; for how to write code in this project, see
 | `SCHEMA_VERIFY_TABLES` | No | `app_meta` | Comma-separated tables `npm run schema:apply` must find after applying |
 | `APP_ACTIVE` | No | `true` | `false` opts this instance out of catalog scans (`active` field of `GET /api/info`) |
 
+The app declares the variables its server code reads in `src/env.ts` and imports
+them from `$app/env/private`; a value that reaches server code needs its entry
+there, since an undeclared variable reads as `undefined`.
+
 ## Schema
 
 `sql/schema.sql` is the source of truth for the database schema. Apply it with
