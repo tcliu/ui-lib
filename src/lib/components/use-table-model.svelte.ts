@@ -21,7 +21,7 @@ export interface TableModelOptions<T> {
   // Columns the filter and the sort accessors read. A getter, because a caller
   // rebuilds localised columns when the locale changes.
   columns: () => DataTableColumn<T>[]
-  // Rows per page; defaults to 10.
+  // Rows per page; defaults to 20.
   pageSize?: number
   // Page-size choices offered by the footer; defaults to the Pagination set.
   pageSizeOptions?: number[]
@@ -71,7 +71,7 @@ export function createTableModel<T>(options: TableModelOptions<T>): TableModel<T
   let sortKey = $state<string | null>(options.initialSortKey ?? null)
   let sortDirection = $state<SortDirection>(options.initialSortDirection ?? 'asc')
   let currentPage = $state(1)
-  let pageSize = $state(options.pageSize ?? 10)
+  let pageSize = $state(options.pageSize ?? 20)
   // Raw selection; reads go through the derived, pruned set below so a filter
   // hides a row without dropping its id from the caller's toggle history.
   let selection = $state<Set<string>>(new Set())

@@ -127,7 +127,7 @@ describe('buildPaginationSnippet', () => {
 
   it('validates page-size options drafts as non-empty positive-integer arrays', () => {
     expect(parsePageSizeOptionsValue([5, 15, 30])).toEqual([5, 15, 30])
-    expect(parsePageSizeOptionsValue([...DEFAULT_PAGE_SIZE_OPTIONS])).toEqual([10, 20, 50])
+    expect(parsePageSizeOptionsValue([...DEFAULT_PAGE_SIZE_OPTIONS])).toEqual([10, 20, 50, 100])
     expect(parsePageSizeOptionsValue([])).toBeNull()
     expect(parsePageSizeOptionsValue(['10'])).toBeNull()
     expect(parsePageSizeOptionsValue([10, 0])).toBeNull()

@@ -39,6 +39,18 @@ function setup(pageSize = 2) {
 }
 
 describe('createTableModel', () => {
+  it('defaults to 20 rows per page', () => {
+    const rows = makeRows()
+    const model = createTableModel<Row>({
+      rows: () => rows,
+      rowId: row => String(row.id),
+      columns: () => COLUMNS,
+    })
+    expect(model.pageSize).toBe(20)
+    expect(model.pagination?.pageSize).toBe(20)
+    expect(model.pageRows).toHaveLength(rows.length)
+  })
+
   it('filters on the searchable columns only and narrows before paging', () => {
     const { model } = setup()
     // `name` is the only searchable column, so a status term matches nothing.

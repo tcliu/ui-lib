@@ -687,7 +687,9 @@ of building a parallel control.
   `searchValue` when the key is not a row property) -> sort (`sortValue`, else
   the row property, with a numeric-aware locale compare and missing values last
   in either direction) -> page — and it prunes the selection to the filtered
-  rows so a hidden row never stays selected. Its "another page exists" rule
+  rows so a hidden row never stays selected. The controller defaults to 20 rows
+  per page, and the footer offers 10, 20, 50, and 100 when the caller does not
+  supply `pageSizeOptions`. Its "another page exists" rule
   gates the footer in managed mode, and managed mode marks every data column
   sortable by default (`sortable: false` opts out), so a managed table only
   declares its columns. The batch toolbar row (`toolbar`,

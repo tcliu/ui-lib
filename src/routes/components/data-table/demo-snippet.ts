@@ -89,24 +89,92 @@ export interface DemoRow {
   status: string
 }
 
+// One distinct demo name per row, so the table exercises four pages of unique
+// records at the default page size.
+const DEMO_NAMES = [
+  'Catalog',
+  'Editor',
+  'Viewer',
+  'Sync',
+  'Archive',
+  'Portal',
+  'Ledger',
+  'Billing',
+  'Invoicing',
+  'Payments',
+  'Receipts',
+  'Refunds',
+  'Disputes',
+  'Settlements',
+  'Clearing',
+  'Treasury',
+  'Custody',
+  'Collateral',
+  'Margin',
+  'Exposure',
+  'Limits',
+  'Compliance',
+  'Audit',
+  'Reporting',
+  'Analytics',
+  'Dashboard',
+  'Insights',
+  'Forecast',
+  'Budget',
+  'Planning',
+  'Procurement',
+  'Inventory',
+  'Warehouse',
+  'Shipping',
+  'Tracking',
+  'Routing',
+  'Dispatch',
+  'Fulfillment',
+  'Orders',
+  'Checkout',
+  'Pricing',
+  'Discounts',
+  'Subscriptions',
+  'Renewals',
+  'Trials',
+  'Onboarding',
+  'Identity',
+  'Access',
+  'Roles',
+  'Permissions',
+  'Sessions',
+  'Notifications',
+  'Messaging',
+  'Inbox',
+  'Threads',
+  'Comments',
+  'Reactions',
+  'Publishing',
+  'Drafts',
+  'Reviews',
+  'Approvals',
+  'Workflows',
+  'Automations',
+  'Integrations',
+  'Webhooks',
+  'Connectors',
+  'Imports',
+  'Exports',
+  'Backups',
+  'Recovery',
+  'Monitoring',
+  'Alerts',
+  'Incidents',
+  'Support',
+  'Knowledge',
+]
+
 // Default demo rows shared by the page and the snippet so the static demo and
 // the Show-code source start from the same data.
-export const DEFAULT_ROWS: DemoRow[] = [
-  { id: 'p1', name: 'Catalog', status: 'Active' },
-  { id: 'p2', name: 'Editor', status: 'Active' },
-  { id: 'p3', name: 'Viewer', status: 'Draft' },
-  { id: 'p4', name: 'Sync', status: 'Active' },
-  { id: 'p5', name: 'Archive', status: 'Draft' },
-  { id: 'p6', name: 'Portal', status: 'Active' },
-  ...Array.from({ length: 24 }, (_, index) => {
-    const n = index + 7
-    return {
-      id: `p${n}`,
-      name: `Module ${n}`,
-      status: n % 3 === 0 ? 'Draft' : 'Active',
-    }
-  }),
-]
+export const DEFAULT_ROWS: DemoRow[] = DEMO_NAMES.map((name, index) => {
+  const n = index + 1
+  return { id: `p${n}`, name, status: n % 3 === 0 ? 'Draft' : 'Active' }
+})
 
 // Validate unknown data into a demo-row list (every entry exactly
 // `{ id, name, status }` strings, the shape the snippet builder emits).

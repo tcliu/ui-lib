@@ -37,7 +37,7 @@ export const LABEL_FIELDS: (keyof PaginationLabels)[] = ['previous', 'next', 'pa
 
 // The default page-size choices behind the page-size dropdown; the builder
 // omits the prop while the demo holds exactly these, so Show-code stays minimal.
-export const DEFAULT_PAGE_SIZE_OPTIONS = [10, 20, 50]
+export const DEFAULT_PAGE_SIZE_OPTIONS = [10, 20, 50, 100]
 
 // Validate unknown data into page-size options: a non-empty array of positive
 // integers only. Anything else returns null, so the dialog applies only shapes

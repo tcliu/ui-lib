@@ -82,7 +82,7 @@
   // the default set.
   const demoPageSize = $derived.by(() => {
     const parsed = Number.parseInt(pg.pageSizeText, 10)
-    return Number.isInteger(parsed) && parsed > 0 ? parsed : 10
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : 20
   })
   // The pagination row's trailing count suffix. The `pagination` object prop is
   // read-only, so the suffix is fixed demo data rather than a Value cell.

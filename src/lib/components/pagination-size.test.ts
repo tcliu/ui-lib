@@ -56,6 +56,16 @@ describe('Pagination numeric size', () => {
     expect(nav?.getAttribute('style')).toContain(`--pg-font: ${14 * SELECT_RATIOS.font}px`)
     expect(nav?.getAttribute('style')).toContain(`--pg-line: ${14 * (SELECT_RATIOS.font * INPUT_LEADING)}px`)
     expect(nav?.getAttribute('style')).toContain(`--pg-pad-y: ${14 * SELECT_RATIOS.padY}px`)
+    // The row gap and the page-size group's section gap scale too; 0.375× and
+    // 0.4× of the 14px dimension resolve at this size.
+    expect(nav?.getAttribute('style')).toContain('--pg-gap: 5.25px')
+    expect(nav?.getAttribute('style')).toContain(`--pg-page-size-gap: ${14 * 0.4}px`)
+    expect(nav?.className).toContain('gap-[var(--pg-gap)]')
+    expect(
+      [...target.querySelectorAll('div')].some(element =>
+        element.classList.contains('ml-[var(--pg-page-size-gap)]'),
+      ),
+    ).toBe(true)
     // The block height matches the page-size dropdown trigger's box.
     expect(nav?.getAttribute('style')).toContain(
       '--pg-btn: calc(var(--pg-line) + 2 * var(--pg-pad-y) + 2px)',
@@ -129,7 +139,7 @@ describe('Pagination page-size options', () => {
       props: { total: 100, pageSize: 10, currentPage: 1, onPageChange: () => {}, onPageSizeChange: () => {} },
     })
     flushSync()
-    expect(openPageSizeOptions()).toEqual(['10', '20', '50'])
+    expect(openPageSizeOptions()).toEqual(['10', '20', '50', '100'])
   })
 
   it('offers custom choices through pageSizeOptions', () => {

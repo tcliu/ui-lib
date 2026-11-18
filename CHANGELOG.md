@@ -42,6 +42,9 @@ version has one section, newest first; the format follows
 - `DataTable`'s `rows` and `rowId` are optional, because managed mode supplies
   both; a custom footer in managed mode follows the model's "another page
   exists" rule unless `showPagination` is set.
+- `DataTable`'s managed controller defaults to 20 rows per page, and
+  `Pagination` (so the table footer) offers `100` as its last default page-size
+  choice: `[10, 20, 50, 100]`.
 - `SelectDropdown`'s trigger and option rows now consume the input chrome's own
   `--input-*` text metrics instead of a parallel `--sel-*` set, and the
   filterable trigger renders its chevron as the field's `trailing` adornment.

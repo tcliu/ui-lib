@@ -20,7 +20,7 @@
     className?: string
     onPageChange: (page: number) => void
     onPageSizeChange?: (size: number) => void
-    // Page-size choices offered by the dropdown; defaults to [10, 20, 50].
+    // Page-size choices offered by the dropdown; defaults to [10, 20, 50, 100].
     pageSizeOptions?: number[]
     // Per-field label overrides; each unset field falls back to its i18n key.
     labels?: PaginationLabels
@@ -41,7 +41,7 @@
     className = '',
     onPageChange,
     onPageSizeChange,
-    pageSizeOptions = [10, 20, 50],
+    pageSizeOptions = [10, 20, 50, 100],
     labels,
     variant = 'numbered',
     trailing,
@@ -66,8 +66,18 @@
   // added, so the resting cell is floored square by `--pg-btn` instead of being
   // widened by a single digit. The direction glyphs ride a trimmed share of the
   // icon slot (0.75×, as `NumberInput`'s steppers do) so they read lighter than
-  // the page numbers.
-  const PG_RATIOS = withLine({ padY: SELECT_RATIOS.padY, padX: 0.7, font: SELECT_RATIOS.font, icon: 0.75 })
+  // the page numbers. The row and page-size-group gaps scale with the size
+  // dimension (0.375× holds the 6px md spacing), and the page-size group takes
+  // its own section gap (0.4×, a 20% trim) so it clears the direction buttons
+  // at every size.
+  const PG_RATIOS = withLine({
+    padY: SELECT_RATIOS.padY,
+    padX: 0.7,
+    font: SELECT_RATIOS.font,
+    icon: 0.75,
+    gap: 0.375,
+    pageSizeGap: 0.4,
+  })
 
   const pgMetrics = $derived(dimensionMetrics(size, PG_RATIOS))
   // A page block shares the page-size dropdown trigger's box — the select line
@@ -213,7 +223,7 @@
 <nav
   aria-label={resolvedPaginationLabel}
   style={pgStyle}
-  class="flex flex-wrap items-center gap-1.5 text-[length:var(--pg-font)] text-slate-400 {className}">
+  class="flex flex-wrap items-center gap-[var(--pg-gap)] text-[length:var(--pg-font)] text-slate-400 {className}">
   <button
     type="button"
     aria-label={resolvedPreviousLabel}
@@ -269,7 +279,7 @@
   </button>
 
   {#if variant === 'numbered' && onPageSizeChange}
-    <div class="flex items-center gap-1.5">
+    <div class="ml-[var(--pg-page-size-gap)] flex items-center gap-[var(--pg-gap)]">
       <span>{resolvedPageSizeLabel}</span>
       <div class="relative">
         <SelectDropdown

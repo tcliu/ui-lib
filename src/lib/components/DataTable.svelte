@@ -80,7 +80,7 @@
     currentPage?: number
     onPageChange?: (page: number) => void
     onPageSizeChange?: (size: number) => void
-    // Page-size choices offered by the footer's dropdown; defaults to [10, 20, 50].
+    // Page-size choices offered by the footer's dropdown; defaults to [10, 20, 50, 100].
     pageSizeOptions?: number[]
     labels?: PaginationLabels
     trailing?: Snippet

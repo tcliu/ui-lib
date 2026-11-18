@@ -63,7 +63,7 @@ controller instead of wiring the four state machines per page:
     rows: () => rows,
     rowId: row => row.id,
     columns: () => columns,
-    pageSize: 10,
+    pageSize: 20,
   })
 </script>
 
