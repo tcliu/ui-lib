@@ -12,7 +12,12 @@
     INPUT_EMBEDDED,
     INPUT_METRIC_CLASS,
   } from './input-chrome'
-  import { TEXT_INPUT_RATIOS, withLine, type TextInputRatioOverrides } from './text-input-metrics'
+  import {
+    TEXT_INPUT_RATIOS,
+    withLine,
+    resolveClearMetrics,
+    type TextInputRatioOverrides,
+  } from './text-input-metrics'
   import type { ClearableProps } from './clearable-props'
 
   const i18n = getI18nContext()
@@ -112,20 +117,11 @@
   )
   const style = $derived(sizeVarStyle('input', metrics))
 
-  // Clear-affordance metrics: the button rides a trimmed share of the size
-  // dimension so the cross reads lighter than the field's own icon slot, while
-  // still scaling with the field (the share the trigger affordances ride); the
-  // inset matches the field's horizontal padding, and the gutter reserves room
-  // for both. The box reserves the outside row's clear slot so the input keeps
+  // Clear-affordance metrics: the shared clear design (a trimmed button inside
+  // its reserved slot), with the inset following the field's horizontal
+  // padding. The box reserves the outside row's clear slot so the input keeps
   // the same width empty and filled.
-  const clearMetrics = $derived(
-    dimensionMetrics(size, {
-      button: resolvedRatios.clearButton,
-      inset: resolvedRatios.padX,
-      gutter: resolvedRatios.clearGutter,
-      box: resolvedRatios.clearBox,
-    }),
-  )
+  const clearMetrics = $derived(resolveClearMetrics(size, resolvedRatios.padX, resolvedRatios))
   const clearStyle = $derived(sizeVarStyle('clear', clearMetrics))
 
   // The outside row's gap between the field and whatever follows it — the clear

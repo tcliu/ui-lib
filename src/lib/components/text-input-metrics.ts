@@ -1,4 +1,19 @@
+import type { SizeInput } from '#lib/size-scale.js'
 import { FIELD_RATIOS, INPUT_LEADING } from './input-chrome'
+import { dimensionMetrics } from './size-metrics'
+
+// The clear affordance's own metrics, shared by every control that renders the
+// shared clear cross (the text field, and a composite such as a tag row that
+// overlays the same cross on its own container edge): the trimmed button, the
+// slot it occupies, and the gutter reserved for it. A field's inset derives
+// from its own `padX`, so it is not part of the set.
+export const CLEAR_RATIOS = {
+  clearButton: 0.625,
+  clearGutter: 1.6875,
+  clearBox: 1,
+}
+
+export type ClearRatios = typeof CLEAR_RATIOS
 
 // One ratio set for the whole field: the tunable text metrics every field
 // shares (`FIELD_RATIOS`), the clear affordance's own metrics, and the outside
@@ -11,9 +26,7 @@ import { FIELD_RATIOS, INPUT_LEADING } from './input-chrome'
 // by a constant).
 export const TEXT_INPUT_RATIOS = {
   ...FIELD_RATIOS,
-  clearButton: 0.625,
-  clearGutter: 1.6875,
-  clearBox: 1,
+  ...CLEAR_RATIOS,
   trailerGap: 0.375,
 }
 
@@ -28,6 +41,19 @@ export type TextInputRatioOverrides = Partial<TextInputRatios>
 // carries the line box as a key.
 export function withLine<R extends { font: number }>(ratios: R): R & { line: number } {
   return { ...ratios, line: ratios.font * INPUT_LEADING }
+}
+
+// The resolved clear affordance for one field: the trimmed button, the slot it
+// occupies, the gutter reserved for it, and the inset derived from the field's
+// own horizontal padding. A control that overlays the shared cross on its own
+// edge reads this instead of re-keying the set.
+export function resolveClearMetrics(size: SizeInput, padX: number, ratios: ClearRatios) {
+  return dimensionMetrics(size, {
+    button: ratios.clearButton,
+    inset: padX,
+    gutter: ratios.clearGutter,
+    box: ratios.clearBox,
+  })
 }
 
 // The subset a composing field forwards to its inner `TextInput`: every key of

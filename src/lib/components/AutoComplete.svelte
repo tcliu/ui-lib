@@ -1,6 +1,6 @@
 <script module lang="ts">
   import { SELECT_RATIOS } from './select-dropdown-styles'
-  import { TEXT_INPUT_RATIOS } from './text-input-metrics'
+  import { CLEAR_RATIOS, TEXT_INPUT_RATIOS } from './text-input-metrics'
 
   // The field and the option panel share one ratio set: the field's tunable
   // metrics — including the clear affordance and the outside row's gap it
@@ -12,9 +12,7 @@
     radius: TEXT_INPUT_RATIOS.radius,
     padX: TEXT_INPUT_RATIOS.padX,
     padY: TEXT_INPUT_RATIOS.padY,
-    clearButton: TEXT_INPUT_RATIOS.clearButton,
-    clearGutter: TEXT_INPUT_RATIOS.clearGutter,
-    clearBox: TEXT_INPUT_RATIOS.clearBox,
+    ...CLEAR_RATIOS,
     trailerGap: TEXT_INPUT_RATIOS.trailerGap,
     // The panel's own keys keep the shared select names.
     minW: SELECT_RATIOS.minW,
