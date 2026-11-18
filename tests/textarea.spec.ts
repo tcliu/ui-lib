@@ -46,3 +46,39 @@ test('showcase: the Textarea variant cell switches to the embedded chrome', asyn
   await page.getByRole('textbox', { name: 'className value', exact: true }).fill('italic')
   await expect(field).toHaveCSS('font-style', 'italic')
 })
+
+test('showcase: the Textarea clear cross clears the value from the first line', async ({ page }) => {
+  await page.goto('/components/textarea')
+  await page.waitForLoadState('networkidle')
+
+  const demo = showcaseDemo(page)
+  const field = demo.locator('textarea')
+  await field.fill('note')
+
+  // Enabling clearable shows the cross while the value is set.
+  const clearableBox = page.getByRole('checkbox', { name: 'clearable value' })
+  await clearableBox.focus()
+  await page.keyboard.press('Space')
+  const clear = demo.getByRole('button', { name: 'Clear' })
+  await expect(clear).toBeVisible()
+
+  const fieldRect = (await field.boundingBox())!
+  const clearRect = (await clear.boundingBox())!
+  // The cross rides the shared text-field clear slot (16px at md).
+  expect(clearRect.width).toBeCloseTo(16, 0)
+  expect(clearRect.height).toBeCloseTo(16, 0)
+  // It stays on the first line instead of the middle of the three-row editor.
+  expect(clearRect.y + clearRect.height / 2).toBeLessThan(fieldRect.y + fieldRect.height / 2 - 10)
+
+  // Clearing empties the bound value, returns focus, and hides the cross.
+  await clear.click()
+  await expect(field).toHaveValue('')
+  await expect(field).toBeFocused()
+  await expect(clear).toHaveCount(0)
+
+  // The page's Show-code carries the staged clearable prop.
+  await page.getByRole('button', { name: 'Show code' }).click()
+  const editor = snippetEditor(page)
+  await expect(editor).toBeVisible({ timeout: 15000 })
+  await expect(editor).toContainText('clearable')
+})

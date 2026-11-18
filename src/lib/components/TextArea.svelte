@@ -1,25 +1,45 @@
+<script module lang="ts">
+  import { TEXT_INPUT_RATIOS } from './text-input-metrics'
+
+  // The textarea's ratio set: the shared text-field metrics plus the clear
+  // affordance's, since a textarea renders the same clear cross and the same
+  // outside row when `clearPlacement` is `outside`. One set keeps the editor,
+  // its cross, and that row scaling together.
+  export const TEXT_AREA_RATIOS = { ...TEXT_INPUT_RATIOS }
+
+  export type TextAreaRatios = typeof TEXT_AREA_RATIOS
+  export type TextAreaRatioOverrides = Partial<TextAreaRatios>
+</script>
+
 <script lang="ts">
   import type { SizeInput } from '#lib/size-scale.js'
+  import { getI18nContext } from '#lib/i18n/store.svelte.js'
+  import CloseIcon from '#lib/icons/CloseIcon.svelte'
+  import Button from './Button.svelte'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
   import {
-    FIELD_RATIOS,
     INPUT_CHROME,
     INPUT_CHROME_NO_OUTLINE,
     INPUT_EMBEDDED,
     INPUT_METRIC_CLASS,
-    type FieldRatioOverrides,
   } from './input-chrome'
-  import { withLine } from './text-input-metrics'
+  import { resolveClearMetrics, withLine } from './text-input-metrics'
+  import type { ClearableProps } from './clearable-props'
 
-  interface Props {
+  interface Props extends ClearableProps {
     value: string
+    // Baseline the clear affordance compares against (empty when unset): the
+    // cross hides while `value` matches it, and the fallback clear writes it
+    // back. A provided `onClear` still owns the clear.
+    defaultValue?: string
     ariaLabel: string
     placeholder?: string
     size?: SizeInput
-    // Partial override of the field's tunable ratios (font, radius, and both
-    // paddings); omitted keys keep the shared defaults. The line box is not an
-    // override: it follows `font`, so a font change carries the row height.
-    ratios?: FieldRatioOverrides
+    // Partial override of the editor's tunable ratios (font, radius, paddings,
+    // and the clear cross's button, gutter, and slot); omitted keys keep the
+    // shared defaults. The line box is not an override: it follows `font`, so a
+    // font change carries the row height, and the clear inset follows `padX`.
+    ratios?: TextAreaRatioOverrides
     disabled?: boolean
     readonly?: boolean
     id?: string
@@ -42,10 +62,13 @@
     onkeydown?: (event: KeyboardEvent) => void
     onfocus?: (event: FocusEvent) => void
     onblur?: (event: FocusEvent) => void
+    // No trailing adornment owns the right edge, so `clearPlacement` `auto`
+    // overlays the editor's first line; an explicit `outside` sits after it.
   }
 
   let {
     value = $bindable(),
+    defaultValue,
     ariaLabel,
     placeholder,
     size = 'md',
@@ -63,13 +86,59 @@
     onkeydown,
     onfocus,
     onblur,
+    clearable = false,
+    clearLabel,
+    clearPlacement = 'auto',
+    onClear,
   }: Props = $props()
+  const i18n = getI18nContext()
 
-  const resolvedRatios = $derived({ ...FIELD_RATIOS, ...ratios })
+  const resolvedRatios = $derived({ ...TEXT_AREA_RATIOS, ...ratios })
   // The editor's line box follows its font through the shared helper, so a font
   // retune carries its row height.
   const metrics = $derived(dimensionMetrics(size, withLine(resolvedRatios)))
   const style = $derived(sizeVarStyle('input', metrics))
+
+  // The clear affordance rides the shared text-field clear design: the same
+  // trimmed button, reserved slot, gutter, and padX-derived inset.
+  const clearMetrics = $derived(resolveClearMetrics(size, resolvedRatios.padX, resolvedRatios))
+  const clearStyle = $derived(sizeVarStyle('clear', clearMetrics))
+
+  // A disabled or read-only editor offers no clear action, and while `value`
+  // matches `defaultValue` (empty when unset) there is nothing to clear.
+  const showClear = $derived(
+    clearable && (value ?? '') !== (defaultValue ?? '') && !disabled && !readonly,
+  )
+  const resolvedClearLabel = $derived(clearLabel ?? i18n.t('common.clear'))
+  const placement = $derived(clearPlacement === 'auto' ? 'inside' : clearPlacement)
+  // The container that hosts the clear button is chosen from `clearable`, not
+  // from whether a value is present, so clearing never recreates the textarea
+  // (which would drop focus) — only the button itself toggles.
+  const insideField = $derived(clearable && placement === 'inside')
+  const outsideField = $derived(clearable && placement === 'outside')
+  const clearInside = $derived(showClear && insideField)
+  const clearOutside = $derived(showClear && outsideField)
+
+  // The gutter is reserved whenever the inside clear is configured, not only
+  // while a value shows the button, so the text keeps the same width empty and
+  // filled.
+  const resolvedStyle = $derived(
+    [style, insideField ? 'padding-right:var(--clear-gutter)' : ''].filter(Boolean).join(';'),
+  )
+
+  // The cross anchors to the first line (not the editor's height), so resizing
+  // the textarea never moves it; the line box is the shared metric's height.
+  const clearLineHeight = 'var(--input-line)'
+  // The frame carries the editor's metrics (the cross's first-line offset and
+  // height resolve from them) plus the clear metrics the gutter and button need.
+  const frameStyle = $derived([style, clearStyle].filter(Boolean).join(';'))
+
+  // The outside row's gap between the editor and the clear slot; the row also
+  // carries the field and clear vars the slot's offset resolves from.
+  const rowMetrics = $derived(dimensionMetrics(size, { gap: resolvedRatios.trailerGap }))
+  const outsideRowStyle = $derived(
+    [`gap:${rowMetrics.gap}px`, style, clearStyle].filter(Boolean).join(';'),
+  )
 
   // Non-positive or fractional rows fall back to the default; only the page
   // validates strictly (invalid input renders the component default there).
@@ -85,23 +154,95 @@
       : `${hideOutline ? INPUT_CHROME_NO_OUTLINE : INPUT_CHROME} h-full resize-y ${INPUT_METRIC_CLASS}`,
   )
   const resolvedClass = $derived(`${inputClass ?? baseClass}${className ? ` ${className}` : ''}`)
+
+  // A provided handler owns the clear; otherwise the value resets to the
+  // default. Focus returns to the editor either way, so the control stays
+  // reachable after the cross disappears with it.
+  function handleClear() {
+    if (onClear) {
+      onClear()
+    } else {
+      value = defaultValue ?? ''
+    }
+    inputRef?.focus()
+  }
 </script>
 
-<textarea
-  bind:this={inputRef}
-  {id}
-  bind:value
-  rows={safeRows}
-  {placeholder}
-  {disabled}
-  {readonly}
-  aria-label={ariaLabel}
-  {oninput}
-  {onkeydown}
-  {onfocus}
-  {onblur}
-  class={resolvedClass}
-  style={style}></textarea>
+{#snippet control()}
+  <textarea
+    bind:this={inputRef}
+    {id}
+    bind:value
+    rows={safeRows}
+    {placeholder}
+    {disabled}
+    {readonly}
+    aria-label={ariaLabel}
+    {oninput}
+    {onkeydown}
+    {onfocus}
+    {onblur}
+    class={resolvedClass}
+    style={resolvedStyle}></textarea>
+{/snippet}
+
+{#snippet clearIcon()}
+  <CloseIcon />
+{/snippet}
+
+{#snippet clearControl()}
+  <Button
+    variant="ghost"
+    size={clearMetrics.button}
+    icon={clearIcon}
+    ariaLabel={resolvedClearLabel}
+    onClick={handleClear}
+    className="size-[var(--clear-box)] shrink-0" />
+{/snippet}
+
+{#snippet field()}
+  {#if insideField}
+    <div class="relative flex h-full" style={frameStyle}>
+      {@render control()}
+      {#if clearInside}
+        <!-- Overlays the editor's own right edge on its first line (not its
+          height) so resizing never moves it; the reserved gutter keeps the text
+          clear of it. -->
+        <span
+          class="absolute right-[var(--clear-inset)] flex items-center"
+          style={`top:calc(var(--input-pad-y) + 1px);height:${clearLineHeight}`}>
+          {@render clearControl()}
+        </span>
+      {/if}
+    </div>
+  {:else}
+    {@render control()}
+  {/if}
+{/snippet}
+
+{#if outsideField}
+  <!-- The editor owns its content, so the clear sits after it as a sibling,
+    anchored to the first line. Only the button toggles with the value, but its
+    slot is reserved even while empty (an inert spacer the size of the cross) so
+    the editor keeps the same width empty and filled. -->
+  <div class="flex h-full items-start" style={outsideRowStyle}>
+    <div class="h-full min-w-0 flex-1">{@render field()}</div>
+    {#if clearOutside}
+      <span
+        class="inline-flex items-center"
+        style={`margin-top:calc(var(--input-pad-y) + 1px);height:${clearLineHeight}`}>
+        {@render clearControl()}
+      </span>
+    {:else}
+      <span
+        aria-hidden="true"
+        class="h-[var(--clear-box)] w-[var(--clear-box)] shrink-0 max-phone:h-11 max-phone:w-11"
+        style="margin-top:calc(var(--input-pad-y) + 1px)"></span>
+    {/if}
+  </div>
+{:else}
+  {@render field()}
+{/if}
 
 <style>
   /* 16px on touch pointers so iOS Safari does not auto-zoom on focus. Plain

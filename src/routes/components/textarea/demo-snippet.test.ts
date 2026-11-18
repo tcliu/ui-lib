@@ -20,6 +20,10 @@ function state(overrides: Partial<TextAreaSnippetState> = {}): TextAreaSnippetSt
     inputClass: staged(''),
     variant: staged(''),
     className: staged(''),
+    clearable: staged('', true),
+    clearLabel: staged(''),
+    clearPlacement: staged(''),
+    defaultValue: staged(''),
     ...overrides,
   }
 }
@@ -37,6 +41,10 @@ describe('buildTextAreaSnippet', () => {
     expect(source).not.toContain('id=')
     expect(source).not.toContain('className=')
     expect(source).not.toContain('variant=')
+    expect(source).not.toContain('clearable')
+    expect(source).not.toContain('clearLabel=')
+    expect(source).not.toContain('clearPlacement=')
+    expect(source).not.toContain('defaultValue=')
   })
 
   it('emits placeholder, rows, size, flags, id, inputClass, variant, and className', () => {
@@ -56,14 +64,33 @@ describe('buildTextAreaSnippet', () => {
     expect(source).toContain('className="italic"')
   })
 
+  it('emits the clear props and baseline while their eyes are on', () => {
+    const on = buildTextAreaSnippet(
+      state({
+        clearable: staged('yes', true),
+        clearLabel: staged('Reset notes', true),
+        clearPlacement: staged('outside', true),
+        defaultValue: staged('baseline', true),
+      }),
+    )
+    expect(on).toContain('    clearable\n')
+    expect(on).toContain('clearLabel="Reset notes"')
+    expect(on).toContain('clearPlacement="outside"')
+    expect(on).toContain('defaultValue="baseline"')
+  })
+
   it('omits component defaults (the Value column prefills them)', () => {
-    const source = buildTextAreaSnippet(state({ rows: staged('3', true), size: staged('md', true), disabled: staged('no', true), hideOutline: staged('no', true), readonly: staged('no', true), variant: staged('bordered', true) }))
+    const source = buildTextAreaSnippet(state({ rows: staged('3', true), size: staged('md', true), disabled: staged('no', true), hideOutline: staged('no', true), readonly: staged('no', true), variant: staged('bordered', true), clearable: staged('no', true), clearPlacement: staged('auto', true), clearLabel: staged('', true), defaultValue: staged('', true) }))
     expect(source).not.toContain('rows=')
     expect(source).not.toMatch(/^\s*size=/m)
     expect(source).not.toContain('disabled')
     expect(source).not.toContain('hideOutline')
     expect(source).not.toContain('readonly')
     expect(source).not.toContain('variant=')
+    expect(source).not.toContain('clearable')
+    expect(source).not.toContain('clearLabel=')
+    expect(source).not.toContain('clearPlacement=')
+    expect(source).not.toContain('defaultValue=')
   })
 
   it('omits non-numeric rows', () => {

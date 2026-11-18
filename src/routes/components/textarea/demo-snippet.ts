@@ -4,7 +4,7 @@
 import { boolAttrLine, enumAttrLine, escapeAttr, sizeAttrLine, textAttrLine, type TriState } from '#showcase/playground/snippet-build.js'
 import { ratiosAttrLine } from '#showcase/playground/text-input-ratios.js'
 import type { Staged } from '#showcase/playground/staged.js'
-import type { FieldRatioOverrides } from '#lib/components/input-chrome.js'
+import type { TextAreaRatioOverrides } from '#lib/components/TextArea.svelte'
 
 export interface TextAreaSnippetState {
   ariaLabel: Staged<string>
@@ -14,7 +14,7 @@ export interface TextAreaSnippetState {
   placeholder: Staged<string>
   rows: Staged<string>
   size: Staged<string>
-  ratios: Staged<FieldRatioOverrides>
+  ratios: Staged<TextAreaRatioOverrides>
   disabled: Staged<TriState>
   hideOutline: Staged<TriState>
   readonly: Staged<TriState>
@@ -22,6 +22,10 @@ export interface TextAreaSnippetState {
   inputClass: Staged<string>
   variant: Staged<string>
   className: Staged<string>
+  clearable: Staged<TriState>
+  clearLabel: Staged<string>
+  clearPlacement: Staged<string>
+  defaultValue: Staged<string>
 }
 
 // A rows line: omitted while the eye is off, unset, or non-numeric (the demo
@@ -35,7 +39,7 @@ function rowsLine(pair: Staged<string>, indent: string): string[] {
 }
 
 export function buildTextAreaSnippet(state: TextAreaSnippetState): string {
-  const { ariaLabel, value, placeholder, rows, size, ratios, disabled, hideOutline, readonly, id, inputClass, variant, className } = state
+  const { ariaLabel, value, placeholder, rows, size, ratios, disabled, hideOutline, readonly, id, inputClass, variant, className, clearable, clearLabel, clearPlacement, defaultValue } = state
   const attributeIndent = '    '
   const lines = [
     '<script>',
@@ -61,6 +65,10 @@ export function buildTextAreaSnippet(state: TextAreaSnippetState): string {
     ...boolAttrLine('readonly', readonly, 'no', attributeIndent),
     ...textAttrLine('id', id, attributeIndent),
     ...textAttrLine('inputClass', inputClass, attributeIndent),
+    ...boolAttrLine('clearable', clearable, 'no', attributeIndent),
+    ...textAttrLine('clearLabel', clearLabel, attributeIndent),
+    ...enumAttrLine('clearPlacement', clearPlacement, 'auto', attributeIndent),
+    ...textAttrLine('defaultValue', defaultValue, attributeIndent),
     // Enum rows prefill their component default in the Value column; the
     // builder omits the default so Show-code stays minimal.
     ...enumAttrLine('variant', variant, 'bordered', attributeIndent),
