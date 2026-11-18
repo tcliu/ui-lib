@@ -192,3 +192,48 @@ test('showcase: the TagInput defaultValue cell stages a clear baseline through a
   await page.getByRole('button', { name: 'Unapply defaultValue', exact: true }).click()
   await expect(clearButton).toBeVisible()
 })
+
+test('showcase: the TagInput clear cross stays on the first row of a wrapped list', async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.goto('/components/tag-input')
+  await page.waitForLoadState('networkidle')
+
+  const demo = showcaseDemo(page)
+  const clearableBox = page.getByRole('checkbox', { name: 'clearable value' })
+  await clearableBox.focus()
+  await page.keyboard.press('Space')
+  const clear = demo.getByRole('button', { name: 'Clear' })
+  await expect(clear).toBeVisible()
+
+  // Enough long tags to wrap the tag row onto several lines.
+  await page.getByRole('button', { name: 'Edit value' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Edit value' })
+  await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
+  await replaceSnippet(
+    page,
+    JSON.stringify(['alpha', 'bravo', 'charlie', 'delta', 'echo', 'foxtrot', 'golf', 'hotel']),
+    dialog,
+  )
+  await dialog.getByRole('button', { name: 'OK', exact: true }).click()
+  await expect(dialog).toHaveCount(0)
+
+  const box = demo.getByRole('combobox').locator('xpath=../..')
+  const firstChipRemove = demo.getByRole('button', { name: 'Remove alpha', exact: true })
+  await expect(firstChipRemove).toBeVisible()
+  const boxRect = (await box.boundingBox())!
+  const chipRect = (await firstChipRemove.boundingBox())!
+  const clearRect = (await clear.boundingBox())!
+
+  // The cross rides the shared text-field clear slot, not the whole icon slot.
+  expect(clearRect.width).toBeCloseTo(16, 0)
+  expect(clearRect.height).toBeCloseTo(16, 0)
+  // It stays centered on the first row instead of drifting to the middle of the
+  // taller wrapped box.
+  expect(
+    Math.abs(clearRect.y + clearRect.height / 2 - (chipRect.y + chipRect.height / 2)),
+  ).toBeLessThan(2)
+  expect(boxRect.height).toBeGreaterThan(clearRect.height * 2)
+})

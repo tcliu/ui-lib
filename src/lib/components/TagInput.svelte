@@ -1,17 +1,30 @@
 <script module lang="ts">
   import { INPUT_RATIOS } from './input-chrome'
+  import { CLEAR_RATIOS } from './text-input-metrics'
+
+  // The inner input's own share of the row's vertical padding: it rides tighter
+  // than the container so a chip row stays compact beside the text entry.
+  const INPUT_PAD_Y = 0.125
 
   // Container ratios: the field's font (its line box derives from it), its own
   // wider padding, the tag gap, the inner input's tighter vertical padding, and
-  // the clear cross's gutter. The cross itself is a shared `Button`, so its box
-  // derives from the button (and therefore scales with the tag size).
+  // the clear cross, which rides the shared text field's clearable metrics: a
+  // trimmed button box inside the same clear slot, so the tag row's cross reads
+  // exactly like a `TextInput`'s at every size.
+  //
+  // The container's padding carries only the remainder of a text field's
+  // vertical padding, so an empty tag row lands on the same height as a
+  // same-size `TextInput` or select trigger (`INPUT_RATIOS.line + 2·padY`)
+  // instead of growing by the inner input's share. `padY` is therefore derived
+  // from the field padding, and the empty and filled boxes stay one height
+  // because the chips stay inside that line box.
   export const TAG_INPUT_RATIOS = {
     font: INPUT_RATIOS.font,
     padX: 0.625,
-    padY: 0.375,
+    padY: INPUT_RATIOS.padY - INPUT_PAD_Y,
     gap: 0.375,
-    inputPadY: 0.125,
-    clearGutter: 1.875,
+    inputPadY: INPUT_PAD_Y,
+    ...CLEAR_RATIOS,
   }
   export type TagInputRatios = typeof TAG_INPUT_RATIOS
   export type TagInputRatioOverrides = Partial<TagInputRatios>
@@ -19,7 +32,7 @@
 
 <script lang="ts">
   import { flushSync, tick, type Snippet } from 'svelte'
-  import Button, { iconOnlyBoxPx } from '#lib/components/Button.svelte'
+  import Button from '#lib/components/Button.svelte'
   import Chip from '#lib/components/Chip.svelte'
   import { CHIP_COLORS, chipVariantClass } from '#lib/chip-variants.js'
   import ListboxPanel from '#lib/components/ListboxPanel.svelte'
@@ -31,7 +44,7 @@
   import { getI18nContext } from '#lib/i18n/store.svelte.js'
   import { type SizeInput } from '#lib/size-scale.js'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
-  import { withLine } from './text-input-metrics'
+  import { resolveClearMetrics, withLine } from './text-input-metrics'
   import type { ClearableProps } from './clearable-props'
 
   interface Props extends ClearableProps {
@@ -51,9 +64,10 @@
     id?: string
     size?: SizeInput
     // Partial override of the container's metric ratios (font, both paddings,
-    // gap, the inner input's vertical padding, and the clear cross's gutter);
-    // omitted keys keep the shared defaults. The line box follows `font` and the
-    // clear inset follows `padX`; the cross's box derives from the shared button.
+    // gap, the inner input's vertical padding, and the clear cross's button,
+    // gutter, and slot); omitted keys keep the shared defaults. The line box
+    // follows `font`, the clear inset follows `padX`, and the clear defaults
+    // ride `TextInput`'s clearable design.
     ratios?: TagInputRatioOverrides
     chipClass?: string | ((tag: string) => string)
     // Colour classes per tag when `chipClass` is not given; replaces the
@@ -282,15 +296,24 @@
   const outsideField = $derived(clearable && placement === 'outside')
   const clearInside = $derived(showClear && insideField)
 
-  // Inside-clear metrics: the cross's inset matches the box's horizontal
-  // padding, and the gutter reserves room for the cross, so chips never run under
-  // the overlay. The gutter is reserved whenever the inside clear is configured,
-  // not only while tags show the button, so the content keeps the same width
-  // filled and at default.
-  const clearMetrics = $derived(
-    dimensionMetrics(size, { inset: resolvedRatios.padX, gutter: resolvedRatios.clearGutter }),
-  )
+  // Inside-clear metrics: the cross rides `TextInput`'s clearable design — a
+  // trimmed button box inside the shared clear slot — the inset matches the
+  // box's horizontal padding, and the gutter reserves room for the cross, so
+  // chips never run under the overlay. The gutter is reserved whenever the
+  // inside clear is configured, not only while tags show the button, so the
+  // content keeps the same width filled and at default.
+  const clearMetrics = $derived(resolveClearMetrics(size, resolvedRatios.padX, resolvedRatios))
   const clearStyle = $derived(sizeVarStyle('clear', clearMetrics))
+  // The first tag row's box: the inner input's line plus its tighter vertical
+  // padding. Anchoring the clear slot to this height (not the box's own) keeps
+  // it on the first row however many the tags span, and centering the button
+  // inside it reproduces the single-row placement at any row count.
+  const clearRowHeight = 'calc(var(--tag-line) + 2 * var(--tag-input-pad-y))'
+  // The outside row resolves the same first-row slot from the tag and clear
+  // vars, so its cross sits at the identical height as the inside one.
+  const outsideRowStyle = $derived(
+    [`gap:${metrics.gap}px`, style, clearStyle].filter(Boolean).join(';'),
+  )
   const boxStyle = $derived(
     [style, insideField ? clearStyle : '', insideField ? 'padding-right:var(--clear-gutter)' : '']
       .filter(Boolean)
@@ -396,14 +419,16 @@
   <CloseIcon />
 {/snippet}
 {#snippet clearControl()}
-  <!-- Ghost keeps the tiny cross unobtrusive; it takes the tag row's size so the
-       cross and the slot reserved below it stay one box at every step. -->
+  <!-- Ghost keeps the cross unobtrusive; it rides the shared clear design (a
+       trimmed button box inside its reserved slot) so the tag row's cross
+       matches a text field's at every size. -->
   <Button
     variant="ghost"
-    {size}
+    size={clearMetrics.button}
     icon={closeIcon}
     ariaLabel={resolvedClearLabel}
-    onClick={handleClear} />
+    onClick={handleClear}
+    className="size-[var(--clear-box)] shrink-0" />
 {/snippet}
 {#snippet fieldBox()}
   <div
@@ -454,10 +479,13 @@
         onkeydown={handleKeydown} />
     </div>
     {#if clearInside}
-      <!-- Overlays the box's own right edge, vertically centered; the flex
-        centers the button exactly (no inline strut offset), and the
-        reserved gutter keeps chips clear of it on every row. -->
-      <span class="absolute top-1/2 right-[var(--clear-inset)] flex -translate-y-1/2 items-center">
+      <!-- Overlays the box's own right edge, anchored to the first tag row (not
+        the box's height) so wrapping tags never move it; the flex centers the
+        button in that row, and the reserved gutter keeps chips clear of it on
+        every row. -->
+      <span
+        class="absolute right-[var(--clear-inset)] flex items-center"
+        style={`top:var(--tag-pad-y);height:${clearRowHeight}`}>
         {@render clearControl()}
       </span>
     {/if}
@@ -465,19 +493,23 @@
 {/snippet}
 {#if outsideField}
   <!-- The chips own the box content, so the clear sits after it as a sibling
-    (like the dropdown surfaces), vertically centered against the box. Only the
+    (like the dropdown surfaces), anchored to the box's first row. Only the
     button toggles with the value, but its slot is reserved even while empty (an
     inert spacer the size of the cross) so the input keeps the same width empty
     and filled. -->
-  <div class="flex items-center" style={`gap:${metrics.gap}px`}>
+  <div class="flex items-start" style={outsideRowStyle}>
     <div class="min-w-0 flex-1">{@render fieldBox()}</div>
     {#if showClear}
-      {@render clearControl()}
+      <span
+        class="inline-flex items-center"
+        style={`margin-top:calc(var(--tag-pad-y) + 1px);height:${clearRowHeight}`}>
+        {@render clearControl()}
+      </span>
     {:else}
       <span
         aria-hidden="true"
-        class="shrink-0"
-        style={`width:${iconOnlyBoxPx(size)}px;height:${iconOnlyBoxPx(size)}px`}></span>
+        class="h-[var(--clear-box)] w-[var(--clear-box)] shrink-0 max-phone:h-11 max-phone:w-11"
+        style="margin-top:calc(var(--tag-pad-y) + 1px)"></span>
     {/if}
   </div>
 {:else}
