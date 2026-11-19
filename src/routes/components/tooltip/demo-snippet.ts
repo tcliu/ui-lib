@@ -3,6 +3,7 @@
 // the editor always shows the markup behind the demo above.
 
 import { escapeAttr } from '#showcase/playground/snippet-build.js'
+import { sizeAttributeFragment } from '#showcase/playground/size-input.js'
 import type { Staged } from '#showcase/playground/staged.js'
 
 export interface TooltipSnippetState {
@@ -11,6 +12,7 @@ export interface TooltipSnippetState {
   label: Staged<string>
   align: Staged<string>
   className: Staged<string>
+  size: Staged<string>
 }
 
 export const STYLED_CLASS = 'border-cyan-500/40 text-cyan-200'
@@ -23,9 +25,12 @@ function scriptString(value: string): string {
   return JSON.stringify(value).replace(/</g, '\\u003c')
 }
 
-export function buildTooltipSnippet({ label, align, className }: TooltipSnippetState): string {
+export function buildTooltipSnippet({ label, align, className, size }: TooltipSnippetState): string {
   const alignAttr = align.on && align.value && align.value !== 'center' ? ` align="${escapeAttr(align.value)}"` : ''
   const classAttr = className.on && className.value ? ` className="${escapeAttr(className.value)}"` : ''
+  // The default step rides the component default, so the builder emits only a
+  // non-default step or a pixel number, exactly like the props row.
+  const sizeAttr = size.on && size.value && size.value !== 'md' ? sizeAttributeFragment(size.value) : ''
   // A custom label becomes a leading script-local; unset, the children read
   // the localized default from scope. `buildSource` drops the same-named
   // scope key once the snippet declares it, so the local value wins.
@@ -33,6 +38,6 @@ export function buildTooltipSnippet({ label, align, className }: TooltipSnippetS
   return [
     ...(label.value ? ['<script>', `  let label = $state(${scriptString(label.value)})`, '</script>'] : []),
     `<Button bind:buttonEl={explicitTrigger}>${text}</Button>`,
-    `<Tooltip trigger={explicitTrigger}${alignAttr}${classAttr}>${text}</Tooltip>`,
+    `<Tooltip trigger={explicitTrigger}${alignAttr}${classAttr}${sizeAttr}>${text}</Tooltip>`,
   ].join('\n')
 }

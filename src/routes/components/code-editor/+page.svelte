@@ -3,7 +3,8 @@
   import { getI18nContext } from '#lib/i18n/store.svelte.js'
   import ShowcasePage from '#showcase/shell/ShowcasePage.svelte'
   import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
-  import { textField, boolField, enumField, snippetField } from '#showcase/playground/snippet-field.js'
+  import { textField, boolField, enumField, snippetField, sizeField } from '#showcase/playground/snippet-field.js'
+  import { parseSizeValue } from '#showcase/playground/size-input.js'
   import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
   import { type TriState } from '#showcase/playground/snippet-build.js'
   import {
@@ -27,7 +28,8 @@
     docType: staged('text'),
     editable: staged('yes' as TriState),
     theme: staged('dark'),
-    containerClass: staged('h-full overflow-hidden rounded-lg border border-slate-700 bg-slate-950'),
+    size: staged('md'),
+    containerClass: staged('h-full overflow-hidden rounded-[var(--editor-frame-radius,0.5rem)] border border-slate-700 bg-slate-950'),
     editorClass: staged('h-full'),
     maxContentLength: staged('0'),
     selectionEnabled: staged('yes' as TriState),
@@ -52,6 +54,10 @@
     return value === undefined ? undefined : ((value || DEFAULT_DOC_TYPE) as DocType)
   })
   const demoTheme = $derived(applied(pg.theme) || undefined)
+  const demoSize = $derived.by(() => {
+    const value = applied(pg.size)
+    return value === undefined ? undefined : parseSizeValue(value)
+  })
   const demoContainerClass = $derived(applied(pg.containerClass) || undefined)
   const demoEditorClass = $derived(applied(pg.editorClass) || undefined)
   const selectionEnabled = $derived(appliedFlag(pg.selectionEnabled))
@@ -76,7 +82,7 @@
     pg = structuredClone(INITIAL)
   }
 
-  const code = $derived.by(() => buildCodeEditorSnippet({ docType: pg.docType, editable: pg.editable, theme: pg.theme, containerClass: pg.containerClass, editorClass: pg.editorClass, maxContentLength: pg.maxContentLength, selectionEnabled: pg.selectionEnabled, autoFocus: pg.autoFocus, editorAriaLabel: pg.editorAriaLabel, recreateKey: pg.recreateKey }))
+  const code = $derived.by(() => buildCodeEditorSnippet({ docType: pg.docType, editable: pg.editable, theme: pg.theme, size: pg.size, containerClass: pg.containerClass, editorClass: pg.editorClass, maxContentLength: pg.maxContentLength, selectionEnabled: pg.selectionEnabled, autoFocus: pg.autoFocus, editorAriaLabel: pg.editorAriaLabel, recreateKey: pg.recreateKey }))
 
   
   // Each editable row declares its Value editor and its snippet write-back
@@ -88,7 +94,7 @@
   // literal maps back to unset.
   const fields: SyncableFieldConfig[] = $derived([
     boolField({ name: 'autoFocus', defaultValue: 'false', note: 'Focuses the editor once it mounts.', ...eyeFlag(pg.autoFocus) }),
-    textField({ name: 'containerClass', type: 'string?', defaultValue: "'h-full overflow-hidden rounded-lg border border-slate-700 bg-slate-950'", note: 'Classes for the outer wrapper; the default renders the framed editor box (override for a light theme).', editorDefaultValue: 'h-full overflow-hidden rounded-lg border border-slate-700 bg-slate-950', clearable: true, placeholder: 'h-full overflow-hidden rounded-lg border border-slate-700 bg-slate-950', ...eye(pg.containerClass) }),
+    textField({ name: 'containerClass', type: 'string?', defaultValue: "'h-full overflow-hidden rounded-[var(--editor-frame-radius,0.5rem)] border border-slate-700 bg-slate-950'", note: 'Classes for the outer wrapper; the default renders the framed editor box (override for a light theme).', editorDefaultValue: 'h-full overflow-hidden rounded-[var(--editor-frame-radius,0.5rem)] border border-slate-700 bg-slate-950', clearable: true, placeholder: 'h-full overflow-hidden rounded-[var(--editor-frame-radius,0.5rem)] border border-slate-700 bg-slate-950', ...eye(pg.containerClass) }),
     snippetField({
       name: 'content',
       type: 'string',
@@ -105,6 +111,7 @@
     { name: 'maxContentLength', type: 'number?', defaultValue: '0', editorDefaultValue: '0', note: 'Caps the document length; 0 disables the cap.', editor: 'number', clearable: true, ...eye(pg.maxContentLength), onChange: value => stage(pg.maxContentLength, value), placeholder: '0', toggle: eyeToggle(pg.maxContentLength), sync: { kind: 'number', pattern: /^\d+$/ } },
     textField({ name: 'recreateKey', type: 'string?', defaultValue: "''", note: 'Changing it destroys and rebuilds the editor.', editorDefaultValue: '', clearable: true, ...eye(pg.recreateKey) }),
     boolField({ name: 'selectionEnabled', defaultValue: 'true', note: 'Allows text selection and copy.', ...eyeFlag(pg.selectionEnabled) }),
+    sizeField({ note: 'Editor text scale; numbers are icon-scale pixels. The font, content padding, and mark radius follow it.', ...eye(pg.size) }),
     enumField({ name: 'theme', type: 'string?', defaultValue: "'dark'", note: "'dark' uses githubDark, any other value githubLight.", options: themeOptions, placeholder: 'dark', clearLabel: 'Clear theme', ...eye(pg.theme) }),
     { name: 'onAutoFocused', type: '() => void', defaultValue: '—', note: 'Called after an autofocus.' },
     { name: 'onContentChange', type: '(content: string) => void', defaultValue: '—', note: 'Called with the document after every edit.' },
@@ -136,6 +143,7 @@
         editorAriaLabel={demoEditorAriaLabel}
         recreateKey={demoRecreateKey}
         theme={demoTheme}
+        size={demoSize}
         containerClass={demoContainerClass}
         editorClass={demoEditorClass}
         maxContentLength={demoMaxContentLength}

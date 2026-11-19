@@ -18,6 +18,10 @@
     minW: SELECT_RATIOS.minW,
     gap: SELECT_RATIOS.gap,
     icon: SELECT_RATIOS.icon,
+    optionGap: SELECT_RATIOS.optionGap,
+    optionRadius: SELECT_RATIOS.optionRadius,
+    panelPad: SELECT_RATIOS.panelPad,
+    panelRadius: SELECT_RATIOS.panelRadius,
   }
   export type AutoCompleteRatios = typeof AUTOCOMPLETE_RATIOS
   export type AutoCompleteRatioOverrides = Partial<AutoCompleteRatios>
@@ -155,7 +159,15 @@
       }),
     ),
   )
-  const panelBoxMetrics = $derived(dimensionMetrics(size, { minW: resolvedRatios.minW }))
+  const panelBoxMetrics = $derived(
+    dimensionMetrics(size, {
+      minW: resolvedRatios.minW,
+      optionGap: resolvedRatios.optionGap,
+      optionRadius: resolvedRatios.optionRadius,
+      panelPad: resolvedRatios.panelPad,
+      panelRadius: resolvedRatios.panelRadius,
+    }),
+  )
   const panelStyle = $derived(
     [sizeVarStyle('input', panelFieldMetrics), sizeVarStyle('sel', panelBoxMetrics)].join(';'),
   )
@@ -315,6 +327,7 @@
       id={panelId}
       ariaLabel={ariaLabel}
       panelClass={`fixed top-0 left-0 z-40 will-change-transform ${resolvedPanelClass}`}
+      panelStyle={panelStyle}
       optionRowClass={resolvedOptionRowClass}
       optionRowStyle={panelStyle}
       options={filteredOptions}

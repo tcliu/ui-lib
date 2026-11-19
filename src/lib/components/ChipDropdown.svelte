@@ -49,6 +49,11 @@
     emptyPadY: 1.5,
     searchPadX: 0.5,
     searchPadY: 0.25,
+    // The panel's own frame: its 4px inner padding and the search field's 6px
+    // radius at `md`, so the floating list tracks the chip's step.
+    pad: 0.25,
+    searchRadius: 0.375,
+    rowRadius: 0.5,
   }
 
   // The menu panel fits its content and floors at the trigger width (set by the
@@ -90,7 +95,7 @@
     disabled = false,
     variant = 'violet',
     size = 'md',
-    panelClass = `${CHIP_MENU_PANEL_CLASS} overflow-y-auto p-1`,
+    panelClass = `${CHIP_MENU_PANEL_CLASS} overflow-y-auto p-[var(--chip-panel-pad)]`,
     buttonClass,
     filterable = false,
     filterPlaceholder,
@@ -377,7 +382,7 @@
       onmousemove={() => {
         if (listbox.selection.peek() !== index) listbox.selection.set(index)
       }}
-      class={`flex w-full min-w-[var(--chip-panel-min-w)] cursor-pointer items-center justify-between rounded-lg px-[var(--chip-panel-pad-x)] py-[var(--chip-panel-pad-y)] text-left text-[length:var(--chip-panel-font)] leading-[var(--chip-panel-line)] transition-none outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-inset ${listbox.highlight.flags[index] ? 'bg-slate-800 text-slate-100' : 'text-slate-300'}`}
+      class={`flex w-full min-w-[var(--chip-panel-min-w)] cursor-pointer items-center justify-between rounded-[var(--chip-panel-row-radius)] px-[var(--chip-panel-pad-x)] py-[var(--chip-panel-pad-y)] text-left text-[length:var(--chip-panel-font)] leading-[var(--chip-panel-line)] transition-none outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-inset ${listbox.highlight.flags[index] ? 'bg-slate-800 text-slate-100' : 'text-slate-300'}`}
       style={panelStyle}>
       <span class="min-w-0 truncate">
         {#if parts}
@@ -444,8 +449,9 @@
       <div
         bind:this={panelRef}
         use:positionPanel={() => ({ getTrigger: () => containerRef, getOpen: () => open, align, autoPlace })}
-        class={resolvedPanelClass}>
-        <div class="shrink-0 bg-slate-900/95 p-1">
+        class={resolvedPanelClass}
+        style={panelStyle}>
+        <div class="shrink-0 bg-slate-900/95 p-[var(--chip-panel-pad)]">
           <input
             bind:this={inputRef}
             type="text"
@@ -460,10 +466,9 @@
               ? `${panelId}-option-${listbox.selection.index}`
               : undefined}
             onkeydown={handleFilterKeydown}
-            style={panelStyle}
-            class="w-full rounded-md border border-slate-700 bg-slate-950 px-[var(--chip-panel-search-pad-x)] py-[var(--chip-panel-search-pad-y)] text-[length:var(--chip-panel-font)] leading-[var(--chip-panel-line)] text-slate-100 outline-none placeholder:text-slate-500 focus-visible:border-sky-500" />
+            class="w-full rounded-[var(--chip-panel-search-radius)] border border-slate-700 bg-slate-950 px-[var(--chip-panel-search-pad-x)] py-[var(--chip-panel-search-pad-y)] text-[length:var(--chip-panel-font)] leading-[var(--chip-panel-line)] text-slate-100 outline-none placeholder:text-slate-500 focus-visible:border-sky-500" />
         </div>
-        <div id={panelId} role="listbox" aria-label={ariaLabel} tabindex="-1" class="min-h-0 flex-1 overflow-y-auto p-1">
+        <div id={panelId} role="listbox" aria-label={ariaLabel} tabindex="-1" class="min-h-0 flex-1 overflow-y-auto p-[var(--chip-panel-pad)]">
           {@render optionList()}
         </div>
       </div>
@@ -474,7 +479,8 @@
         role="listbox"
         aria-label={ariaLabel}
         use:positionPanel={() => ({ getTrigger: () => containerRef, getOpen: () => open, align, autoPlace })}
-        class={resolvedPanelClass}>
+        class={resolvedPanelClass}
+        style={panelStyle}>
         {@render optionList()}
       </div>
     {/if}

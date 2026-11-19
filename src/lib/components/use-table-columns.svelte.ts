@@ -30,6 +30,10 @@ export interface TableColumnsOptions {
   getResetSignal: () => number
   getContainer: () => HTMLElement | null
   getColumnCellWidth: (i: number) => number
+  // The table's own pixel floors on the shared size axis. Omitted, the `md`
+  // constants above stand in, so a caller that never scales keeps today's
+  // widths.
+  getColumnFloors?: () => { min: number; select: number }
   // When the visible column set shrinks, drops header element refs past `count`
   // so a detached header's width is never served.
   pruneHeaderRefs: (count: number) => void
@@ -48,8 +52,12 @@ export function createTableColumns(options: TableColumnsOptions) {
 
   const managedWidths = $derived(options.getResizable() && columnWidths.length > 0)
 
+  function floors(): { min: number; select: number } {
+    return options.getColumnFloors?.() ?? { min: TABLE_MIN_COLUMN_WIDTH, select: TABLE_SELECT_COLUMN_WIDTH }
+  }
+
   const totalWidth = $derived.by(() => {
-    let sum = options.getSelectable() ? TABLE_SELECT_COLUMN_WIDTH : 0
+    let sum = options.getSelectable() ? floors().select : 0
     const columns = options.getColumns()
     for (let i = 0; i < columns.length; i++) {
       sum += columnWidths[i] ?? 0
@@ -59,7 +67,7 @@ export function createTableColumns(options: TableColumnsOptions) {
 
   function columnMinWidth(i: number): number {
     const mw = options.getColumns()[i]?.minWidth
-    return typeof mw === 'number' && Number.isFinite(mw) && mw >= 0 ? mw : TABLE_MIN_COLUMN_WIDTH
+    return typeof mw === 'number' && Number.isFinite(mw) && mw >= 0 ? mw : floors().min
   }
 
   // Width for a newly shown column: its declared percentage share of the
@@ -71,7 +79,7 @@ export function createTableColumns(options: TableColumnsOptions) {
     const pct = typeof declared === 'string' && declared.endsWith('%') ? Number.parseFloat(declared) : NaN
     const basis = options.getContainer()?.clientWidth ?? columnWidths.reduce((sum, w) => sum + w, 0)
     const computed = !Number.isNaN(pct) && basis > 0 ? Math.round((basis * pct) / 100) : ADDED_COLUMN_FALLBACK_WIDTH
-    return Math.max(computed, index >= 0 ? columnMinWidth(index) : TABLE_MIN_COLUMN_WIDTH)
+    return Math.max(computed, index >= 0 ? columnMinWidth(index) : floors().min)
   }
 
   const resize = createColumnResize({

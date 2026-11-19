@@ -259,7 +259,7 @@ describe('StructureTree', () => {
   it('renders the built-in row classes by default', () => {
     const root = render({ nested: { a: 1 } }, { onChange: vi.fn() })
     const header = buttonByName(root, /^Edit \$\.nested$/).closest('div')
-    expect(header?.getAttribute('class')).toContain('gap-2')
+    expect(header?.getAttribute('class')).toContain('gap-[var(--tree-row-gap,0.5rem)]')
   })
 
   it('applies custom container and leaf row classes', () => {
@@ -269,7 +269,7 @@ describe('StructureTree', () => {
     )
     const header = buttonByName(root, /^Edit \$\.nested$/).closest('div')
     expect(header?.getAttribute('class')).toContain('custom-container')
-    expect(header?.getAttribute('class')).not.toContain('gap-2')
+    expect(header?.getAttribute('class')).not.toContain('gap-[var(--tree-row-gap,0.5rem)]')
     buttonByName(root, /expand nested/i).click()
     flushSync()
     expect(root.innerHTML).toContain('custom-leaf')

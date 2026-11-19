@@ -8,7 +8,7 @@
 // Curated playground option: unset or the component default renders the
 // default, Yes/No force the value. Options start at the default, so the
 // cleared form applies no overrides.
-import { boolAttrLine, enumAttrLine, textAttrLine, type TriState } from '#showcase/playground/snippet-build.js'
+import { boolAttrLine, enumAttrLine, sizeAttrLine, textAttrLine, type TriState } from '#showcase/playground/snippet-build.js'
 import type { Staged } from '#showcase/playground/staged.js'
 
 // The document types the wrapped editor loads a language pack for (see
@@ -44,6 +44,7 @@ export interface LazyCodeEditorSnippetState {
   autoFocus: Staged<TriState>
   editorAriaLabel: Staged<string>
   recreateKey: Staged<string>
+  size: Staged<string>
 }
 
 // A max-length line: omitted while the eye is off, unset, at the component
@@ -56,7 +57,7 @@ function maxLengthLine(pair: Staged<string>, indent: number, def = ''): string[]
   return Number.isInteger(parsed) && parsed >= 0 ? [`${' '.repeat(indent)}maxContentLength={${parsed}}`] : []
 }
 
-export function buildLazyCodeEditorSnippet({ docType, editable, containerClass, editorClass, maxContentLength, autoFocus, editorAriaLabel, recreateKey }: LazyCodeEditorSnippetState): string {
+export function buildLazyCodeEditorSnippet({ docType, editable, containerClass, editorClass, maxContentLength, autoFocus, editorAriaLabel, recreateKey, size }: LazyCodeEditorSnippetState): string {
   const resolvedDocType = docType.value || DEFAULT_DOC_TYPE
   return [
     '<div class="h-64 w-full max-w-xl">',
@@ -67,6 +68,7 @@ export function buildLazyCodeEditorSnippet({ docType, editable, containerClass, 
     // keeps the Markdown demo baseline.
     ...enumAttrLine('docType', { on: docType.on, value: resolvedDocType }, 'text', '    '),
     ...boolAttrLine('editable', editable, 'yes', '    '),
+    ...sizeAttrLine(size, '    '),
     ...textAttrLine('containerClass', containerClass, '    '),
     ...textAttrLine('editorClass', editorClass, '    '),
     ...maxLengthLine(maxContentLength, 4, '0'),

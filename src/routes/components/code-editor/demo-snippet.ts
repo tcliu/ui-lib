@@ -8,7 +8,7 @@
 // Curated playground option: unset or the component default renders the
 // default, Yes/No force the value. Options start at the default, so the
 // cleared form applies no overrides.
-import { boolAttrLine, enumAttrLine, textAttrLine, type TriState } from '#showcase/playground/snippet-build.js'
+import { boolAttrLine, enumAttrLine, sizeAttrLine, textAttrLine, type TriState } from '#showcase/playground/snippet-build.js'
 import type { Staged } from '#showcase/playground/staged.js'
 
 // The document types CodeEditor loads a language pack for (see
@@ -38,6 +38,7 @@ export interface CodeEditorSnippetState {
   docType: Staged<string>
   editable: Staged<TriState>
   theme: Staged<string>
+  size: Staged<string>
   containerClass: Staged<string>
   editorClass: Staged<string>
   maxContentLength: Staged<string>
@@ -57,7 +58,7 @@ function maxLengthLine(pair: Staged<string>, indent: number, def = ''): string[]
   return Number.isInteger(parsed) && parsed >= 0 ? [`${' '.repeat(indent)}maxContentLength={${parsed}}`] : []
 }
 
-export function buildCodeEditorSnippet({ docType, editable, theme, containerClass, editorClass, maxContentLength, selectionEnabled, autoFocus, editorAriaLabel, recreateKey }: CodeEditorSnippetState): string {
+export function buildCodeEditorSnippet({ docType, editable, theme, size, containerClass, editorClass, maxContentLength, selectionEnabled, autoFocus, editorAriaLabel, recreateKey }: CodeEditorSnippetState): string {
   const resolvedDocType = docType.value || DEFAULT_DOC_TYPE
   return [
     '<div class="h-64 w-full max-w-xl">',
@@ -71,6 +72,7 @@ export function buildCodeEditorSnippet({ docType, editable, theme, containerClas
     // The theme Value prefills the component default; the builder omits it so
     // Show-code stays minimal.
     ...enumAttrLine('theme', theme, 'dark', '    '),
+    ...sizeAttrLine(size, '    '),
     ...textAttrLine('containerClass', containerClass, '    '),
     ...textAttrLine('editorClass', editorClass, '    '),
     ...maxLengthLine(maxContentLength, 4, '0'),

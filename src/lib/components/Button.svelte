@@ -26,6 +26,9 @@
     radius: 0.375,
     padX: 0.65,
     padY: BUTTON_PAD_Y,
+    // The icon→label gap: the original 8px at `md`, kept as one ratio so a
+    // compact button never carries a gap wider than its own padding.
+    gap: 0.5,
     icon: 1,
   }
   export const BUTTON_METRICS = { ...BUTTON_RATIOS, iconPad: iconPadRatio(BUTTON_RATIOS), glyph: ICON_RATIO }
@@ -194,7 +197,7 @@
 
 {#snippet buttonInner()}
   {#if icon}
-    <span class="inline-flex items-center gap-2">
+    <span class="inline-flex items-center gap-[var(--btn-gap)]">
       <span class={`inline-flex items-center justify-center ${iconBoxClass} ${iconGlyphClass}`}>{@render icon()}</span>
       {@render children?.()}
     </span>
@@ -230,7 +233,7 @@
 {#if tooltip}
   <span bind:this={triggerEl} class="group relative inline-flex">
     {@render buttonElement()}
-    <Tooltip align={tooltipAlign} trigger={triggerEl}>{tooltip}</Tooltip>
+    <Tooltip align={tooltipAlign} trigger={triggerEl} {size}>{tooltip}</Tooltip>
   </span>
 {:else}
   {@render buttonElement()}

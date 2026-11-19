@@ -2,6 +2,7 @@ import { indentLess } from '@codemirror/commands'
 import { EditorSelection, RangeSetBuilder, type Extension } from '@codemirror/state'
 import { Decoration, EditorView } from '@codemirror/view'
 import { githubDark, githubLight } from '@uiw/codemirror-theme-github'
+import { editorMetrics, type EditorMetrics } from './code-editor-styles'
 
 // Language packs are loaded on demand, one chunk per document type, so the
 // editor never bundles the languages a given document does not use. A host
@@ -25,7 +26,7 @@ export function loadEditorLanguage(documentType: string): Promise<Extension | nu
 // fixed dark values otherwise, so an unthemed host renders the same dark
 // chrome it always did. `theme` stays a plain string so the shared file
 // never imports a per-app settings module.
-export function colorThemeExtensions(theme: string): Extension[] {
+export function colorThemeExtensions(theme: string, metrics: EditorMetrics = editorMetrics('md')): Extension[] {
   return [
     theme === 'dark' || theme === 'ember' || theme === 'forest' || theme === 'midnight' || theme === 'nebula'
       ? githubDark
@@ -34,7 +35,7 @@ export function colorThemeExtensions(theme: string): Extension[] {
       '&': {
         height: '100%',
         maxHeight: '100%',
-        fontSize: '0.875rem',
+        fontSize: `${metrics.font}px`,
         fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace',
       },
       '.cm-scroller': {
@@ -42,10 +43,10 @@ export function colorThemeExtensions(theme: string): Extension[] {
         overflow: 'auto',
       },
       '.cm-content': {
-        paddingTop: '0.75rem',
-        paddingRight: '1rem',
-        paddingBottom: '0.75rem',
-        paddingLeft: '0.5rem',
+        paddingTop: `${metrics.padY}px`,
+        paddingRight: `${metrics.padX}px`,
+        paddingBottom: `${metrics.padY}px`,
+        paddingLeft: `${metrics.padLeft}px`,
         minHeight: '100%',
         caretColor: 'var(--cm-caret, rgb(103 232 249))',
       },
@@ -71,11 +72,11 @@ export function colorThemeExtensions(theme: string): Extension[] {
       // the dark palette the other CodeMirror chrome fallbacks above use.
       '.cm-playbackHighlight': {
         backgroundColor: 'var(--cm-playbackHighlight, rgba(34, 211, 238, 0.28))',
-        borderRadius: '0.125rem',
+        borderRadius: `${metrics.radius}px`,
       },
       '.cm-playbackHighlightSelected': {
         backgroundColor: 'var(--cm-playbackHighlightSelected, rgba(52, 211, 153, 0.32))',
-        borderRadius: '0.125rem',
+        borderRadius: `${metrics.radius}px`,
       },
       '.cm-selectionBackground .cm-playbackHighlight, .cm-playbackHighlight.cm-selectionBackground, .cm-content:has(.cm-selectionBackground) .cm-playbackHighlight':
         {

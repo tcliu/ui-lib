@@ -5,6 +5,7 @@ import BarChart from './BarChart.svelte'
 import Button from './Button.svelte'
 import Buttons from './Buttons.svelte'
 import Chip from './Chip.svelte'
+import DataTableSizeHarness from './data-table-size.harness.svelte'
 import DateInput from './DateInput.svelte'
 import FormField from './FormField.svelte'
 import MenuSizeHarness from './menu-size.harness.svelte'
@@ -91,7 +92,17 @@ interface ComponentCase {
 const CASES: ComponentCase[] = [
   {
     name: 'Button',
-    keys: ['btn-font', 'btn-line', 'btn-radius', 'btn-pad-x', 'btn-pad-y', 'btn-icon', 'btn-icon-pad', 'btn-glyph'],
+    keys: [
+      'btn-font',
+      'btn-line',
+      'btn-radius',
+      'btn-pad-x',
+      'btn-pad-y',
+      'btn-gap',
+      'btn-icon',
+      'btn-icon-pad',
+      'btn-glyph',
+    ],
     render: size => renderStyle(Button, { size }),
   },
   {
@@ -101,7 +112,17 @@ const CASES: ComponentCase[] = [
   },
   {
     name: 'Menu',
-    keys: ['btn-font', 'btn-line', 'btn-radius', 'btn-pad-x', 'btn-pad-y', 'btn-icon', 'btn-icon-pad', 'btn-glyph'],
+    keys: [
+      'btn-font',
+      'btn-line',
+      'btn-radius',
+      'btn-pad-x',
+      'btn-pad-y',
+      'btn-gap',
+      'btn-icon',
+      'btn-icon-pad',
+      'btn-glyph',
+    ],
     render: size => renderStyle(MenuSizeHarness, { size }),
   },
   {
@@ -133,6 +154,7 @@ const CASES: ComponentCase[] = [
     keys: [
       'input-font',
       'input-line',
+      'input-radius',
       'input-pad-x',
       'input-pad-y',
       'sel-chevron-gap',
@@ -140,6 +162,10 @@ const CASES: ComponentCase[] = [
       'sel-gap',
       'sel-icon',
       'sel-min-w',
+      'sel-option-gap',
+      'sel-option-radius',
+      'sel-panel-pad',
+      'sel-panel-radius',
     ],
     render: size =>
       renderStyle(SelectDropdown, { options: ['a', 'b'], activeValue: 'a', ariaLabel: 'x', onSelect: () => {}, size }),
@@ -168,6 +194,7 @@ const CASES: ComponentCase[] = [
       'btn-line',
       'btn-pad-x',
       'btn-pad-y',
+      'btn-gap',
       'btn-radius',
       'input-font',
       'input-line',
@@ -179,6 +206,29 @@ const CASES: ComponentCase[] = [
       'pwd-inset',
     ],
     render: size => renderStyle(PasswordInput, { value: '', size }),
+  },
+  {
+    name: 'DataTable',
+    keys: [
+      'table-font',
+      'table-line',
+      'table-pad-x',
+      'table-pad-y',
+      'table-meta-font',
+      'table-select-col',
+      'table-min-col',
+      'table-shell-gap',
+      'table-toolbar-min-h',
+      'table-toolbar-gap',
+      'table-filter-gap',
+      'table-empty-pad-y',
+      'table-header-gap',
+      'table-header-pad-x',
+      'table-sort-gap',
+      'table-sort-radius',
+      'table-resize-w',
+    ],
+    render: size => renderStyle(DataTableSizeHarness, { size, showSearch: false }),
   },
   {
     name: 'Chip',
@@ -205,6 +255,7 @@ const CASES: ComponentCase[] = [
       'btn-line',
       'btn-pad-x',
       'btn-pad-y',
+      'btn-gap',
       'btn-radius',
       'input-font',
       'input-line',

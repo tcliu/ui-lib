@@ -16,6 +16,16 @@ export interface GridColumnsOptions {
   // An app-owned prefix for its persisted widths; the package prefix stays the
   // read fallback.
   getStoragePrefix?: () => string | undefined
+  // The grid's own pixel geometry on the shared size axis. Omitted, the `md`
+  // constants below stand in, so a caller that never scales keeps today's
+  // layout.
+  getMetrics?: () => GridMetrics
+}
+
+export interface GridMetrics {
+  rowNumber: number
+  minColumn: number
+  defaultColumn: number
 }
 
 const ROW_NUMBER_WIDTH = 36
@@ -31,6 +41,16 @@ const TABLE_LEFT_BORDER = 1
 export function createGridColumns(options: GridColumnsOptions) {
   const columnCount = () => options.getColumnCount()
 
+  function metrics(): GridMetrics {
+    return (
+      options.getMetrics?.() ?? {
+        rowNumber: ROW_NUMBER_WIDTH,
+        minColumn: MIN_COLUMN_WIDTH,
+        defaultColumn: DEFAULT_COLUMN_WIDTH,
+      }
+    )
+  }
+
   // Column widths in pixels. Empty array means auto-width (min-w-32 fallback).
   let columnWidths = $state<number[]>([])
   let autoColumnWidths = $state<number[]>([])
@@ -40,7 +60,7 @@ export function createGridColumns(options: GridColumnsOptions) {
   // remainder of the available width so the table never overflows the container
   // on initial render.
   function resolveInitialWidths(): number[] {
-    const available = Math.max(0, (options.getContainer()?.clientWidth ?? 0) - ROW_NUMBER_WIDTH - TABLE_LEFT_BORDER)
+    const available = Math.max(0, (options.getContainer()?.clientWidth ?? 0) - metrics().rowNumber - TABLE_LEFT_BORDER)
     const widths: number[] = []
     let sum = 0
     for (let i = 0; i < columnCount(); i++) {
@@ -54,11 +74,11 @@ export function createGridColumns(options: GridColumnsOptions) {
         w = 128
       }
       if (i < columnCount() - 1) {
-        const clamped = Math.max(MIN_COLUMN_WIDTH, w)
+        const clamped = Math.max(metrics().minColumn, w)
         widths.push(clamped)
         sum += clamped
       } else {
-        widths.push(Math.max(MIN_COLUMN_WIDTH, available - sum))
+        widths.push(Math.max(metrics().minColumn, available - sum))
       }
     }
     return widths
@@ -72,14 +92,14 @@ export function createGridColumns(options: GridColumnsOptions) {
     const count = columnCount()
     if (count === 0) return []
     const available = Math.max(
-      MIN_COLUMN_WIDTH * count,
+      metrics().minColumn * count,
       (options.getContainer()?.clientWidth ?? options.getViewport()?.clientWidth ?? 0) -
-        ROW_NUMBER_WIDTH -
+        metrics().rowNumber -
         TABLE_LEFT_BORDER,
     )
-    const base = Math.max(MIN_COLUMN_WIDTH, Math.floor(available / count))
+    const base = Math.max(metrics().minColumn, Math.floor(available / count))
     const widths = Array.from({ length: count }, () => base)
-    widths[count - 1] = Math.max(MIN_COLUMN_WIDTH, available - base * (count - 1))
+    widths[count - 1] = Math.max(metrics().minColumn, available - base * (count - 1))
     return widths
   }
 
@@ -91,8 +111,8 @@ export function createGridColumns(options: GridColumnsOptions) {
       columnWidths = widths
     },
     getColumnCellWidth: options.getColumnCellWidth,
-    getMinWidth: () => MIN_COLUMN_WIDTH,
-    getFillWidthOffset: () => TABLE_LEFT_BORDER + ROW_NUMBER_WIDTH,
+    getMinWidth: () => metrics().minColumn,
+    getFillWidthOffset: () => TABLE_LEFT_BORDER + metrics().rowNumber,
     getStorageKey: options.getStorageKey,
     getStoragePrefix: options.getStoragePrefix,
   })
@@ -128,8 +148,8 @@ export function createGridColumns(options: GridColumnsOptions) {
   // (no explicit widths) are left alone.
   function rescaleToContainer() {
     const available = Math.max(
-      MIN_COLUMN_WIDTH * columnCount(),
-      (options.getContainer()?.clientWidth ?? 0) - ROW_NUMBER_WIDTH - TABLE_LEFT_BORDER,
+      metrics().minColumn * columnCount(),
+      (options.getContainer()?.clientWidth ?? 0) - metrics().rowNumber - TABLE_LEFT_BORDER,
     )
     let total = 0
     for (let i = 0; i < columnCount(); i++) total += columnWidths[i]
@@ -140,12 +160,12 @@ export function createGridColumns(options: GridColumnsOptions) {
       if (i === last) {
         next.push(columnWidths[i])
       } else {
-        next.push(Math.max(MIN_COLUMN_WIDTH, Math.round((columnWidths[i] / total) * available)))
+        next.push(Math.max(metrics().minColumn, Math.round((columnWidths[i] / total) * available)))
       }
     }
     let used = 0
     for (let i = 0; i < last; i++) used += next[i]
-    next[last] = Math.max(MIN_COLUMN_WIDTH, available - used)
+    next[last] = Math.max(metrics().minColumn, available - used)
     columnWidths = next
   }
 
@@ -189,7 +209,7 @@ export function createGridColumns(options: GridColumnsOptions) {
     const removed = columnWidths.length > count
     const next: number[] = []
     for (let i = 0; i < count; i++) {
-      next.push(columnWidths[i] ?? DEFAULT_COLUMN_WIDTH)
+      next.push(columnWidths[i] ?? metrics().defaultColumn)
     }
     columnWidths = next
     if (removed) rescaleToContainer()
@@ -202,7 +222,7 @@ export function createGridColumns(options: GridColumnsOptions) {
 
   // Total table width: row-number column plus all data columns.
   const totalWidth = $derived.by(() => {
-    let sum = ROW_NUMBER_WIDTH
+    let sum = metrics().rowNumber
     for (let i = 0; i < columnCount(); i++) {
       sum += renderedColumnWidths[i] ?? 0
     }

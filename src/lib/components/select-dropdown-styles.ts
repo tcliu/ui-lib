@@ -1,4 +1,4 @@
-import { FIELD_RATIOS, INPUT_PAD_X_CLASS, INPUT_TEXT_METRIC_CLASS } from './input-chrome'
+import { FIELD_RATIOS, INPUT_PAD_X_CLASS, INPUT_RADIUS_CLASS, INPUT_TEXT_METRIC_CLASS } from './input-chrome'
 
 // Numeric sizes are positions on the shared scale (`$lib/size-scale`): names
 // are aliases for its steps and every metric below interpolates from the
@@ -16,6 +16,9 @@ export const SELECT_RATIOS = {
   font: FIELD_RATIOS.font,
   padX: FIELD_RATIOS.padX,
   padY: FIELD_RATIOS.padY,
+  // The box radius is the text field's own, so a select trigger and a
+  // `TextInput` beside it keep the same corner at every size.
+  radius: FIELD_RATIOS.radius,
   // The chevron's own right gutter (chevron → border), deliberately independent
   // of the text padding: the marker sits closer to the border than the label's
   // `padX` inset, and a padding retune leaves it where it is.
@@ -28,6 +31,14 @@ export const SELECT_RATIOS = {
   minW: 7,
   gap: 0.375,
   icon: 1,
+  // The listbox chrome: an option row's label→trailer gap and radius, and the
+  // floating panel's padding and radius. Each is the original 8/6/4/8px at
+  // `md`, so the panel tracks the trigger instead of staying at the default
+  // step while the rows inside it scale.
+  optionGap: 0.5,
+  optionRadius: 0.375,
+  panelPad: 0.25,
+  panelRadius: 0.5,
 }
 
 export type SelectRatios = typeof SELECT_RATIOS
@@ -53,7 +64,7 @@ export const SELECT_TRIGGER_UTILITIES =
 // `SELECT_BOX_UTILITIES`), because the positioner floors the panel root to the
 // trigger width via inline style.
 export const DEFAULT_PANEL_CLASS =
-  'w-max max-w-xs max-h-[min(50vh,20rem)] overflow-y-auto rounded-lg border border-slate-700 bg-slate-900/95 p-1 shadow-2xl shadow-slate-950/60 backdrop-blur'
+  'w-max max-w-xs max-h-[min(50vh,20rem)] overflow-y-auto rounded-[var(--sel-panel-radius,0.5rem)] border border-slate-700 bg-slate-900/95 p-[var(--sel-panel-pad,0.25rem)] shadow-2xl shadow-slate-950/60 backdrop-blur'
 
 // One box class for both trigger variants: the border, surface, padding, and
 // chevron inset are identical whether the box holds a button or the filterable
@@ -66,7 +77,7 @@ export const DEFAULT_PANEL_CLASS =
 // pointer can hover one while focus sits on another.
 const TRIGGER_LAYOUT =
   'inline-flex cursor-pointer items-center justify-between gap-[var(--sel-chevron-text-gap)] text-left outline-none transition motion-reduce:transition-none'
-export const TRIGGER_BASE = `${TRIGGER_LAYOUT} rounded-md border border-slate-700 bg-slate-950 text-slate-100 hover:border-cyan-500`
+export const TRIGGER_BASE = `${TRIGGER_LAYOUT} ${INPUT_RADIUS_CLASS} border border-slate-700 bg-slate-950 text-slate-100 hover:border-cyan-500`
 // The bordered surface without its outline: the surface and text rules stay,
 // while the border, its hover tint, and its focus color drop, for a trigger
 // that sits inside a caller-owned row without drawing a second box.
@@ -77,5 +88,5 @@ export const TRIGGER_NO_OUTLINE = `${TRIGGER_LAYOUT} bg-slate-950 text-slate-100
 // shared embedded text field.
 export const TRIGGER_EMBEDDED = `${TRIGGER_LAYOUT} bg-transparent`
 export const OPTION_BASE =
-  'flex w-full cursor-pointer items-center justify-between gap-2 rounded-md text-left outline-none transition-none max-phone:min-h-11'
+  'flex w-full cursor-pointer items-center justify-between gap-[var(--sel-option-gap,0.5rem)] rounded-[var(--sel-option-radius,0.375rem)] text-left outline-none transition-none max-phone:min-h-11'
 export const EMPTY_BASE = 'text-slate-400'

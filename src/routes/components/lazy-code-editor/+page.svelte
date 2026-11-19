@@ -5,7 +5,8 @@
   import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
   import { type TriState } from '#showcase/playground/snippet-build.js'
   import { applied, appliedFlag, eye, eyeFlag, eyeResetToggle, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
-  import { enumField, textField, boolField, snippetField } from '#showcase/playground/snippet-field.js'
+  import { enumField, textField, boolField, snippetField, sizeField } from '#showcase/playground/snippet-field.js'
+  import { parseSizeValue } from '#showcase/playground/size-input.js'
   import {
     DEFAULT_CONTENT,
     DEFAULT_DOC_TYPE,
@@ -32,6 +33,7 @@
     autoFocus: staged('no' as TriState),
     editorAriaLabel: staged(''),
     recreateKey: staged(''),
+    size: staged('md'),
   }
   let pg = $state(structuredClone(INITIAL))
   // The component requires content, so the eye resets to the default document
@@ -62,6 +64,10 @@
   const demoAutoFocus = $derived(appliedFlag(pg.autoFocus))
   const demoEditorAriaLabel = $derived(applied(pg.editorAriaLabel) || undefined)
   const demoRecreateKey = $derived(applied(pg.recreateKey) || undefined)
+  const demoSize = $derived.by(() => {
+    const value = applied(pg.size)
+    return value === undefined ? undefined : parseSizeValue(value)
+  })
 
   function clearPlayground() {
     pg = structuredClone(INITIAL)
@@ -77,6 +83,7 @@
       autoFocus: pg.autoFocus,
       editorAriaLabel: pg.editorAriaLabel,
       recreateKey: pg.recreateKey,
+      size: pg.size,
     }),
   )
 
@@ -106,6 +113,7 @@
     { name: 'maxContentLength', type: 'number?', defaultValue: '0', editorDefaultValue: '0', note: 'Caps the document length; 0 disables the cap.', editor: 'number', clearable: true, ...eye(pg.maxContentLength), onChange: value => stage(pg.maxContentLength, value), placeholder: '0', toggle: eyeToggle(pg.maxContentLength), sync: { kind: 'number', pattern: /^\d+$/ } },
     textField({ name: 'editorAriaLabel', type: 'string?', defaultValue: 'editor.content', note: 'Accessible name for the editor textbox; unset, the localized editor.content key renders.', clearable: true, ...eye(pg.editorAriaLabel) }),
     textField({ name: 'recreateKey', type: 'string?', defaultValue: "''", note: 'Changing it destroys and rebuilds the editor.', editorDefaultValue: '', clearable: true, ...eye(pg.recreateKey) }),
+    sizeField({ note: 'Editor text scale; numbers are icon-scale pixels. The font, content padding, and loading text follow it.', ...eye(pg.size) }),
     { name: 'onAutoFocused', type: '() => void', defaultValue: '—', note: 'Called after an autofocus.' },
     { name: 'onContentChange', type: '(content: string) => void', defaultValue: '—', note: 'Called with the document after every edit.' },
     { name: 'onReady', type: '() => void', defaultValue: '—', note: 'Called once the EditorView exists.' },
@@ -134,6 +142,7 @@
         autoFocus={demoAutoFocus}
         editorAriaLabel={demoEditorAriaLabel}
         recreateKey={demoRecreateKey}
+        size={demoSize}
         containerClass={demoContainerClass}
         editorClass={demoEditorClass}
         maxContentLength={demoMaxContentLength} />

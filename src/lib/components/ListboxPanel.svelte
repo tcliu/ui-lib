@@ -14,6 +14,9 @@
     id: string
     ariaLabel?: string
     panelClass: string
+    // Inline metrics for the owner's size-derived panel chrome (padding,
+    // radius), published on the panel root so its classes can read them.
+    panelStyle?: string
     optionRowClass: string
     // Inline geometry for interpolated owner sizes; the class carries the
     // static chrome either way.
@@ -51,6 +54,7 @@
     id,
     ariaLabel,
     panelClass,
+    panelStyle,
     optionRowClass,
     optionRowStyle,
     options,
@@ -102,7 +106,8 @@
   role="listbox"
   aria-label={ariaLabel}
   use:positionPanel={() => ({ getTrigger, getOpen, align, autoPlace })}
-  class={panelClass}>
+  class={panelClass}
+  style={panelStyle}>
   {#if emptyLabel && options.length === 0}
     <div role="presentation" class={emptyRowClass} style={emptyRowStyle}>{emptyLabel}</div>
   {/if}

@@ -10,8 +10,12 @@
   // fight a leftover utility and structural classes cannot be dropped. The
   // showcase page seeds its class rows from the tunable defaults.
   export const STRUCTURE_ROW_BASE_CLASS = 'group flex w-fit max-w-full items-center'
-  export const DEFAULT_CONTAINER_ROW_CLASS = 'gap-2 rounded py-1 hover:bg-slate-800/40'
-  export const DEFAULT_LEAF_ROW_CLASS = 'gap-1 rounded py-1 hover:bg-slate-800/40'
+  // The fallbacks keep each class usable on its own at the `md` step; the
+  // owning root's `--tree-*` vars replace them at another size.
+  export const DEFAULT_CONTAINER_ROW_CLASS =
+    'gap-[var(--tree-row-gap,0.5rem)] rounded-[var(--tree-row-radius,0.25rem)] py-[var(--tree-row-pad-y,0.25rem)] hover:bg-slate-800/40'
+  export const DEFAULT_LEAF_ROW_CLASS =
+    'gap-[var(--tree-leaf-gap,0.25rem)] rounded-[var(--tree-row-radius,0.25rem)] py-[var(--tree-row-pad-y,0.25rem)] hover:bg-slate-800/40'
 
   // Size scale, calibrated at the `md` default so the tree renders exactly as
   // before (14px text on a 19.25px line = `text-sm leading-snug`) and scales
@@ -19,15 +23,33 @@
   // and action buttons ride the ratios that reproduce the `xs`/`sm` steps at
   // `md` so the row stays proportionate at every size.
   const LEADING_SNUG = 1.375
-  export const STRUCTURE_RATIOS = { font: FONT_RATIO, line: FONT_RATIO * LEADING_SNUG, caret: 0.75, action: 0.875 }
+  export const STRUCTURE_RATIOS = {
+    font: FONT_RATIO,
+    line: FONT_RATIO * LEADING_SNUG,
+    caret: 0.75,
+    action: 0.875,
+    // The row's own chrome: the caret group's 2px gap, the action buttons' 6px
+    // padding and 4px radius, the key→value 6px gap, the 1px inline-key radius,
+    // and the depth indent (0.3rem shift + 8px guide) at `md`.
+    actionGap: 0.125,
+    actionPad: 0.375,
+    actionRadius: 0.25,
+    valueGap: 0.375,
+    keyRadius: 0.0625,
+    indent: 0.3,
+    indentPad: 0.5,
+    // The built-in row classes: the container's 8px and the leaf's 4px gap,
+    // their 4px radius and padding, and the 4px gutter step between them.
+    rowGap: 0.5,
+    leafGap: 0.25,
+    rowPadY: 0.25,
+    rowRadius: 0.25,
+    gapStep: 0.25,
+  }
 
   // The mono text classes every tree surface shares; the `--tree-*` vars come
   // from `structureStyle` on the owning root.
   export const STRUCTURE_TEXT_CLASS = 'font-mono text-[length:var(--tree-font)] leading-[var(--tree-line)]'
-
-  // Difference between the two default row gaps: container `gap-2` (8px) minus
-  // leaf `gap-1` (4px). Calibrated to the built-in row classes.
-  const GAP_STEP_PX = 4
 
   export function structureMetrics(size: SizeInput) {
     return dimensionMetrics(size, STRUCTURE_RATIOS)
@@ -39,7 +61,7 @@
     // button's own box plus the gap difference above, so a leaf key starts at
     // the same x as a container label at the same level even when some props
     // are nested containers.
-    const gutter = iconOnlyBoxPx(metrics.caret) + GAP_STEP_PX
+    const gutter = iconOnlyBoxPx(metrics.caret) + metrics.gapStep
     return `${sizeVarStyle('tree', metrics)};--tree-gutter:${gutter}px`
   }
 </script>
@@ -263,7 +285,7 @@
   height (set by the buttons) while a field is being edited. -->
 {#snippet rowActions(name: string, copyText: string, onEdit?: () => void)}
   <span
-    class="flex shrink-0 items-center gap-0.5 transition group-hover:opacity-100 focus-within:opacity-100 [@media(hover:hover)]:opacity-0">
+    class="flex shrink-0 items-center gap-[var(--tree-action-gap)] transition group-hover:opacity-100 focus-within:opacity-100 [@media(hover:hover)]:opacity-0">
     {#if onEdit}
       <Button
         size={treeMetrics.action}
@@ -277,7 +299,7 @@
         onKeyDown={e => {
           if (e.key === 'Enter' || e.key === ' ') e.stopPropagation()
         }}
-        className="bg-transparent p-1.5 text-slate-400 hover:text-cyan-300">
+        className="bg-transparent p-[var(--tree-action-pad)] text-slate-400 hover:text-cyan-300">
         {#snippet icon()}
           <EditIcon />
         {/snippet}
@@ -295,7 +317,7 @@
       onKeyDown={e => {
         if (e.key === 'Enter' || e.key === ' ') e.stopPropagation()
       }}
-      className="bg-transparent p-1.5 text-slate-400 hover:text-cyan-300">
+      className="bg-transparent p-[var(--tree-action-pad)] text-slate-400 hover:text-cyan-300">
       {#snippet icon()}
         <CopyIcon />
       {/snippet}
@@ -322,7 +344,7 @@
           <input
             bind:this={editOwnName.input}
             bind:value={editOwnName.text}
-            class="min-w-[2ch] rounded-[1px] bg-slate-900 p-0 font-mono text-[length:var(--tree-font)] leading-[var(--tree-line)] text-slate-300 outline outline-1 outline-cyan-500 outline-offset-[6px]"
+            class="min-w-[2ch] rounded-[var(--tree-key-radius)] bg-slate-900 p-0 font-mono text-[length:var(--tree-font)] leading-[var(--tree-line)] text-slate-300 outline outline-1 outline-cyan-500 outline-offset-[6px]"
             style={`width: ${editOwnName.width}px`}
             onblur={commitOwnName}
             onmousedown={e => {
@@ -341,7 +363,7 @@
         {:else if onRenameKey && editable && path.length > 0 && !parentIsArray}
           <button
             type="button"
-            class="cursor-pointer rounded text-slate-300 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-cyan-500"
+            class="cursor-pointer rounded-[var(--tree-action-radius)] text-slate-300 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-cyan-500"
             ondblclick={e => {
               e.stopPropagation()
               startEditOwnName()
@@ -352,7 +374,7 @@
                 e.stopPropagation()
                 startEditOwnName()
               }
-            }}>{label}<Tooltip>{i18n.t('structure.renameHint')}</Tooltip></button>
+            }}>{label}<Tooltip {size}>{i18n.t('structure.renameHint')}</Tooltip></button>
         {:else}
           <span class="text-slate-300">{label}</span>
         {/if}
@@ -364,7 +386,7 @@
   </div>
 
   {#if open}
-    <div class={depth === 0 ? 'ml-[0.3rem] pl-2' : 'ml-[0.3rem] border-l border-slate-800 pl-2'}>
+    <div class={depth === 0 ? 'ml-[var(--tree-indent)] pl-[var(--tree-indent-pad)]' : 'ml-[var(--tree-indent)] border-l border-slate-800 pl-[var(--tree-indent-pad)]'}>
       {#each entries as entry (entry.key)}
         {#if isContainer(entry.value)}
           <Self
@@ -388,7 +410,7 @@
               <input
                 bind:this={editValue.input}
                 bind:value={editValue.text}
-                class="ml-1.5 min-w-[2ch] shrink-0 rounded-[1px] bg-slate-900 p-0 font-mono text-[length:var(--tree-font)] leading-[var(--tree-line)] outline outline-1 outline-cyan-500 outline-offset-[6px]"
+                class="ml-[var(--tree-value-gap)] min-w-[2ch] shrink-0 rounded-[var(--tree-key-radius)] bg-slate-900 p-0 font-mono text-[length:var(--tree-font)] leading-[var(--tree-line)] outline outline-1 outline-cyan-500 outline-offset-[6px]"
                 style={`width: ${editValue.width}px`}
                 onblur={commitValue}
                 onmousedown={e => {
@@ -416,7 +438,7 @@
             <input
               bind:this={editName.input}
               bind:value={editName.text}
-              class="min-w-[2ch] shrink-0 rounded-[1px] bg-slate-900 p-0 font-mono text-[length:var(--tree-font)] leading-[var(--tree-line)] text-slate-300 outline outline-1 outline-cyan-500 outline-offset-[6px]"
+              class="min-w-[2ch] shrink-0 rounded-[var(--tree-key-radius)] bg-slate-900 p-0 font-mono text-[length:var(--tree-font)] leading-[var(--tree-line)] text-slate-300 outline outline-1 outline-cyan-500 outline-offset-[6px]"
               style={`width: ${editName.width}px`}
               onblur={commitName}
               onmousedown={e => {
@@ -433,7 +455,7 @@
               }}
               onkeydown={handleNameKeydown} />
             <span class="shrink-0 text-slate-600">:</span>
-            <span class={`ml-1.5 ${valueClass(entry.value)}`}>{valueText(entry.value)}</span>
+            <span class={`ml-[var(--tree-value-gap)] ${valueClass(entry.value)}`}>{valueText(entry.value)}</span>
             {@render rowActions(jsonPath(entryPath(entry)), copyValue(entry.value))}
           </div>
         {:else}
@@ -442,7 +464,7 @@
             {#if onRenameKey && editable}
               <button
                 type="button"
-                class="shrink-0 cursor-pointer rounded text-slate-300 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-cyan-500"
+                class="shrink-0 cursor-pointer rounded-[var(--tree-action-radius)] text-slate-300 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-cyan-500"
                 ondblclick={e => {
                   e.stopPropagation()
                   startEditName(entry)
@@ -453,7 +475,7 @@
                     e.stopPropagation()
                     startEditName(entry)
                   }
-                }}>{entry.key}<Tooltip>{i18n.t('structure.renameHint')}</Tooltip></button>
+                }}>{entry.key}<Tooltip {size}>{i18n.t('structure.renameHint')}</Tooltip></button>
             {:else}
               <span class="shrink-0 text-slate-300">{entry.key}</span>
             {/if}
@@ -464,13 +486,13 @@
                 space to the row's inline text. -->
               <button
                 type="button"
-                class="ml-1.5 min-w-0 cursor-pointer truncate rounded bg-transparent text-left focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-cyan-500"
+                class="ml-[var(--tree-value-gap)] min-w-0 cursor-pointer truncate rounded-[var(--tree-action-radius)] bg-transparent text-left focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-cyan-500"
                 onclick={() => startEditValue(entry)}
                 ondblclick={() => startEditValue(entry)}>
-                <span class={valueClass(entry.value)}>{valueText(entry.value)}</span><Tooltip>{i18n.t('structure.editKey', { name: jsonPath(entryPath(entry)) })}</Tooltip>
+                <span class={valueClass(entry.value)}>{valueText(entry.value)}</span><Tooltip {size}>{i18n.t('structure.editKey', { name: jsonPath(entryPath(entry)) })}</Tooltip>
               </button>
             {:else}
-              <span class="ml-1.5 min-w-0 truncate text-slate-400">
+              <span class="ml-[var(--tree-value-gap)] min-w-0 truncate text-slate-400">
                 <span class={valueClass(entry.value)}>{valueText(entry.value)}</span>
               </span>
             {/if}

@@ -77,7 +77,7 @@
     try {
       const labelRect = displayBtn?.getBoundingClientRect()
       const editRect = editBtn?.getBoundingClientRect()
-      const gapPx = 8 // Tailwind gap-2 is 0.5rem -> 8px at 16px root
+      const gapPx = metrics.rowGap
       if (labelRect) {
         inputWidth = Math.ceil(labelRect.width + (editRect?.width ?? 0) + gapPx)
       } else {
@@ -187,7 +187,9 @@
   // the edit field derive their line box from the font, so one font override
   // keeps them on one height.
   const resolvedRatios = $derived({ ...FIELD_RATIOS, ...ratios })
-  const metrics = $derived(dimensionMetrics(size, withLine(resolvedRatios)))
+  // The row's label→field→action gap is its own metric (8px at `md`), not a
+  // field tunable, so the measurement below and the flex gap read one value.
+  const metrics = $derived(dimensionMetrics(size, withLine({ ...resolvedRatios, rowGap: 0.5 })))
   const sizeStyle = $derived(sizeVarStyle('input', metrics))
   // The edit field rides the same metrics; TextInput derives its own line from
   // the font, so it takes only the tunable subset.
@@ -269,7 +271,7 @@
        pushed to the right. Keep min-w-0 so truncation still works.
        `items-center` centers the icon wrappers (edit + copy) on the text field's
        own vertical middle, so no nudge is needed to align them with the text. -->
-  <div class="group flex min-w-0 items-center gap-2">
+  <div class="group flex min-w-0 items-center gap-[var(--input-row-gap)]" style={sizeStyle}>
     {@render displayContent()}
     {#if copyable && text.trim() !== ''}
       <span class="shrink-0 transition group-hover:opacity-100 focus-within:opacity-100 [@media(hover:hover)]:opacity-0">

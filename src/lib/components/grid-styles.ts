@@ -43,12 +43,16 @@ export function rowNumberBorderStyle(selected: boolean): string {
 
 export function rowSelectorClass(ri: number, selected: boolean): string {
   const bg = ri % 2 === 1 ? 'bg-slate-900' : 'bg-slate-950'
-  return `sticky left-0 z-10 w-9 cursor-pointer border-b border-r border-b-slate-800 border-r-slate-500 p-0 text-right outline-none ${selected ? 'bg-slate-800' : bg}`
+  // The row-handle width comes from the grid's `--grid-row-number-w` metric, so
+  // the selector cell and the colgroup column it labels stay in lockstep.
+  return `sticky left-0 z-10 w-[var(--grid-row-number-w)] cursor-pointer border-b border-r border-b-slate-800 border-r-slate-500 p-0 text-right outline-none ${selected ? 'bg-slate-800' : bg}`
 }
 
 export function columnSelectorClass(selected: boolean, isLastColumn: boolean): string {
   const rightBorder = isLastColumn ? 'border-r-slate-800' : 'border-r-slate-500'
-  return `min-w-32 h-6 cursor-pointer border-b border-r border-b-slate-600 ${rightBorder} p-0 text-center text-xs font-normal outline-none ${selected ? 'bg-slate-800' : ''}`
+  // The label row's height, text, and column floor all read the same metrics the
+  // header-data row uses, so the two header bands never drift.
+  return `min-w-[var(--grid-min-col)] h-[var(--grid-label-row-h)] cursor-pointer border-b border-r border-b-slate-600 ${rightBorder} p-0 text-center text-[length:var(--grid-selector-font)] font-normal outline-none ${selected ? 'bg-slate-800' : ''}`
 }
 
 export function gridRowClass(index: number): string {

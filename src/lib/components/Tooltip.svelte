@@ -1,14 +1,31 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
+  import type { SizeInput } from '#lib/size-scale.js'
+  import { dimensionMetrics, sizeVarStyle } from './size-metrics'
 
   interface Props {
     children: Snippet
     align?: 'center' | 'left' | 'right'
     className?: string
     trigger?: HTMLElement | null
+    // Scale of the hint box on the shared size axis. Ratios are calibrated so
+    // the default `md` reproduces the original `text-xs` box: 12px font with
+    // its 16px line, `px-2 py-1` (8/4px) padding, and the `rounded` 4px radius.
+    size?: SizeInput
   }
 
-  let { children, align = 'center', className: extraClass = '', trigger: triggerProp = null }: Props = $props()
+  let {
+    children,
+    align = 'center',
+    className: extraClass = '',
+    trigger: triggerProp = null,
+    size = 'md',
+  }: Props = $props()
+
+  const TOOLTIP_RATIOS = { font: 0.75, line: 1, padX: 0.5, padY: 0.25, radius: 0.25 }
+  const tipMetrics = $derived(dimensionMetrics(size, TOOLTIP_RATIOS))
+  const tipStyle = $derived(sizeVarStyle('tip', tipMetrics))
+
 
   let anchor = $state<HTMLElement | null>(null)
   // Explicit trigger (e.g. Menu positioning) wins; otherwise fall back to the
@@ -225,5 +242,5 @@
     use:portal
     role="tooltip"
     class={`st-tooltip ${extraClass}`}
-    style={`top:${top}px; left:${left}px; opacity:1;`}
+    style={`top:${top}px; left:${left}px; opacity:1; ${tipStyle}`}
     >{@render children()}</span>{/if}

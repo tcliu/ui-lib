@@ -36,7 +36,7 @@
   // md default); the box keeps its 1.25× padding while the tick rides a trimmed
   // share of the slot, so the mark sits light inside it without shrinking the
   // checkbox.
-  const CBX_RATIOS = { gap: 0.75, box: 1.25, font: 0.875, icon: 0.875 }
+  const CBX_RATIOS = { gap: 0.75, box: 1.25, font: 0.875, icon: 0.875, radius: 0.375 }
 
   const metrics = $derived(dimensionMetrics(size, CBX_RATIOS))
   const boxStyle = $derived(sizeVarStyle('cbx', metrics))
@@ -67,7 +67,7 @@
     onchange={event => onChange?.((event.currentTarget as HTMLInputElement).checked)} />
   <span
     aria-hidden="true"
-    class={`inline-flex h-[var(--cbx-box)] w-[var(--cbx-box)] items-center justify-center rounded-md border transition peer-focus-visible:border-transparent peer-focus-visible:ring-2 peer-focus-visible:ring-cyan-500/70 ${checked ? 'border-cyan-500 bg-cyan-300 text-slate-950' : 'border-slate-700 bg-slate-950 text-transparent'}`}>
+    class={`inline-flex h-[var(--cbx-box)] w-[var(--cbx-box)] items-center justify-center rounded-[var(--cbx-radius)] border transition peer-focus-visible:border-transparent peer-focus-visible:ring-2 peer-focus-visible:ring-cyan-500/70 ${checked ? 'border-cyan-500 bg-cyan-300 text-slate-950' : 'border-slate-700 bg-slate-950 text-transparent'}`}>
     <CheckIcon size={iconPx} />
   </span>
   {#if label}

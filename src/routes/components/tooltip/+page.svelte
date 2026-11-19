@@ -5,7 +5,8 @@
   import ShowcasePage from '#showcase/shell/ShowcasePage.svelte'
   import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
   import { applied, eye, eyeResetToggle, stage, staged } from '#showcase/playground/staged.js'
-  import { enumField, textField, snippetField } from '#showcase/playground/snippet-field.js'
+  import { enumField, textField, snippetField, sizeField } from '#showcase/playground/snippet-field.js'
+  import { parseSizeValue } from '#showcase/playground/size-input.js'
   import { buildTooltipSnippet } from './demo-snippet'
 
   const i18n = getI18nContext()
@@ -20,6 +21,7 @@
     label: staged('Apply', true),
     align: staged('center'),
     className: staged(''),
+    size: staged('md'),
   }
   let pg = $state(structuredClone(INITIAL))
   // The component requires children, so the eye resets to the default label
@@ -33,13 +35,19 @@
   const demoLabel = $derived(pg.label.value || i18n.t('common.apply'))
   const demoAlign = $derived((applied(pg.align) || undefined) as 'center' | 'left' | 'right' | undefined)
   const demoClass = $derived(applied(pg.className) || undefined)
+  const demoSize = $derived.by(() => {
+    const value = applied(pg.size)
+    return value === undefined ? undefined : parseSizeValue(value)
+  })
   const applyLabel = $derived(i18n.t('common.apply'))
 
   function clearPlayground() {
     pg = structuredClone(INITIAL)
   }
 
-  const code = $derived.by(() => buildTooltipSnippet({ label: pg.label, align: pg.align, className: pg.className }))
+  const code = $derived.by(() =>
+    buildTooltipSnippet({ label: pg.label, align: pg.align, className: pg.className, size: pg.size }),
+  )
 
   
   // Each editable row declares its Value editor and its snippet write-back
@@ -60,6 +68,7 @@
       sync: { kind: 'script', attr: 'label', unsetAbsent: true, set: value => (pg.label.value = value) },
     }),
     textField({ name: 'className', type: 'string?', defaultValue: "''", note: 'Extra classes for the tooltip box.', editorDefaultValue: '', clearable: true, ...eye(pg.className) }),
+    sizeField({ note: 'Hint box scale; numbers are icon-scale pixels. The font, line, padding, and radius follow it.', ...eye(pg.size) }),
     { name: 'trigger', type: 'HTMLElement | null', defaultValue: 'null', note: 'Explicit trigger; falls back to the anchor parent.' },
   ])
 
@@ -80,5 +89,5 @@
     scopeRefreshWhen={() => pg.label.value === ''}
   >
     <Button bind:buttonEl={explicitTrigger}>{demoLabel}</Button>
-    <Tooltip trigger={explicitTrigger} align={demoAlign} className={demoClass}>{demoLabel}</Tooltip>
+    <Tooltip trigger={explicitTrigger} align={demoAlign} className={demoClass} size={demoSize}>{demoLabel}</Tooltip>
   </ShowcasePage>

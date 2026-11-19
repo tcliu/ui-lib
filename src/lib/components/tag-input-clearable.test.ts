@@ -120,7 +120,7 @@ describe('TagInput clearable defaultValue', () => {
 
   it('resolves auto to the inside overlay', async () => {
     await remount({ value: ['b'], defaultValue: ['a'], clearable: true })
-    expect(clearEl()!.closest('div.rounded-lg')).not.toBeNull()
+    expect(clearEl()!.closest('div[class*="focus-within:border-cyan-500"]')).not.toBeNull()
     expect(clearEl()!.closest('span.absolute')?.getAttribute('style')).toMatch(
       /top:\s*var\(--tag-pad-y\)/,
     )
@@ -128,7 +128,7 @@ describe('TagInput clearable defaultValue', () => {
 
   it('anchors the outside clear to the first row', async () => {
     await remount({ value: ['b'], defaultValue: ['a'], clearable: true, clearPlacement: 'outside' })
-    expect(clearEl()!.closest('div.rounded-lg')).toBeNull()
+    expect(clearEl()!.closest('div[class*="focus-within:border-cyan-500"]')).toBeNull()
     expect(clearEl()!.closest('div.items-start')).not.toBeNull()
     expect(clearEl()!.parentElement!.getAttribute('style')).toMatch(
       /margin-top:\s*calc\(var\(--tag-pad-y\) \+ 1px\)/,
@@ -138,7 +138,7 @@ describe('TagInput clearable defaultValue', () => {
   it('overlays the box edge and reserves a gutter while inside', async () => {
     await remount({ value: ['b'], defaultValue: ['a'], clearable: true, clearPlacement: 'inside' })
     // No sibling row: the cross rides inside the box itself, anchored to the first row.
-    expect(clearEl()!.closest('div.rounded-lg')).not.toBeNull()
+    expect(clearEl()!.closest('div[class*="focus-within:border-cyan-500"]')).not.toBeNull()
     const overlay = clearEl()!.closest('span.absolute')
     expect(overlay?.getAttribute('style')).toMatch(/top:\s*var\(--tag-pad-y\)/)
     // Chips never run under the overlay, even while the cross is hidden.

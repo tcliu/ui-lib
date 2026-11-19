@@ -192,3 +192,151 @@ test('numeric size scales the Buttons gap by a constant ratio', async ({ page })
     expect(gap / SIZES[i]!).toBeCloseTo(0.5, 2)
   })
 })
+
+test('numeric size scales the Tooltip hint box by a constant ratio', async ({ page }) => {
+  await page.goto('/components/tooltip')
+  await page.waitForLoadState('networkidle')
+
+  const sizeValue = page.getByRole('combobox', { name: 'size value', exact: true })
+  const trigger = showcaseDemo(page).getByRole('button', { name: 'Apply' })
+  const tip = page.getByRole('tooltip')
+
+  // The size Value is a combobox, so drive it through the named steps. Clearing
+  // first opens the panel unfiltered by the old value.
+  for (const [index, [step, size]] of (
+    [
+      ['xs', 12],
+      ['xl', 20],
+    ] as const
+  ).entries()) {
+    // The first pick starts from the unset default, so there is no clear slot
+    // yet; later picks clear first so the panel opens unfiltered.
+    if (index > 0) {
+      await page.getByRole('button', { name: 'Clear size' }).click()
+    }
+    await sizeValue.click()
+    await page.getByRole('option', { name: step, exact: true }).click()
+    await trigger.hover()
+    await expect(tip).toBeVisible()
+    const box = await tip.evaluate(el => {
+      const cs = getComputedStyle(el)
+      return {
+        font: parseFloat(cs.fontSize),
+        padLeft: parseFloat(cs.paddingLeft),
+        padTop: parseFloat(cs.paddingTop),
+        radius: parseFloat(cs.borderTopLeftRadius),
+      }
+    })
+    // 0.75 font, 0.5/0.25 padding, and the 0.25 radius: the original `md` box
+    // (12px on `text-xs`, `px-2 py-1`, `rounded`) scaled by the dimension.
+    expect(box.font / size).toBeCloseTo(0.75, 2)
+    expect(box.padLeft / size).toBeCloseTo(0.5, 2)
+    expect(box.padTop / size).toBeCloseTo(0.25, 2)
+    expect(box.radius / size).toBeCloseTo(0.25, 2)
+  }
+})
+
+test('numeric size scales DataTable cells by a constant ratio', async ({ page }) => {
+  const snippet = [
+    '<script>',
+    "  const rows = [{ id: 1, name: 'alpha' }]",
+    "  const columns = [{ key: 'name', header: 'Name' }]",
+    '</script>',
+    '<div class="flex flex-col gap-2">',
+    ...SIZES.map(s => `  <DataTable size={${s}} rows={rows} columns={columns} rowId={r => r.id} />`),
+    '</div>',
+  ].join('\n')
+  await applySnippet(page, '/components/data-table', snippet, SIZES.length, 'tbody td')
+
+  // One cell per table, in snippet order.
+  const cells = await showcaseDemo(page)
+    .locator('tbody td')
+    .evaluateAll(nodes =>
+      nodes.map(el => {
+          const cs = getComputedStyle(el)
+          return {
+            font: parseFloat(cs.fontSize),
+            line: parseFloat(cs.lineHeight),
+            padLeft: parseFloat(cs.paddingLeft),
+            padTop: parseFloat(cs.paddingTop),
+          }
+        }),
+    )
+  expect(cells).toHaveLength(SIZES.length)
+  cells.forEach((cell, i) => {
+    const size = SIZES[i]!
+    expect(cell.font / size).toBeCloseTo(0.875, 2)
+    expect(cell.line / size).toBeCloseTo(1.25, 2)
+    expect(cell.padLeft / size).toBeCloseTo(0.75, 2)
+    expect(cell.padTop / size).toBeCloseTo(0.5, 2)
+  })
+})
+
+test('numeric size scales DataGrid cells by a constant ratio', async ({ page }) => {
+  const snippet = [
+    '<script>',
+    "  const rows = [['Name'], ['alpha']]",
+    '</script>',
+    '<div class="flex flex-col gap-2">',
+    ...SIZES.map(
+      s =>
+        `  <div class="h-28 w-72"><DataGrid size={${s}} value={rows} initialColumnWidths={['80']} /></div>`,
+    ),
+    '</div>',
+  ].join('\n')
+  await applySnippet(page, '/components/data-grid', snippet, SIZES.length, 'tbody textarea')
+
+  const cells = await showcaseDemo(page)
+    .locator('tbody textarea')
+    .evaluateAll(nodes =>
+      nodes.map(el => {
+        const cs = getComputedStyle(el)
+        return {
+          font: parseFloat(cs.fontSize),
+          padLeft: parseFloat(cs.paddingLeft),
+          padTop: parseFloat(cs.paddingTop),
+        }
+      }),
+    )
+  expect(cells).toHaveLength(SIZES.length)
+  cells.forEach((cell, i) => {
+    const size = SIZES[i]!
+    expect(cell.font / size).toBeCloseTo(0.875, 2)
+    expect(cell.padLeft / size).toBeCloseTo(0.5, 2)
+    expect(cell.padTop / size).toBeCloseTo(0.25, 2)
+  })
+})
+
+test('numeric size scales the CodeEditor text and content padding by a constant ratio', async ({
+  page,
+}) => {
+  const snippet = [
+    '<script>',
+    '  let doc = $state("const a = 1")',
+    '</script>',
+    '<div class="flex flex-col gap-2">',
+    ...SIZES.map(s => `  <div class="h-32 w-64"><CodeEditor size={${s}} bind:content={doc} /></div>`),
+    '</div>',
+  ].join('\n')
+  await applySnippet(page, '/components/code-editor', snippet, SIZES.length, '.cm-content')
+
+  const content = await showcaseDemo(page)
+    .locator('.cm-content')
+    .evaluateAll(nodes =>
+      nodes.map(el => {
+        const cs = getComputedStyle(el)
+        return {
+          font: parseFloat(cs.fontSize),
+          padTop: parseFloat(cs.paddingTop),
+          padLeft: parseFloat(cs.paddingLeft),
+        }
+      }),
+    )
+  expect(content).toHaveLength(SIZES.length)
+  content.forEach((cell, i) => {
+    const size = SIZES[i]!
+    expect(cell.font / size).toBeCloseTo(0.875, 2)
+    expect(cell.padTop / size).toBeCloseTo(0.75, 2)
+    expect(cell.padLeft / size).toBeCloseTo(0.5, 2)
+  })
+})

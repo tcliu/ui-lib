@@ -12,7 +12,8 @@
   import Button from './Button.svelte'
   import CloseIcon from '#lib/icons/CloseIcon.svelte'
   import ExportIcon from '#lib/icons/ExportIcon.svelte'
-  import { createTableColumns, TABLE_MIN_COLUMN_WIDTH, TABLE_SELECT_COLUMN_WIDTH } from './use-table-columns.svelte'
+  import { createTableColumns } from './use-table-columns.svelte'
+  import { dimensionMetrics, sizeVarStyle } from './size-metrics'
   import { createTableScrollSync } from './use-table-scroll-sync.svelte'
   import type { TableModel } from './use-table-model.svelte'
   import { resolveColumnWidths } from '#lib/components/column-helpers.js'
@@ -255,6 +256,44 @@
   const resolvedChooserResetLabel = $derived(chooserResetLabel ?? i18n.t('table.resetColumns'))
   const resolvedSelectAllAriaLabel = $derived(selectAllAriaLabel ?? i18n.t('table.selectAll'))
 
+  // Cell/header text and the table's own floors ride the shared size axis.
+  // `md` reproduces the original `text-sm` cells: a 14px font on a 20px line
+  // with 12/8px padding, a 12px selection count, and the 40px selection column
+  // plus 60px column floor. `dense` is its own ratio set, not a multiplier of
+  // the base: its 8/4px padding was never a uniform share of 12/8px.
+  // The shell and header chrome ride the same axis: the 8px shell gap, the
+  // 32px/6px toolbar box, the 8px filter row, the 40px empty cell, the header's
+  // 8px/4px label row, the 4px sort stack, and the 6px resize rail at `md`.
+  const TABLE_RATIOS = {
+    font: 0.875,
+    line: 1.25,
+    padX: 0.75,
+    padY: 0.5,
+    metaFont: 0.75,
+    selectCol: 2.5,
+    minCol: 3.75,
+    shellGap: 0.5,
+    toolbarMinH: 2,
+    toolbarGap: 0.375,
+    filterGap: 0.5,
+    emptyPadY: 2.5,
+    headerGap: 0.5,
+    headerPadX: 0.25,
+    sortGap: 0.25,
+    sortRadius: 0.25,
+    resizeW: 0.375,
+  }
+  const TABLE_DENSE_RATIOS = { font: 0.75, padX: 0.5, padY: 0.25 }
+  const tableMetrics = $derived(dimensionMetrics(size, TABLE_RATIOS))
+  const denseMetrics = $derived(dimensionMetrics(size, TABLE_DENSE_RATIOS))
+  const tableStyle = $derived(sizeVarStyle('table', tableMetrics))
+  // Dense keeps the base line box (its cell class still inherits the table's
+  // line) and overrides only padding and font, exactly like the literals it
+  // replaces.
+  const denseCellStyle = $derived(
+    `padding: ${denseMetrics.padY}px ${denseMetrics.padX}px; font-size: ${denseMetrics.font}px`,
+  )
+
   // --- Managed mode -------------------------------------------------------
   //
   // With a `model`, every controlled input below is read from the controller:
@@ -380,11 +419,13 @@
   )
   const headerCellBase = $derived(
     isDocs
-      ? 'border-b border-slate-700 py-2 pr-3 font-medium'
-      : 'sticky top-0 z-10 border-b border-slate-800 bg-slate-900/95 px-3 py-2 backdrop-blur',
+      ? 'border-b border-slate-700 py-[var(--table-pad-y)] pr-[var(--table-pad-x)] font-medium'
+      : 'sticky top-0 z-10 border-b border-slate-800 bg-slate-900/95 px-[var(--table-pad-x)] py-[var(--table-pad-y)] backdrop-blur',
   )
   const bodyCellBase = $derived(
-    isDocs ? 'border-b border-slate-800 py-2 pr-3 align-top' : 'border-b border-slate-800/50 px-3 py-2',
+    isDocs
+      ? 'border-b border-slate-800 py-[var(--table-pad-y)] pr-[var(--table-pad-x)] align-top'
+      : 'border-b border-slate-800/50 px-[var(--table-pad-x)] py-[var(--table-pad-y)]',
   )
   const bodyRowClass = $derived(isDocs ? '' : 'hover:bg-slate-900/40')
 
@@ -469,7 +510,8 @@
     getStoragePrefix: () => storagePrefix,
     getResetSignal: () => resetWidthsSignal,
     getContainer: () => tableContainer,
-    getColumnCellWidth: (i: number) => headerEls[i]?.offsetWidth ?? TABLE_MIN_COLUMN_WIDTH,
+    getColumnCellWidth: (i: number) => headerEls[i]?.offsetWidth ?? tableMetrics.minCol,
+    getColumnFloors: () => ({ min: tableMetrics.minCol, select: tableMetrics.selectCol }),
     // bind:this grows headerEls but never shrinks it; drop stale tail refs so a
     // shrinking column list can't serve a detached header's width.
     pruneHeaderRefs: count => {
@@ -503,14 +545,14 @@
 
 <svelte:window onmouseup={tableColumns.resize.handleResizeMouseUp} onmousemove={tableColumns.resize.handleResizeMouseMove} />
 
-<div class="flex w-full min-w-0 flex-col gap-2 {fillHeight ? 'min-h-0 flex-1' : ''}">
+<div class="flex w-full min-w-0 flex-col gap-[var(--table-shell-gap)] {fillHeight ? 'min-h-0 flex-1' : ''}" style={tableStyle}>
   {#if showToolbarRow}
-    <div class="flex min-h-8 shrink-0 flex-wrap items-center gap-1.5">
+    <div class="flex min-h-[var(--table-toolbar-min-h)] shrink-0 flex-wrap items-center gap-[var(--table-toolbar-gap)]">
       {#if toolbar}
         {@render toolbar(selectedRows, clearSelection)}
       {/if}
       {#if selectionCountPosition === 'start'}
-        <span class="text-xs text-slate-400">{i18n.t('table.selected', { count: selectionCount })}</span>
+        <span class="text-[length:var(--table-meta-font)] text-slate-400">{i18n.t('table.selected', { count: selectionCount })}</span>
       {/if}
       {#if batchActions}
         {@render batchActions(selectedRows, clearSelection)}
@@ -539,7 +581,7 @@
         {@render toolbarEnd(selectedRows, clearSelection)}
       {/if}
       {#if selectionCountPosition === 'end'}
-        <span class="ml-auto text-xs text-slate-400"
+        <span class="ml-auto text-[length:var(--table-meta-font)] text-slate-400"
           >{i18n.t('table.selected', { count: selectionCount })}</span
         >
       {/if}
@@ -547,7 +589,7 @@
   {/if}
 
   {#if showSearch || chooserColumns}
-    <div class="flex flex-wrap items-center gap-2 {fillHeight ? 'shrink-0' : ''}">
+    <div class="flex flex-wrap items-center gap-[var(--table-filter-gap)] {fillHeight ? 'shrink-0' : ''}">
       {#if showSearch}
         {#if model}
           <SearchInput
@@ -585,7 +627,7 @@
     {#if tableColumns.managedWidths}
       <colgroup>
         {#if selectable}
-          <col style="width:{TABLE_SELECT_COLUMN_WIDTH}px;" />
+          <col style="width:{tableMetrics.selectCol}px;" />
         {/if}
         {#each Array.from({ length: columns.length }) as _, i}
           <col style="width:{tableColumns.columnWidths[i]}px;" />
@@ -594,7 +636,7 @@
     {:else if splitHeader}
       <colgroup>
         {#if selectable}
-          <col style="width:{TABLE_SELECT_COLUMN_WIDTH}px;" />
+          <col style="width:{tableMetrics.selectCol}px;" />
         {/if}
         {#each resolvedColumns as column (column.key)}
           <col style={column.widthStyle} />
@@ -606,7 +648,7 @@
   {#snippet tableBody()}
     {#if loading && activeRows.length === 0}
       <tr>
-        <td colspan={columnCount} class="px-3 py-10">
+        <td colspan={columnCount} class="px-[var(--table-pad-x)] py-[var(--table-empty-pad-y)]">
           <div class="flex justify-center">
             <Spinner {size} />
           </div>
@@ -614,13 +656,13 @@
       </tr>
     {:else if activeRows.length === 0}
       <tr>
-        <td colspan={columnCount} class="px-3 py-10 text-center text-sm text-slate-400">{resolvedEmptyMessage}</td>
+        <td colspan={columnCount} class="px-[var(--table-pad-x)] py-[var(--table-empty-pad-y)] text-center text-[length:var(--table-font)] text-slate-400">{resolvedEmptyMessage}</td>
       </tr>
     {:else}
       {#each activeRows as row (activeRowId(row))}
         <tr class={bodyRowClass}>
           {#if selectable}
-            <td class="border-b border-slate-800/50 px-3 py-2">
+            <td class="border-b border-slate-800/50 px-[var(--table-pad-x)] py-[var(--table-pad-y)]">
               <Checkbox
                 checked={activeSelectedIds?.has(activeRowId(row)) ?? false}
                 {size}
@@ -635,7 +677,7 @@
                 : column.minWidthClass} {column.cellClass}"
               style={[
                 tableColumns.managedWidths ? '' : column.minWidthStyle,
-                dense ? 'padding: 4px 8px; font-size: 12px' : '',
+                dense ? denseCellStyle : '',
               ]
                 .filter(Boolean)
                 .join('; ')}>
@@ -648,9 +690,9 @@
   {/snippet}
 
   {#snippet headerRow()}
-    <tr class="text-left text-sm font-medium text-slate-400">
+    <tr class="text-left font-medium text-slate-400">
       {#if selectable}
-        <th class="sticky top-0 z-10 w-10 border-b border-slate-800 bg-slate-900/95 px-3 py-2 backdrop-blur">
+        <th class="sticky top-0 z-10 w-[var(--table-select-col)] border-b border-slate-800 bg-slate-900/95 px-[var(--table-pad-x)] py-[var(--table-pad-y)] backdrop-blur">
           <Checkbox
             checked={activeAllSelected}
             indeterminate={activeSomeSelected && !activeAllSelected}
@@ -683,28 +725,28 @@
             headerAlignStyle,
             tableColumns.managedWidths ? '' : column.widthStyle,
             tableColumns.managedWidths ? '' : column.minWidthStyle,
-            dense ? 'padding: 4px 8px; font-size: 12px' : '',
+            dense ? denseCellStyle : '',
           ]
             .filter(Boolean)
             .join('; ')}
           data-col-index={i}
           aria-sort={isActive ? (isAsc ? 'ascending' : 'descending') : undefined}>
           {#if column.headerTip}
-            <Tooltip>{column.headerTip}</Tooltip>
+            <Tooltip {size}>{column.headerTip}</Tooltip>
           {/if}
           {#if column.sortable}
-            <span class="flex w-full items-center gap-2 text-left {centerHeader ? 'relative justify-center px-1' : ''}">
+            <span class="flex w-full items-center gap-[var(--table-header-gap)] text-left {centerHeader ? 'relative justify-center px-[var(--table-header-pad-x)]' : ''}">
               <span class={centerHeader ? 'min-w-0 overflow-hidden break-words text-ellipsis' : ''}
                 >{column.header}</span>
               <span
-                class="flex flex-col gap-1 {centerHeader
+                class="flex flex-col gap-[var(--table-sort-gap)] {centerHeader
                   ? 'absolute top-1/2 right-0 -translate-y-1/2'
                   : ''} text-slate-400 transition-opacity {isActive
                   ? 'opacity-100'
                   : '[@media(hover:hover)]:opacity-0'} group-focus-within:opacity-100 group-hover:opacity-100">
                 <button
                   type="button"
-                  class="flex rounded-sm leading-none transition-colors outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 {isAsc
+                  class="flex rounded-[var(--table-sort-radius)] leading-none transition-colors outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 {isAsc
                     ? 'text-cyan-400'
                     : 'hover:text-cyan-300 focus-visible:text-cyan-300'}"
                   aria-label={sortAriaLabel?.(column, 'asc') ?? i18n.t('table.sortAsc', { column: column.header })}
@@ -715,7 +757,7 @@
                 </button>
                 <button
                   type="button"
-                  class="flex rounded-sm leading-none transition-colors outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 {isDesc
+                  class="flex rounded-[var(--table-sort-radius)] leading-none transition-colors outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 {isDesc
                     ? 'text-cyan-400'
                     : 'hover:text-cyan-300 focus-visible:text-cyan-300'}"
                   aria-label={sortAriaLabel?.(column, 'desc') ?? i18n.t('table.sortDesc', { column: column.header })}
@@ -730,7 +772,7 @@
           {#if resizable}
             <button
               type="button"
-              class="absolute top-0 right-0 z-10 h-full w-1.5 cursor-col-resize border-0 bg-transparent p-0 outline-none hover:bg-cyan-500/40 focus-visible:bg-cyan-500/40 {i <
+              class="absolute top-0 right-0 z-10 h-full w-[var(--table-resize-w)] cursor-col-resize border-0 bg-transparent p-0 outline-none hover:bg-cyan-500/40 focus-visible:bg-cyan-500/40 {i <
               columns.length - 1
                 ? 'translate-x-1/2'
                 : ''}"
@@ -747,7 +789,7 @@
     <div class={splitFrameClass}>
       <div class="flex-none overflow-hidden" bind:this={headerWrapper}>
         <table
-          class="border-separate border-spacing-0 text-sm [&_tr:last-child_td]:border-b-0 {splitTableClass}"
+          class="border-separate border-spacing-0 text-[length:var(--table-font)] leading-[var(--table-line)] [&_tr:last-child_td]:border-b-0 {splitTableClass}"
           style={splitTableStyle}>
           {@render tableColgroup()}
           <thead>
@@ -757,7 +799,7 @@
       </div>
       <div tabindex="-1" class="min-h-0 flex-1 overflow-auto outline-none" bind:this={tableContainer}>
         <table
-          class="border-separate border-spacing-0 text-sm [&_tr:last-child_td]:border-b-0 {splitTableClass}"
+          class="border-separate border-spacing-0 text-[length:var(--table-font)] leading-[var(--table-line)] [&_tr:last-child_td]:border-b-0 {splitTableClass}"
           style={splitTableStyle}>
           {@render tableColgroup()}
           <tbody>
@@ -772,7 +814,7 @@
       class={`${fillHeight ? fillContainerClass : resolvedContainerClass} outline-none`}
       bind:this={tableContainer}>
       <table
-        class="{tableChromeClass} text-sm {tableColumns.managedWidths ? 'min-w-full' : `w-full ${tableClassName}`}"
+        class="{tableChromeClass} text-[length:var(--table-font)] leading-[var(--table-line)] {tableColumns.managedWidths ? 'min-w-full' : `w-full ${tableClassName}`}"
         style={tableColumns.managedWidths
           ? `table-layout:fixed;min-width:100%;width:${tableColumns.totalWidth}px;`
           : ''}>

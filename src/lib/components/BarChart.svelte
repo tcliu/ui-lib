@@ -145,7 +145,7 @@
     {#each rows as row, index (row.column.label + index)}
       <div class="group flex h-full min-w-[var(--chart-col-min)] flex-col justify-end [flex:0_1_var(--chart-col-max)]">
         {#if row.column.tip}
-          <Tooltip>{row.column.tip}</Tooltip>
+          <Tooltip {size}>{row.column.tip}</Tooltip>
         {/if}
         <div
           class="flex w-full flex-col overflow-hidden rounded-t-[var(--chart-bar-radius)]"

@@ -2,7 +2,7 @@
   import { getI18nContext } from '#lib/i18n/store.svelte.js'
   import type CodeEditor from './CodeEditor.svelte'
   import type { ComponentProps } from 'svelte'
-  import { CODE_EDITOR_CLASS, CODE_EDITOR_CONTAINER_CLASS } from './code-editor-styles'
+  import { CODE_EDITOR_CLASS, CODE_EDITOR_CONTAINER_CLASS, editorMetrics } from './code-editor-styles'
   const i18n = getI18nContext()
 
   // The lazy surface is derived from the eager editor's props so the two can
@@ -19,6 +19,7 @@
     content = $bindable(),
     editable = true,
     docType = 'text',
+    size = 'md',
     containerClass = CODE_EDITOR_CONTAINER_CLASS,
     editorClass = CODE_EDITOR_CLASS,
     editorAriaLabel,
@@ -31,6 +32,9 @@
   }: Props = $props()
 
   const resolvedAriaLabel = $derived(editorAriaLabel ?? i18n.t('editor.content'))
+  // The loading placeholder carries the editor's own text scale, so the surface
+  // never jumps when the real editor mounts.
+  const loadingFontPx = $derived(editorMetrics(size).font)
 
   // Lazy CodeEditor module: typed from the real component so the lazy boundary
   // stays cast-free.
@@ -95,6 +99,7 @@
     {content}
     {editable}
     {docType}
+    {size}
     {containerClass}
     {editorClass}
     editorAriaLabel={resolvedAriaLabel}
@@ -105,10 +110,11 @@
     {onAutoFocused}
     onContentChange={handleContentChange}></EditorComponent>
 {:else}
-  <div class={containerClass}>
+  <div class={containerClass} style={`--editor-frame-radius:${editorMetrics(size).frameRadius}px`}>
     <div
       role="status"
-      class={`${editorClass} flex min-h-[12rem] items-center justify-center text-sm text-slate-400`}>
+      class={`${editorClass} flex min-h-[12rem] items-center justify-center text-slate-400`}
+      style={`font-size:${loadingFontPx}px`}>
       {loadError || i18n.t('editor.loading')}
     </div>
   </div>

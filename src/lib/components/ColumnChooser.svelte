@@ -7,6 +7,7 @@
   import { createFocusoutClose } from '#lib/actions/use-focusout-close.js'
   import { useDropdown } from '#lib/actions/use-dropdown.svelte.js'
   import { positionPanel } from '#lib/position-panel.svelte.js'
+  import { dimensionMetrics, sizeVarStyle } from './size-metrics'
 
   export interface ChooserColumn {
     key: string
@@ -26,6 +27,22 @@
   }
 
   let { triggerLabel, resetAriaLabel, columns, onToggle, onReset, size = 'md' }: Props = $props()
+
+  // The chooser's own chrome rides the shared axis with its buttons: the 4px
+  // trigger/reset gap, the 144px panel floor, the panel's 8px radius and 6px
+  // padding, and each row's 4px radius with 6/2px padding at `md`. The
+  // viewport-clamped `max-h` stays a layout guard.
+  const COLCHOOSER_RATIOS = {
+    gap: 0.25,
+    minW: 9,
+    panelRadius: 0.5,
+    panelPad: 0.375,
+    rowRadius: 0.25,
+    rowPadX: 0.375,
+    rowPadY: 0.125,
+  }
+  const chooserMetrics = $derived(dimensionMetrics(size, COLCHOOSER_RATIOS))
+  const chooserStyle = $derived(sizeVarStyle('colchooser', chooserMetrics))
 
   let open = $state(false)
   let containerRef = $state<HTMLSpanElement | null>(null)
@@ -63,7 +80,11 @@
   }))
 </script>
 
-<span class="colchooser relative inline-flex gap-1" bind:this={containerRef} onfocusout={handleFocusOut}>
+<span
+  class="colchooser relative inline-flex gap-[var(--colchooser-gap)]"
+  style={chooserStyle}
+  bind:this={containerRef}
+  onfocusout={handleFocusOut}>
   {#snippet triggerIcon()}
     <ColumnsIcon />
   {/snippet}
@@ -93,13 +114,13 @@
     <div
       bind:this={panelRef}
       use:positionPanel={() => ({ getTrigger: () => triggerRef, getOpen: () => open, align: 'right' })}
-      class="panel fixed top-0 left-0 z-40 max-h-[50dvh] min-w-36 overflow-auto rounded-lg border border-slate-700 bg-slate-900/95 p-1.5 shadow-2xl shadow-slate-950/60 backdrop-blur will-change-transform"
+      class="panel fixed top-0 left-0 z-40 max-h-[50dvh] min-w-[var(--colchooser-min-w)] overflow-auto rounded-[var(--colchooser-panel-radius)] border border-slate-700 bg-slate-900/95 p-[var(--colchooser-panel-pad)] shadow-2xl shadow-slate-950/60 backdrop-blur will-change-transform"
       tabindex="-1"
       role="group"
       aria-label={triggerLabel}
       onpointerdown={event => event.preventDefault()}>
       {#each columns as column (column.key)}
-        <div class="chooser-row rounded px-1.5 py-0.5 whitespace-nowrap hover:bg-slate-800">
+        <div class="chooser-row rounded-[var(--colchooser-row-radius)] px-[var(--colchooser-row-pad-x)] py-[var(--colchooser-row-pad-y)] whitespace-nowrap hover:bg-slate-800">
           <Checkbox
             checked={column.checked}
             label={column.header}

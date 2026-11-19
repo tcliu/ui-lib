@@ -8,6 +8,7 @@ const BASE: CodeEditorSnippetState = {
   docType: staged('', true),
   editable: staged('', true),
   theme: staged('', true),
+  size: staged(''),
   containerClass: staged(''),
   editorClass: staged(''),
   maxContentLength: staged('', true),
@@ -42,7 +43,7 @@ describe('buildCodeEditorSnippet', () => {
   })
 
   it('omits the component-default flags and caps (the Value column prefills them)', () => {
-    const on = buildCodeEditorSnippet(state({ docType: staged('text', true), editable: staged('yes', true), theme: staged('dark', true), containerClass: staged('h-full overflow-hidden rounded-lg border border-slate-700 bg-slate-950'), editorClass: staged('h-full'), maxContentLength: staged('0', true), selectionEnabled: staged('yes', true) }))
+    const on = buildCodeEditorSnippet(state({ docType: staged('text', true), editable: staged('yes', true), theme: staged('dark', true), containerClass: staged('h-full overflow-hidden rounded-[var(--editor-frame-radius,0.5rem)] border border-slate-700 bg-slate-950'), editorClass: staged('h-full'), maxContentLength: staged('0', true), selectionEnabled: staged('yes', true) }))
     expect(on).not.toContain('docType=')
     expect(on).not.toContain('editable')
     expect(on).not.toContain('theme=')
@@ -109,6 +110,16 @@ describe('buildCodeEditorSnippet', () => {
     const on = buildCodeEditorSnippet(state({ containerClass: staged('h-full overflow-hidden', true), editorClass: staged('h-full', true) }))
     expect(on).toContain('containerClass="h-full overflow-hidden"')
     expect(on).toContain('editorClass="h-full"')
+  })
+
+  it('emits a named size step and a pixel number', () => {
+    expect(buildCodeEditorSnippet(state({ size: staged('lg', true) }))).toContain('size="lg"')
+    expect(buildCodeEditorSnippet(state({ size: staged('22', true) }))).toContain('size={22}')
+  })
+
+  it('omits the size default and a size while its eye is off', () => {
+    expect(buildCodeEditorSnippet(state({ size: staged('md', true) }))).not.toContain('size=')
+    expect(buildCodeEditorSnippet(state({ size: staged('lg') }))).not.toContain('size=')
   })
 })
 

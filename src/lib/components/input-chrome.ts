@@ -38,8 +38,10 @@ export const INPUT_TEXT_METRIC_CLASS =
 // The symmetric horizontal padding of a full field.
 export const INPUT_PAD_X_CLASS = 'px-[var(--input-pad-x)]'
 
-// The radius of a full field.
-export const INPUT_RADIUS_CLASS = 'rounded-[var(--input-radius)]'
+// The radius of a full field. The fallback keeps the class usable on its own
+// (an exported trigger class consumed outside a styled field) at the `md` step;
+// the emitted var wins wherever a sized field renders.
+export const INPUT_RADIUS_CLASS = 'rounded-[var(--input-radius,0.375rem)]'
 
 // The `--input-*` metric classes for a full text field; the size-metric custom
 // properties they consume are set inline by the component.

@@ -46,10 +46,19 @@
     'bottom-center': 'bottom-4 inset-x-4 sm:inset-x-auto sm:bottom-4 sm:left-1/2 sm:w-96 sm:-translate-x-1/2',
   }
 
-  // Continuous text metrics: every metric is a fixed ratio of the size
-  // dimension, so text scales smoothly with the same font ratio every other
-  // sized component uses.
-  const TOAST_RATIOS = { font: FONT_RATIO, line: 1.5 }
+  // Continuous text metrics plus the surface's own frame: every metric is a
+  // fixed ratio of the size dimension, so the box, its gaps, and the action's
+  // padding track the text (12/16/12/6px and 10/6px at `md`).
+  const TOAST_RATIOS = {
+    font: FONT_RATIO,
+    line: 1.5,
+    gap: 0.75,
+    padX: 1,
+    padY: 0.75,
+    radius: 0.375,
+    actionPadX: 0.625,
+    actionPadY: 0.375,
+  }
 
   const toastMetrics = $derived(dimensionMetrics(size, TOAST_RATIOS))
   const toastStyle = $derived(sizeVarStyle('toast', toastMetrics))
@@ -109,10 +118,14 @@
   role="status"
   aria-live="polite"
   style={toastStyle}
-  class={`fixed z-40 flex items-start gap-3 rounded-md px-4 py-3 shadow-lg shadow-slate-950/25 backdrop-blur-sm ${variantClasses[variant][type]} ${positionClasses[position]}`}>
+  class={`fixed z-40 flex items-start gap-[var(--toast-gap)] rounded-[var(--toast-radius)] px-[var(--toast-pad-x)] py-[var(--toast-pad-y)] shadow-lg shadow-slate-950/25 backdrop-blur-sm ${variantClasses[variant][type]} ${positionClasses[position]}`}>
   <p class="min-w-0 flex-1 font-medium text-[length:var(--toast-font)] leading-[var(--toast-line)]">{message}</p>
   {#if action}
-    <Button variant="ghost" {size} onClick={action.onClick} className="shrink-0 px-2.5 py-1.5 font-semibold">
+    <Button
+      variant="ghost"
+      {size}
+      onClick={action.onClick}
+      className="shrink-0 px-[var(--toast-action-pad-x)] py-[var(--toast-action-pad-y)] font-semibold">
       {action.label}
     </Button>
   {/if}

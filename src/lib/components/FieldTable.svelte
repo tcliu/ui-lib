@@ -113,6 +113,11 @@
 
   const i18n = getI18nContext()
 
+  // The props table's row geometry follows the DataTable metrics it renders
+  // into: the cell's 12/8px padding and the row's 8px gap at `md`. Reading them
+  // here keeps the absolute area editor's insets in step with the cells.
+  const fieldMetrics = $derived(dimensionMetrics(size, { cellPadX: 0.75, cellPadY: 0.5, gap: 0.5 }))
+
   // Header labels: each falls back to its English default when unset.
   const labels = $derived({
     prop: headers?.prop ?? i18n.t('showcase.prop'),
@@ -170,7 +175,7 @@
   // the text row height) rather than assumed to be the slot, so a row-height
   // retune carries the inset with it instead of leaving the area over the glyph.
   function areaRightInset(): number {
-    return 12 + 8 + iconOnlyBoxPx(size)
+    return fieldMetrics.cellPadX + fieldMetrics.gap + iconOnlyBoxPx(size)
   }
 
   // Shift applied to a number row's eye while its outside clear slot is empty:
@@ -200,7 +205,7 @@
   // and `resize-none` replaces the default `resize-y`: dragging a
   // cell-filling area would desync it from the row.
   const AREA_FILL_CLASS =
-    `absolute bottom-2 left-0 top-2 max-w-[calc(100%-var(--area-right,12px))] ` +
+    `absolute bottom-[var(--ftb-cell-pad-y)] left-0 top-[var(--ftb-cell-pad-y)] max-w-[calc(100%-var(--area-right))] ` +
     `${INPUT_CHROME} resize-none ${INPUT_METRIC_CLASS}`
 
   // Column shares of the table width. Both split tables (fixed header band
@@ -319,7 +324,9 @@
     rows. The in-flow spacer holds the two-row floor (and the row width
     beside the eye), so short rows keep today's height and the eye never
     spills into the next column. -->
-  <div class="flex items-start gap-2" style={field.toggle ? `--area-right:${areaRightInset()}px` : undefined}>
+  <div
+    class="flex items-start gap-[var(--ftb-gap)]"
+    style={`--ftb-cell-pad-y:${fieldMetrics.cellPadY}px;--ftb-gap:${fieldMetrics.gap}px;--area-right:${field.toggle ? areaRightInset() : fieldMetrics.cellPadX}px`}>
     <div aria-hidden="true" class="min-w-0 flex-1" style="min-height:{areaFloor()}px"></div>
     <TextArea
       value={field.value ?? ''}
@@ -408,7 +415,7 @@
     {#if field.editor === 'textarea' || isLongText(field)}
       {@render textAreaEditor(field)}
     {:else if field.toggle}
-      <div class="flex items-center gap-2">
+      <div class="flex items-center" style={`gap:${fieldMetrics.gap}px`}>
         {@render textEditor(field)}
         {@render applyEye(field)}
       </div>
@@ -423,7 +430,7 @@
         over it with a `transform` — paint-only, so the layout (and the input
         width) never moves — sitting against the input instead of hanging at
         the cell edge; while a clear button shows, the eye stays after it. -->
-      <div class="flex items-center gap-2">
+      <div class="flex items-center" style={`gap:${fieldMetrics.gap}px`}>
         <div class="min-w-0 flex-1">
           {@render numberEditor(field)}
         </div>
@@ -436,7 +443,7 @@
     {/if}
   {:else if field.editor === 'enum' || field.editor === 'size'}
     {#if field.toggle}
-      <div class="flex items-center gap-2">
+      <div class="flex items-center" style={`gap:${fieldMetrics.gap}px`}>
         {@render enumEditor(field)}
         {@render applyEye(field)}
       </div>
@@ -445,7 +452,7 @@
     {/if}
   {:else if field.editor === 'boolean'}
     {#if field.toggle}
-      <div class="flex items-center gap-2">
+      <div class="flex items-center" style={`gap:${fieldMetrics.gap}px`}>
         {@render checkboxEditor(field)}
         {@render applyEye(field)}
       </div>
@@ -453,7 +460,7 @@
       {@render checkboxEditor(field)}
     {/if}
   {:else if field.editor === 'options-json' || field.editor === 'snippet'}
-    <div class="flex items-center gap-2">
+    <div class="flex items-center" style={`gap:${fieldMetrics.gap}px`}>
       <Button
         variant="ghost"
         size={size}

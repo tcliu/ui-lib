@@ -33,4 +33,4 @@ export const CHIP_PANEL_BASE =
 
 // The tag-suggestion panel keeps one fixed, comfortable width; the dropdown
 // menu panel instead tracks its trigger/content (see `ChipDropdown`).
-export const DEFAULT_CHIP_PANEL_CLASS = `${CHIP_PANEL_BASE} w-64 overflow-y-auto p-1`
+export const DEFAULT_CHIP_PANEL_CLASS = `${CHIP_PANEL_BASE} w-64 overflow-y-auto p-[var(--tag-panel-pad,0.25rem)]`

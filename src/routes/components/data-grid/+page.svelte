@@ -120,7 +120,7 @@
     }),
     { name: 'maxColumns', type: 'number?', defaultValue: '—', note: 'Locks the column count (e.g. key/value grids).', editor: 'number', clearable: true, ...eye(pg.maxColumns), onChange: value => stage(pg.maxColumns, value), toggle: eyeToggle(pg.maxColumns), sync: { kind: 'number', pattern: /^\d+$/ } },
     boolField({ name: 'showHeaders', defaultValue: 'true', note: 'Treats the first row as a header (bindable).', ...eyeFlag(pg.showHeaders) }),
-    sizeField({ note: 'Toolbar scale; numbers are icon-scale pixels interpolated between the steps.', ...eye(pg.size) }),
+    sizeField({ note: 'Cell text, padding, and the grid’s own row-handle, label-row, and column geometry scale with the toolbar chrome; numbers are icon-scale pixels.', ...eye(pg.size) }),
     textField({ name: 'storageKey', type: 'string?', defaultValue: '—', note: 'Persists resized widths under this localStorage key.', clearable: true, ...eye(pg.storageKey) }),
     textField({ name: 'storagePrefix', type: 'string?', defaultValue: '—', note: 'App-owned localStorage prefix for the persisted widths; the package prefix stays the read fallback.', clearable: true, ...eye(pg.storagePrefix) }),
     jsonField({

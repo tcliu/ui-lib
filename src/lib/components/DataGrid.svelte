@@ -19,6 +19,7 @@
   import { createAutoScroll } from './use-grid-autoscroll.svelte'
   import { columnLetter } from './grid-utils'
   import { createGridColumns } from './use-grid-columns.svelte'
+  import { dimensionMetrics, sizeVarStyle } from './size-metrics'
   import { createTableScrollSync } from './use-table-scroll-sync.svelte'
   import { createGridCellRefs } from './grid-cell-refs'
   import { createGridEditor } from './use-grid-editor.svelte'
@@ -174,14 +175,50 @@
   // data column is bounded by two splitters: dragging the splitter between
   // columns ci and ci+1 re-partitions those two adjacent columns, and the
   // splitter after the last column moves the table's right edge.
+
+  // Cell text, in-cell padding, and the grid's own geometry ride the shared
+  // size axis. `md` reproduces the original `text-sm` cells with `px-2 py-1`
+  // padding, the 12px selector text, and the 36/24/128px row-handle, label-row,
+  // and minimum-column boxes.
+  const GRID_RATIOS = {
+    font: 0.875,
+    line: 1.25,
+    padX: 0.5,
+    padY: 0.25,
+    selectorFont: 0.75,
+    selectorPadX: 0.375,
+    rowNumberW: 2.25,
+    labelRowH: 1.5,
+    minCol: 8,
+    columnFloor: 3.75,
+    labelGap: 0.375,
+    // The grid's own shell: 8px padding and gap, a 6px frame radius, the 4px
+    // sort-stack gap and 4px action radius, the 6px resize rail, and the 12px
+    // empty-state gap at `md`.
+    shellGap: 0.5,
+    shellPad: 0.5,
+    rootRadius: 0.375,
+    sortGap: 0.25,
+    actionRadius: 0.25,
+    resizeW: 0.375,
+    emptyGap: 0.75,
+  }
+  const gridMetrics = $derived(dimensionMetrics(size, GRID_RATIOS))
+  const gridStyle = $derived(sizeVarStyle('grid', gridMetrics))
+
   const columns = createGridColumns({
     getColumnCount: () => model.columnCount,
     getContainer: () => gridContainer,
     getViewport: () => rootEl,
-    getColumnCellWidth: (ci: number) => cellRefs.colSelector(ci)?.offsetWidth ?? 128,
+    getColumnCellWidth: (ci: number) => cellRefs.colSelector(ci)?.offsetWidth ?? gridMetrics.minCol,
     getInitialColumnWidths: () => initialColumnWidths,
     getStorageKey: () => storageKey,
     getStoragePrefix: () => storagePrefix,
+    getMetrics: () => ({
+      rowNumber: gridMetrics.rowNumberW,
+      minColumn: gridMetrics.columnFloor,
+      defaultColumn: gridMetrics.minCol,
+    }),
   })
 
   createTableScrollSync({
@@ -228,7 +265,8 @@
 <div
   data-testid="data-grid"
   onkeydown={undoRedo.handleHistoryKeydown}
-  class="flex h-full flex-col gap-2 bg-slate-950 p-2 text-slate-200">
+  class="flex h-full flex-col gap-[var(--grid-shell-gap)] bg-slate-950 p-[var(--grid-shell-pad)] text-slate-200"
+  style={gridStyle}>
   <GridToolbar
     {size}
     {model}
@@ -243,20 +281,20 @@
     onUndo={undoRedo.undo}
     onRedo={undoRedo.redo} />
 
-  <div class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md" bind:this={rootEl}>
+  <div class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[var(--grid-root-radius)]" bind:this={rootEl}>
     <div class="flex-none overflow-hidden" bind:this={headerWrapper}>
       <table
         role="grid"
         aria-label={i18n.t('grid.spreadsheet')}
         aria-rowcount={model.rowCount + 1}
         aria-colcount={model.columnCount}
-        class="border-separate border-spacing-0 border-t border-l border-slate-800 text-sm"
+        class="border-separate border-spacing-0 border-t border-l border-slate-800 text-[length:var(--grid-font)] leading-[var(--grid-line)]"
         style={columns.renderedColumnWidths.length > 0
           ? `table-layout:fixed;width:${columns.totalWidth}px;`
           : 'width:100%;'}>
         {#if columns.renderedColumnWidths.length > 0}
           <colgroup>
-            <col style="width:2.25rem;" />
+            <col style="width:{gridMetrics.rowNumberW}px;" />
             {#each Array.from({ length: model.columnCount }) as _, ci}
               <col style="width:{columns.renderedColumnWidths[ci]}px;" />
             {/each}
@@ -268,8 +306,8 @@
               <th
                 role="columnheader"
                 aria-label={i18n.t('grid.selectAll')}
-                class="sticky top-0 left-0 z-30 w-9 border-r border-b border-r-slate-500 border-b-slate-600 bg-slate-900 p-0 text-center font-normal"
-                style="min-width:2.25rem;max-width:2.25rem;{selectAllBorderStyle(sel.isCellSelected(0, 0))}"
+                class="sticky top-0 left-0 z-30 w-[var(--grid-row-number-w)] border-r border-b border-r-slate-500 border-b-slate-600 bg-slate-900 p-0 text-center font-normal"
+                style="min-width:{gridMetrics.rowNumberW}px;max-width:{gridMetrics.rowNumberW}px;{selectAllBorderStyle(sel.isCellSelected(0, 0))}"
                 data-select-all
                 tabindex="-1"
                 onmousedown={sel.handleSelectAllMousedown}
@@ -295,15 +333,15 @@
                   onmousedown={event => sel.handleColumnSelectorMousedown(event, ci)}
                   onmouseenter={() => sel.handleColumnSelectorMouseOver(ci)}
                   onkeydown={event => sel.handleColumnSelectorKeydown(event, ci)}>
-                  <span class="flex w-full items-center justify-center gap-1.5 text-center">
+                  <span class="flex w-full items-center justify-center gap-[var(--grid-label-gap)] text-center">
                     <span>{columnLabels?.[ci] ?? columnLetter(ci)}</span>
                     <span
-                      class="flex flex-col gap-1 text-slate-400 transition-opacity {isSortActive
+                      class="flex flex-col gap-[var(--grid-sort-gap)] text-slate-400 transition-opacity {isSortActive
                         ? 'opacity-100'
                         : '[@media(hover:hover)]:opacity-0'} group-hover:opacity-100 focus-within:opacity-100">
                       <button
                         type="button"
-                        class="flex rounded-sm leading-none transition-colors outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 {isSortAsc
+                        class="flex rounded-[var(--grid-action-radius)] leading-none transition-colors outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 {isSortAsc
                           ? 'text-cyan-400'
                           : 'hover:text-cyan-300 focus-visible:text-cyan-300'}"
                         aria-label={i18n.t('grid.sortAsc', { name: columnLabels?.[ci] ?? columnLetter(ci) })}
@@ -316,7 +354,7 @@
                       </button>
                       <button
                         type="button"
-                        class="flex rounded-sm leading-none transition-colors outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 {isSortDesc
+                        class="flex rounded-[var(--grid-action-radius)] leading-none transition-colors outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 {isSortDesc
                           ? 'text-cyan-400'
                           : 'hover:text-cyan-300 focus-visible:text-cyan-300'}"
                         aria-label={i18n.t('grid.sortDesc', { name: columnLabels?.[ci] ?? columnLetter(ci) })}
@@ -330,7 +368,7 @@
                   {#if editable}
                     <button
                       type="button"
-                      class="absolute top-0 right-0 z-10 h-full w-1.5 cursor-col-resize border-0 bg-transparent p-0 outline-none hover:bg-cyan-500/40 focus-visible:bg-cyan-500/40 {ci <
+                      class="absolute top-0 right-0 z-10 h-full w-[var(--grid-resize-w)] cursor-col-resize border-0 bg-transparent p-0 outline-none hover:bg-cyan-500/40 focus-visible:bg-cyan-500/40 {ci <
                       model.columnCount - 1
                         ? 'translate-x-1/2'
                         : ''}"
@@ -342,11 +380,11 @@
               {/each}
             </tr>
             {#if showHeaders && model.rowCount > 0}
-              <tr aria-rowindex="2" class="sticky top-6 z-20 bg-slate-900">
+              <tr aria-rowindex="2" class="sticky top-[var(--grid-label-row-h)] z-20 bg-slate-900">
                 <th
                   role="columnheader"
-                  class="sticky top-6 left-0 z-30 w-9 border-r border-b border-r-slate-500 border-b-slate-600 bg-slate-900 p-0 text-center font-normal"
-                  style="min-width:2.25rem;max-width:2.25rem;{rowNumberBorderStyle(sel.isCellSelected(0, 0))}"></th>
+                  class="sticky top-[var(--grid-label-row-h)] left-0 z-30 w-[var(--grid-row-number-w)] border-r border-b border-r-slate-500 border-b-slate-600 bg-slate-900 p-0 text-center font-normal"
+                  style="min-width:{gridMetrics.rowNumberW}px;max-width:{gridMetrics.rowNumberW}px;{rowNumberBorderStyle(sel.isCellSelected(0, 0))}"></th>
                 {#each model.rows[0].cells as cell, ci (cell.id)}
                   <th
                     use:cellRefs.cellBoxRef={{ ri: 0, ci }}
@@ -354,7 +392,7 @@
                     aria-colindex={ci + 1}
                     aria-selected={sel.isCellSelected(0, ci)}
                     class={gridCellClass(
-                      'min-w-32 border-r border-b border-r-slate-800 border-b-slate-600 p-0 font-semibold outline-none',
+                      'min-w-[var(--grid-min-col)] border-r border-b border-r-slate-800 border-b-slate-600 p-0 font-semibold outline-none',
                       sel.isCellSelected(0, ci),
                     )}
                     style={cellStyles(
@@ -378,7 +416,7 @@
                       data-col={ci}
                       rows={editor.isCellEditing(0, ci) && cell.value.includes('\n') ? 2 : 1}
                       wrap="off"
-                      class="w-full resize-none overflow-hidden border-0 bg-transparent px-2 py-1 text-slate-200 outline-none focus:bg-slate-800"
+                      class="w-full resize-none overflow-hidden border-0 bg-transparent px-[var(--grid-pad-x)] py-[var(--grid-pad-y)] text-slate-200 outline-none focus:bg-slate-800"
                       value={cell.value}
                       readonly={!editable}
                       oninput={event => editable && model.setValue(0, ci, event.currentTarget.value)}
@@ -402,13 +440,13 @@
         aria-label={i18n.t('grid.spreadsheet')}
         aria-rowcount={model.rowCount + 1}
         aria-colcount={model.columnCount}
-        class="border-separate border-spacing-0 border-l border-slate-800 text-sm"
+        class="border-separate border-spacing-0 border-l border-slate-800 text-[length:var(--grid-font)] leading-[var(--grid-line)]"
         style={columns.renderedColumnWidths.length > 0
           ? `table-layout:fixed;width:${columns.totalWidth}px;`
           : 'width:100%;'}>
         {#if columns.renderedColumnWidths.length > 0}
           <colgroup>
-            <col style="width:2.25rem;" />
+            <col style="width:{gridMetrics.rowNumberW}px;" />
             {#each Array.from({ length: model.columnCount }) as _, ci}
               <col style="width:{columns.renderedColumnWidths[ci]}px;" />
             {/each}
@@ -431,7 +469,7 @@
                   onmousedown={event => sel.handleRowSelectorMousedown(event, actualRi)}
                   onmouseenter={() => sel.handleRowSelectorMouseOver(actualRi)}
                   onkeydown={event => sel.handleRowSelectorKeydown(event, actualRi)}>
-                  <span class="px-1.5 text-xs text-slate-500">{ri + 1}</span>
+                  <span class="px-[var(--grid-selector-pad-x)] text-[length:var(--grid-selector-font)] text-slate-500">{ri + 1}</span>
                 </td>
                 {#each row.cells as cell, ci (cell.id)}
                   {@const lineCount = cell.value.split('\n').length}
@@ -443,7 +481,7 @@
                     aria-colindex={ci + 1}
                     aria-selected={sel.isCellSelected(actualRi, ci)}
                     class={gridCellClass(
-                      'min-w-32 border-r border-b border-slate-800 p-0 outline-none',
+                      'min-w-[var(--grid-min-col)] border-r border-b border-slate-800 p-0 outline-none',
                       sel.isCellSelected(actualRi, ci),
                     )}
                     style={cellStyles(
@@ -467,7 +505,7 @@
                       data-col={ci}
                       rows={expanded ? editorLines : 1}
                       wrap="off"
-                      class="w-full resize-none overflow-hidden border-0 bg-transparent px-2 py-1 text-slate-200 outline-none focus:bg-slate-800"
+                      class="w-full resize-none overflow-hidden border-0 bg-transparent px-[var(--grid-pad-x)] py-[var(--grid-pad-y)] text-slate-200 outline-none focus:bg-slate-800"
                       style={expanded
                         ? EDITOR_OVERLAY_STYLE + (lineCount > EDITOR_MAX_LINES ? EDITOR_OVERLAY_SCROLL_STYLE : '')
                         : ''}
@@ -486,7 +524,7 @@
       </table>
 
       {#if model.rowCount === 0}
-        <div class="flex h-full flex-col items-center justify-center gap-3 text-sm text-slate-400">
+        <div class="flex h-full flex-col items-center justify-center gap-[var(--grid-empty-gap)] text-[length:var(--grid-font)] text-slate-400">
           <span>{i18n.t('grid.noContent')}</span>
           <Button variant="secondary" {size} onClick={() => sel.addRow()} disabled={!editable}>{i18n.t('grid.addRow')}</Button>
         </div>

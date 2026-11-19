@@ -7,6 +7,8 @@
   import { search, searchKeymap } from '@codemirror/search'
   import { EditorSelection, EditorState, Compartment, type Extension } from '@codemirror/state'
   import { EditorView, drawSelection, keymap, lineNumbers } from '@codemirror/view'
+  import type { SizeInput } from '#lib/size-scale.js'
+  import { editorMetrics } from './code-editor-styles'
   import { maxContentLengthFilter } from './code-editor-max-content'
   import {
     colorThemeExtensions,
@@ -25,6 +27,11 @@
     docType?: string
     selectionEnabled?: boolean
     theme?: string
+    // Editor text scale on the shared size axis: the font, the content padding,
+    // and the playback-mark radius. A change reconfigures the colour theme
+    // compartment, never the view, so the caret, scroll position, and selection
+    // survive it.
+    size?: SizeInput
     containerClass?: string
     editorClass?: string
     editorAriaLabel?: string
@@ -43,6 +50,7 @@
     docType = 'text',
     selectionEnabled = true,
     theme = 'dark',
+    size = 'md',
     containerClass = CODE_EDITOR_CONTAINER_CLASS,
     editorClass = CODE_EDITOR_CLASS,
     editorAriaLabel = 'Content',
@@ -60,6 +68,7 @@
   let lastEditable = false
   let lastSelectionEnabled = true
   let lastTheme = 'dark'
+  let lastSize: SizeInput = 'md'
   const editableCompartment = new Compartment()
   const colorThemeCompartment = new Compartment()
   const playbackHighlightCompartment = new Compartment()
@@ -68,7 +77,7 @@
 
   function createEditorExtensions(languageExtensions: Extension[] = []): Extension[] {
     return [
-      colorThemeCompartment.of(colorThemeExtensions(theme)),
+      colorThemeCompartment.of(colorThemeExtensions(theme, editorMetrics(size))),
       editableCompartment.of(EditorView.editable.of(editable)),
       selectionGuardCompartment.of(selectionGuardExtension(selectionEnabled)),
       selectionAttrCompartment.of(selectionAttrExtension(selectionEnabled)),
@@ -167,6 +176,7 @@
         lastEditable = editable
         lastSelectionEnabled = selectionEnabled
         lastTheme = theme
+        lastSize = size
         if (autoFocus) {
           editorView.focus()
           onAutoFocused?.()
@@ -207,10 +217,12 @@
 
   $effect(() => {
     void theme
-    if (!editorView || theme === lastTheme) return
+    void size
+    if (!editorView || (theme === lastTheme && size === lastSize)) return
     lastTheme = theme
+    lastSize = size
     editorView.dispatch({
-      effects: colorThemeCompartment.reconfigure(colorThemeExtensions(theme)),
+      effects: colorThemeCompartment.reconfigure(colorThemeExtensions(theme, editorMetrics(size))),
     })
   })
 
@@ -293,6 +305,6 @@
   })
 </script>
 
-<div class={containerClass}>
+<div class={containerClass} style={`--editor-frame-radius:${editorMetrics(size).frameRadius}px`}>
   <div bind:this={editorContainerRef} role="textbox" aria-label={editorAriaLabel} class={editorClass}></div>
 </div>

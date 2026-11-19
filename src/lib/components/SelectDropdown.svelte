@@ -147,6 +147,7 @@
         font: resolvedRatios.font,
         padX: resolvedRatios.padX,
         padY: resolvedRatios.padY,
+        radius: resolvedRatios.radius,
       }),
     ),
   )
@@ -157,6 +158,10 @@
       chevronTextGap: resolvedRatios.chevronTextGap,
       gap: resolvedRatios.gap,
       icon: resolvedRatios.icon,
+      optionGap: resolvedRatios.optionGap,
+      optionRadius: resolvedRatios.optionRadius,
+      panelPad: resolvedRatios.panelPad,
+      panelRadius: resolvedRatios.panelRadius,
     }),
   )
   const style = $derived(
@@ -686,6 +691,7 @@
       id={panelId}
       {ariaLabel}
       panelClass={`fixed top-0 left-0 z-40 will-change-transform ${resolvedPanelClass}`}
+      panelStyle={style}
       optionRowClass={resolvedOptionRowClass}
       optionRowStyle={resolvedOptionRowStyle}
       options={filteredOptions}

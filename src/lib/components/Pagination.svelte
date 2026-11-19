@@ -77,6 +77,8 @@
     icon: 0.75,
     gap: 0.375,
     pageSizeGap: 0.4,
+    // The page block's own corner, the same 6px step as a text field at `md`.
+    radius: SELECT_RATIOS.radius,
   })
 
   const pgMetrics = $derived(dimensionMetrics(size, PG_RATIOS))
@@ -101,14 +103,14 @@
   )
 
   const iconButtonClass =
-    'relative inline-flex h-[var(--pg-btn)] w-[var(--pg-btn)] items-center justify-center rounded-md border border-slate-700 bg-slate-950 font-semibold text-slate-100 outline-none transition hover:border-cyan-500 hover:text-cyan-300 focus-visible:border-cyan-500 focus-visible:text-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-500 disabled:cursor-not-allowed disabled:opacity-40'
+    'relative inline-flex h-[var(--pg-btn)] w-[var(--pg-btn)] items-center justify-center rounded-[var(--pg-radius)] border border-slate-700 bg-slate-950 font-semibold text-slate-100 outline-none transition hover:border-cyan-500 hover:text-cyan-300 focus-visible:border-cyan-500 focus-visible:text-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-500 disabled:cursor-not-allowed disabled:opacity-40'
 
   // Sizing-only fragment shared by the page buttons and the ellipsis
   // placeholders (which carry no border, surface, or hover chrome).
   const pageButtonBox = 'h-[var(--pg-btn)] min-w-[var(--pg-btn)] px-[var(--pg-pad-x)]'
 
   const pageButtonClass =
-    `relative inline-flex ${pageButtonBox} items-center justify-center rounded-md border border-slate-700 bg-slate-950 font-semibold text-slate-100 outline-none transition hover:border-cyan-500 hover:text-cyan-300 focus-visible:border-cyan-500 focus-visible:text-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-500 disabled:cursor-not-allowed disabled:opacity-40`
+    `relative inline-flex ${pageButtonBox} items-center justify-center rounded-[var(--pg-radius)] border border-slate-700 bg-slate-950 font-semibold text-slate-100 outline-none transition hover:border-cyan-500 hover:text-cyan-300 focus-visible:border-cyan-500 focus-visible:text-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-500 disabled:cursor-not-allowed disabled:opacity-40`
 
   const pageNumbers = $derived.by(() => {
     if (totalPages <= 7) {
@@ -163,7 +165,7 @@
   // fixed width is the fallback for a browser without `field-sizing`: it keeps
   // the square and lets an over-long entry scroll inside it.
   const jumpInputClass =
-    'w-[var(--pg-btn)] min-w-[var(--pg-btn)] [@supports(field-sizing:content)]:w-auto [@supports(field-sizing:content)]:field-sizing-content h-[var(--pg-btn)] rounded-md border border-cyan-500 bg-slate-950 px-[var(--pg-pad-x)] text-center text-[length:var(--pg-font)] font-semibold text-cyan-300 outline-none focus-visible:border-cyan-500 focus-visible:ring-2 focus-visible:ring-cyan-500'
+    'w-[var(--pg-btn)] min-w-[var(--pg-btn)] [@supports(field-sizing:content)]:w-auto [@supports(field-sizing:content)]:field-sizing-content h-[var(--pg-btn)] rounded-[var(--pg-radius)] border border-cyan-500 bg-slate-950 px-[var(--pg-pad-x)] text-center text-[length:var(--pg-font)] font-semibold text-cyan-300 outline-none focus-visible:border-cyan-500 focus-visible:ring-2 focus-visible:ring-cyan-500'
 
   function goToPage(page: number) {
     if (page < 1 || page > totalPages || page === currentPage) {

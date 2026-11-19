@@ -4,6 +4,7 @@
   import CopyIcon from '#lib/icons/CopyIcon.svelte'
   import { getI18nContext } from '#lib/i18n/store.svelte.js'
   import { copyToClipboard } from './copy-to-clipboard'
+  import { dimensionMetrics, sizeVarStyle } from './size-metrics'
   import type { SizeInput } from '#lib/size-scale.js'
 
   const i18n = getI18nContext()
@@ -31,6 +32,12 @@
     children,
     size = 'md',
   }: Props = $props()
+
+  // The copy affordance's own spacing rides the size axis with its button: the
+  // 4px text→button gap and the 6px top-right offset at `md`.
+  const COPYABLE_RATIOS = { gap: 0.25, offset: 0.375 }
+  const copyableMetrics = $derived(dimensionMetrics(size, COPYABLE_RATIOS))
+  const copyableStyle = $derived(sizeVarStyle('copyable', copyableMetrics))
 
   // Derived (not read inline) so a locale switch re-resolves the labels.
   const resolvedAriaLabel = $derived(ariaLabel ?? i18n.t('copy.toClipboard'))
@@ -76,7 +83,7 @@
 {#if copyPosition === 'top-right'}
   <!-- Top-right mode: the copy button sits to the right of the wrapped content
        on the same row as its first line. -->
-  <div class={`group flex items-start gap-1 ${containerClass}`}>
+  <div class={`group flex items-start gap-[var(--copyable-gap)] ${containerClass}`} style={copyableStyle}>
     <div class="min-w-0 flex-1">
       {#if children}
         {@render children()}
@@ -85,13 +92,13 @@
       {/if}
     </div>
     {#if hasCopyText()}
-      <span class="mt-1.5 mr-1.5">
+      <span class="mt-[var(--copyable-offset)] mr-[var(--copyable-offset)]">
         {@render copyButton()}
       </span>
     {/if}
   </div>
 {:else}
-  <div class={`group flex min-w-0 flex-1 items-center gap-1 ${containerClass}`}>
+  <div class={`group flex min-w-0 flex-1 items-center gap-[var(--copyable-gap)] ${containerClass}`} style={copyableStyle}>
     <span class={`${textClass} min-w-0 truncate`}>
       {#if children}
         {@render children()}

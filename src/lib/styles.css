@@ -310,8 +310,16 @@ button:disabled {
   cursor: not-allowed;
 }
 
+/* The hint box's metrics ride the shared size axis as custom properties set by
+   `Tooltip`; the fallbacks keep the box readable for a consumer that applies
+   the class without the component. They are the original `md` step: a 12px
+   font on a 16px line, 8/4px padding, and a 4px radius. */
 .st-tooltip {
-  @apply pointer-events-none fixed z-40 whitespace-nowrap rounded border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-200 shadow-lg transition-opacity duration-150 motion-reduce:transition-none;
+  @apply pointer-events-none fixed z-40 whitespace-nowrap border border-slate-700 bg-slate-900 text-slate-200 shadow-lg transition-opacity duration-150 motion-reduce:transition-none;
+  font-size: var(--tip-font, 0.75rem);
+  line-height: var(--tip-line, 1rem);
+  padding: var(--tip-pad-y, 0.25rem) var(--tip-pad-x, 0.5rem);
+  border-radius: var(--tip-radius, 0.25rem);
   opacity: 0;
 }
 

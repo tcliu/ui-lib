@@ -385,7 +385,7 @@
     boolField({ name: 'selectable', defaultValue: 'false', note: 'Renders the checkbox column.', ...eyeFlag(pg.selectable) }),
     boolField({ name: 'showPagination', defaultValue: 'pagination configured', note: 'Renders the pagination footer. Unset, the footer renders only when `pagination` supplies its data and onPageChange.', ...eyeFlag(pg.showPagination) }),
     boolField({ name: 'showSearch', defaultValue: 'true', note: 'Renders the search field.', ...eyeFlag(pg.showSearch) }),
-    sizeField({ note: 'Search, chooser, selection, and pagination scale; numbers are icon-scale pixels interpolated between the steps.', ...eye(pg.size) }),
+    sizeField({ note: 'Cell text, padding, selection count, and the table’s own column floors scale with the search, chooser, selection, and pagination chrome; numbers are icon-scale pixels.', ...eye(pg.size) }),
     boolField({ name: 'someSelected', defaultValue: '—', note: 'Header checkbox indeterminate state. Interaction override; unset follows the selection.', ...eyeFlag(pg.someSelected) }),
     {
       name: 'sortDirection',

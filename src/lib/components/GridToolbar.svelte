@@ -9,6 +9,7 @@
   import UndoIcon from '#lib/icons/UndoIcon.svelte'
   import RedoIcon from '#lib/icons/RedoIcon.svelte'
   import { getI18nContext } from '#lib/i18n/store.svelte.js'
+  import { dimensionMetrics, sizeVarStyle } from './size-metrics'
   const i18n = getI18nContext()
 
   interface Props {
@@ -41,13 +42,19 @@
     onRedo,
   }: Props = $props()
 
+  // The toolbar's own layout rides the same axis as its buttons: the 12px
+  // outer gap, the 4px button-group gap, and the 12px selection count at `md`.
+  const TOOLBAR_RATIOS = { outerGap: 0.75, groupGap: 0.25, countFont: 0.75 }
+  const toolbarMetrics = $derived(dimensionMetrics(size, TOOLBAR_RATIOS))
+  const toolbarStyle = $derived(sizeVarStyle('gtb', toolbarMetrics))
+
   function mutationDisabled(disabled = false): boolean {
     return !editable || disabled
   }
 </script>
 
-<div class="flex flex-none flex-wrap items-center justify-between gap-3">
-  <div class="flex flex-wrap items-center gap-1">
+<div class="flex flex-none flex-wrap items-center justify-between gap-[var(--gtb-outer-gap)]" style={toolbarStyle}>
+  <div class="flex flex-wrap items-center gap-[var(--gtb-group-gap)]">
     {#if !hideHeaderToggle}
       <Button
         {size}
@@ -156,6 +163,6 @@
       {/snippet}
     </Button>
   </div>
-  <span class="text-xs text-slate-400"
+  <span class="text-[length:var(--gtb-count-font)] text-slate-400"
     >{i18n.t('grid.rowColCount', { rows: model.rowCount, columns: model.columnCount })}</span>
 </div>

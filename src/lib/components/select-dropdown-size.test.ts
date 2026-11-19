@@ -15,6 +15,11 @@ describe('SelectDropdown size metrics', () => {
       minW: 98,
       gap: 5.25,
       icon: 14,
+      radius: 14 * INPUT_RATIOS.radius,
+      optionGap: 7,
+      optionRadius: 5.25,
+      panelPad: 3.5,
+      panelRadius: 7,
     })
     for (const px of [12, 14, 16, 18, 20]) {
       const m = dimensionMetrics(px, SELECT_RATIOS)
@@ -26,6 +31,11 @@ describe('SelectDropdown size metrics', () => {
       expect(m.minW / px).toBeCloseTo(7)
       expect(m.gap / px).toBeCloseTo(0.375)
       expect(m.icon / px).toBeCloseTo(1)
+      expect(m.radius / px).toBeCloseTo(INPUT_RATIOS.radius)
+      expect(m.optionGap / px).toBeCloseTo(0.5)
+      expect(m.optionRadius / px).toBeCloseTo(0.375)
+      expect(m.panelPad / px).toBeCloseTo(0.25)
+      expect(m.panelRadius / px).toBeCloseTo(0.5)
     }
   })
 

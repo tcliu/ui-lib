@@ -115,6 +115,6 @@
     </span>
   {/if}
   {#if tooltip}
-    <Tooltip>{tooltip}</Tooltip>
+    <Tooltip {size}>{tooltip}</Tooltip>
   {/if}
 </span>

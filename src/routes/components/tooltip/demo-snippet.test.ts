@@ -3,7 +3,7 @@ import { staged } from '#showcase/playground/staged.js'
 import { STYLED_CLASS, buildTooltipSnippet } from './demo-snippet'
 
 // The curated props this builder reads, all eyes off and no label.
-const IDLE = { label: staged(''), align: staged(''), className: staged('') }
+const IDLE = { label: staged(''), align: staged(''), className: staged(''), size: staged('') }
 
 describe('buildTooltipSnippet', () => {
   it('omits align and class while unset', () => {
@@ -32,6 +32,16 @@ describe('buildTooltipSnippet', () => {
   it('emits the styled class', () => {
     const source = buildTooltipSnippet({ ...IDLE, className: staged(STYLED_CLASS, true) })
     expect(source).toContain('className="border-cyan-500/40 text-cyan-200"')
+  })
+
+  it('emits a named size step and a pixel number', () => {
+    expect(buildTooltipSnippet({ ...IDLE, size: staged('lg', true) })).toContain(' size="lg"')
+    expect(buildTooltipSnippet({ ...IDLE, size: staged('22', true) })).toContain(' size={22}')
+  })
+
+  it('omits the size default and a size while its eye is off', () => {
+    expect(buildTooltipSnippet({ ...IDLE, size: staged('md', true) })).not.toContain('size=')
+    expect(buildTooltipSnippet({ ...IDLE, size: staged('lg') })).not.toContain('size=')
   })
 
   it('omits the staged class while its eye is off and emits it when on', () => {

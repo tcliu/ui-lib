@@ -29,6 +29,16 @@
     gap: 0.375,
     inputPadY: INPUT_PAD_Y,
     inputMinW: 0.75,
+    // The container's own frame plus the suggestion row's chrome: the 8px
+    // container radius, the 6px option radius, the option's 8px label→trailer
+    // gap, the chip's 2px remove padding and 8px dot, and the panel's 4px
+    // padding at `md`.
+    radius: 0.5,
+    optionGap: 0.5,
+    optionRadius: 0.375,
+    removePad: 0.125,
+    dot: 0.5,
+    panelPad: 0.25,
     ...CLEAR_RATIOS,
   }
   export type TagInputRatios = typeof TAG_INPUT_RATIOS
@@ -167,6 +177,12 @@
         gap: resolvedRatios.gap,
         inputPadY: resolvedRatios.inputPadY,
         inputMinW: resolvedRatios.inputMinW,
+        radius: resolvedRatios.radius,
+        optionGap: resolvedRatios.optionGap,
+        optionRadius: resolvedRatios.optionRadius,
+        removePad: resolvedRatios.removePad,
+        dot: resolvedRatios.dot,
+        panelPad: resolvedRatios.panelPad,
       }),
     ),
   )
@@ -435,7 +451,7 @@
     data-escape-capture={open ? '' : null}
     onfocusout={listbox.handleFocusOut}
     style={boxStyle}
-    class={`rounded-lg border border-slate-700 bg-slate-950 px-[var(--tag-pad-x)] py-[var(--tag-pad-y)] transition focus-within:border-cyan-500${insideField ? ' relative' : ''}`}>
+    class={`rounded-[var(--tag-radius)] border border-slate-700 bg-slate-950 px-[var(--tag-pad-x)] py-[var(--tag-pad-y)] transition focus-within:border-cyan-500${insideField ? ' relative' : ''}`}>
     <div class="flex flex-wrap items-center gap-[var(--tag-gap)]">
       {#each value as tag, index (tag.toLowerCase())}
         {#if chip}
@@ -450,7 +466,7 @@
             removeLabel={i18n.t('tagInput.remove', { name: tag })}
             onRemove={() => removeAt(index)}
             {disabled}
-            removeButtonClass="rounded-full p-0.5 opacity-60 transition-opacity outline-none hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-cyan-500 disabled:cursor-not-allowed disabled:opacity-40" />
+            removeButtonClass="rounded-full p-[var(--tag-remove-pad)] opacity-60 transition-opacity outline-none hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-cyan-500 disabled:cursor-not-allowed disabled:opacity-40" />
         {/if}
       {/each}
       <TextInput
@@ -521,7 +537,7 @@
 {#snippet panelLeading(tag: string)}
   {@const dotStyle = optionDotStyle?.(tag)}
   {#if dotStyle}
-    <span class="h-2 w-2 shrink-0 rounded-full" style={dotStyle}></span>
+    <span class="size-[var(--tag-dot)] shrink-0 rounded-full" style={dotStyle}></span>
   {/if}
 {/snippet}
 {#if open && suggestions.length > 0}
@@ -530,7 +546,8 @@
     id={listboxId}
     ariaLabel={i18n.t('tagInput.suggestions')}
     panelClass={DEFAULT_CHIP_PANEL_CLASS}
-    optionRowClass="flex w-full cursor-pointer items-center gap-2 rounded-md px-[var(--tag-pad-x)] py-[var(--tag-pad-y)] text-left text-[length:var(--tag-font)] leading-[var(--tag-line)] transition-none outline-none max-phone:min-h-11"
+    optionRowClass="flex w-full cursor-pointer items-center gap-[var(--tag-option-gap)] rounded-[var(--tag-option-radius)] px-[var(--tag-pad-x)] py-[var(--tag-pad-y)] text-left text-[length:var(--tag-font)] leading-[var(--tag-line)] transition-none outline-none max-phone:min-h-11"
+    panelStyle={style}
     optionRowStyle={style}
     options={suggestions}
     highlightFlags={listbox.highlight.flags}
