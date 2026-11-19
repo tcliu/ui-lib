@@ -122,6 +122,14 @@ summed across columns; a column with a tip shows it on hover. The whole plot
 scales with its `size`, and `height` overrides only the plot box when a fixed
 footprint is needed.
 
+Text surfaces share the same size step: a hint, a code editor, and a table's
+cells scale their text and spacing with the control they belong to, so raising a
+button, an editor, or a table raises the hint, the editor text, and the table's
+own column floors together instead of leaving one at the old scale. A control's
+shape follows too: its corners, internal gaps, and container padding are part of
+the same step, so a smaller control reads smaller rather than keeping a larger
+control's rounded frame and spacing.
+
 ## Theming
 
 The app supports ten themes; `dark` is the default palette (no `data-theme`

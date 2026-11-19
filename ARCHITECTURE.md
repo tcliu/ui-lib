@@ -441,10 +441,17 @@ of building a parallel control.
 - **Size metrics** — a sized component exposes one numeric size dimension;
   `xs`–`xl` are aliases of the shared `SIZE_PX` axis (`xs:12 … xl:20`). Every
   metric scales by a fixed ratio of that dimension (`metric = ratio ×
-  resolveSize(size)`); font is a ratio too — the text-like controls take the
+  resolveSize(size)`). The control's own chrome belongs to that set, not only
+  its text: corner radii, internal gaps, container padding, focus-slot insets,
+  and a table's or grid's own row-handle/column-box geometry all ride the axis,
+  so an `xs` control never keeps an `md` corner or gap. A literal length utility
+  left in a sized component fails `tools/check-size-literals.mjs` (see the size
+  literal gate). Font is a ratio too — the text-like controls take the
   shared `FONT_RATIO` (0.875: the input chrome, `SelectDropdown`, `DateInput`,
-  `TagInput`, `Pagination`, and the text-only components), while `Button`
-  keeps its compact `0.8125` label. `Button`'s line box is derived so its padded
+  `TagInput`, `Pagination`, `Tooltip`, the code editors, and the table cells,
+  while `Button` keeps its compact `0.8125` label. A table's `dense` step is its
+  own ratio set rather than a multiplier of the normal cell (see the DataTable
+  bullet). `Button`'s line box is derived so its padded
   box (`line + 2·padY`) equals the text field's row box
   (`INPUT_RATIOS.line + 2·INPUT_RATIOS.padY`), while its vertical padding stays
   at the original share, so the compact button still sits level beside a field.
@@ -698,7 +705,14 @@ of building a parallel control.
   `grid-selection-state.ts` holds the selection-state shape so the selector and
   keyboard composables can share it without importing the selection
   orchestrator; the toolbar is `GridToolbar` and the selection/presentation
-  classes live in `grid-styles.ts`. It implements the
+  classes live in `grid-styles.ts`. Its `size` covers the cells as well as the
+  toolbar: the root emits `--grid-*` metrics (font `0.875`, line `1.25`, cell
+  padding `0.5`/`0.25`, selector text `0.75`, selector padding `0.375`,
+  row-handle `2.25`, label row `1.5`, column box `8`, width-engine floor
+  `3.75`), and the three geometry sources that used to be literal — the
+  colgroup `2.25rem`, the selector classes, and `use-grid-columns`' constants —
+  all read the same set, so the header and body columns stay aligned at every
+  step. It implements the
   ARIA grid pattern: a `role="grid"` table whose
   `role="columnheader"`/`role="rowheader"`/`role="gridcell"` cells carry
   `tabindex="-1"` plus pointer and keyboard handlers, and the container owns the
@@ -741,7 +755,16 @@ of building a parallel control.
   from the last value it saw.
   `variant="docs"` swaps the viewer chrome for the static docs chrome.
   `bordered={false}` drops the viewer/split container chrome for borderless
-  embedding. `FieldTable` rides on `DataTable` to render `FieldConfig[]`
+  embedding. Its `size` also scales the cells: the root emits `--table-*`
+  metrics (font `0.875`, line `1.25`, padding `0.75`/`0.5`, selection-count
+  text `0.75`, selection column `2.5`, column floor `3.75`), the table elements
+  read the font and line, and the width engine takes those floors through
+  `getColumnFloors` so the selection `<col>` and the managed-width floor agree
+  with the rendered cells. `dense` is a second ratio set (`font 0.75`,
+  `padX 0.5`, `padY 0.25`) rather than a multiplier of the base — its
+  horizontal padding was never a uniform share of the normal cell's — and it
+  keeps the base line box, matching the literal `padding`/`font-size` it
+  replaces. `FieldTable` rides on `DataTable` to render `FieldConfig[]`
   props tables, so docs and viewer share one table. Its dialog-backed rows
   open an *action* dialog (not `FormDialog`): the editor's primary applies
   the content, so it stays enabled while the content is valid — confirming the
@@ -836,7 +859,14 @@ of building a parallel control.
   sits beside the anchor), so an inline trigger's own text and layout are never
   disturbed: placing `<Tooltip>` inside an element makes that element the
   trigger with no `trigger` ref, and the explicit `trigger` prop stays for
-  cases where the anchor sits elsewhere.
+  cases where the anchor sits elsewhere. Its `size` rides the shared axis: the
+  portalled span carries `--tip-*` metrics (font `0.75`, line `1`, padding
+  `0.5`/`0.25`, radius `0.25`), calibrated so `md` reproduces the original
+  `text-xs` box. The shipped `.st-tooltip` class reads those variables with those
+  same values as fallbacks, so a consumer applying the class without the
+  component is unchanged. A composite that owns a `size` forwards it to every
+  hint it renders (`Button`, `Chip`, `BarChart`, `StructureNode`, `DataTable`),
+  so a `lg` control never shows an `md` hint.
 - **Dialogs** — `ConfirmDialog` routes its dismiss affordances to `onCancel` when
   one is passed, and `confirmOnDismiss` makes Escape/overlay/close perform the
   confirm instead of cancelling. Dialog content portals to `document.body`
@@ -874,7 +904,15 @@ of building a parallel control.
   `time.*`, `grid.*`, `table.*`, `resizable.*`, and `appShell.*`.
 - **CodeEditor / LazyCodeEditor** — load language packs on demand through a
   `docType` lookup; the CodeMirror theme package needs `@babel/runtime` in any
-  app that vendors it.
+  app that vendors it. Its `size` rides the shared axis through `EDITOR_RATIOS`
+  (`font 0.875`, content padding `0.75`/`1`/`0.5`, playback-mark radius
+  `0.125`), resolved by `editorMetrics` and handed to
+  `colorThemeExtensions(theme, metrics)`; the value is a plain pixel length
+  because CodeMirror's theme takes lengths, not custom properties. A size change
+  reconfigures `colorThemeCompartment` instead of recreating the view, so the
+  caret, scroll position, and selection survive. `LazyCodeEditor` forwards the
+  same `size` and scales its loading placeholder's text, so the surface does not
+  jump when the real editor mounts.
 
 ### Sanctioned DOM access
 
@@ -1102,6 +1140,17 @@ directory, and a spec filed on the wrong side of the split. It reads the
 `#`-prefixed subpath imports from `package.json` (plus any tsconfig `paths`), so
 a new alias needs no second edit, and it resolves a `.js` specifier to the
 `.ts`/`.svelte.ts` source it compiles from.
+
+**Size literal gate.** `npm run check` also runs
+`tools/check-size-literals.mjs`: it scans every component that declares
+`size?: SizeInput` for length utilities that resolve to no `--*` metric var
+(`rounded-md`, `gap-2`, `px-3`, `text-xs`, `w-1.5`, …) in markup or in a class
+map. Structural layout (`min-w-0`, `top-0`, `w-full`), pill shapes
+(`rounded-full`), `var(--…)` references, and the file's allowlist are exempt;
+each allowlist entry carries a reason and must still appear, so the list cannot
+rot. The metric-ratio invariants only see the vars a component emits — this gate
+covers the other half, the classes that consume them, which is why a new literal
+cannot silently stay at the `md` step.
 
 ## End-to-end tests
 

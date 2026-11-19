@@ -84,7 +84,7 @@ Project-specific development conventions for the UI Library web app.
 - A keyed `localStorage` surface layers a generic store and a typed wrapper instead of hand-rolling prefix logic: `createPersistStore(prefixes)` owns the chain (first prefix writes, later ones are migrated read fallbacks, removal clears all) and the domain module (`useColumnWidthStorage`) owns parsing and appends its canonical prefix. The caller passes its own prefixes; no module-level `configure` call or global registry, so behavior never depends on startup order.
 - A module whose only per-app part is such a value becomes package-owned (its marker drops); a marker survives only for app content — dictionary bodies, project config data, a package entry — where no call site can supply it.
 - Shared components never traverse or manipulate the DOM; sanctioned exceptions and the permitted `svelte-ignore` suppressions are in `ARCHITECTURE.md`. Never suppress another `a11y_*` warning or `state_referenced_locally`.
-- Plain-text hints use the `tooltip` prop with the shared `Tooltip` component; a disabled `Button`'s tooltip rides its non-disabled wrapper (disabled triggers fire no events).
+- Plain-text hints use the `tooltip` prop with the shared `Tooltip` component; a disabled `Button`'s tooltip rides its non-disabled wrapper (disabled triggers fire no events). The hint box rides the shared size axis, a component that owns a `size` forwards it to every hint it renders, and `.st-tooltip` keeps today's values as variable fallbacks for a consumer using the class alone.
 - `npm run check` enforces shared parity; a change is complete only once siblings are re-ported or the app declares the fork and its reason in its own `shared-parity.json`. The gate also resolves each sibling's package imports back to canonical source, so renaming a shared module fails it until every consumer stops asking for the old path. Mechanism in `ARCHITECTURE.md`.
 - A module only the server runtime and the scripts use lives under `src/lib/server/`, which SvelteKit keeps out of the client bundle; the scripts import the same file, so the two runtimes cannot drift. Mechanism in `ARCHITECTURE.md`.
 - Keep shared scripts byte-identical: read per-app values from ungated app files, never hardcode an app name or path; project-owned data stays out of gated directories.
@@ -113,9 +113,14 @@ Project-specific development conventions for the UI Library web app.
   `trailer` (outside the trigger); its `trailing` slot belongs to the built-in
   chevron, so a caller never supplies a competing trailing adornment.
 - Spreadsheet editing stays one shared control (`DataGrid`); reuse it instead of
-  forking a grid.
+  forking a grid. Its `size` scales the cells and the grid's own geometry (row
+  handles, label row, column box, width-engine floor), with the colgroup, the
+  selector classes, and the width engine reading one metric set.
 - Tabular display stays one shared control (`DataTable`), with `FieldTable` for
   `FieldConfig[]` props tables; pagination is optional (omit it for no footer).
+  Its `size` scales cell text, padding, the selection count, and the table's own
+  column floors; `dense` is its own ratio set, not a multiplier of the normal
+  cell.
 - Tree/JSON-shaped display stays one shared control (`StructureTree`); reuse it
   instead of forking a tree viewer.
 - Charted data display stays one shared control (`BarChart`), with its tones in
@@ -232,7 +237,10 @@ Project-specific development conventions for the UI Library web app.
   lives in `.tmp/`, never in source directories.
 - The shared `CodeEditor`/`LazyCodeEditor` load language packs on demand through
   a `docType` lookup; its CodeMirror packages are optional peer dependencies,
-  and its theme package needs `@babel/runtime` in any app that vendors it.
+  and its theme package needs `@babel/runtime` in any app that vendors it. Its
+  `size` resolves `EDITOR_RATIOS` into the colour-theme extension and changes
+  through `colorThemeCompartment.reconfigure`, never by recreating the view;
+  `LazyCodeEditor` forwards it and scales its loading text.
 - The showcase's code panel is a live playground: a Show-code snippet must reproduce its static demo exactly, never including a shell-owned resize frame.
 - `ShowcasePage` pins everything above the props `tbody` so only the `FieldTable` body scrolls and the header band never scrolls away; mechanism in `ARCHITECTURE.md`.
 - When a component's props change, update its showcase page in the same change (playground state, props-table rows, snippet builder, tests), or the change is incomplete.
@@ -344,6 +352,7 @@ npm test
 ```
 
 - Measure unit coverage with `npm run test:coverage` (vitest v8 provider); use the summary as evidence for test-coverage findings, never as a percentage target.
+- A sized component takes radii, gaps, padding, and its own geometry from its `--*` vars, never a literal left at `md`; `npm run check` enforces it (`tools/check-size-literals.mjs`) and intentional statics need a reasoned allowlist entry. Mechanism in `ARCHITECTURE.md`.
 - Browser (e2e) specs live one-per-component/concern under `tests/`, with shared helpers not one growing spec; anchor locators on roles, accessible names, or `data-*` hooks, never DOM nesting.
 - A unit test lives beside its module (`foo.test.ts`, fixture `*.harness.svelte`); browser specs stay in root `tests/`, with no test-only directory in `src/`, `scripts/`, or `tools/`. `npm run check` enforces it (`tools/check-test-layout.mjs`); shared parity exempts tests and harnesses. Mechanism in `ARCHITECTURE.md`.
 - Portaled overlays render under `document.body`, not the demo hook, so anchor those assertions page-wide; match exactly when one accessible name prefixes another (`~/.agents/references/testing.md`).
