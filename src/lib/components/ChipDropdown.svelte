@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { flushSync, tick } from 'svelte'
+  import { tick } from 'svelte'
   import { useListbox } from '#lib/actions/use-listbox.svelte.js'
   import { createOptionIndex, matchesOption, matchLabelParts } from '#lib/actions/option-index.js'
-  import { isModifiedNavKey } from '#lib/actions/listbox-keynav.js'
+  import { handleListboxNavKey } from '#lib/actions/listbox-keynav.js'
   import { positionPanel } from '#lib/position-panel.svelte.js'
   import Button from '#lib/components/Button.svelte'
   import ChevronDownIcon from '#lib/icons/ChevronDownIcon.svelte'
@@ -287,18 +287,14 @@
     buttonRef?.focus()
   }
 
-  function moveHighlight(direction: 'down' | 'up') {
-    if (filteredOptions.length === 0) return
-    if (!open) {
-      flushSync(() => {
-        openPanel()
-        if (direction === 'up') listbox.selection.move('last', filteredOptions.length)
-      })
-      return
-    }
-    // OS key auto-repeat fires back-to-back keydowns; flush synchronously so
-    // each repeat paints the newly active row immediately.
-    listbox.moveHighlight(direction)
+  // The listbox keys route through the shared navigation handler: it opens a
+  // closed panel on an arrow, moves the highlight while open, and leaves a
+  // modified navigation key to the text field.
+  const nav = {
+    isOpen: () => open,
+    openPanel,
+    move: (direction: 'up' | 'down' | 'first' | 'last') => listbox.moveHighlight(direction),
+    count: () => filteredOptions.length,
   }
 
   function handleButtonKeydown(event: KeyboardEvent) {
@@ -307,23 +303,8 @@
       event.preventDefault()
       return
     }
-    if (event.key === 'ArrowDown') {
-      event.preventDefault()
-      moveHighlight('down')
-    } else if (event.key === 'ArrowUp') {
-      event.preventDefault()
-      moveHighlight('up')
-    } else if (event.key === 'Home') {
-      if (open && filteredOptions.length > 0) {
-        event.preventDefault()
-        listbox.moveHighlight('first')
-      }
-    } else if (event.key === 'End') {
-      if (open && filteredOptions.length > 0) {
-        event.preventDefault()
-        listbox.moveHighlight('last')
-      }
-    } else if (event.key === 'Enter' || event.key === ' ') {
+    if (handleListboxNavKey(event, nav)) return
+    if (event.key === 'Enter' || event.key === ' ') {
       if (!open) {
         event.preventDefault()
         openPanel()
@@ -337,24 +318,10 @@
 
   function handleFilterKeydown(event: KeyboardEvent) {
     // Modified navigation keys edit the search text (Shift+Home selects to the
-    // start, Shift+Arrow extends the selection); let the browser handle them
-    // instead of moving the list highlight. Plain keys still drive the listbox.
-    if (isModifiedNavKey(event)) {
-      return
-    }
-    if (event.key === 'ArrowDown') {
-      event.preventDefault()
-      moveHighlight('down')
-    } else if (event.key === 'ArrowUp') {
-      event.preventDefault()
-      moveHighlight('up')
-    } else if (event.key === 'Home') {
-      event.preventDefault()
-      listbox.moveHighlight('first')
-    } else if (event.key === 'End') {
-      event.preventDefault()
-      listbox.moveHighlight('last')
-    } else if (event.key === 'Enter') {
+    // start, Shift+Arrow extends the selection); the shared handler lets them
+    // through instead of moving the list highlight.
+    if (handleListboxNavKey(event, nav)) return
+    if (event.key === 'Enter') {
       event.preventDefault()
       const option = filteredOptions[listbox.selection.index] ?? filteredOptions[0]
       if (option) select(option.value)

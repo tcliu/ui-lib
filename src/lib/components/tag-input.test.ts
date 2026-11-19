@@ -184,6 +184,15 @@ describe('TagInput editing', () => {
     render({ value: [], options: [], disabled: true })
     expect(input().disabled).toBe(true)
   })
+
+  it('shows the hint only while no tag occupies the row', async () => {
+    render({ value: [], options: [], placeholder: 'Add a tag' })
+    expect(input().placeholder).toBe('Add a tag')
+    await unmount(instance!)
+    instance = null
+    render({ value: ['svelte'], options: [], placeholder: 'Add a tag' })
+    expect(input().placeholder).toBe('')
+  })
 })
 
 describe('TagInput keyboard', () => {
@@ -206,14 +215,89 @@ describe('TagInput keyboard', () => {
     expect(onQueryChange).toHaveBeenLastCalledWith('')
   })
 
-  it('clears the draft and reports it on Escape while open', () => {
+  it('keeps the draft and dismisses the panel on Escape', () => {
     const onQueryChange = vi.fn()
-    render({ value: [], options: [], onQueryChange })
+    render({ value: [], options: ['svelte', 'kit'], onQueryChange })
     openPanel()
     type('ki')
+    // Sanity: the query narrowed the list before the dismissal.
+    expect(optionLabels()).toEqual(['kit'])
     onQueryChange.mockClear()
     pressKey('Escape')
-    expect(onQueryChange).toHaveBeenCalledWith('')
+    expect(input().value).toBe('ki')
+    expect(onQueryChange).not.toHaveBeenCalled()
+    expect(optionLabels()).toEqual([])
+  })
+
+  it('reopens the dismissed panel when typing continues', () => {
+    render({ value: [], options: ['svelte', 'kit'] })
+    openPanel()
+    type('sve')
+    pressKey('Escape')
+    expect(optionLabels()).toEqual([])
+    type('svel')
+    expect(optionLabels()).toEqual(['svelte'])
+  })
+
+  it('reopens the dismissed panel when the field is clicked', () => {
+    render({ value: [], options: ['svelte', 'kit'] })
+    openPanel()
+    pressKey('Escape')
+    expect(optionLabels()).toEqual([])
+    // An already-focused input fires no new `focus`, so the click reopens.
+    input().click()
+    flushSync()
+    expect(optionLabels()).toEqual(['svelte', 'kit'])
+  })
+
+  it('commits the typed draft on Enter while the panel is dismissed', () => {
+    const onChange = vi.fn()
+    render({ value: [], options: [], onChange })
+    openPanel()
+    type('custom')
+    pressKey('Escape')
+    pressKey('Enter')
+    expect(onChange).toHaveBeenCalledWith(['custom'])
+    expect(optionLabels()).toEqual([])
+  })
+
+  it('accepts the last suggestion when ArrowUp opens the panel', () => {
+    const onChange = vi.fn()
+    render({ value: [], options: ['svelte', 'sky'], onChange })
+    openPanel()
+    type('s')
+    // Dismiss the list, then reopen it onto the last row: that open is an
+    // explicit navigation, so Enter takes the row instead of committing the
+    // typed draft.
+    pressKey('Escape')
+    pressKey('ArrowUp')
+    pressKey('Enter')
+    expect(onChange).toHaveBeenCalledWith(['sky'])
+  })
+
+  it('leaves a modified arrow to the text field', () => {
+    render({ value: [], options: ['svelte', 'kit'] })
+    openPanel()
+    pressKey('ArrowDown')
+    const active = input().getAttribute('aria-activedescendant')
+    expect(active).toBeTruthy()
+    input().dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'ArrowDown', shiftKey: true, bubbles: true, cancelable: true }),
+    )
+    flushSync()
+    // Shift+Arrow extends the text selection; the highlight stays put.
+    expect(input().getAttribute('aria-activedescendant')).toBe(active)
+  })
+
+  it('reports the listbox collapsed while a query matches nothing', () => {
+    render({ value: [], options: ['svelte'] })
+    openPanel()
+    type('sve')
+    expect(input().getAttribute('aria-expanded')).toBe('true')
+    type('zzz')
+    // No panel renders, so the combobox must not claim an expanded list.
+    expect(input().getAttribute('aria-expanded')).toBe('false')
+    expect(input().getAttribute('aria-controls')).toBeNull()
   })
 
   it('adds the active suggestion on Enter with an empty draft and no prior navigation', () => {

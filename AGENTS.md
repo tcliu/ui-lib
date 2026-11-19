@@ -90,6 +90,18 @@ Project-specific development conventions for the UI Library web app.
 - Keep shared scripts byte-identical: read per-app values from ungated app files, never hardcode an app name or path; project-owned data stays out of gated directories.
 - Tag editing stays one shared control (`TagInput`); map an app's richer tag
   object to `string[]` at the call site instead of forking a second control.
+- A tag row keeps its caret beside the last chip while the row has room: the inner
+  input's minimum is a size ratio (`inputMinW`), never a field width, so a row with
+  space never drops the caret onto an empty line; the hint shows only while no tag
+  occupies the row.
+- `TagInput`'s `Escape` dismisses the suggestions while keeping focus and the draft;
+  typing, a click on the field, and an arrow reopen them, and `Enter` with them
+  dismissed commits the draft.
+- The text-entry comboboxes (`AutoComplete`, `TagInput`) share their entry gestures
+  and listbox keys through `combobox-entry.ts` and `handleListboxNavKey`, never a
+  per-component keydown: an arrow opens a closed panel (onto the last row for
+  `ArrowUp`), the entry gestures reopen a dismissed one, and only `Enter` stays per
+  surface.
 - The dropdown/menu surfaces share `use-listbox.svelte.ts` (and `ListboxPanel` where the panel shape fits); compose them for a new listbox surface, never re-wiring the helpers by hand.
 - Free-text suggestions stay one shared control (`AutoComplete`), filtering to
   matches only and hiding the panel when nothing matches.

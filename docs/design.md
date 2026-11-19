@@ -76,7 +76,18 @@ An autocomplete field narrows its suggestion list the same way but keeps the
 typed text as its value: free text is accepted, picking a suggestion writes that
 suggestion's label into the field, and a query that matches nothing hides the
 panel instead of falling back to the full list. `Escape` dismisses the
-suggestions while keeping focus and the typed text.
+suggestions while keeping focus and the typed text, and typing, clicking the
+field, or an arrow brings them back (`ArrowUp` opens onto the last suggestion),
+the same gestures a tag field uses.
+
+A tag field keeps its entry at the end of the chip row: while the row still has
+room for the caret the input sits beside the last chip and takes the rest of
+that row, wrapping onto a new line only when there is none, and the hint shows
+only while no tag occupies the row. `Escape` dismisses the suggestions while
+keeping focus and the typed text, typing, clicking the field, or either arrow
+brings them back (`ArrowUp` opens onto the last suggestion), and `Enter` with the
+suggestions dismissed commits the typed text as a tag instead of reopening the
+list.
 
 A password field's eye toggle switches between masked and plain text without
 moving the caret or changing the selection; when the field had focus before the

@@ -237,3 +237,72 @@ test('showcase: the TagInput clear cross stays on the first row of a wrapped lis
   ).toBeLessThan(2)
   expect(boxRect.height).toBeGreaterThan(clearRect.height * 2)
 })
+
+test('showcase: the TagInput caret stays on the last chip row while the row has room', async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.goto('/components/tag-input')
+  await page.waitForLoadState('networkidle')
+
+  const demo = showcaseDemo(page)
+  await page.getByRole('button', { name: 'Edit value' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Edit value' })
+  await expect(dialog.locator('.cm-content')).toBeVisible({ timeout: 15000 })
+  await replaceSnippet(page, JSON.stringify(['svelte', 'kit', 'icons', 'forms']), dialog)
+  await dialog.getByRole('button', { name: 'OK', exact: true }).click()
+  await expect(dialog).toHaveCount(0)
+
+  const input = demo.getByRole('combobox')
+  const lastChipRemove = demo.getByRole('button', { name: 'Remove forms', exact: true })
+  await expect(lastChipRemove).toBeVisible()
+
+  // The entry's floor is its caret line, not a field width, so the input takes
+  // whatever the row has left instead of wrapping a row that still has room.
+  const minWidth = await input.evaluate(el => parseFloat(getComputedStyle(el).minWidth))
+  expect(minWidth).toBeLessThan(16)
+
+  const inputRect = (await input.boundingBox())!
+  const chipRect = (await lastChipRemove.boundingBox())!
+  expect(
+    Math.abs(inputRect.y + inputRect.height / 2 - (chipRect.y + chipRect.height / 2)),
+  ).toBeLessThan(2)
+
+  // One row: no empty line under the chips, and the caret line sits on the row.
+  const boxRect = (await input.locator('xpath=../..').boundingBox())!
+  const pillRect = (await lastChipRemove.locator('xpath=..').boundingBox())!
+  expect(boxRect.height).toBeLessThan(pillRect.height * 2)
+})
+
+test('showcase: the TagInput suggestions come back after Escape, and Enter commits', async ({ page }) => {
+  await page.goto('/components/tag-input')
+  await page.waitForLoadState('networkidle')
+
+  const demo = showcaseDemo(page)
+  const input = demo.getByRole('combobox')
+  const forms = page.getByRole('option', { name: 'forms', exact: true })
+
+  await input.click()
+  await input.pressSequentially('for')
+  await expect(forms).toBeVisible()
+
+  // Escape dismisses the list but keeps the typed text for the next commit.
+  await page.keyboard.press('Escape')
+  await expect(forms).toHaveCount(0)
+  await expect(input).toHaveValue('for')
+
+  // Typing brings it back, and so does a click after another dismissal.
+  await input.pressSequentially('m')
+  await expect(forms).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(forms).toHaveCount(0)
+  await input.click()
+  await expect(forms).toBeVisible()
+
+  // Enter with the list dismissed commits the draft instead of reopening it.
+  await page.keyboard.press('Escape')
+  await page.keyboard.press('Enter')
+  await expect(forms).toHaveCount(0)
+  await expect(demo).toContainText('tags: svelte, kit, form')
+})

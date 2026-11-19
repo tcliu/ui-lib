@@ -54,6 +54,11 @@ describe('TagInput dimension ratios', () => {
       expect(num(style, 'tag-input-pad-y') / px).toBeCloseTo(0.125)
       expect(num(style, 'tag-pad-y') / px).toBeCloseTo(INPUT_RATIOS.padY - 0.125)
       expect(num(style, 'tag-gap') / px).toBeCloseTo(0.375)
+      // The inner input's floor is its caret line, not a field's width: the
+      // input grows over the row's remainder, so a wider floor would wrap a row
+      // that still had room for the caret.
+      expect(num(style, 'tag-input-min-w') / px).toBeCloseTo(0.75)
+      expect(num(style, 'tag-input-min-w')).toBeLessThan(num(style, 'tag-line'))
       // The inner input's row box plus the container's padding lands on a
       // same-size text field's box, empty or filled.
       expect(

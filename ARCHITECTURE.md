@@ -147,14 +147,21 @@ byte-identically by the consuming apps through the parity gate's server list.
   helpers in `src/lib/actions/`: `typeahead.ts` (native type-ahead; Shift
   reverses), `option-index.ts` (lowercased option index, match test, and
   matched-label split), `listbox-keynav.ts` (modified-key test plus
-  flush-on-move), and `use-active-highlight.svelte.ts` (O(1) per-row highlight
-  flags). `use-listbox.svelte.ts` composes them into the navigation and dismissal
+  `handleListboxNavKey`, the arrow/Home/End routing the dropdown surfaces and
+  text-entry comboboxes share: an arrow opens a closed panel — `ArrowUp` straight
+  onto the last row, which is then revealed — and otherwise moves the highlight,
+  while a modified navigation key stays with the text field), `combobox-entry.ts`
+  (the entry gestures the two text-entry comboboxes share: focus, a click, and
+  typing reopen a dismissed panel), and `use-active-highlight.svelte.ts` (O(1)
+  per-row highlight flags). `use-listbox.svelte.ts` composes them into the navigation and dismissal
   core shared by `SelectDropdown`, `ChipDropdown`, `TagInput`, `AutoComplete`,
   and `Menu` (active
   index, held-key moves with optional disabled-skipping, type-ahead, focusout
   close, and the `useDropdown` lifecycle); each surface keeps its own open state,
-  filtering, and value commit. The aria-activedescendant surfaces render
-  `use-active-highlight` flags; `Menu` focuses the active item instead.
+  filtering, and value commit, and dismissal is the core's `onEscape` — close the
+  panel, keep the text — so `Enter` alone differs (an autocomplete accepts the
+  active row, a tag field commits its draft). The aria-activedescendant surfaces
+  render `use-active-highlight` flags; `Menu` focuses the active item instead.
   `SelectDropdown`, `TagInput`, and `AutoComplete` share the panel chrome through
   `ListboxPanel.svelte` (positioning, option rows, empty row, the `leading`
   element rendered before the default label, and the `option` snippet for row
@@ -581,7 +588,15 @@ of building a parallel control.
   per-tag colour through `chipStyle` (the chip) and `optionDotStyle` (the dot
   before the option label), keeping its own colour model out of the markup. It
   reports the typed draft via `onQueryChange`, renders chips through `Chip`, and
-  exports `focus()`.
+  exports `focus()`. The inner entry is the row's last flex item, so its floor
+  is the caret line alone (`inputMinW`, a size ratio, never a field width): a
+  row still holding a caret's width keeps the input beside the last chip and
+  lets it grow over the remainder, and it wraps only when the row has no room
+  left. The hint renders only while no tag occupies the row, so a narrow
+  remainder never clips it into apparent content. `Enter` commits the draft as
+  tag(s) while the panel is dismissed and takes the highlighted row once an
+  arrow, Home, or End moved it; the entry gestures around it are the shared
+  text-combobox ones.
 - **DateInput** — one control for a date or a date-time, single or a range:
   `DateInput` composes the fields (`DateField` owns the field chrome and the
   portalled panel, over `use-calendar-grid.svelte.ts` for the visible month,

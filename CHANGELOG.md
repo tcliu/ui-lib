@@ -7,6 +7,30 @@ version has one section, newest first; the format follows
 
 ## [Unreleased]
 
+### Changed
+
+- `AutoComplete` and `TagInput` now share one entry and navigation policy: focus,
+  a click, or typing reopens a dismissed suggestion list, and an unmodified arrow
+  drives it on the dropdown and text-entry combobox surfaces (an `ArrowUp` on a
+  closed list opens it onto the last row). `TagInput` now leaves a modified arrow
+  (Shift/Ctrl/Alt, Home/End) to the text field, like the other surfaces.
+- `TagInput`'s `Escape` dismisses the suggestion panel while keeping focus and the
+  typed draft (it used to clear the draft first); typing, clicking the field, and
+  either arrow reopen the panel, and `Enter` with it dismissed commits the draft as
+  tag(s) instead of taking a list row.
+
+### Fixed
+
+- `ArrowUp` on a closed listbox opens it onto the last row and reveals it, so
+  `TagInput`'s `Enter` accepts that row after the explicit navigation instead of
+  committing the draft. `SelectDropdown`, `ChipDropdown`, and `AutoComplete`
+  share the same behavior.
+- `TagInput` keeps its entry beside the last chip while the row has room: the
+  input's minimum width is now a size ratio (`inputMinW`, `0.75`) instead of a
+  fixed `6rem`, so a row with space no longer wraps the caret onto an empty line
+  and a partially filled row no longer doubles the box's height. The hint renders
+  only while no tag occupies the row, so a narrow remainder never clips it.
+
 ## [0.4.0] - 2026-11-18
 
 ### Added

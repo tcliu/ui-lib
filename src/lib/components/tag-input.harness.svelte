@@ -11,6 +11,7 @@
     chipClass?: string | ((tag: string) => string)
     chipStyle?: (tag: string) => string | undefined
     optionDotStyle?: (tag: string) => string | undefined
+    placeholder?: string
     onQueryChange?: (query: string) => void
     onChange?: (next: string[]) => void
   }
@@ -24,6 +25,7 @@
     chipClass,
     chipStyle,
     optionDotStyle,
+    placeholder,
     onQueryChange,
     onChange,
   }: Props = $props()
@@ -38,5 +40,6 @@
   {chipClass}
   {chipStyle}
   {optionDotStyle}
+  {placeholder}
   {onQueryChange}
   {onChange} />

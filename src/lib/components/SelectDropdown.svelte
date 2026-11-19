@@ -1,7 +1,7 @@
 <script lang="ts">
   import { flushSync, tick, type Snippet } from 'svelte'
   import { useListbox } from '#lib/actions/use-listbox.svelte.js'
-  import { isModifiedNavKey } from '#lib/actions/listbox-keynav.js'
+  import { handleListboxNavKey } from '#lib/actions/listbox-keynav.js'
   import Button from '#lib/components/Button.svelte'
   import ListboxPanel from '#lib/components/ListboxPanel.svelte'
   import TextInput from '#lib/components/TextInput.svelte'
@@ -461,6 +461,16 @@
     await closeAndRestoreFocus()
   }
 
+  // The listbox keys route through the shared navigation handler: it opens a
+  // closed panel on an arrow (onto the last row for ArrowUp), moves the
+  // highlight while open, and leaves modified navigation keys to the text field.
+  const nav = {
+    isOpen: () => open,
+    openPanel,
+    move: (direction: 'up' | 'down' | 'first' | 'last') => listbox.moveHighlight(direction),
+    count: () => filteredOptions.length,
+  }
+
   // One keydown entry, dispatched by concern: type-ahead, range selection,
   // modified-key passthrough, listbox navigation, Escape, then Enter/commit.
   function handleControlKeydown(event: KeyboardEvent) {
@@ -475,13 +485,10 @@
     if (handleRangeSelection(event)) {
       return
     }
-    // Other modified navigation keys (Shift+Arrow, Ctrl/Meta+Arrow/Home/End)
-    // belong to the text field; let the browser handle them. Plain keys still
-    // drive the listbox.
-    if (isModifiedNavKey(event)) {
-      return
-    }
-    if (handleListboxNavigation(event)) {
+    // The shared handler moves the listbox for the plain arrows and leaves a
+    // modified navigation key (Shift+Arrow, Ctrl/Meta+Arrow/Home/End) to the
+    // text field.
+    if (handleListboxNavKey(event, nav)) {
       return
     }
     if (event.key === 'Escape') {
@@ -526,40 +533,6 @@
       event.preventDefault()
       const end = inputRef.value.length
       inputRef.setSelectionRange(end, end)
-      return true
-    }
-    return false
-  }
-
-  function handleListboxNavigation(event: KeyboardEvent): boolean {
-    if (event.key === 'ArrowDown') {
-      event.preventDefault()
-      if (!open) {
-        flushSync(() => {
-          openPanel()
-        })
-        return true
-      }
-      listbox.moveHighlight('down')
-      return true
-    }
-    if (event.key === 'ArrowUp') {
-      event.preventDefault()
-      if (!open) {
-        flushSync(() => {
-          openPanel()
-          listbox.selection.move('last', filteredOptions.length)
-        })
-        return true
-      }
-      listbox.moveHighlight('up')
-      return true
-    }
-    if (event.key === 'Home' || event.key === 'End') {
-      if (open && filteredOptions.length > 0) {
-        event.preventDefault()
-        listbox.moveHighlight(event.key === 'Home' ? 'first' : 'last')
-      }
       return true
     }
     return false

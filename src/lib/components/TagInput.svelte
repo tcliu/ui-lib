@@ -7,10 +7,10 @@
   const INPUT_PAD_Y = 0.125
 
   // Container ratios: the field's font (its line box derives from it), its own
-  // wider padding, the tag gap, the inner input's tighter vertical padding, and
-  // the clear cross, which rides the shared text field's clearable metrics: a
-  // trimmed button box inside the same clear slot, so the tag row's cross reads
-  // exactly like a `TextInput`'s at every size.
+  // wider padding, the tag gap, the inner input's tighter vertical padding, the
+  // width its caret line needs, and the clear cross, which rides the shared text
+  // field's clearable metrics: a trimmed button box inside the same clear slot,
+  // so the tag row's cross reads exactly like a `TextInput`'s at every size.
   //
   // The container's padding carries only the remainder of a text field's
   // vertical padding, so an empty tag row lands on the same height as a
@@ -18,12 +18,17 @@
   // instead of growing by the inner input's share. `padY` is therefore derived
   // from the field padding, and the empty and filled boxes stay one height
   // because the chips stay inside that line box.
+  //
+  // `inputMinW` is the caret line's own floor, not a comfortable field width:
+  // the input grows over the row's remainder, so a wider floor would wrap a row
+  // that still had room and drop the caret to a line of its own.
   export const TAG_INPUT_RATIOS = {
     font: INPUT_RATIOS.font,
     padX: 0.625,
     padY: INPUT_RATIOS.padY - INPUT_PAD_Y,
     gap: 0.375,
     inputPadY: INPUT_PAD_Y,
+    inputMinW: 0.75,
     ...CLEAR_RATIOS,
   }
   export type TagInputRatios = typeof TAG_INPUT_RATIOS
@@ -31,7 +36,7 @@
 </script>
 
 <script lang="ts">
-  import { flushSync, tick, type Snippet } from 'svelte'
+  import { tick, type Snippet } from 'svelte'
   import Button from '#lib/components/Button.svelte'
   import Chip from '#lib/components/Chip.svelte'
   import { CHIP_COLORS, chipVariantClass } from '#lib/chip-variants.js'
@@ -40,6 +45,7 @@
   import CloseIcon from '#lib/icons/CloseIcon.svelte'
   import { DEFAULT_CHIP_PANEL_CLASS } from '#lib/dropdown-chrome.js'
   import { useListbox } from '#lib/actions/use-listbox.svelte.js'
+  import { createComboboxEntry } from '#lib/actions/combobox-entry.js'
   import { matchLabelParts } from '#lib/actions/option-index.js'
   import { getI18nContext } from '#lib/i18n/store.svelte.js'
   import { type SizeInput } from '#lib/size-scale.js'
@@ -64,10 +70,10 @@
     id?: string
     size?: SizeInput
     // Partial override of the container's metric ratios (font, both paddings,
-    // gap, the inner input's vertical padding, and the clear cross's button,
-    // gutter, and slot); omitted keys keep the shared defaults. The line box
-    // follows `font`, the clear inset follows `padX`, and the clear defaults
-    // ride `TextInput`'s clearable design.
+    // gap, the inner input's vertical padding and caret-line width, and the
+    // clear cross's button, gutter, and slot); omitted keys keep the shared
+    // defaults. The line box follows `font`, the clear inset follows `padX`, and
+    // the clear defaults ride `TextInput`'s clearable design.
     ratios?: TagInputRatioOverrides
     chipClass?: string | ((tag: string) => string)
     // Colour classes per tag when `chipClass` is not given; replaces the
@@ -160,6 +166,7 @@
         padY: resolvedRatios.padY,
         gap: resolvedRatios.gap,
         inputPadY: resolvedRatios.inputPadY,
+        inputMinW: resolvedRatios.inputMinW,
       }),
     ),
   )
@@ -288,6 +295,10 @@
   // Every combobox needs a name: the placeholder when the caller sets one,
   // otherwise the localized suggestions label (never an empty string).
   const resolvedAriaLabel = $derived(placeholder || i18n.t('tagInput.suggestions'))
+  // The hint describes an empty field. Once tags occupy the row the entry has
+  // only the remainder to type in, where the hint would clip mid-word and read
+  // as content, so it drops while keeping the combobox's accessible name.
+  const resolvedPlaceholder = $derived(value.length > 0 ? '' : placeholder)
   const placement = $derived(clearPlacement === 'auto' ? 'inside' : clearPlacement)
   // The container that hosts the clear button is chosen from `clearable`, not
   // from whether tags are present, so toggling the value never recreates the
@@ -335,17 +346,34 @@
 
   function openPanel(): void {
     if (disabled) return
+    // Opening starts a fresh list: no stale highlight and no stale navigation
+    // from a panel the user already dismissed.
     lastSuggestions = suggestions
+    navigated = false
     listbox.selection.reset()
     open = true
   }
 
-  function handleInput(): void {
-    navigated = false
-    onQueryChange?.(draft)
-  }
+  // Entry and navigation gestures are the shared text-combobox ones: focus,
+  // a click, or typing brings a dismissed panel back, and the arrow keys drive
+  // the listbox. Enter stays this field's own (commit the draft, or take the
+  // highlighted row after an explicit navigation).
+  const entry = createComboboxEntry({
+    isOpen: () => open,
+    openPanel,
+    move: direction => listbox.moveHighlight(direction),
+    count: () => suggestions.length,
+    onInput: () => {
+      navigated = false
+      onQueryChange?.(draft)
+    },
+    onNavigate: () => {
+      navigated = true
+    },
+  })
 
   function handleKeydown(event: KeyboardEvent): void {
+    if (entry.handleKeydown(event)) return
     if (event.key === 'Enter' || event.key === ',') {
       event.preventDefault()
       if (event.key === 'Enter' && open && suggestions.length > 0 && (navigated || !draft.trim())) {
@@ -355,33 +383,6 @@
       commitDraft()
     } else if (event.key === 'Backspace' && !draft && value.length > 0) {
       removeAt(value.length - 1)
-    } else if (event.key === 'ArrowDown') {
-      event.preventDefault()
-      if (!open) {
-        flushSync(() => {
-          openPanel()
-        })
-        return
-      }
-      navigated = true
-      listbox.moveHighlight('down')
-    } else if (event.key === 'ArrowUp') {
-      event.preventDefault()
-      if (!open) {
-        flushSync(() => {
-          openPanel()
-          listbox.selection.move('last', suggestions.length)
-        })
-        return
-      }
-      navigated = true
-      listbox.moveHighlight('up')
-    } else if (event.key === 'Home' || event.key === 'End') {
-      if (open && suggestions.length > 0) {
-        event.preventDefault()
-        navigated = true
-        listbox.moveHighlight(event.key === 'Home' ? 'first' : 'last')
-      }
     }
   }
 
@@ -402,11 +403,9 @@
       open = false
     },
     onEscape: () => {
-      if (draft) {
-        setDraft('')
-        navigated = false
-        return
-      }
+      // Escape dismisses the suggestions, keeping focus and the draft so the
+      // next Enter commits what the user typed; typing, a click, or an arrow
+      // brings the list back.
       open = false
     },
     onScrollClose: () => {
@@ -460,22 +459,21 @@
         id={id}
         {size}
         variant="embedded"
-        className="min-w-24 flex-1 py-[var(--tag-input-pad-y)] text-[length:var(--tag-font)] leading-[var(--tag-line)] text-slate-100 placeholder:text-slate-500"
-        {placeholder}
+        className="min-w-[var(--tag-input-min-w)] flex-1 py-[var(--tag-input-pad-y)] text-[length:var(--tag-font)] leading-[var(--tag-line)] text-slate-100 placeholder:text-slate-500"
+        placeholder={resolvedPlaceholder}
         {disabled}
         role="combobox"
         ariaLabel={resolvedAriaLabel}
-        aria-expanded={open}
-        aria-controls={listboxId}
+        aria-expanded={open && suggestions.length > 0}
+        aria-controls={open && suggestions.length > 0 ? listboxId : undefined}
         aria-autocomplete="list"
         aria-activedescendant={open && suggestions.length > 0
           ? `${listboxId}-option-${listbox.selection.index}`
           : undefined}
         autocomplete="off"
-        onfocus={() => {
-          if (!open) openPanel()
-        }}
-        oninput={handleInput}
+        onfocus={entry.handleFocus}
+        onclick={entry.handleClick}
+        oninput={entry.handleInput}
         onkeydown={handleKeydown} />
     </div>
     {#if clearInside}

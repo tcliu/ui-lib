@@ -24,10 +24,10 @@
 </script>
 
 <script lang="ts">
-  import { flushSync, tick } from 'svelte'
+  import { tick } from 'svelte'
   import { useListbox } from '#lib/actions/use-listbox.svelte.js'
+  import { createComboboxEntry } from '#lib/actions/combobox-entry.js'
   import { createOptionIndex, matchesOption, matchLabelParts } from '#lib/actions/option-index.js'
-  import { isModifiedNavKey } from '#lib/actions/listbox-keynav.js'
   import type { SizeInput } from '#lib/size-scale.js'
   import type { DropdownPanelProps } from '#lib/dropdown-chrome.js'
   import TextInput from './TextInput.svelte'
@@ -223,29 +223,23 @@
     void tick().then(() => listbox.revealActive())
   }
 
-  function handleFocus() {
-    if (!open) {
-      openPanel()
-    }
-  }
-
-  function handleClick() {
-    if (!open) {
-      openPanel()
-    }
-  }
-
-  function handleInput() {
-    // Read the element's own value so the open filter is fresh even if the
-    // `bind:value` write has not landed in this handler's turn yet.
-    const next = inputRef?.value
-    if (next !== undefined && next !== value) {
-      value = next
-    }
-    if (!open) {
-      openPanel()
-    }
-  }
+  // Entry and navigation gestures are the shared text-combobox ones: focus, a
+  // click, or typing brings a dismissed panel back, and the arrow keys drive the
+  // listbox. Enter stays this field's own (accept the active row while open).
+  const entry = createComboboxEntry({
+    isOpen: () => open,
+    openPanel,
+    move: direction => listbox.moveHighlight(direction),
+    count: () => filteredOptions.length,
+    onInput: () => {
+      // Read the element's own value so the open filter is fresh even if the
+      // `bind:value` write has not landed in this handler's turn yet.
+      const next = inputRef?.value
+      if (next !== undefined && next !== value) {
+        value = next
+      }
+    },
+  })
 
   function select(option: NormalizedOption) {
     value = option.label
@@ -254,44 +248,14 @@
   }
 
   function handleKeydown(event: KeyboardEvent) {
-    // Modified navigation keys belong to the text field (Shift+Arrow selects,
-    // Ctrl+Arrow moves by word); plain keys drive the listbox.
-    if (isModifiedNavKey(event)) {
-      return
-    }
-    if (event.key === 'ArrowDown') {
-      event.preventDefault()
-      if (!open) {
-        flushSync(() => {
-          openPanel()
-        })
-        return
-      }
-      listbox.moveHighlight('down')
-    } else if (event.key === 'ArrowUp') {
-      event.preventDefault()
-      if (!open) {
-        flushSync(() => {
-          openPanel()
-          listbox.selection.move('last', filteredOptions.length)
-        })
-        return
-      }
-      listbox.moveHighlight('up')
-    } else if (event.key === 'Home' || event.key === 'End') {
-      if (open && filteredOptions.length > 0) {
+    if (entry.handleKeydown(event)) return
+    // Accept the active suggestion only while the panel is open; a closed field
+    // lets Enter reach the surrounding form.
+    if (event.key === 'Enter' && open) {
+      const option = filteredOptions[listbox.selection.index]
+      if (option) {
         event.preventDefault()
-        listbox.moveHighlight(event.key === 'Home' ? 'first' : 'last')
-      }
-    } else if (event.key === 'Enter') {
-      // Accept the active suggestion only while the panel is open; a closed
-      // field lets Enter reach the surrounding form.
-      if (open) {
-        const option = filteredOptions[listbox.selection.index]
-        if (option) {
-          event.preventDefault()
-          select(option)
-        }
+        select(option)
       }
     }
   }
@@ -340,9 +304,9 @@
     aria-activedescendant={showPanel && filteredOptions[listbox.selection.index]
       ? `${panelId}-option-${listbox.selection.index}`
       : undefined}
-    onfocus={handleFocus}
-    onclick={handleClick}
-    oninput={handleInput}
+    onfocus={entry.handleFocus}
+    onclick={entry.handleClick}
+    oninput={entry.handleInput}
     onkeydown={handleKeydown}>
   </TextInput>
   {#if showPanel}
