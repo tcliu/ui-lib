@@ -75,6 +75,7 @@ const CONVERTED_PAGE_SLUGS = [
   'checkbox',
   'chip',
   'chip-dropdown',
+  'clear-button',
   'code-editor',
   'column-chooser',
   'confirm-dialog',

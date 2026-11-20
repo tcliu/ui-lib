@@ -14,6 +14,7 @@ export const SHOWCASE_COMPONENTS: ShowcaseComponent[] = [
   { slug: 'checkbox', name: 'Checkbox' },
   { slug: 'chip', name: 'Chip' },
   { slug: 'chip-dropdown', name: 'ChipDropdown' },
+  { slug: 'clear-button', name: 'ClearButton' },
   { slug: 'code-editor', name: 'CodeEditor' },
   { slug: 'column-chooser', name: 'ColumnChooser' },
   { slug: 'confirm-dialog', name: 'ConfirmDialog' },
@@ -61,7 +62,7 @@ export const SHOWCASE_COMPONENT_GROUPS: Record<string, readonly string[]> = {
   // Form inputs.
   inputs: ['number-input', 'search-input', 'text-input', 'autocomplete', 'textarea', 'password-input', 'editable-text', 'form-field', 'tag-input', 'checkbox'],
   // Click/action affordances.
-  actions: ['button', 'buttons', 'copyable'],
+  actions: ['button', 'buttons', 'copyable', 'clear-button'],
   // Tabular and charted data display.
   tables: ['data-grid', 'data-table', 'field-table', 'pagination', 'column-chooser', 'structure-tree', 'bar-chart'],
   // Code editing.
