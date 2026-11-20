@@ -163,6 +163,10 @@ Project-specific development conventions for the UI Library web app.
 - `NumberInput`'s `showControls` hides only the stepper overlay; `variant="embedded"`
   is what hands the box to the caller, so a stepper-less field keeps its bordered
   box — pair it with `hideOutline` for a borderless one.
+- A `NumberInput` value the field writes back (blur normalization, a stepper, the
+  wheel) keeps `max(step, value)` decimal places: a fractional step pads a
+  coarser entry (`1` with `step={0.5}` renders `1.0`) and a finer entry keeps its
+  digits (`1.25` stepped by `0.5` renders `1.75`) instead of rounding to the step.
 - A clearable field extends the shared `ClearableProps` group, never re-declaring it or hand-rolling a cross; mechanism in `ARCHITECTURE.md` (Input family).
 - A standalone clear action (clear filters, clear tags) is `ClearButton`, never a default `Button`: it rides the field clear metrics, so its cross matches the clearable fields beside it.
 - A clearable multi-row field (`TagInput`, `TextArea`) anchors its cross to the first row/line rather than the field's height, so wrapping, growing, or resizing never moves it.

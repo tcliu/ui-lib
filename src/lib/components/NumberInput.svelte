@@ -215,6 +215,22 @@
     return dot === -1 ? 0 : s.length - dot - 1
   }
 
+  // Decimal places the field's own text carries, so writing a value back never
+  // rounds away digits the entry already shows.
+  function textDecimals(text: string): number {
+    const dot = text.indexOf('.')
+    return dot === -1 ? 0 : text.length - dot - 1
+  }
+
+  // A value the field writes keeps `max(step, value)` decimals: the step pads a
+  // coarser value (`1` with `0.5` renders `1.0`) and a finer value keeps its
+  // digits (`1.25` stepped by `0.5` renders `1.75`) instead of rounding to the
+  // step. `toFixed` caps at 100 places.
+  function formatValue(num: number, current: string): string {
+    const decimals = Math.min(100, Math.max(stepDecimals(), textDecimals(current)))
+    return decimals > 0 ? num.toFixed(decimals) : String(num)
+  }
+
   function snapToStep(val: number): number {
     if (step === undefined || min === undefined) return val
     const decimals = stepDecimals()
@@ -265,8 +281,9 @@
     focused = false
     wheelDelta = 0
     const input = event.target as HTMLInputElement
-    const numValue = Number.parseFloat(input.value)
-    if (input.value === '' || Number.isNaN(numValue)) {
+    const text = input.value
+    const numValue = Number.parseFloat(text)
+    if (text === '' || Number.isNaN(numValue)) {
       onblur?.(event)
       return
     }
@@ -277,11 +294,8 @@
     if (max !== undefined && clamped > max) {
       clamped = max
     }
-    const snapped = snapToStep(clamped)
-    const finalValue = snapped !== numValue ? snapped : clamped !== numValue ? clamped : null
-    if (finalValue !== null) {
-      const decimals = stepDecimals()
-      const next = decimals > 0 ? String(Number(finalValue.toFixed(decimals))) : String(finalValue)
+    const next = formatValue(snapToStep(clamped), text)
+    if (next !== text) {
       input.value = next
       value = next
     }
@@ -302,9 +316,7 @@
       next = max
     }
     next = snapToStep(next)
-    // Ensure fixed decimals for display consistency when step has decimals
-    const decimals = stepDecimals()
-    const nextStr = decimals > 0 ? String(Number(next.toFixed(decimals))) : String(next)
+    const nextStr = formatValue(next, value)
     value = nextStr
     if (inputEl) {
       inputEl.value = nextStr

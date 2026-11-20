@@ -379,6 +379,11 @@ of building a parallel control.
   chooses that box with its own `variant` and toggles the stepper overlay with
   `showControls` independently, so hiding the steppers leaves the bordered box
   intact (the stepless demo is `showControls={false}` plus `hideOutline`).
+  A value it writes back — normalizing on blur or moving by a step — keeps as
+  many decimal places as the step or the entry it replaces, whichever is longer:
+  a fractional step pads a coarse entry (`1` with `0.5` renders `1.0`) while a
+  finer entry keeps its digits (`1.25` stepped by `0.5` renders `1.75`) instead
+  of rounding to the step.
   `EditableText`
   rides `TextInput` the same way and keeps its own skin — an outline ring
   standing in for the text — through that override, since it paints its own

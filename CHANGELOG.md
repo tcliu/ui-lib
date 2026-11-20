@@ -51,6 +51,10 @@ version has one section, newest first; the format follows
 
 ### Fixed
 
+- `NumberInput` writes a value back with as many decimal places as the step or
+  the entry it replaces, whichever is longer: a fractional step pads a coarse
+  entry (`1` with `step={0.5}` renders `1.0`) and a finer entry keeps its digits
+  (`1.25` stepped by `0.5` renders `1.75`) instead of rounding to the step.
 - `DataGrid` cell text sits on the row's own box: the cell editor is a block
   element, so a cell no longer grows by the line box's descent below the text
   and the value centers in both the header and body rows.
