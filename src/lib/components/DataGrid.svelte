@@ -416,7 +416,7 @@
                       data-col={ci}
                       rows={editor.isCellEditing(0, ci) && cell.value.includes('\n') ? 2 : 1}
                       wrap="off"
-                      class="w-full resize-none overflow-hidden border-0 bg-transparent px-[var(--grid-pad-x)] py-[var(--grid-pad-y)] text-slate-200 outline-none focus:bg-slate-800"
+                      class="block w-full resize-none overflow-hidden border-0 bg-transparent px-[var(--grid-pad-x)] py-[var(--grid-pad-y)] text-slate-200 outline-none focus:bg-slate-800"
                       value={cell.value}
                       readonly={!editable}
                       oninput={event => editable && model.setValue(0, ci, event.currentTarget.value)}
@@ -505,7 +505,7 @@
                       data-col={ci}
                       rows={expanded ? editorLines : 1}
                       wrap="off"
-                      class="w-full resize-none overflow-hidden border-0 bg-transparent px-[var(--grid-pad-x)] py-[var(--grid-pad-y)] text-slate-200 outline-none focus:bg-slate-800"
+                      class="block w-full resize-none overflow-hidden border-0 bg-transparent px-[var(--grid-pad-x)] py-[var(--grid-pad-y)] text-slate-200 outline-none focus:bg-slate-800"
                       style={expanded
                         ? EDITOR_OVERLAY_STYLE + (lineCount > EDITOR_MAX_LINES ? EDITOR_OVERLAY_SCROLL_STYLE : '')
                         : ''}
