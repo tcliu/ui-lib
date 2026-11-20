@@ -5,6 +5,41 @@ version has one section, newest first; the format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.2] - 2026-11-20
+
+### Added
+
+- `DataTable` column filters: `columnFilters` adds a funnel trigger to every
+  `filterable` column's header, opening a portalled panel with a free-text
+  autocomplete of that column's values (`filterOptions` overrides them).
+  `filters` is bindable and `onFilter` reports every change, so a remote table
+  filters server-side while a table that owns its full rows filters locally; a
+  `ClearButton` beside the search box clears them all.
+- `DataTable`'s sort arrows stay visible at rest, so the active direction reads
+  without hovering, and the column-filter funnel rides right beside them.
+- `FilterIcon` gains a `sheets` variant — three decreasing bars, the lighter
+  spreadsheet-style filter mark the table header uses; `regular` stays the solid
+  funnel. A filtered column keeps the bar mark, switching it to the accent ink
+  with a small dot badge, so the glyph's shape never changes with state.
+- `createTableModel` takes `initialFilters` and exposes `filters`,
+  `setFilter`, `clearFilters`, `activeFilterCount`, and `allRows`; column
+  filters run ahead of the search in the filter → sort → page pipeline.
+- `DataTable` keeps loaded rows visible while `loading`, setting `aria-busy`
+  and overlaying a spinner, and clamps an out-of-range `currentPage` by
+  reporting `onPageChange(totalPages)` once when a remote total shrinks.
+- `AutoComplete` reports its live text through `onInput` (typing, clearing, or
+  an option pick), beside `onSelect`.
+
+### Changed
+
+- `Button` takes the text field's text metrics — font, radius, line box, and
+  vertical padding — so one size step gives the same label size and the same
+  outer box across controls: the label is the field's `0.875` ratio (14px at
+  `md`) instead of the compact `0.8125`. The glyph keeps the shared icon ratio
+  (13px at `md`). A borderless variant (`primary`, `danger`) carries a
+  transparent `1px` border, so its outer box matches a bordered variant and a
+  text field instead of landing 2px shorter beside them.
+
 ## [0.4.1] - 2026-11-20
 
 ### Added
