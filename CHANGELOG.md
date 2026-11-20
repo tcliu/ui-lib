@@ -5,6 +5,14 @@ version has one section, newest first; the format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-11-20
+
+### Fixed
+
+- `DataGrid` cell text sits on the row's own box: the cell editor is a block
+  element, so a cell no longer grows by the line box's descent below the text
+  and the value centers in both the header and body rows.
+
 ## [0.4.2] - 2026-11-20
 
 ### Added
