@@ -5,18 +5,14 @@ version has one section, newest first; the format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.5.0] - 2026-11-20
-
-### Fixed
-
-- `DataGrid` cell text sits on the row's own box: the cell editor is a block
-  element, so a cell no longer grows by the line box's descent below the text
-  and the value centers in both the header and body rows.
-
-## [0.4.2] - 2026-11-20
+## [0.4.1] - 2026-11-20
 
 ### Added
 
+- `ClearButton`: the standalone clear affordance, sharing the clearable
+  field's trimmed cross (`0.625×` of the size axis) and reserved pointer box
+  (`1×`), with a localized “Clear” accessible name and optional `size`,
+  `disabled`, and `tooltip` props.
 - `DataTable` column filters: `columnFilters` adds a funnel trigger to every
   `filterable` column's header, opening a portalled panel with a free-text
   autocomplete of that column's values (`filterOptions` overrides them).
@@ -47,23 +43,17 @@ version has one section, newest first; the format follows
   (13px at `md`). A borderless variant (`primary`, `danger`) carries a
   transparent `1px` border, so its outer box matches a bordered variant and a
   text field instead of landing 2px shorter beside them.
-
-## [0.4.1] - 2026-11-20
-
-### Added
-
-- `ClearButton`: the standalone clear affordance, sharing the clearable
-  field's trimmed cross (`0.625×` of the size axis) and reserved pointer box
-  (`1×`), with a localized “Clear” accessible name and optional `size`,
-  `disabled`, and `tooltip` props.
-
-### Changed
-
 - `Button`'s label carries a small optical nudge (`0.1×` the size) so text
   without descenders centers in the box instead of sitting high; the box height
   and padding are unchanged.
 - An icon-only `Button` renders its glyph 15% larger while the button box and
   icon slot stay unchanged.
+
+### Fixed
+
+- `DataGrid` cell text sits on the row's own box: the cell editor is a block
+  element, so a cell no longer grows by the line box's descent below the text
+  and the value centers in both the header and body rows.
 
 ## [0.4.0] - 2026-11-19
 
