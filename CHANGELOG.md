@@ -5,33 +5,24 @@ version has one section, newest first; the format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.4.1] - 2026-11-20
+
+### Added
+
+- `ClearButton`: the standalone clear affordance, sharing the clearable
+  field's trimmed cross (`0.625×` of the size axis) and reserved pointer box
+  (`1×`), with a localized “Clear” accessible name and optional `size`,
+  `disabled`, and `tooltip` props.
 
 ### Changed
 
-- `AutoComplete` and `TagInput` now share one entry and navigation policy: focus,
-  a click, or typing reopens a dismissed suggestion list, and an unmodified arrow
-  drives it on the dropdown and text-entry combobox surfaces (an `ArrowUp` on a
-  closed list opens it onto the last row). `TagInput` now leaves a modified arrow
-  (Shift/Ctrl/Alt, Home/End) to the text field, like the other surfaces.
-- `TagInput`'s `Escape` dismisses the suggestion panel while keeping focus and the
-  typed draft (it used to clear the draft first); typing, clicking the field, and
-  either arrow reopen the panel, and `Enter` with it dismissed commits the draft as
-  tag(s) instead of taking a list row.
+- `Button`'s label carries a small optical nudge (`0.1×` the size) so text
+  without descenders centers in the box instead of sitting high; the box height
+  and padding are unchanged.
+- An icon-only `Button` renders its glyph 15% larger while the button box and
+  icon slot stay unchanged.
 
-### Fixed
-
-- `ArrowUp` on a closed listbox opens it onto the last row and reveals it, so
-  `TagInput`'s `Enter` accepts that row after the explicit navigation instead of
-  committing the draft. `SelectDropdown`, `ChipDropdown`, and `AutoComplete`
-  share the same behavior.
-- `TagInput` keeps its entry beside the last chip while the row has room: the
-  input's minimum width is now a size ratio (`inputMinW`, `0.75`) instead of a
-  fixed `6rem`, so a row with space no longer wraps the caret onto an empty line
-  and a partially filled row no longer doubles the box's height. The hint renders
-  only while no tag occupies the row, so a narrow remainder never clips it.
-
-## [0.4.0] - 2026-11-18
+## [0.4.0] - 2026-11-19
 
 ### Added
 
@@ -63,6 +54,19 @@ version has one section, newest first; the format follows
   overlays the first line, reserves the same gutter and outside slot as
   `TextInput`, and resets to the baseline, with the same disabled/read-only
   behavior.
+- `Tooltip` takes `size`: the hint box's font, line, padding, and radius follow
+  the shared axis while `md` keeps the previous `text-xs` box, and the shipped
+  `.st-tooltip` class reads the same custom properties with `md` fallbacks.
+  `Button`, `Chip`, `BarChart`, `StructureNode`, and `DataTable` forward their
+  own `size` to every hint they render.
+- `CodeEditor` and `LazyCodeEditor` take `size`: the editor's font, content
+  padding, playback-mark radius, and frame radius follow the axis, and a size
+  change reconfigures the colour theme so the caret, scroll position, and
+  selection survive. The lazy surface forwards it and scales its loading text.
+- `DataTable` and `DataGrid` cells follow the size axis: text, line, padding,
+  the selection column, the width-engine floor, the row handles, and the label
+  row all read one metric set, and `md` keeps the previous cells plus the
+  exported width constants.
 
 ### Changed
 
@@ -81,9 +85,31 @@ version has one section, newest first; the format follows
   `--input-*` text metrics instead of a parallel `--sel-*` set, and the
   filterable trigger renders its chevron as the field's `trailing` adornment.
   `SELECT_RATIOS` gains `chevronTextGap` for the label→chevron gap.
+- `AutoComplete` and `TagInput` now share one entry and navigation policy: focus,
+  a click, or typing reopens a dismissed suggestion list, and an unmodified arrow
+  drives it on the dropdown and text-entry combobox surfaces (an `ArrowUp` on a
+  closed list opens it onto the last row). `TagInput` now leaves a modified arrow
+  (Shift/Ctrl/Alt, Home/End) to the text field, like the other surfaces.
+- `TagInput`'s `Escape` dismisses the suggestion panel while keeping focus and the
+  typed draft (it used to clear the draft first); typing, clicking the field, and
+  either arrow reopen the panel, and `Enter` with it dismissed commits the draft as
+  tag(s) instead of taking a list row.
+- Every sized control's own chrome now follows its axis instead of staying at
+  `md`: corner radii, internal gaps, container padding, and the grid/table shell
+  geometry. `DataTable`'s `dense` step is its own ratio set rather than a
+  multiplier of the normal cell.
 
 ### Fixed
 
+- `ArrowUp` on a closed listbox opens it onto the last row and reveals it, so
+  `TagInput`'s `Enter` accepts that row after the explicit navigation instead of
+  committing the draft. `SelectDropdown`, `ChipDropdown`, and `AutoComplete`
+  share the same behavior.
+- `TagInput` keeps its entry beside the last chip while the row has room: the
+  input's minimum width is now a size ratio (`inputMinW`, `0.75`) instead of a
+  fixed `6rem`, so a row with space no longer wraps the caret onto an empty line
+  and a partially filled row no longer doubles the box's height. The hint renders
+  only while no tag occupies the row, so a narrow remainder never clips it.
 - `TagInput` renders at the same height as a same-size `TextInput` or
   `SelectDropdown` trigger: the container's vertical padding now carries the
   remainder of the shared field padding instead of adding the inner input's
