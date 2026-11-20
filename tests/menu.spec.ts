@@ -58,7 +58,7 @@ test('showcase: the Menu icon and item cells edit through dialogs with a reset e
 
   // A valid class applies on OK. The trigger is the shared Button, so the
   // glyph keeps the button's own size: the class applies, but it does not
-  // scale the glyph.
+  // scale the glyph. An icon-only button renders the larger icon-only share.
   await replaceSnippet(page, '<KebabIcon className="h-6 w-6" />', iconDialog)
   await expect(iconDialog.getByRole('alert')).toHaveCount(0)
   await iconOk.click()
@@ -66,7 +66,9 @@ test('showcase: the Menu icon and item cells edit through dialogs with a reset e
   const trigger = demo.getByRole('button', { name: 'More actions' })
   const glyph = trigger.locator('svg')
   await expect(glyph).toHaveClass(/h-6/)
-  const glyphSize = await trigger.evaluate(el => getComputedStyle(el).getPropertyValue('--btn-glyph').trim())
+  const glyphSize = await trigger.evaluate(el =>
+    getComputedStyle(el).getPropertyValue('--btn-icon-only-glyph').trim(),
+  )
   const glyphBox = await glyph.boundingBox()
   expect(glyphBox?.width).toBeCloseTo(Number.parseFloat(glyphSize), 1)
 

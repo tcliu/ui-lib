@@ -69,7 +69,7 @@ describe('Button dimension ratios', () => {
       const style = target.querySelector('button')?.getAttribute('style') ?? ''
       expect(num(style, 'font') / px).toBeCloseTo(BUTTON_RATIOS.font)
       expect(num(style, 'pad-x') / px).toBeCloseTo(0.65)
-      expect(num(style, 'pad-y') / px).toBeCloseTo(0.45)
+      expect(num(style, 'pad-y') / px).toBeCloseTo(INPUT_RATIOS.padY)
       expect(num(style, 'radius') / px).toBeCloseTo(0.375)
       // The padded box equals the text field's row box.
       expect(num(style, 'line') + 2 * num(style, 'pad-y')).toBeCloseTo(px * (INPUT_RATIOS.line + 2 * INPUT_RATIOS.padY))
@@ -83,10 +83,35 @@ describe('Button dimension ratios', () => {
     }
   })
 
-  it('pins the padded box to the text field row box', () => {
+  it('takes the text field text metrics, so font and outer height agree', () => {
+    // One size step means one font size, radius, and row box: a button's label
+    // is the field's label, so the two never read as different scales.
+    expect(BUTTON_RATIOS.font).toBe(INPUT_RATIOS.font)
+    expect(BUTTON_RATIOS.radius).toBe(INPUT_RATIOS.radius)
+    expect(BUTTON_RATIOS.padY).toBe(INPUT_RATIOS.padY)
+    expect(BUTTON_RATIOS.line).toBe(INPUT_RATIOS.line)
     // Both boxes carry the same 1px border, so equal line + padding is equal
     // height beside a TextInput at every size.
     expect(BUTTON_RATIOS.line + 2 * BUTTON_RATIOS.padY).toBeCloseTo(INPUT_RATIOS.line + 2 * INPUT_RATIOS.padY)
+  })
+
+  it('keeps a filled variant on the field frame height and ghost outside it', async () => {
+    // Primary/danger fill their box but still carry the frame as a transparent
+    // border, so a primary button is not 2px shorter than an adjacent field or
+    // outline button. Ghost is a bare inline affordance: its box is its line, so
+    // it must not pick up the frame (and grow 2px taller than the line).
+    for (const variant of ['primary', 'danger'] as const) {
+      instance = mount(Button, { target, props: { variant } })
+      flushSync()
+      const className = target.querySelector('button')?.className ?? ''
+      expect(className).toContain('border')
+      expect(className).toContain('border-transparent')
+      await unmount(instance)
+      instance = null
+    }
+    instance = mount(Button, { target, props: { variant: 'ghost' } })
+    flushSync()
+    expect(target.querySelector('button')?.className ?? '').not.toContain('border')
   })
 
   it('keeps an interpolated size below the exact step above it', async () => {
@@ -97,8 +122,8 @@ describe('Button dimension ratios', () => {
     instance = mount(Button, { target, props: { size: 16 } })
     flushSync()
     const s16 = target.querySelector('button')?.getAttribute('style') ?? ''
-    expect(num(s15, 'font')).toBe(12.1875)
-    expect(num(s16, 'font')).toBe(13)
+    expect(num(s15, 'font')).toBe(13.125)
+    expect(num(s16, 'font')).toBe(14)
   })
 })
 

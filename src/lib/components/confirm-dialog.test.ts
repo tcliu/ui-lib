@@ -111,13 +111,13 @@ describe('ConfirmDialog dismiss routing', () => {
 describe('ConfirmDialog props', () => {
   it('honors the confirm button size and accent', () => {
     const ui = open({ buttonSize: 'xl', accent: 'emerald' })
-    expect(ui.confirm().getAttribute('style')).toContain('--btn-font: 16.25px')
+    expect(ui.confirm().getAttribute('style')).toContain('--btn-font: 17.5px')
     expect(ui.confirm().className).toContain('bg-emerald-500')
   })
 
   it('defaults the confirm button to md and the rose accent', () => {
     const ui = open()
-    expect(ui.confirm().getAttribute('style')).toContain('--btn-font: 13px')
+    expect(ui.confirm().getAttribute('style')).toContain('--btn-font: 14px')
     expect(ui.confirm().className).toContain('bg-rose-500')
   })
 

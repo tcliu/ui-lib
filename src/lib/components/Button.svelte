@@ -1,31 +1,29 @@
 <script module lang="ts">
   import { ICON_RATIO, type SizeInput } from '#lib/size-scale.js'
-  import { INPUT_RATIOS } from './input-chrome'
+  import { FIELD_RATIOS, INPUT_RATIOS } from './input-chrome'
   import { dimensionMetrics, iconPadRatio } from './size-metrics'
 
-  // Every metric is a fixed ratio of the size dimension, so each keeps a
-  // constant metric:dimension ratio across the range; the icon slot is the
-  // dimension itself (ratio 1) and the glyph inside renders at the shared icon
-  // ratio, matching every other icon at the same size. Font weight is an
-  // emphasis tier, not a length. The label keeps its compact 13px step rather
-  // than the field's shared font ratio, so a button still reads as a tool
-  // button. `iconPad` is derived so an icon-only button's box
-  // (`icon + 2·iconPad`) equals a text button's (`line + 2·padY`) and the glyph
-  // reads as a square at the text row height instead of a shorter box — see
-  // `iconPadRatio`.
-  // The vertical padding stays at its original share and the line box absorbs
-  // the difference instead: `line + 2·padY` equals the text field's row box
-  // (`INPUT_RATIOS.line + 2·INPUT_RATIOS.padY`), so a button beside a field
-  // lands on exactly the field's height without growing its padding.
-  const BUTTON_FONT = 0.8125
-  const BUTTON_PAD_Y = 0.45
-  const BUTTON_LINE = INPUT_RATIOS.line + 2 * INPUT_RATIOS.padY - 2 * BUTTON_PAD_Y
+  // A button and a text field are the same size step, so they share the same
+  // text metrics: the field's font ratio, radius, line box, and vertical
+  // padding. A labelled button therefore matches a field's label size and its
+  // outer box at every step, and a filled, borderless variant carries a
+  // transparent 1px border so that box includes the field's frame too. Only the
+  // horizontal padding stays the button's own — a field reserves a wider inset.
+  //
+  // The glyph is deliberately not tied to the label's font ratio: it renders at
+  // the shared icon ratio, its own optical size, matching every other icon at
+  // the same step (the label is 14px at `md`, the glyph 13px). The icon slot is
+  // the size dimension itself (ratio 1), and `iconPad` is derived so an
+  // icon-only button's box (`icon + 2·iconPad`) equals a text button's
+  // (`line + 2·padY`), so the glyph reads as a square at the text row height
+  // instead of a shorter box — see `iconPadRatio`. Font weight is an emphasis
+  // tier, not a length.
   export const BUTTON_RATIOS = {
-    font: BUTTON_FONT,
-    line: BUTTON_LINE,
-    radius: 0.375,
+    font: FIELD_RATIOS.font,
+    line: INPUT_RATIOS.line,
+    radius: FIELD_RATIOS.radius,
     padX: 0.65,
-    padY: BUTTON_PAD_Y,
+    padY: FIELD_RATIOS.padY,
     // The icon→label gap: the original 8px at `md`, kept as one ratio so a
     // compact button never carries a gap wider than its own padding.
     gap: 0.5,
@@ -178,12 +176,17 @@ export const BUTTON_METRICS = {
     const pad =
       variant === 'ghost' ? '' : isIconOnly ? 'p-[var(--btn-icon-pad)]' : 'py-[var(--btn-pad-y)] px-[var(--btn-pad-x)]'
     const common = `${shape} ${pad}`.trim()
+    // A borderless fill still carries the field's 1px frame as a transparent
+    // border, so its outer box matches a bordered variant (and a text field)
+    // instead of landing 2px shorter beside them. Ghost is the lone exception:
+    // it is a bare inline affordance whose box is its line, not a control box.
+    const FRAME = 'border border-transparent'
     // Primary carries semibold emphasis, so dialog confirms read bold.
     if (variant === 'primary') {
-      return `${common} font-semibold ${primaryClasses[accent]} ${ringClass}`
+      return `${common} ${FRAME} font-semibold ${primaryClasses[accent]} ${ringClass}`
     }
     if (variant === 'danger') {
-      return `${common} bg-rose-500 text-onaccent hover:bg-rose-400 focus:bg-rose-400 ${ringClass}`
+      return `${common} ${FRAME} bg-rose-500 text-onaccent hover:bg-rose-400 focus:bg-rose-400 ${ringClass}`
     }
     // Outline carries the same semibold emphasis as primary, so dialog
     // Cancel/Reset buttons read bold like their confirms.

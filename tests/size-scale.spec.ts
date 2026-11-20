@@ -62,12 +62,51 @@ test('numeric size scales every Button metric by a constant ratio', async ({ pag
   const rows = await measure(page, 'button')
   rows.forEach((row, i) => {
     const size = SIZES[i]!
-    expect(row.font / size).toBeCloseTo(0.8125, 2)
-    expect(row.line / size).toBeCloseTo(1.166, 3)
+    // A button takes the text field's own text metrics, so one size step is one
+    // label size and one row box across controls.
+    expect(row.font / size).toBeCloseTo(0.875, 2)
+    expect(row.line / size).toBeCloseTo(1.279, 3)
     expect(row.padLeft / size).toBeCloseTo(0.65, 2)
-    expect(row.padTop / size).toBeCloseTo(0.45, 2)
+    expect(row.padTop / size).toBeCloseTo(0.39375, 2)
     expect(row.radius / size).toBeCloseTo(0.375, 2)
   })
+})
+
+test('numeric size keeps a Button on the TextInput box height', async ({ page }) => {
+  const snippet = [
+    '<script>let t = $state("")</script>',
+    '<div class="flex flex-col items-start gap-2">',
+    ...SIZES.map(
+      s =>
+        `  <div data-row="${s}" class="flex items-center gap-2">\n` +
+        `    <TextInput bind:value={t} ariaLabel="f${s}" size={${s}} />\n` +
+        `    <Button size={${s}}>Label</Button>\n` +
+        `    <Button variant="primary" size={${s}}>Label</Button>\n` +
+        `    <Button variant="danger" size={${s}}>Label</Button>\n` +
+        `    <Button variant="primary" size={${s}} ariaLabel="icon">\n` +
+        '      {#snippet icon()}<CheckIcon />{/snippet}\n' +
+        '    </Button>\n' +
+        '  </div>',
+    ),
+    '</div>',
+  ].join('\n')
+  await applySnippet(page, '/components/button', snippet, SIZES.length, '[data-row]')
+
+  const rows = await showcaseDemo(page)
+    .locator('[data-row]')
+    .evaluateAll(nodes =>
+      nodes.map(row => ({
+        size: row.getAttribute('data-row'),
+        heights: [...row.querySelectorAll('input, button')].map(el => el.getBoundingClientRect().height),
+      })),
+    )
+  for (const { size, heights } of rows) {
+    // The field, the bordered secondary button, both filled variants (which
+    // carry the frame as a transparent border), and an icon-only filled button
+    // all share one outer box.
+    expect(heights, `size ${size} renders five controls`).toHaveLength(5)
+    for (const height of heights) expect(Math.abs(height - heights[0]!), `size ${size} height ${height}`).toBeLessThan(0.5)
+  }
 })
 
 test('numeric size scales every TextInput metric by a constant ratio', async ({ page }) => {

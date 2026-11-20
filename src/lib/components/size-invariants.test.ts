@@ -393,10 +393,10 @@ describe.each(CASES)('$name — all metrics', ({ keys, render }) => {
 describe('custom size invariants — edge cases', () => {
   it('non-finite falls back to md, <=0 clamps to 1', async () => {
     const fontAt = async (size: number): Promise<number> => styleVars(await renderStyle(Button, { size }))['btn-font']!
-    expect(await fontAt(Number.NaN)).toBeCloseTo(13)
-    expect(await fontAt(Infinity)).toBeCloseTo(13)
-    expect(await fontAt(-Infinity)).toBeCloseTo(13)
-    expect(await fontAt(0)).toBeCloseTo(0.8125)
-    expect(await fontAt(-5)).toBeCloseTo(0.8125)
+    expect(await fontAt(Number.NaN)).toBeCloseTo(14)
+    expect(await fontAt(Infinity)).toBeCloseTo(14)
+    expect(await fontAt(-Infinity)).toBeCloseTo(14)
+    expect(await fontAt(0)).toBeCloseTo(0.875)
+    expect(await fontAt(-5)).toBeCloseTo(0.875)
   })
 })
