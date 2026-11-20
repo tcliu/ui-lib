@@ -215,6 +215,30 @@ export function parseRowsJson(text: string): DemoRow[] | null {
   }
 }
 
+// Parse a column-filter map: an object of non-blank keys to string values, the
+// shape `filters` takes. Anything else returns null so the dialog can refuse it.
+export function parseFiltersValue(value: unknown): Record<string, string> | null {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return null
+  }
+  const out: Record<string, string> = {}
+  for (const [key, entry] of Object.entries(value)) {
+    if (typeof entry !== 'string') {
+      return null
+    }
+    out[key] = entry
+  }
+  return out
+}
+
+export function parseFiltersJson(text: string): Record<string, string> | null {
+  try {
+    return parseFiltersValue(JSON.parse(text))
+  } catch {
+    return null
+  }
+}
+
 export interface DataTableSnippetState {
   rows: Staged<DemoRow[]>
   showSearch: Staged<TriState>
@@ -235,6 +259,8 @@ export interface DataTableSnippetState {
   searchKeys: Staged<string[] | null>
   chooserLabel: Staged<string>
   chooserResetLabel: Staged<string>
+  columnFilters: Staged<TriState>
+  filters: Staged<Record<string, string>>
   selectAllAriaLabel: Staged<string>
   allSelected: Staged<TriState>
   someSelected: Staged<TriState>
@@ -267,6 +293,8 @@ export function buildDataTableSnippet({
   searchKeys,
   chooserLabel,
   chooserResetLabel,
+  columnFilters,
+  filters,
   selectAllAriaLabel,
   allSelected,
   someSelected,
@@ -289,8 +317,8 @@ export function buildDataTableSnippet({
     '  ]',
     '  const columns = [',
     "    { key: 'id', header: 'ID', cell: idCell },",
-    "    { key: 'name', header: 'Name', sortable: true, searchable: true, cell: nameCell },",
-    "    { key: 'status', header: 'Status', searchable: true, cell: statusCell },",
+    "    { key: 'name', header: 'Name', sortable: true, searchable: true, filterable: true, cell: nameCell },",
+    "    { key: 'status', header: 'Status', searchable: true, filterable: true, cell: statusCell },",
     '  ]',
     ...(searchKeys.value && searchKeys.on ? [`  let searchKeys = $state(${JSON.stringify(searchKeys.value)});`] : []),
     '</script>',
@@ -306,13 +334,13 @@ export function buildDataTableSnippet({
     ...(trailing
       ? [
           '{#snippet tableTrailing()}',
-          `  <span class="text-xs text-slate-400">{visibleTotal(rows, pgQuery)} ${escapeText(trailing)}</span>`,
+          `  <span class="text-xs text-slate-400">{visibleTotal(rows, pgQuery, pgFilters)} ${escapeText(trailing)}</span>`,
           '{/snippet}',
         ]
       : []),
     ...stageStaticOpenLines('', paneClass),
     '    <DataTable',
-    '      rows={visibleRows(rows, pgQuery, pgSortKey, pgSortDirection, pgPage, demoPageSize)}',
+    '      rows={visibleRows(rows, pgQuery, pgFilters, pgSortKey, pgSortDirection, pgPage, demoPageSize)}',
     '      columns={columns.filter(column => !hidden.has(column.key))}',
     '      rowId={row => row.id}',
     ...(showSearch.on && showSearch.value === 'no'
@@ -332,10 +360,12 @@ export function buildDataTableSnippet({
     ...textAttrLine('chooserResetLabel', chooserResetLabel, '      '),
     '      onToggleColumn={handleToggleColumn}',
     '      onResetColumns={handleResetColumns}',
+    ...boolAttrLine('columnFilters', columnFilters, 'no', '      '),
+    ...(filters.on ? ['      bind:filters={pgFilters}', '      onFilter={handleFilter}'] : []),
     '      bind:sortKey={pgSortKey}',
     '      bind:sortDirection={pgSortDirection}',
     '      pagination={{',
-    '        total: visibleTotal(rows, pgQuery),',
+    '        total: visibleTotal(rows, pgQuery, pgFilters),',
     '        pageSize: demoPageSize,',
     '        currentPage: pgPage,',
     '        onPageChange: handlePageChange,',

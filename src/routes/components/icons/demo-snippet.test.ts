@@ -156,6 +156,7 @@ describe('icon gallery coverage', () => {
       'DoubleChevronRight',
       'DoubleChevronUp',
       'Edit',
+      'Filter',
       'Table',
     ])
   })

@@ -16,6 +16,7 @@ import Buttons from '#lib/components/Buttons.svelte'
 import Checkbox from '#lib/components/Checkbox.svelte'
 import Chip from '#lib/components/Chip.svelte'
 import ChipDropdown from '#lib/components/ChipDropdown.svelte'
+import ClearButton from '#lib/components/ClearButton.svelte'
 import CodeEditor from '#lib/components/CodeEditor.svelte'
 import ColumnChooser from '#lib/components/ColumnChooser.svelte'
 import ConfirmDialog from '#lib/components/ConfirmDialog.svelte'
@@ -75,6 +76,7 @@ import ExportIcon from '#lib/icons/ExportIcon.svelte'
 import ExternalLinkIcon from '#lib/icons/ExternalLinkIcon.svelte'
 import EyeIcon from '#lib/icons/EyeIcon.svelte'
 import EyeSlashIcon from '#lib/icons/EyeSlashIcon.svelte'
+import FilterIcon from '#lib/icons/FilterIcon.svelte'
 import FireIcon from '#lib/icons/FireIcon.svelte'
 import FollowIcon from '#lib/icons/FollowIcon.svelte'
 import ForestIcon from '#lib/icons/ForestIcon.svelte'
@@ -152,6 +154,7 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/Checkbox.svelte': { default: Checkbox },
   'ui/Chip.svelte': { default: Chip },
   'ui/ChipDropdown.svelte': { default: ChipDropdown },
+  'ui/ClearButton.svelte': { default: ClearButton },
   'ui/CodeEditor.svelte': { default: CodeEditor },
   'ui/ColumnChooser.svelte': { default: ColumnChooser },
   'ui/ConfirmDialog.svelte': { default: ConfirmDialog },
@@ -211,6 +214,7 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/ExternalLinkIcon.svelte': { default: ExternalLinkIcon },
   'ui/EyeIcon.svelte': { default: EyeIcon },
   'ui/EyeSlashIcon.svelte': { default: EyeSlashIcon },
+  'ui/FilterIcon.svelte': { default: FilterIcon },
   'ui/FireIcon.svelte': { default: FireIcon },
   'ui/FollowIcon.svelte': { default: FollowIcon },
   'ui/ForestIcon.svelte': { default: ForestIcon },

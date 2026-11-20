@@ -129,6 +129,10 @@ export const zhTW = {
     export: '匯出',
     exportSelected: '匯出所選',
     clearSelection: '清除選取',
+    filter: '篩選',
+    filterColumn: '篩選 {column}',
+    clearFilters: '清除篩選',
+    loading: '正在載入資料',
   },
   edit: {
     editText: '編輯文字',

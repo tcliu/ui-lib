@@ -3,6 +3,7 @@
   import { getI18nContext } from '#lib/i18n/store.svelte.js'
   import ShowcasePage from '#showcase/shell/ShowcasePage.svelte'
   import ShowcaseStage from '#showcase/shell/ShowcaseStage.svelte'
+  import { applyColumnFilters } from '#lib/components/table-column-filters'
   import { parseSizeValue } from '#showcase/playground/size-input.js'
   import { enumField, textField, boolField, sizeField, jsonField, snippetDialog } from '#showcase/playground/snippet-field.js'
   import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
@@ -11,6 +12,7 @@
     buildDataTableSnippet,
     DEFAULT_ROWS,
     parseChooserColumnsJson,
+    parseFiltersJson,
     parseRowsJson,
     parseSearchKeysJson,
     parseSearchKeysValue,
@@ -55,6 +57,8 @@
     rows: staged(freshRows() as DemoRow[], true),
     chooserLabel: staged('Choose columns'),
     chooserResetLabel: staged('Reset columns'),
+    columnFilters: staged('no' as TriState),
+    filters: staged({} as Record<string, string>, true),
     selectAllAriaLabel: staged('Select all'),
     selectionCountPosition: staged('end'),
     allSelected: staged('' as TriState),
@@ -97,6 +101,7 @@
   const fillHeight = $derived(appliedFlag(pg.fillHeight))
   const bodyScroll = $derived(appliedFlag(pg.bodyScroll))
   const bordered = $derived(appliedFlag(pg.bordered))
+  const columnFilters = $derived(appliedFlag(pg.columnFilters))
   const demoSize = $derived.by(() => {
     const value = applied(pg.size)
     return value === undefined ? undefined : parseSizeValue(value)
@@ -133,12 +138,14 @@
   function visibleRows(
     all: DemoRow[],
     text: string,
+    filters: Record<string, string>,
     key: string | null,
     direction: 'asc' | 'desc',
     page: number,
     size: number,
   ): DemoRow[] {
-    const filtered = all.filter(row => matches(row, text))
+    const searched = all.filter(row => matches(row, text))
+    const filtered = applyColumnFilters(searched, columns, filters)
     const sorted =
       key === 'name'
         ? [...filtered].sort((a, b) =>
@@ -148,8 +155,12 @@
     return sorted.slice((page - 1) * size, page * size)
   }
 
-  function visibleTotal(all: DemoRow[], text: string): number {
-    return all.filter(row => matches(row, text)).length
+  function visibleTotal(all: DemoRow[], text: string, filters: Record<string, string>): number {
+    return applyColumnFilters(
+      all.filter(row => matches(row, text)),
+      columns,
+      filters,
+    ).length
   }
 
   function toggleSelection(set: Set<string>, id: string, checked: boolean): Set<string> {
@@ -185,8 +196,8 @@
 
   const columns: DataTableColumn<DemoRow>[] = [
     { key: 'id', header: 'ID', cell: idCell },
-    { key: 'name', header: 'Name', sortable: true, searchable: true, cell: nameCell },
-    { key: 'status', header: 'Status', searchable: true, cell: statusCell },
+    { key: 'name', header: 'Name', sortable: true, searchable: true, filterable: true, cell: nameCell },
+    { key: 'status', header: 'Status', searchable: true, filterable: true, cell: statusCell },
   ]
 
   // Snippet-facing scope helpers. The generated Show-code source destructures
@@ -202,9 +213,17 @@
     })),
   )
   const pageRows = $derived(
-    visibleRows(pg.rows.value, pg.query.value, pg.sortKey.value, pg.sortDirection.value, pg.page, demoPageSize),
+    visibleRows(
+      pg.rows.value,
+      pg.query.value,
+      pg.filters.value,
+      pg.sortKey.value,
+      pg.sortDirection.value,
+      pg.page,
+      demoPageSize,
+    ),
   )
-  const rowTotal = $derived(visibleTotal(pg.rows.value, pg.query.value))
+  const rowTotal = $derived(visibleTotal(pg.rows.value, pg.query.value, pg.filters.value))
   const allRowsSelected = $derived(pg.selected.size > 0 && pg.selected.size === pg.rows.value.length)
   const someRowsSelected = $derived(pg.selected.size > 0 && pg.selected.size < pg.rows.value.length)
   const demoResetWidths = $derived.by(() => {
@@ -215,6 +234,10 @@
   })
 
   function handleSearchInput() {
+    pg.page = 1
+  }
+  function handleFilter(key: string, value: string) {
+    pg.filters.value = { ...pg.filters.value, [key]: value }
     pg.page = 1
   }
   function handleToggleColumn(key: string, checked: boolean) {
@@ -259,6 +282,8 @@
       searchKeys: pg.searchKeys,
       chooserLabel: pg.chooserLabel,
       chooserResetLabel: pg.chooserResetLabel,
+      columnFilters: pg.columnFilters,
+      filters: pg.filters,
       selectAllAriaLabel: pg.selectAllAriaLabel,
       allSelected: pg.allSelected,
       someSelected: pg.someSelected,
@@ -305,6 +330,25 @@
     }),
     textField({ name: 'chooserLabel', type: 'string?', defaultValue: "'Choose columns'", note: 'Accessible name for the column selector.', editorDefaultValue: 'Choose columns', clearable: true, placeholder: 'Choose columns', ...eye(pg.chooserLabel) }),
     textField({ name: 'chooserResetLabel', type: 'string?', defaultValue: "'Reset columns'", note: 'Accessible name for the reset button.', editorDefaultValue: 'Reset columns', clearable: true, placeholder: 'Reset columns', ...eye(pg.chooserResetLabel) }),
+    boolField({ name: 'columnFilters', defaultValue: 'false', note: 'Adds a funnel trigger to every filterable header; its panel autocompletes the column values.', ...eyeFlag(pg.columnFilters) }),
+    jsonField({
+      name: 'filters',
+      type: 'Record<string, string>?',
+      note: 'Bindable per-column filter text; the demo filters its own page pipeline from it. The eye applies the map.',
+      value: JSON.stringify(pg.filters.value, null, 2),
+      onChange: (draft: string) => {
+        const parsed = parseFiltersJson(draft)
+        if (parsed) {
+          stage(pg.filters, parsed)
+        }
+      },
+      dialog: {
+        valid: (draft: string) => parseFiltersJson(draft) != null,
+        invalidMessage: 'Invalid filters JSON. Use an object of column key to text.',
+        title: 'Edit filters',
+      },
+      toggle: eyeResetToggle(pg.filters, () => (pg.filters.value = {})),
+    }),
     textField({ name: 'containerClassName', type: 'string?', defaultValue: "''", note: 'Extra classes for the outer container; built-in scroll/border chrome when unset.', editorDefaultValue: '', clearable: true, ...eye(pg.containerClassName) }),
     boolField({ name: 'dense', defaultValue: 'false', note: 'Compact padding for panel tables.', ...eyeFlag(pg.dense) }),
     textField({ name: 'emptyMessage', type: 'string?', defaultValue: "'No rows'", note: 'Shown when rows is empty.', editorDefaultValue: 'No rows', clearable: true, placeholder: 'No rows', ...eye(pg.emptyMessage) }),
@@ -462,6 +506,12 @@
       defaultValue: '—',
       note: 'Sort handler; or bind sortKey/sortDirection.',
     },
+    {
+      name: 'onFilter',
+      type: '(key: string, value: string) => void',
+      defaultValue: '—',
+      note: 'Column-filter handler. Supplying it makes the table a presenter (it never filters locally), so a remote caller refilters its query.',
+    },
     { name: 'onToggleAll', type: '() => void', defaultValue: '—', note: 'Select-all handler for the header checkbox.' },
     { name: 'onToggleColumn', type: '(key, checked) => void', defaultValue: '—', note: 'Column visibility handler.' },
     {
@@ -519,6 +569,7 @@
     scope={{
       hidden,
       pgQuery: pg.query.value,
+      pgFilters: pg.filters.value,
       pgPage: pg.page,
       demoPageSize,
       pgSortKey: pg.sortKey.value,
@@ -536,6 +587,7 @@
       toggleSelection,
       toggleAllSelected,
       handleSearchInput,
+      handleFilter,
       handleToggleColumn,
       handleResetColumns,
       handlePageChange,
@@ -543,7 +595,7 @@
     }}
 
     sync={{ tag: 'DataTable' }}
-    scopeRefresh={() => [pg.query.value, pg.page, pg.sortKey.value, pg.sortDirection.value, pg.selected, hidden, demoPageSize]}
+    scopeRefresh={() => [pg.query.value, pg.filters.value, pg.page, pg.sortKey.value, pg.sortDirection.value, pg.selected, hidden, demoPageSize]}
   >
     <ShowcaseStage paneClass={stagePaneClass}>
       <DataTable
@@ -563,6 +615,9 @@
         chooserResetLabel={applied(pg.chooserResetLabel) || undefined}
         onToggleColumn={handleToggleColumn}
         onResetColumns={handleResetColumns}
+        columnFilters={columnFilters}
+        bind:filters={pg.filters.value}
+        onFilter={handleFilter}
         bind:sortKey={pg.sortKey.value}
         bind:sortDirection={pg.sortDirection.value}
         pagination={{

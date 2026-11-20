@@ -89,6 +89,9 @@ export async function editorContains(page: Page, text: string, section?: Locator
   const region = section ?? snippetRegion(page)
   const scroller = region.locator('.cm-scroller')
   const content = snippetEditor(page, section)
+  // The editor renders only the lines near the viewport and skips work while it
+  // is off screen, so bring it into view before scrolling through it.
+  await content.scrollIntoViewIfNeeded()
   const steps = 30
   for (let index = 0; index <= steps; index += 1) {
     if (((await content.textContent()) ?? '').includes(text)) return true

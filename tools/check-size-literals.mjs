@@ -59,6 +59,7 @@ export const ALLOWED = {
       reason: 'bounded viewer card chrome, outside the table metrics',
     },
     { tokens: ['pr-0'], reason: 'docs chrome drops the trailing pad on the last column' },
+    { tokens: ['inset-0'], reason: 'busy overlay covers the shell; it carries no control metric' },
   ],
   'DateField.svelte': [
     { tokens: ['max-w-[calc(100vw-1rem)]'], reason: 'viewport clamp on the calendar panel' },

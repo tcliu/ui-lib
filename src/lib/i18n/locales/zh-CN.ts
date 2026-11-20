@@ -129,6 +129,10 @@ export const zhCN = {
     export: '导出',
     exportSelected: '导出所选',
     clearSelection: '清除选择',
+    filter: '筛选',
+    filterColumn: '筛选 {column}',
+    clearFilters: '清除筛选',
+    loading: '正在加载数据',
   },
   edit: {
     editText: '编辑文本',

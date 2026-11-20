@@ -1,14 +1,15 @@
 import type { DataTableColumn, DataTablePagination, SortDirection } from './DataTable.svelte'
+import { applyColumnFilters, type ColumnFilters } from './table-column-filters'
 
 // The client-side controller behind `DataTable`'s `model` prop: it owns the
 // search filter, the sort order, the page slice, and the selection set, so the
 // table stays a presenter and a page that wants the same behavior does not
 // re-wire four state machines.
 //
-// The pipeline order is fixed: filter (searchable columns only) -> sort -> page.
-// The search term resets the page, the page clamps when the result set shrinks,
-// and the selection is pruned to the filtered rows so a hidden row never stays
-// selected behind a filter.
+// The pipeline order is fixed: column filters -> filter (searchable columns
+// only) -> sort -> page. The search term and a column filter reset the page, the
+// page clamps when the result set shrinks, and the selection is pruned to the
+// filtered rows so a hidden row never stays selected behind a filter.
 //
 // Reactivity arrives through getters, like the other composables: the caller's
 // `$state` rows and `$derived` columns are re-read on every recompute. The
@@ -29,6 +30,9 @@ export interface TableModelOptions<T> {
   paginate?: boolean
   initialSortKey?: string | null
   initialSortDirection?: SortDirection
+  // Per-column filter text to start from, keyed by column key. The model owns
+  // the state afterwards (`filters`, `setFilter`, `clearFilters`).
+  initialFilters?: ColumnFilters
   // Locale for the string comparator. Omitted falls back to the runtime locale,
   // so a caller that sorts only numeric/identifier columns needs nothing.
   locale?: () => string | undefined
@@ -38,8 +42,15 @@ export interface TableModel<T> {
   readonly rowId: (row: T) => string
   // The search term; assigning resets the page to the first one.
   searchValue: string
+  // Per-column filter text keyed by column key (columns marked `filterable`).
+  readonly filters: ColumnFilters
+  // How many filterable columns carry a non-blank filter.
+  readonly activeFilterCount: number
   readonly sortKey: string | null
   readonly sortDirection: SortDirection
+  // The unfiltered source rows, so a column's filter suggestions stay complete
+  // while the table itself is narrowed.
+  readonly allRows: T[]
   readonly totalRows: number
   readonly filteredRows: T[]
   readonly sortedRows: T[]
@@ -57,6 +68,10 @@ export interface TableModel<T> {
   setSort(key: string, direction: SortDirection): void
   setPage(page: number): void
   setPageSize(size: number): void
+  // Writes one column's filter text and returns to the first page.
+  setFilter(key: string, text: string): void
+  // Drops every column filter and returns to the first page.
+  clearFilters(): void
   toggleSelection(id: string, checked: boolean): void
   // Selects the current page, or clears the selection when the page is already
   // fully selected.
@@ -72,6 +87,7 @@ export function createTableModel<T>(options: TableModelOptions<T>): TableModel<T
   let sortDirection = $state<SortDirection>(options.initialSortDirection ?? 'asc')
   let currentPage = $state(1)
   let pageSize = $state(options.pageSize ?? 20)
+  let filters = $state<ColumnFilters>({ ...options.initialFilters })
   // Raw selection; reads go through the derived, pruned set below so a filter
   // hides a row without dropping its id from the caller's toggle history.
   let selection = $state<Set<string>>(new Set())
@@ -81,12 +97,20 @@ export function createTableModel<T>(options: TableModelOptions<T>): TableModel<T
 
   const searchableColumns = $derived(columns.filter(column => column.searchable))
 
+  const activeFilterCount = $derived(
+    columns.filter(column => column.filterable && (filters[column.key] ?? '').trim() !== '').length,
+  )
+
+  // Column filters run ahead of the search, so the page slice, the footer's
+  // total, and the pruned selection all read the narrowed set.
+  const columnFilteredRows = $derived(applyColumnFilters(sourceRows, columns, filters))
+
   const filteredRows = $derived.by(() => {
     const needle = search.trim().toLowerCase()
     if (needle === '' || searchableColumns.length === 0) {
-      return sourceRows
+      return columnFilteredRows
     }
-    return sourceRows.filter(row =>
+    return columnFilteredRows.filter(row =>
       searchableColumns.some(column => {
         const value = column.searchValue
           ? column.searchValue(row)
@@ -174,6 +198,16 @@ export function createTableModel<T>(options: TableModelOptions<T>): TableModel<T
     currentPage = 1
   }
 
+  function setFilter(key: string, text: string): void {
+    filters = { ...filters, [key]: text }
+    currentPage = 1
+  }
+
+  function clearFilters(): void {
+    filters = {}
+    currentPage = 1
+  }
+
   function toggleSelection(id: string, checked: boolean): void {
     // Rebuild from the pruned set, so a stale id cannot come back when the
     // filter that hid it is cleared.
@@ -205,6 +239,12 @@ export function createTableModel<T>(options: TableModelOptions<T>): TableModel<T
       search = next
       currentPage = 1
     },
+    get filters() {
+      return filters
+    },
+    get activeFilterCount() {
+      return activeFilterCount
+    },
     // A caller that resets the table programmatically uses the same path the
     // search field does, so the page always returns to the first one.
     get sortKey() {
@@ -215,6 +255,9 @@ export function createTableModel<T>(options: TableModelOptions<T>): TableModel<T
     },
     get totalRows() {
       return sortedRows.length
+    },
+    get allRows() {
+      return sourceRows
     },
     get filteredRows() {
       return filteredRows
@@ -255,6 +298,8 @@ export function createTableModel<T>(options: TableModelOptions<T>): TableModel<T
     setSort,
     setPage,
     setPageSize,
+    setFilter,
+    clearFilters,
     toggleSelection,
     toggleAll,
     clearSelection,

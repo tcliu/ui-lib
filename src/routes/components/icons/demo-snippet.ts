@@ -38,6 +38,7 @@ import ExportIcon from '#lib/icons/ExportIcon.svelte'
 import ExternalLinkIcon from '#lib/icons/ExternalLinkIcon.svelte'
 import EyeIcon from '#lib/icons/EyeIcon.svelte'
 import EyeSlashIcon from '#lib/icons/EyeSlashIcon.svelte'
+import FilterIcon from '#lib/icons/FilterIcon.svelte'
 import FireIcon from '#lib/icons/FireIcon.svelte'
 import FollowIcon from '#lib/icons/FollowIcon.svelte'
 import ForestIcon from '#lib/icons/ForestIcon.svelte'
@@ -126,6 +127,7 @@ export const ICON_ENTRIES: IconEntry[] = [
   { name: 'ExternalLink' },
   { name: 'Eye' },
   { name: 'EyeSlash' },
+  { name: 'Filter' },
   { name: 'Fire' },
   { name: 'Follow' },
   { name: 'Forest' },
@@ -237,6 +239,7 @@ export const ICON_COMPONENTS: Record<string, Component> = {
   ExternalLink: ExternalLinkIcon,
   Eye: EyeIcon,
   EyeSlash: EyeSlashIcon,
+  Filter: FilterIcon,
   Fire: FireIcon,
   Follow: FollowIcon,
   Forest: ForestIcon,

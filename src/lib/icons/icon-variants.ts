@@ -6,10 +6,11 @@
 //
 // The chevron family's own weight ladder lives in `chevron-stroke.ts`; the
 // double chevrons carry a third, fuller rendering, the copy and edit marks
-// carry their own, the delete mark adds its row/column band markers, and the
-// table mark adds the four insert edges. The icon viewport spec reads this
-// registry, so each rendering's geometry is validated against its own stroke
-// treatment instead of against the union of the glyph's renderings.
+// carry their own, the delete mark adds its row/column band markers, the filter
+// mark adds a spreadsheet-style bar rendering, and the table mark adds the four
+// insert edges. The icon viewport spec reads this registry, so each rendering's
+// geometry is validated against its own stroke treatment instead of against the
+// union of the glyph's renderings.
 import { CHEVRON_STYLE, CHEVRON_VARIANTS, type ChevronStrokeStyle } from './chevron-stroke'
 
 export interface IconVariantLadder {
@@ -60,6 +61,16 @@ export const DELETE_STYLE: Record<(typeof DELETE_VARIANTS)[number], ChevronStrok
   columns: { stroke: 1.82, linecap: 'round', linejoin: 'round' },
 }
 
+// The filter mark: `regular` is the solid funnel; `sheets` renders the
+// spreadsheet app's three-bar funnel, the lighter mark a dense header row
+// wants. Both are filled, so the stroke treatment is the filled sentinel.
+export const FILTER_VARIANTS = ['regular', 'sheets'] as const
+export type FilterVariant = (typeof FILTER_VARIANTS)[number]
+export const FILTER_STYLE: Record<(typeof FILTER_VARIANTS)[number], ChevronStrokeStyle> = {
+  regular: { stroke: 0, linecap: 'round', linejoin: 'round' },
+  sheets: { stroke: 0, linecap: 'round', linejoin: 'round' },
+}
+
 // The table mark: `regular` is the table frame with its header and column
 // rules; the insert renderings replace those rules with the band boundary and
 // the insertion tick, naming the row/column edge they add.
@@ -96,5 +107,6 @@ export const VARIANT_LADDERS: Record<string, IconVariantLadder> = {
   'CopyIcon.svelte': { variants: COPY_VARIANTS, styles: COPY_VARIANTS.map((v) => COPY_STYLE[v]) },
   'DeleteIcon.svelte': { variants: DELETE_VARIANTS, styles: DELETE_VARIANTS.map((v) => DELETE_STYLE[v]) },
   'EditIcon.svelte': { variants: EDIT_VARIANTS, styles: EDIT_VARIANTS.map((v) => EDIT_STYLE[v]) },
+  'FilterIcon.svelte': { variants: FILTER_VARIANTS, styles: FILTER_VARIANTS.map((v) => FILTER_STYLE[v]) },
   'TableIcon.svelte': { variants: TABLE_VARIANTS, styles: TABLE_VARIANTS.map((v) => TABLE_STYLE[v]) },
 }

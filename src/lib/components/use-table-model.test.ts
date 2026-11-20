@@ -184,3 +184,75 @@ describe('createTableModel', () => {
     expect([...model.selectedIds]).toEqual(['2'])
   })
 })
+
+describe('createTableModel column filters', () => {
+  const FILTERABLE: DataTableColumn<Row>[] = [
+    { key: 'name', header: 'Name', searchable: true, filterable: true },
+    { key: 'amount', header: 'Amount', num: true, filterable: true },
+    { key: 'status', header: 'Status', filterable: true },
+  ]
+
+  function filtered(pageSize = 2, initialFilters?: Record<string, string>) {
+    const rows = makeRows()
+    const model = createTableModel<Row>({
+      rows: () => rows,
+      rowId: row => String(row.id),
+      columns: () => FILTERABLE,
+      pageSize,
+      initialFilters,
+    })
+    return { rows, model }
+  }
+
+  it('narrows rows and the footer total, and returns to the first page', () => {
+    const { model } = filtered()
+    model.setPage(3)
+    model.setFilter('status', 'OPEN')
+    expect(model.currentPage).toBe(1)
+    expect(model.filteredRows.map(row => row.id)).toEqual([1, 3, 4, 5])
+    expect(model.totalRows).toBe(4)
+    expect(model.totalPages).toBe(2)
+    expect(model.pagination?.total).toBe(4)
+  })
+
+  it('ANDs column filters with the search term', () => {
+    const { model } = filtered(10)
+    model.setFilter('status', 'OPEN')
+    model.searchValue = 'item'
+    expect(model.filteredRows.map(row => row.id)).toEqual([4, 5])
+    model.setFilter('name', 'item2')
+    expect(model.filteredRows.map(row => row.id)).toEqual([5])
+  })
+
+  it('sorts the filtered set, keeping the pipeline order', () => {
+    const { model } = filtered(10)
+    model.setFilter('status', 'OPEN')
+    model.setSort('amount', 'desc')
+    expect(model.sortedRows.map(row => row.id)).toEqual([1, 5, 4, 3])
+  })
+
+  it('counts active filters, ignores blanks, and clears them all', () => {
+    const { model } = filtered(10, { status: 'OPEN' })
+    expect(model.filters).toEqual({ status: 'OPEN' })
+    expect(model.activeFilterCount).toBe(1)
+    model.setFilter('name', '  ')
+    expect(model.activeFilterCount).toBe(1)
+    model.setFilter('name', 'item')
+    expect(model.activeFilterCount).toBe(2)
+    model.clearFilters()
+    expect(model.filters).toEqual({})
+    expect(model.activeFilterCount).toBe(0)
+    expect(model.filteredRows.map(row => row.id)).toEqual([1, 2, 3, 4, 5])
+  })
+
+  it('prunes the selection against the column-filtered rows', () => {
+    const { model } = filtered(10)
+    model.toggleSelection('1', true)
+    model.toggleSelection('2', true)
+    model.setFilter('status', 'CLOSED')
+    expect([...model.selectedIds]).toEqual(['2'])
+    // Clearing the filter restores the raw selection, like the search does.
+    model.clearFilters()
+    expect([...model.selectedIds].sort()).toEqual(['1', '2'])
+  })
+})

@@ -35,6 +35,8 @@ const base: DataTableSnippetState = {
   searchKeys: staged(null, true),
   chooserLabel: staged(''),
   chooserResetLabel: staged(''),
+  columnFilters: staged('', true),
+  filters: staged({}, true),
   selectAllAriaLabel: staged(''),
   allSelected: staged('', true),
   someSelected: staged('', true),
@@ -55,18 +57,18 @@ describe('buildDataTableSnippet', () => {
     const set = buildDataTableSnippet({ ...base, trailing: 'entries' })
     expect(set).toContain('trailing: tableTrailing,')
     expect(set).toContain('{#snippet tableTrailing()}')
-    expect(set).toContain('{visibleTotal(rows, pgQuery)} entries</span>')
+    expect(set).toContain('{visibleTotal(rows, pgQuery, pgFilters)} entries</span>')
   })
 
   it('escapes the trailing suffix', () => {
     const source = buildDataTableSnippet({ ...base, trailing: 'a & <b>' })
-    expect(source).toContain('{visibleTotal(rows, pgQuery)} a &amp; &lt;b&gt;</span>')
+    expect(source).toContain('{visibleTotal(rows, pgQuery, pgFilters)} a &amp; &lt;b&gt;</span>')
   })
 
   it('emits the pagination object with the scope paging wiring', () => {
     const source = buildDataTableSnippet(base)
     expect(source).toContain('pagination={{')
-    expect(source).toContain('total: visibleTotal(rows, pgQuery),')
+    expect(source).toContain('total: visibleTotal(rows, pgQuery, pgFilters),')
     expect(source).toContain('pageSize: demoPageSize,')
     expect(source).toContain('currentPage: pgPage,')
     expect(source).toContain('onPageChange: handlePageChange,')

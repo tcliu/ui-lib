@@ -129,6 +129,10 @@ export const en = {
     export: 'Export',
     exportSelected: 'Export selected',
     clearSelection: 'Clear selection',
+    filter: 'Filter',
+    filterColumn: 'Filter {column}',
+    clearFilters: 'Clear filters',
+    loading: 'Loading rows',
   },
   edit: {
     editText: 'Edit text',

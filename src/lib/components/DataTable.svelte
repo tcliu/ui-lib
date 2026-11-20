@@ -10,12 +10,16 @@
   import CaretDownIcon from '#lib/icons/CaretDownIcon.svelte'
   import CaretUpIcon from '#lib/icons/CaretUpIcon.svelte'
   import Button from './Button.svelte'
+  import ColumnFilter from './ColumnFilter.svelte'
+  import ClearButton from './ClearButton.svelte'
   import CloseIcon from '#lib/icons/CloseIcon.svelte'
   import ExportIcon from '#lib/icons/ExportIcon.svelte'
+  import type { SelectOption } from './SelectDropdown.svelte'
   import { createTableColumns } from './use-table-columns.svelte'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
   import { createTableScrollSync } from './use-table-scroll-sync.svelte'
   import type { TableModel } from './use-table-model.svelte'
+  import { applyColumnFilters, collectFilterOptions, type ColumnFilters } from './table-column-filters'
   import { resolveColumnWidths } from '#lib/components/column-helpers.js'
   import Tooltip from './Tooltip.svelte'
   import { getI18nContext } from '#lib/i18n/store.svelte.js'
@@ -61,6 +65,12 @@
     // managed controller, so a column whose key is not a row property (an
     // actions column, a formatted cell) can still be searchable.
     searchValue?: (row: T) => string
+    // Makes the column's header carry a filter trigger. Its
+    // text matches `searchValue` (else `row[key]`), case-insensitively.
+    filterable?: boolean
+    // Suggestions offered by the column's filter field. Absent derives them from
+    // the rows the table holds (distinct non-empty values, sorted, capped).
+    filterOptions?: SelectOption[]
   }
 
   // The built-in Export/Clear pair in the batch toolbar. `fileName` names the
@@ -171,6 +181,20 @@
     // scroll container, sticky header, and row hover. `docs` is the static
     // documentation table: plain overflow wrapper, non-sticky header, no hover.
     variant?: 'data' | 'docs'
+    // Per-column filters: `columnFilters` adds a funnel trigger to every
+    // `filterable` column's header, opening a portalled panel with the same
+    // free-text autocomplete (the column's values as suggestions). `filters` is
+    // the text keyed by column and is bindable, so a caller can pre-seed or
+    // reset it.
+    //
+    // Ownership: a `model` filters its own rows; otherwise `onFilter` makes the
+    // table a presenter that only emits (server-side filtering); otherwise the
+    // table filters the rows it renders itself when it owns the full set (no
+    // `pagination`). With `pagination` and no `onFilter` the trigger is a
+    // presenter too — the caller filters upstream, like the search box.
+    columnFilters?: boolean
+    filters?: ColumnFilters
+    onFilter?: (key: string, value: string) => void
     sortKey?: string | null
     sortDirection?: SortDirection
     onSort?: (key: string, direction: SortDirection) => void
@@ -232,6 +256,9 @@
     fillHeight = false,
     bodyScroll = false,
     showPagination,
+    columnFilters = false,
+    filters = $bindable({}),
+    onFilter,
     dense = false,
     bordered = true,
     variant = 'data',
@@ -255,6 +282,8 @@
   const resolvedChooserLabel = $derived(chooserLabel ?? i18n.t('table.chooseColumns'))
   const resolvedChooserResetLabel = $derived(chooserResetLabel ?? i18n.t('table.resetColumns'))
   const resolvedSelectAllAriaLabel = $derived(selectAllAriaLabel ?? i18n.t('table.selectAll'))
+  const resolvedClearFiltersLabel = $derived(i18n.t('table.clearFilters'))
+  const resolvedLoadingLabel = $derived(i18n.t('table.loading'))
 
   // Cell/header text and the table's own floors ride the shared size axis.
   // `md` reproduces the original `text-sm` cells: a 14px font on a 20px line
@@ -301,7 +330,14 @@
   // and the footer. Without one, the component stays the controlled presenter it
   // has always been.
 
-  const activeRows = $derived(model ? model.pageRows : (rows ?? []))
+  const displayRows = $derived(model ? model.pageRows : (rows ?? []))
+  // The table narrows its own rows only when it owns the full set: no model, no
+  // remote callback, and no pagination (a page slice cannot produce correct
+  // counts). Otherwise the row stays a presenter, like the search box.
+  const localFiltering = $derived(!model && !onFilter && pagination == null)
+  const activeRows = $derived(
+    localFiltering ? applyColumnFilters(displayRows, columns, filters) : displayRows,
+  )
   const activeRowId = $derived(
     model?.rowId ?? rowId ?? ((row: T) => String(activeRows.indexOf(row))),
   )
@@ -311,6 +347,31 @@
   const activeAllSelected = $derived(model ? model.allSelected : allSelected)
   const activeSomeSelected = $derived(model ? model.someSelected : someSelected)
   const activePagination = $derived(model ? model.pagination : pagination)
+
+  // Column filters: the model owns them in managed mode; a controlled table
+  // keeps them in the bindable `filters` prop. The row renders only when the
+  // caller opted in and at least one column is filterable.
+  const activeFilters = $derived(model ? model.filters : filters)
+  const activeFilterCount = $derived(
+    model
+      ? model.activeFilterCount
+      : columns.filter(column => column.filterable && (filters[column.key] ?? '').trim() !== '')
+          .length,
+  )
+  const hasColumnFilters = $derived(columnFilters && columns.some(column => column.filterable))
+  // Suggestions read the unfiltered rows, so a panel never loses options as the
+  // table narrows. A caller's `filterOptions` wins per column.
+  const filterOptionSets = $derived.by(() => {
+    const source = model ? model.allRows : (rows ?? [])
+    const sets: Record<string, SelectOption[]> = {}
+    for (const column of columns) {
+      if (!column.filterable) {
+        continue
+      }
+      sets[column.key] = column.filterOptions ?? collectFilterOptions(source, column)
+    }
+    return sets
+  })
 
   // Pagination is configured when the object supplies its data and the
   // page-change handler, so omitting any of them renders no footer. An explicit
@@ -341,6 +402,31 @@
     (showPagination ?? (model ? model.hasMorePages : resolvedPagination != null)) &&
       resolvedPagination != null,
   )
+
+  // A refetch over already-loaded rows keeps them in the DOM; the overlay tells
+  // the user the page is stale rather than replacing the table with a spinner.
+  const showBusyOverlay = $derived(loading && activeRows.length > 0)
+
+  // A remote total can shrink below the page the caller is on (a deleted last
+  // row, a narrower filter). Report the clamp back once per out-of-range value
+  // instead of rendering a page with no active cell.
+  let lastClampedPage: number | null = null
+  $effect(() => {
+    if (model || !resolvedPagination) {
+      return
+    }
+    const pageSize = Math.max(1, resolvedPagination.pageSize)
+    const totalPages = Math.max(1, Math.ceil(resolvedPagination.total / pageSize))
+    if (resolvedPagination.currentPage <= totalPages) {
+      lastClampedPage = null
+      return
+    }
+    if (lastClampedPage === resolvedPagination.currentPage) {
+      return
+    }
+    lastClampedPage = resolvedPagination.currentPage
+    resolvedPagination.onPageChange(totalPages)
+  })
 
   // --- Batch toolbar ------------------------------------------------------
 
@@ -541,11 +627,38 @@
     }
     onSort?.(column.key, direction)
   }
+
+  // One column's filter text. In managed mode the model owns the state and the
+  // page reset; otherwise the bindable `filters` prop is the source and the
+  // caller hears every change through `onFilter`.
+  function setColumnFilter(key: string, value: string): void {
+    if (model) {
+      model.setFilter(key, value)
+      return
+    }
+    filters = { ...filters, [key]: value }
+    onFilter?.(key, value)
+  }
+
+  function clearColumnFilters(): void {
+    if (model) {
+      model.clearFilters()
+      return
+    }
+    const cleared = Object.keys(filters)
+    filters = {}
+    for (const key of cleared) {
+      onFilter?.(key, '')
+    }
+  }
 </script>
 
 <svelte:window onmouseup={tableColumns.resize.handleResizeMouseUp} onmousemove={tableColumns.resize.handleResizeMouseMove} />
 
-<div class="flex w-full min-w-0 flex-col gap-[var(--table-shell-gap)] {fillHeight ? 'min-h-0 flex-1' : ''}" style={tableStyle}>
+<div
+  class="flex w-full min-w-0 flex-col gap-[var(--table-shell-gap)] {fillHeight ? 'min-h-0 flex-1' : ''} {showBusyOverlay ? 'relative' : ''}"
+  style={tableStyle}
+  aria-busy={loading || undefined}>
   {#if showToolbarRow}
     <div class="flex min-h-[var(--table-toolbar-min-h)] shrink-0 flex-wrap items-center gap-[var(--table-toolbar-gap)]">
       {#if toolbar}
@@ -588,7 +701,7 @@
     </div>
   {/if}
 
-  {#if showSearch || chooserColumns}
+  {#if showSearch || chooserColumns || hasColumnFilters}
     <div class="flex flex-wrap items-center gap-[var(--table-filter-gap)] {fillHeight ? 'shrink-0' : ''}">
       {#if showSearch}
         {#if model}
@@ -610,6 +723,13 @@
             placeholder={resolvedSearchPlaceholder}
             wrapperClass="min-w-0 flex-1" />
         {/if}
+      {/if}
+      {#if hasColumnFilters}
+        <ClearButton
+          {size}
+          ariaLabel={resolvedClearFiltersLabel}
+          disabled={activeFilterCount === 0}
+          onClick={clearColumnFilters} />
       {/if}
       {#if chooserColumns}
         <ColumnChooser
@@ -718,7 +838,7 @@
         <th
           bind:this={headerEls[i]}
           scope="col"
-          class="{headerCellBase} {column.sortable ? 'group' : ''} {column.num ? 'num' : ''} {tableColumns.managedWidths
+          class="{headerCellBase} {column.num ? 'num' : ''} {tableColumns.managedWidths
             ? ''
             : column.widthClass} {tableColumns.managedWidths ? '' : column.minWidthClass}"
           style={[
@@ -734,36 +854,53 @@
           {#if column.headerTip}
             <Tooltip {size}>{column.headerTip}</Tooltip>
           {/if}
-          {#if column.sortable}
-            <span class="flex w-full items-center gap-[var(--table-header-gap)] text-left {centerHeader ? 'relative justify-center px-[var(--table-header-pad-x)]' : ''}">
+          {#if column.sortable || column.filterable}
+            <span class="flex w-full items-center gap-[var(--table-header-gap)] text-left {column.num
+              ? 'justify-end'
+              : ''} {centerHeader ? 'relative justify-center px-[var(--table-header-pad-x)]' : ''}">
               <span class={centerHeader ? 'min-w-0 overflow-hidden break-words text-ellipsis' : ''}
                 >{column.header}</span>
+              <!-- Controls sit right beside the label (a numeric header keeps
+                   them at its right edge with the label); a centered header
+                   pins the cluster to its right edge so the label stays
+                   centered. -->
               <span
-                class="flex flex-col gap-[var(--table-sort-gap)] {centerHeader
+                class="flex items-center gap-[var(--table-header-gap)] {centerHeader
                   ? 'absolute top-1/2 right-0 -translate-y-1/2'
-                  : ''} text-slate-400 transition-opacity {isActive
-                  ? 'opacity-100'
-                  : '[@media(hover:hover)]:opacity-0'} group-focus-within:opacity-100 group-hover:opacity-100">
-                <button
-                  type="button"
-                  class="flex rounded-[var(--table-sort-radius)] leading-none transition-colors outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 {isAsc
-                    ? 'text-cyan-400'
-                    : 'hover:text-cyan-300 focus-visible:text-cyan-300'}"
-                  aria-label={sortAriaLabel?.(column, 'asc') ?? i18n.t('table.sortAsc', { column: column.header })}
-                  onclick={() => handleSortClick(column, 'asc')}>
-                  <!-- The caret is cropped tight to the triangle, so `size` is the
-                       width it renders at (0.8125 × 10) rather than a square box. -->
-                  <CaretUpIcon size={10} />
-                </button>
-                <button
-                  type="button"
-                  class="flex rounded-[var(--table-sort-radius)] leading-none transition-colors outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 {isDesc
-                    ? 'text-cyan-400'
-                    : 'hover:text-cyan-300 focus-visible:text-cyan-300'}"
-                  aria-label={sortAriaLabel?.(column, 'desc') ?? i18n.t('table.sortDesc', { column: column.header })}
-                  onclick={() => handleSortClick(column, 'desc')}>
-                  <CaretDownIcon size={10} />
-                </button>
+                  : ''}">
+                {#if column.sortable}
+                  <span class="flex flex-col gap-[var(--table-sort-gap)] text-slate-400">
+                    <button
+                      type="button"
+                      class="flex rounded-[var(--table-sort-radius)] leading-none transition-colors outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 {isAsc
+                        ? 'text-cyan-400'
+                        : 'hover:text-cyan-300 focus-visible:text-cyan-300'}"
+                      aria-label={sortAriaLabel?.(column, 'asc') ?? i18n.t('table.sortAsc', { column: column.header })}
+                      onclick={() => handleSortClick(column, 'asc')}>
+                      <!-- The caret is cropped tight to the triangle, so `size` is the
+                           width it renders at (0.8125 × 10) rather than a square box. -->
+                      <CaretUpIcon size={10} />
+                    </button>
+                    <button
+                      type="button"
+                      class="flex rounded-[var(--table-sort-radius)] leading-none transition-colors outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 {isDesc
+                        ? 'text-cyan-400'
+                        : 'hover:text-cyan-300 focus-visible:text-cyan-300'}"
+                      aria-label={sortAriaLabel?.(column, 'desc') ?? i18n.t('table.sortDesc', { column: column.header })}
+                      onclick={() => handleSortClick(column, 'desc')}>
+                      <CaretDownIcon size={10} />
+                    </button>
+                  </span>
+                {/if}
+                {#if column.filterable && columnFilters}
+                  <ColumnFilter
+                    column={column.header}
+                    value={activeFilters[column.key] ?? ''}
+                    options={filterOptionSets[column.key] ?? []}
+                    {size}
+                    onInput={value => setColumnFilter(column.key, value)}
+                    onClear={() => setColumnFilter(column.key, '')} />
+                {/if}
               </span>
             </span>
           {:else}
@@ -826,6 +963,13 @@
           {@render tableBody()}
         </tbody>
       </table>
+    </div>
+  {/if}
+
+  {#if showBusyOverlay}
+    <div class="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-slate-950/40">
+      <span class="sr-only" role="status">{resolvedLoadingLabel}</span>
+      <Spinner {size} />
     </div>
   {/if}
 

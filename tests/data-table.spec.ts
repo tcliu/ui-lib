@@ -23,7 +23,7 @@ test('showcase: DataTable toolbar hosts search plus column selector and reset', 
   await search.fill('Viewer')
   await expect(section.locator('tbody tr')).toHaveCount(1)
   await search.fill('')
-  await expect(section.locator('tbody tr')).toHaveCount(10)
+  await expect(section.locator('tbody tr')).toHaveCount(20)
   await section.getByRole('button', { name: 'Choose columns' }).click()
   // The panel is portaled to the body by positionPanel, so it is no longer a
   // descendant of the section; select it by role instead.
@@ -44,7 +44,7 @@ test('showcase: DataTable toolbar hosts search plus column selector and reset', 
   await expect(section.getByRole('button', { name: /^Resize / })).toHaveCount(0)
 
   // The row total rides at the pagination row's right edge.
-  await expect(section.getByRole('navigation').getByText('30 rows')).toBeVisible()
+  await expect(section.getByRole('navigation').getByText('75 rows')).toBeVisible()
 })
 
 test('showcase: DataTable Value cells drive the demo table', async ({ page }) => {
@@ -63,7 +63,7 @@ test('showcase: DataTable Value cells drive the demo table', async ({ page }) =>
   const selectableBox = page.getByRole('checkbox', { name: 'selectable value' })
   await selectableBox.focus()
   await page.keyboard.press('Space')
-  await expect(demo.locator('tbody input[type="checkbox"]')).toHaveCount(10)
+  await expect(demo.locator('tbody input[type="checkbox"]')).toHaveCount(20)
 
   // Clearing it back restores the pristine table.
   await selectableBox.focus()
@@ -218,13 +218,13 @@ test('showcase: the DataTable sortKey and sortDirection Value cells drive sortin
   // Unset renders insertion order (Catalog first).
   await expect(demo.locator('tbody tr').first()).toContainText('Catalog')
 
-  // sortKey=name sorts ascending (Archive first); desc flips it (Viewer first).
+  // sortKey=name sorts ascending (Access first); desc flips it (Workflows first).
   await page.getByRole('textbox', { name: 'sortKey value', exact: true }).fill('name')
-  await expect(demo.locator('tbody tr').first()).toContainText('Archive')
+  await expect(demo.locator('tbody tr').first()).toContainText('Access')
   const direction = page.getByRole('combobox', { name: 'sortDirection value' })
   await direction.press('ArrowDown')
   await page.getByRole('option', { name: 'desc' }).click()
-  await expect(demo.locator('tbody tr').first()).toContainText('Viewer')
+  await expect(demo.locator('tbody tr').first()).toContainText('Workflows')
 
   // Clearing sortKey restores insertion order.
   await page.getByRole('button', { name: 'Clear sortKey' }).click()
@@ -278,6 +278,7 @@ test('showcase: a DataTable column resize handle widens its column', async ({ pa
 
   // The demo declares no storageKey, so the widths stay session-only.
   const handle = handles.first()
+  await handle.scrollIntoViewIfNeeded()
   const box = (await handle.boundingBox())!
   // A splitter straddles its column's edge (translated by half its width), so
   // its outer half overlaps the next header: grab the inner half.
@@ -320,4 +321,55 @@ test('showcase: the DataTable variant Value cell switches to the docs layout', a
   // Docs table: no sticky band, collapsed borders, no row hover.
   await expect(header).toHaveCSS('position', 'static')
   await expect(demo.locator('table')).toHaveCSS('border-collapse', 'collapse')
+})
+
+test('showcase: DataTable column filters open from the header and narrow the demo', async ({ page }) => {
+  await page.goto('/components/data-table')
+  await page.waitForLoadState('networkidle')
+  const demo = showcaseDemo(page)
+
+  // Off by default: the demo declares filterable columns but no triggers.
+  await expect(demo.getByRole('button', { name: 'Filter Status' })).toHaveCount(0)
+
+  // The columnFilters Value cell (its input is clipped, so toggle from the
+  // keyboard) turns the triggers on.
+  const columnFiltersBox = page.getByRole('checkbox', { name: 'columnFilters value' })
+  await columnFiltersBox.focus()
+  await page.keyboard.press('Space')
+  const statusFilter = demo.getByRole('button', { name: 'Filter Status' })
+  await expect(statusFilter).toBeVisible()
+  await expect(demo.getByRole('button', { name: 'Filter Name' })).toBeVisible()
+
+  // The sort arrows stay visible without hovering.
+  await expect(demo.getByRole('button', { name: 'Sort Name ascending' })).toBeVisible()
+  await expect(demo.getByRole('button', { name: 'Sort Name descending' })).toBeVisible()
+
+  // The trigger opens a portalled panel whose input takes focus.
+  await statusFilter.click()
+  const panel = page.locator('[role="group"]', { has: page.getByRole('combobox', { name: 'Filter Status' }) })
+  await expect(panel).toBeVisible()
+  const input = panel.getByRole('combobox', { name: 'Filter Status' })
+  await expect(input).toBeFocused()
+
+  // A custom typed value narrows the caller's pipeline and its row total.
+  await input.fill('Active')
+  await expect(demo.getByRole('navigation').getByText('50 rows')).toBeVisible()
+  await expect(demo.locator('tbody tr')).toHaveCount(20)
+
+  // Clearing every filter restores the full set.
+  await demo.getByRole('button', { name: 'Clear filters' }).click()
+  await expect(demo.getByRole('navigation').getByText('75 rows')).toBeVisible()
+
+  // The Name column suggests its own values; picking one filters to it and
+  // leaves the filter panel open.
+  await demo.getByRole('button', { name: 'Filter Name' }).click()
+  const nameInput = page.locator('[role="group"]').getByRole('combobox', { name: 'Filter Name' })
+  await nameInput.click()
+  await page.getByRole('option', { name: 'Catalog', exact: true }).click()
+  await expect(demo.getByRole('navigation').getByText('1 rows')).toBeVisible()
+  await expect(demo.locator('tbody tr').first()).toContainText('Catalog')
+
+  // The per-column clear empties that filter only.
+  await page.locator('[role="group"]').getByRole('button', { name: 'Clear Name' }).click()
+  await expect(demo.getByRole('navigation').getByText('75 rows')).toBeVisible()
 })
