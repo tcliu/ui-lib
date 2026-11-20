@@ -153,6 +153,7 @@ Project-specific development conventions for the UI Library web app.
   is what hands the box to the caller, so a stepper-less field keeps its bordered
   box — pair it with `hideOutline` for a borderless one.
 - A clearable field extends the shared `ClearableProps` group, never re-declaring it or hand-rolling a cross; mechanism in `ARCHITECTURE.md` (Input family).
+- A standalone clear action (clear filters, clear tags) is `ClearButton`, never a default `Button`: it rides the field clear metrics, so its cross matches the clearable fields beside it.
 - A clearable multi-row field (`TagInput`, `TextArea`) anchors its cross to the first row/line rather than the field's height, so wrapping, growing, or resizing never moves it.
 - A `number` Value cell driving live interaction state (its setter ignores blank input) stays non-clearable.
 - A composite field uses `TextInput`'s `trailer` slot for content outside the
@@ -184,6 +185,7 @@ Project-specific development conventions for the UI Library web app.
 - A dialog panel's footprint is `BaseDialog`'s `widthVariant`/`heightVariant` (or the `size` shorthand setting both; explicit variant wins), not a `SizeInput` metric scale. Mechanism in `ARCHITECTURE.md`.
 - Size svg primitives (icons, spinner) take `size` attributes, never classes.
 - A sized control's icon slot is the size dimension itself (`icon` ratio `1`), while the glyph renders at the shared `ICON_RATIO` (`0.8125`), keeping the optical size the filled-viewBox glyphs were normalized from.
+- An icon-only `Button` renders its glyph 15% larger (`0.934375`) than a labelled button's while the slot and box stay the same, so the mark reads as the control.
 - An in-field affordance glyph rides a trimmed share of the icon slot rather than the whole slot — the dropdown trigger's chevron and its clear cross and a clearable field's cross at `0.625×`, the number steppers at `0.75×`, the date panel's clear cross at `0.8×`, the search icon at `0.9×` — so it reads lighter than the label while still scaling with the control.
 - `ChipDropdown` scales on the shared size axis (its ratios calibrated so `md` reproduces the original chip's label, padding, and gaps, with its chevron on `SelectDropdown`'s `0.625×` affordance share) and reserves the clear slot while holding its own label width, so clearing never resizes it.
 - `Chip` owns its size-scaled spacing (padding, font, line, gap) on the shared axis; `chipClass` supplies color and the static pill's shape (radius), so a caller passes `size` instead of baking padding/font into the class.
@@ -211,9 +213,9 @@ Project-specific development conventions for the UI Library web app.
 - Reuse this project's existing UI primitives; every button is the shared
   `Button` (icon-only through its `icon` snippet) per
   `~/.agents/references/ui-patterns.md`, never a raw `<button>`.
-- A padded `Button` keeps its compact label and original vertical padding, and
-  derives its line box from the text field's row box instead, so a button beside
-  a field lands on the same height without growing its padding. Mechanism in
+- A padded `Button` keeps its compact label and vertical padding and derives
+  its line box from the field row, so it lands level beside a field; its label
+  takes a `0.1×` optical nudge so cap-height text centers. Mechanism in
   `ARCHITECTURE.md`.
 - A composite trigger that renders the shared `Button` (the `Menu` trigger)
   inherits its box, hit area, focus ring, and glyph size, so the trigger's

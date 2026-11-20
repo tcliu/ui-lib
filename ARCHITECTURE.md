@@ -438,6 +438,12 @@ of building a parallel control.
   owns the whole row. The gap is the row's only metric (a fixed ratio of the
   size dimension, so `md` lands on the `gap-2` step (8px)), and the buttons
   keep the size the caller gives them.
+- **ClearButton** — the standalone clear affordance: a ghost icon button whose
+  cross and pointer box ride the clearable field's own metrics (`size` names
+  the field step it matches), with a localized `Clear` accessible name and
+  optional `disabled`/`tooltip`. A filter or tag row uses it instead of a
+  default `Button`, so the action matches the clear crosses in the fields
+  around it.
 - **Size metrics** — a sized component exposes one numeric size dimension;
   `xs`–`xl` are aliases of the shared `SIZE_PX` axis (`xs:12 … xl:20`). Every
   metric scales by a fixed ratio of that dimension (`metric = ratio ×
@@ -455,6 +461,11 @@ of building a parallel control.
   box (`line + 2·padY`) equals the text field's row box
   (`INPUT_RATIOS.line + 2·INPUT_RATIOS.padY`), while its vertical padding stays
   at the original share, so the compact button still sits level beside a field.
+  Its label carries a `0.1×` optical nudge (`--btn-label-nudge`): the line box
+  centers the font's ascent/descent box, but a word without descenders fills
+  only the ascent side, so half the unused descent reads as extra bottom space;
+  the nudge centers the cap height while descenders hang naturally, leaving the
+  box height and padding untouched.
   `TagInput` derives the same way: its container padding carries only the
   remainder of the field's padding (`INPUT_RATIOS.padY − inputPadY`), so the
   inner input's share never adds height and an empty tag row matches a same-size
@@ -491,6 +502,9 @@ of building a parallel control.
   and the glyph rendered into it takes the shared icon ratio (`ICON_RATIO`,
   0.8125) — the text-like font ratio, so an `md` icon lands at 13px, the size of
   its label and the optical size the filled-viewBox glyphs were normalized from.
+  An icon-only `Button` uses `iconOnlyGlyph` (`ICON_RATIO × 1.15`, 14.95px
+  at `md`) inside the same slot, so a label-less glyph reads as the control while
+  the button box and hit area stay unchanged.
   An in-field affordance trims that slot rather than matching the label:
   `SelectDropdown`'s trigger chevron and clear cross, `TextInput`'s clear cross,
   and `TagInput`'s clear cross ride `0.625×` it, `NumberInput`'s steppers
