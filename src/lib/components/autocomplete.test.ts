@@ -154,6 +154,36 @@ describe('AutoComplete value model', () => {
     expect(text('value')).toBe('United Kingdom')
     expect(text('picked')).toBe('uk')
   })
+
+  it('reports live input text through onInput and keeps free text', () => {
+    openPanel()
+    type('Atlantis')
+    expect(text('typed')).toBe('Atlantis')
+    // Free text is a valid value even with no matching suggestion.
+    expect(text('value')).toBe('Atlantis')
+    expect(text('picked')).toBe('')
+  })
+
+  it('reports a picked option through onInput as well as onSelect', () => {
+    openPanel()
+    type('can')
+    expect(pressKey('Enter')).toBe(true)
+    expect(text('typed')).toBe('Canada')
+    expect(text('picked')).toBe('ca')
+  })
+
+  it('reports the cleared value through onInput', () => {
+    openPanel()
+    type('Atlantis')
+    const clear = document.querySelector('button[aria-label="Clear"]')
+    if (!(clear instanceof HTMLButtonElement)) {
+      throw new Error('clear button not found')
+    }
+    clear.click()
+    flushSync()
+    expect(text('typed')).toBe('')
+    expect(text('value')).toBe('')
+  })
 })
 
 describe('AutoComplete ratios', () => {

@@ -10,12 +10,16 @@
 
   let value = $state('')
   let picked = $state('')
+  let typed = $state('')
 </script>
 
 <AutoComplete
   bind:value
   {options}
   ariaLabel="Country"
-  onSelect={next => (picked = next)} />
+  clearable
+  onSelect={next => (picked = next)}
+  onInput={next => (typed = next)} />
 <span data-testid="value">{value}</span>
 <span data-testid="picked">{picked}</span>
+<span data-testid="typed">{typed}</span>

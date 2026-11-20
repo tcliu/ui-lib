@@ -171,6 +171,7 @@
     enumField({ name: 'variant', type: "'bordered' | 'embedded'", defaultValue: "'bordered'", note: 'Chrome variant; embedded drops the border, the background, and the focus ring for a field rendered inside another surface.', options: variantOptions, placeholder: 'bordered', clearLabel: 'Clear variant', ...eye(pg.variant) }),
     { name: 'inputRef', type: 'HTMLInputElement | null', defaultValue: 'null', note: 'Bindable native input element.' },
     { name: 'onClear', type: '() => void', defaultValue: 'clears value', note: 'Clear handler; falls back to clearing the bound value when omitted.' },
+    { name: 'onInput', type: '(value: string) => void', defaultValue: '—', note: 'Called with the live input text on typing, clearing, or an option pick; `value` stays the bindable source.' },
     { name: 'onSelect', type: '(value: string) => void', defaultValue: '—', note: "Called with the chosen option's value when an option is picked." }
   ])
 

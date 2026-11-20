@@ -60,6 +60,11 @@
     // Called with the chosen option's `value` when an option is picked (a
     // notification, not the source of truth — `value` stays the display text).
     onSelect?: (value: string) => void
+    // Called with the live input text on every change: typing, clearing, or an
+    // option pick writing its label. `value` remains the bindable source; this
+    // is the notification a controlled caller (a column filter, a remote query)
+    // reacts to without binding.
+    onInput?: (value: string) => void
     ariaLabel?: string
     placeholder?: string
     size?: SizeInput
@@ -82,6 +87,7 @@
     defaultValue,
     options,
     onSelect,
+    onInput,
     ariaLabel,
     placeholder,
     size = 'md',
@@ -247,16 +253,32 @@
       // Read the element's own value so the open filter is fresh even if the
       // `bind:value` write has not landed in this handler's turn yet.
       const next = inputRef?.value
-      if (next !== undefined && next !== value) {
+      if (next === undefined) return
+      if (next !== value) {
         value = next
       }
+      // Report every change, including one the field's own binding already
+      // applied, so a controlled caller never misses a keystroke.
+      onInput?.(next)
     },
   })
 
   function select(option: NormalizedOption) {
     value = option.label
+    onInput?.(option.label)
     onSelect?.(option.value)
     close()
+  }
+
+  // Mirrors `TextInput`'s fallback clear so the notification fires whether the
+  // caller supplied its own `onClear` or left the clear to the field.
+  function handleClear() {
+    if (onClear) {
+      onClear()
+    } else {
+      value = defaultValue ?? ''
+      onInput?.(value)
+    }
   }
 
   function handleKeydown(event: KeyboardEvent) {
@@ -308,7 +330,7 @@
     {clearable}
     {clearLabel}
     {clearPlacement}
-    {onClear}
+    onClear={handleClear}
     role="combobox"
     aria-autocomplete="list"
     aria-expanded={showPanel}
