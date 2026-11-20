@@ -13,6 +13,7 @@ export function GET(): Response {
     normalizeCard({
       id: 'ui-lib',
       name: 'UI Library',
+      description: 'The shared UI surface: components, icons, actions and the i18n store.',
       branch,
       // Runtime profile authority: `PROFILE` (`dev`/`prod`), absent in apps with
       // no runtime profile (the card normalizes it to `null`).
