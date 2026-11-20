@@ -454,13 +454,17 @@ of building a parallel control.
   left in a sized component fails `tools/check-size-literals.mjs` (see the size
   literal gate). Font is a ratio too — the text-like controls take the
   shared `FONT_RATIO` (0.875: the input chrome, `SelectDropdown`, `DateInput`,
-  `TagInput`, `Pagination`, `Tooltip`, the code editors, and the table cells,
-  while `Button` keeps its compact `0.8125` label. A table's `dense` step is its
+  `TagInput`, `Pagination`, `Tooltip`, the code editors, the table cells, and
+  `Button`). A table's `dense` step is its
   own ratio set rather than a multiplier of the normal cell (see the DataTable
-  bullet). `Button`'s line box is derived so its padded
-  box (`line + 2·padY`) equals the text field's row box
-  (`INPUT_RATIOS.line + 2·INPUT_RATIOS.padY`), while its vertical padding stays
-  at the original share, so the compact button still sits level beside a field.
+  bullet). `Button` takes the field's text metrics outright — font, radius,
+  line box, and vertical padding — so one size step is one label size and one
+  row box across controls; a filled, borderless variant (`primary`, `danger`)
+  carries a transparent 1px border so its outer box includes the field's frame
+  too. Only the glyph stays
+  off that scale: it keeps the shared icon ratio rather than following the
+  label, so one glyph size serves a button and an icon anywhere else at that
+  step.
   Its label carries a `0.1×` optical nudge (`--btn-label-nudge`): the line box
   centers the font's ascent/descent box, but a word without descenders fills
   only the ascent side, so half the unused descent reads as extra bottom space;
@@ -500,8 +504,9 @@ of building a parallel control.
   axis, and its glyph follows the button's ratio). A
   sized control's own icon slot is the size dimension itself (`icon` ratio `1`),
   and the glyph rendered into it takes the shared icon ratio (`ICON_RATIO`,
-  0.8125) — the text-like font ratio, so an `md` icon lands at 13px, the size of
-  its label and the optical size the filled-viewBox glyphs were normalized from.
+  0.8125; 13px at `md`) — its own optical size, independent of the label's font
+  ratio, so a button's glyph keeps the size the filled-viewBox artwork was
+  normalized from while the label takes the field's 14px.
   An icon-only `Button` uses `iconOnlyGlyph` (`ICON_RATIO × 1.15`, 14.95px
   at `md`) inside the same slot, so a label-less glyph reads as the control while
   the button box and hit area stay unchanged.
@@ -591,7 +596,10 @@ of building a parallel control.
 - **AutoComplete** — a free-text field composing `TextInput` + `useListbox` +
   `ListboxPanel`: picking an option writes its label to the bindable `value` and
   reports the option's `value` via `onSelect`, filtering to matches only (no
-  full-list fallback) and hiding the panel when nothing matches.
+  full-list fallback) and hiding the panel when nothing matches. `onInput`
+  reports the live text on every change — typing, clearing, or a pick writing
+  its label — so a controlled caller (a column filter, a remote query) can react
+  without binding `value`.
 - **Menu** — an icon-triggered dropdown (desktop popover, phone bottom sheet):
   its trigger is the shared `Button`, so the box, the hit area, the focus ring,
   and the glyph's size all come from the shared button, and the `size` prop
@@ -767,6 +775,29 @@ of building a parallel control.
   rising `resetWidthsSignal` number, not a callback: the caller only tells the
   table that the saved widths should drop, and a repeated bump still differs
   from the last value it saw.
+  Column filters (`columnFilters` + `columns[].filterable`) put a funnel trigger
+  in each opted-in header, right beside the label and next to sort arrows that
+  now stay visible so the active direction is readable at rest (the funnel is
+  `FilterIcon`'s `sheets` variant — three decreasing bars — so it reads lighter
+  than the solid funnel in a dense header). A numeric header keeps the pair at
+  its right edge; a centered header pins the pair to its right edge so the label
+  stays centered. The trigger opens a portalled panel with
+  the shared `AutoComplete` — the column's own values (`filterOptions` overrides
+  the derived set) plus any typed text — and a per-column clear; a `ClearButton`
+  beside the search box drops every filter. Ownership follows the
+  data: a `model` filters through `setFilter` in the controller pipeline, an
+  `onFilter` callback makes the table a presenter (server-side filtering, never
+  local), and with neither the table filters the full `rows` it owns — but not
+  when `pagination` is configured, where a page slice cannot produce correct
+  counts and the caller filters upstream, as it does for the search box.
+  A filtered column keeps the same three-bar mark — the trigger switches to the
+  accent ink and carries a small accent dot badge — so the glyph never reads as
+  a different control while the filtered columns stand out.
+  A remote table supplies the page slice plus `pagination.total`; the shell sets
+  `aria-busy` and overlays a spinner over the loaded rows while `loading`, and a
+  total that shrinks below the current page reports one
+  `onPageChange(totalPages)` clamp instead of rendering a page with no active
+  cell.
   `variant="docs"` swaps the viewer chrome for the static docs chrome.
   `bordered={false}` drops the viewer/split container chrome for borderless
   embedding. Its `size` also scales the cells: the root emits `--table-*`

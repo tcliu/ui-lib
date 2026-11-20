@@ -74,6 +74,63 @@ The model owns the search filter (columns marked `searchable`), the sort (the
 column's `sortValue` or the row property), the page slice, and the selection,
 and `DataTable` adds the batch toolbar and the built-in Export/Clear pair.
 
+#### Column filters
+
+Mark a column `filterable` and turn on `columnFilters` to get a funnel trigger
+in its header, beside the sort arrows. The trigger opens a small panel whose
+`AutoComplete` suggests the column's own values and accepts any typed text;
+`filters` is bindable, so a page can seed or reset it. A `ClearButton` beside the
+search box drops every column filter at once.
+
+```svelte
+<DataTable
+  {rows}
+  {columns}
+  rowId={row => row.id}
+  columnFilters
+  bind:filters
+  onFilter={(key, value) => refetch({ [key]: value })}
+/>
+```
+
+Who filters depends on the shape of the data:
+
+| Table | Filtering |
+| --- | --- |
+| `model` (in-memory) | the model — filters run before search, sort, and paging |
+| `onFilter` supplied | your handler — the table never filters locally |
+| no `pagination` | the table, over the full `rows` it renders |
+| `pagination` without `onFilter` | the caller, upstream, like `searchValue` |
+
+#### Server-side paging
+
+Pass the current page's rows and the server's total; the footer derives its page
+count from `total`. Sorting emits `onSort`, and the search and filter fields are
+presenters, so every request stays with the caller.
+
+```svelte
+<DataTable
+  rows={page.rows}
+  {columns}
+  rowId={row => row.id}
+  onSort={(key, direction) => refetch({ sort: `${key}:${direction}` })}
+  columnFilters
+  onFilter={(key, value) => refetch({ [key]: value })}
+  pagination={{
+    total: page.total,
+    pageSize: page.pageSize,
+    currentPage: page.page,
+    onPageChange: page => refetch({ page }),
+    onPageSizeChange: size => refetch({ page: 1, pageSize: size }),
+  }}
+/>
+```
+
+While `loading` is set the table keeps its rows visible, marks itself busy, and
+overlays a spinner; a total that shrinks below the current page reports the
+clamped page through `onPageChange`. Debouncing and request cancellation stay
+with the caller.
+
 ### Editor
 
 `CodeEditor` and `LazyCodeEditor` are the only components with optional

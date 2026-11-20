@@ -121,6 +121,17 @@ Project-specific development conventions for the UI Library web app.
   Its `size` scales cell text, padding, the selection count, and the table's own
   column floors; `dense` is its own ratio set, not a multiplier of the normal
   cell.
+- Per-column filtering stays `DataTable`'s header filter (`columnFilters` plus a
+  `filterable` column; a funnel trigger opens a small panel whose `AutoComplete`
+  suggests the column's values and accepts typed text). The trigger rides beside
+  the always-visible sort arrows, right after the label, and a centered header
+  keeps the pair pinned to its right edge. A column with a set filter keeps the
+  same bar mark, switches it to the accent ink, and adds a small accent dot
+  badge, so filtered columns read at a glance without the glyph changing shape.
+  A remote table supplies
+  `onFilter` and never filters locally; a controlled table with `pagination` is
+  a presenter too, so the caller filters upstream exactly as it does for
+  `searchValue`.
 - Tree/JSON-shaped display stays one shared control (`StructureTree`); reuse it
   instead of forking a tree viewer.
 - Charted data display stays one shared control (`BarChart`), with its tones in
@@ -184,6 +195,7 @@ Project-specific development conventions for the UI Library web app.
 - `Pagination` takes `variant` (`numbered` default, `compact` summary): compact keeps previous/next around the `pagination.pageOf` summary and omits the page-size selector; labels.pageOf substitutes `{page}` and `{total}`.
 - A dialog panel's footprint is `BaseDialog`'s `widthVariant`/`heightVariant` (or the `size` shorthand setting both; explicit variant wins), not a `SizeInput` metric scale. Mechanism in `ARCHITECTURE.md`.
 - Size svg primitives (icons, spinner) take `size` attributes, never classes.
+- A `Button` takes the text field's text metrics — font, radius, line box, and vertical padding — so one size step gives the same label size and the same outer box across controls; a filled, borderless variant (`primary`, `danger`) carries a transparent 1px border so its box includes the field's frame, while `ghost` stays a bare inline affordance. The glyph is the exception: it stays on the shared icon ratio rather than following the label's font ratio.
 - A sized control's icon slot is the size dimension itself (`icon` ratio `1`), while the glyph renders at the shared `ICON_RATIO` (`0.8125`), keeping the optical size the filled-viewBox glyphs were normalized from.
 - An icon-only `Button` renders its glyph 15% larger (`0.934375`) than a labelled button's while the slot and box stay the same, so the mark reads as the control.
 - An in-field affordance glyph rides a trimmed share of the icon slot rather than the whole slot — the dropdown trigger's chevron and its clear cross and a clearable field's cross at `0.625×`, the number steppers at `0.75×`, the date panel's clear cross at `0.8×`, the search icon at `0.9×` — so it reads lighter than the label while still scaling with the control.
@@ -213,10 +225,7 @@ Project-specific development conventions for the UI Library web app.
 - Reuse this project's existing UI primitives; every button is the shared
   `Button` (icon-only through its `icon` snippet) per
   `~/.agents/references/ui-patterns.md`, never a raw `<button>`.
-- A padded `Button` keeps its compact label and vertical padding and derives
-  its line box from the field row, so it lands level beside a field; its label
-  takes a `0.1×` optical nudge so cap-height text centers. Mechanism in
-  `ARCHITECTURE.md`.
+- A `Button`'s label takes a `0.1×` optical nudge so cap-height text centers; its metrics and frame are covered by the size-metric rule above. Mechanism in `ARCHITECTURE.md`.
 - A composite trigger that renders the shared `Button` (the `Menu` trigger)
   inherits its box, hit area, focus ring, and glyph size, so the trigger's
   icon carries no `size` and a trigger class never restates padding; the
@@ -295,7 +304,7 @@ Project-specific development conventions for the UI Library web app.
 - Keep focusable controls keyboard reachable with explicit focus styles and accessible names; keep non-interactive scroll wrappers out of the tab order (`tabindex="-1"`).
 - `AppShell` fills its container (`h-full`), the app supplying the viewport box (`h-dvh` wrapper); never `min-h-screen`, `overflow-hidden` clipping, or chasing mobile keyboard gaps (see `cross-browser.md`).
 - Icon-only `Button` padding is the same fixed ratio of its size dimension as every other metric; text buttons keep `px`/`py` distinction. Mechanism in `ARCHITECTURE.md`.
-- The `ghost` variant deliberately carries no padding for icons or text, so it stays compact.
+- The `ghost` variant deliberately carries no padding for icons or text, so it stays compact; it is the one variant outside the field-frame height rule, its box being its line rather than a control box.
 - A ghost text button restores breathing room through `className`; a ghost on a touch surface still owes the mobile target (`~/.agents/references/responsive-design.md`).
 - `ConfirmDialog` routes dismiss affordances to `onCancel` when passed; a discard confirm passes `confirmOnDismiss` so Escape/overlay/close perform the confirm, while destructive confirms keep the safe cancel.
 - A dialog's action row sits `gap-4` below its scrolling body (the panel's own header-to-body gap), never flush against it.
