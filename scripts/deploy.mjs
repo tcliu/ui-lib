@@ -276,7 +276,15 @@ async function runDeployTargets(
               heartbeat,
               plugins,
             })
-          : await runVercelFlow({ profile, syncEnv, applySchema: schema, heartbeat, projectFlag, plugins })
+          : await runVercelFlow({
+              profile,
+              syncEnv,
+              applySchema: schema,
+              heartbeat,
+              projectFlag,
+              vercelProtection: config.vercelProtection,
+              plugins,
+            })
       logEvent({ action: 'deploy_end', details: { target, url, elapsed_ms: Date.now() - startedAt } })
     } catch (error) {
       logEvent({

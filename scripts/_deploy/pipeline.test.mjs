@@ -75,6 +75,18 @@ describe('vercel pipeline', () => {
       'ready',
     ])
   })
+
+  it('inserts the protection step after auth when configured', () => {
+    expect(
+      stepNames(vercelTarget, vercelCtx({ syncEnv: 'yes', vercelProtection: 'preview' }), ['env-sync']),
+    ).toEqual(['auth', 'protection', 'env-sync', 'schema', 'domains', 'deploy', 'ready'])
+  })
+
+  it('rejects an unknown protection mode', () => {
+    expect(() => stepNames(vercelTarget, vercelCtx({ vercelProtection: 'sometimes' }), [])).toThrow(
+      /vercelProtection must be/,
+    )
+  })
 })
 
 describe('vercel domain step', () => {
