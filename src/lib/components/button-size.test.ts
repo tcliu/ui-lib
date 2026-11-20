@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { flushSync, mount, unmount } from 'svelte'
-import Button, { BUTTON_RATIOS } from './Button.svelte'
+import { createRawSnippet, flushSync, mount, unmount } from 'svelte'
+import Button, { BUTTON_METRICS, BUTTON_RATIOS } from './Button.svelte'
+import { ICON_RATIO } from '#lib/size-scale.js'
 import { INPUT_RATIOS } from './input-chrome'
 import { dimensionMetrics, iconPadRatio, resolveSize } from './size-metrics'
 
@@ -98,5 +99,68 @@ describe('Button dimension ratios', () => {
     const s16 = target.querySelector('button')?.getAttribute('style') ?? ''
     expect(num(s15, 'font')).toBe(12.1875)
     expect(num(s16, 'font')).toBe(13)
+  })
+})
+
+
+describe('Button label optical alignment', () => {
+  const icon = createRawSnippet(() => ({ render: () => '<span data-icon></span>' }))
+  const label = createRawSnippet(() => ({ render: () => '<span>Apply</span>' }))
+
+  it('shifts the label row by the nudge and counter-shifts the icon', () => {
+    instance = mount(Button, { target, props: { icon, children: label } })
+    flushSync()
+    const button = target.querySelector('button')!
+    const style = button.getAttribute('style') ?? ''
+    expect(num(style, 'label-nudge')).toBeCloseTo(BUTTON_RATIOS.labelNudge * 16)
+    const row = button.querySelector(':scope > span')!
+    expect(row.className).toContain('translate-y-[var(--btn-label-nudge)]')
+    const iconBox = row.querySelector(':scope > span')!
+    expect(iconBox.className).toContain('-translate-y-[var(--btn-label-nudge)]')
+  })
+
+  it('shifts a text-only label by the same nudge', () => {
+    if (instance) {
+      unmount(instance)
+      instance = null
+    }
+    instance = mount(Button, { target, props: { children: label } })
+    flushSync()
+    const wrapper = target.querySelector('button > span')!
+    expect(wrapper.className).toContain('translate-y-[var(--btn-label-nudge)]')
+  })
+})
+
+
+describe('Button icon-only glyph', () => {
+  const icon = createRawSnippet(() => ({ render: () => '<span data-icon></span>' }))
+  const label = createRawSnippet(() => ({ render: () => '<span>Apply</span>' }))
+
+  it('renders 15% larger than the shared glyph ratio', () => {
+    expect(BUTTON_METRICS.iconOnlyGlyph).toBeCloseTo(ICON_RATIO * 1.15)
+    instance = mount(Button, { target, props: { icon, size: 'md' } })
+    flushSync()
+    const style = target.querySelector('button')?.getAttribute('style') ?? ''
+    expect(num(style, 'glyph')).toBeCloseTo(ICON_RATIO * 16)
+    expect(num(style, 'icon-only-glyph')).toBeCloseTo(ICON_RATIO * 1.15 * 16)
+    // The slot is unchanged, so the button box is untouched.
+    expect(num(style, 'icon')).toBe(16)
+  })
+
+  it('uses the icon-only glyph only when no label is present', () => {
+    instance = mount(Button, { target, props: { icon, size: 'md' } })
+    flushSync()
+    expect(target.querySelector('button span')?.className).toContain('--btn-icon-only-glyph')
+
+    if (instance) {
+      unmount(instance)
+      instance = null
+    }
+    instance = mount(Button, { target, props: { icon, children: label } })
+    flushSync()
+    const row = target.querySelector('button > span')!
+    const iconBox = row.querySelector(':scope > span')!
+    expect(iconBox.className).toContain('--btn-glyph')
+    expect(iconBox.className).not.toContain('--btn-icon-only-glyph')
   })
 })

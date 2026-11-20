@@ -29,9 +29,24 @@
     // The icon→label gap: the original 8px at `md`, kept as one ratio so a
     // compact button never carries a gap wider than its own padding.
     gap: 0.5,
+    // Optical label nudge: the line box centers the font's ascent/descent box,
+    // but its ink sits above that center when a word has no descender (nearly
+    // half the descent reads as extra bottom space). Shifting the label by half
+    // that gap centers the cap height while descenders hang naturally; 1.6px at
+    // `md`. Box height and padding are untouched.
+    labelNudge: 0.1,
     icon: 1,
   }
-  export const BUTTON_METRICS = { ...BUTTON_RATIOS, iconPad: iconPadRatio(BUTTON_RATIOS), glyph: ICON_RATIO }
+  // An icon-only button has no label sharing the slot, so its glyph renders 15%
+// larger than a labelled button's while the slot (and so the button box) stays
+// unchanged: the glyph reads as the control, not as an adornment.
+const BUTTON_ICON_ONLY_GLYPH = ICON_RATIO * 1.15
+export const BUTTON_METRICS = {
+  ...BUTTON_RATIOS,
+  iconPad: iconPadRatio(BUTTON_RATIOS),
+  glyph: ICON_RATIO,
+  iconOnlyGlyph: BUTTON_ICON_ONLY_GLYPH,
+}
 
   // A paddingless icon-only button floors its box at the text row height
   // (`min-w`/`min-h` take `--btn-line`), so it renders wider than its icon slot.
@@ -185,8 +200,14 @@
 
   const iconBoxClass = 'h-[var(--btn-icon)] w-[var(--btn-icon)]'
   // The slot is the size dimension, but the glyph inside renders at the shared
-  // icon ratio so a button icon matches an icon anywhere else at that size.
-  const iconGlyphClass = '[&_svg]:h-[var(--btn-glyph)] [&_svg]:w-[var(--btn-glyph)]'
+  // icon ratio so a button icon matches an icon anywhere else at that size. An
+  // icon-only button has no label in the slot, so its glyph takes the larger
+  // icon-only share while the slot and the button box stay the same.
+  const iconGlyphClass = $derived(
+    isIconOnly
+      ? '[&_svg]:h-[var(--btn-icon-only-glyph)] [&_svg]:w-[var(--btn-icon-only-glyph)]'
+      : '[&_svg]:h-[var(--btn-glyph)] [&_svg]:w-[var(--btn-glyph)]',
+  )
 
   function handlePreventFocusSteal(event: PointerEvent) {
     event.preventDefault()
@@ -196,13 +217,17 @@
 </script>
 
 {#snippet buttonInner()}
-  {#if icon}
-    <span class="inline-flex items-center gap-[var(--btn-gap)]">
-      <span class={`inline-flex items-center justify-center ${iconBoxClass} ${iconGlyphClass}`}>{@render icon()}</span>
-      {@render children?.()}
+  {#if icon && children}
+    <span class="inline-flex translate-y-[var(--btn-label-nudge)] items-center gap-[var(--btn-gap)]">
+      <span
+        class={`inline-flex -translate-y-[var(--btn-label-nudge)] items-center justify-center ${iconBoxClass} ${iconGlyphClass}`}
+        >{@render icon()}</span>
+      {@render children()}
     </span>
-  {:else}
-    {@render children?.()}
+  {:else if icon}
+    <span class={`inline-flex items-center justify-center ${iconBoxClass} ${iconGlyphClass}`}>{@render icon()}</span>
+  {:else if children}
+    <span class="translate-y-[var(--btn-label-nudge)]">{@render children()}</span>
   {/if}
 {/snippet}
 
