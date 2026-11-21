@@ -5,6 +5,23 @@ version has one section, newest first; the format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.2] - 2026-11-21
+
+### Added
+
+- `NumberInput` accelerates its step on a modifier: Alt or Shift with
+  ArrowUp/Down, the wheel, or a stepper click moves `step × 10` at once, and
+  both modifiers move `step × 100`, keeping the same clamp, snapping, and
+  written decimals as a single step. A shifted wheel arrives as a horizontal
+  delta, so the focused field reads that axis instead of scrolling the page
+  sideways.
+
+### Changed
+
+- `NumberInput`'s stepper chevrons shrink by 20% (`stepperIcon` `0.75` → `0.6`,
+  9.6px in the md stepper slot), so they read lighter beside the value while
+  the gutter, radius, and button boxes stay unchanged.
+
 ## [0.4.1] - 2026-11-20
 
 ### Added
