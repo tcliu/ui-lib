@@ -65,7 +65,7 @@
   // inside that height once a one-digit label, the padding, and the border are
   // added, so the resting cell is floored square by `--pg-btn` instead of being
   // widened by a single digit. The direction glyphs ride a trimmed share of the
-  // icon slot (0.75×, as `NumberInput`'s steppers do) so they read lighter than
+  // icon slot (0.75×) so they read lighter than
   // the page numbers. The row and page-size-group gaps scale with the size
   // dimension (0.375× holds the 6px md spacing), and the page-size group takes
   // its own section gap (0.4×, a 20% trim) so it clears the direction buttons

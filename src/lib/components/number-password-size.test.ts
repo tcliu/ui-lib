@@ -43,22 +43,22 @@ describe('NumberInput size', () => {
     await remount(NumberInput, { value: '5', ariaLabel: 'x' })
     const frame = target.firstElementChild
     // The stepper glyph rides the trimmed in-field share; its gutter clears the
-    // overlay (0.75 × md).
-    expect(frame?.getAttribute('style')).toContain('--num-icon: 12px')
+    // overlay (0.6 × md).
+    expect(frame?.getAttribute('style')).toContain('--num-icon: 9.6px')
     expect(frame?.getAttribute('style')).toContain('--num-pad-right: 20px')
     expect(frame?.getAttribute('style')).toContain('--num-radius: 6px')
     // The box rides TextInput's shared base metrics.
     expect(target.querySelector('input')?.className).toContain('text-[length:var(--input-font)]')
     // Stepper chevrons scale with the dimension, at the shared icon ratio.
-    expect(target.querySelector('svg')?.getAttribute('width')).toBe('9.75')
+    expect(target.querySelector('svg')?.getAttribute('width')).toBe('7.8')
   })
 
   it('scales continuously for names and numbers, falling back to md', async () => {
     await remount(NumberInput, { value: '5', ariaLabel: 'x', size: 14 })
-    expect(target.firstElementChild?.getAttribute('style')).toContain('--num-icon: 10.5px')
+    expect(target.firstElementChild?.getAttribute('style')).toContain('--num-icon: 8.4px')
     expect(target.firstElementChild?.getAttribute('style')).toContain('--num-pad-right: 17.5px')
     await remount(NumberInput, { value: '5', ariaLabel: 'x', size: Number.NaN })
-    expect(target.firstElementChild?.getAttribute('style')).toContain('--num-icon: 12px')
+    expect(target.firstElementChild?.getAttribute('style')).toContain('--num-icon: 9.6px')
   })
 
   it('merges a partial override over the field and the stepper metrics', async () => {

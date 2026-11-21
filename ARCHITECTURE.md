@@ -383,7 +383,12 @@ of building a parallel control.
   many decimal places as the step or the entry it replaces, whichever is longer:
   a fractional step pads a coarse entry (`1` with `0.5` renders `1.0`) while a
   finer entry keeps its digits (`1.25` stepped by `0.5` renders `1.75`) instead
-  of rounding to the step.
+  of rounding to the step. A modifier accelerates a step: Alt or Shift with
+  ArrowUp/ArrowDown, a wheel notch, or a stepper click moves ten steps at once,
+  both modifiers move a hundred, and the accelerated value keeps the same
+  clamp, snapping, and decimals; the multiplier is internal. A shifted wheel
+  arrives as a horizontal delta, so the focused field reads that axis instead
+  of leaving it to the page.
   `EditableText`
   rides `TextInput` the same way and keeps its own skin — an outline ring
   standing in for the text — through that override, since it paints its own
@@ -518,7 +523,7 @@ of building a parallel control.
   An in-field affordance trims that slot rather than matching the label:
   `SelectDropdown`'s trigger chevron and clear cross, `TextInput`'s clear cross,
   and `TagInput`'s clear cross ride `0.625×` it, `NumberInput`'s steppers
-  `0.75×`, `SearchInput`'s leading search icon `0.9×`, and all still scale with
+  `0.6×`, `SearchInput`'s leading search icon `0.9×`, and all still scale with
   the control.
   `Pagination`'s page blocks reuse the select trigger's line and vertical
   padding (plus its 1px border), so the numbered blocks, the jump input, and the

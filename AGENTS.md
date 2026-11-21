@@ -167,6 +167,11 @@ Project-specific development conventions for the UI Library web app.
   wheel) keeps `max(step, value)` decimal places: a fractional step pads a
   coarser entry (`1` with `step={0.5}` renders `1.0`) and a finer entry keeps its
   digits (`1.25` stepped by `0.5` renders `1.75`) instead of rounding to the step.
+- `NumberInput` accelerates on a modifier: Alt or Shift with ArrowUp/Down, a
+  wheel notch, or a stepper click moves `step × 10`, and both modifiers
+  together move `step × 100`, through the same clamp, snapping, and step
+  decimals. The multiplier is internal. A shifted wheel arrives as a horizontal
+  delta, so the focused field reads that axis and claims it from page scrolling.
 - A clearable field extends the shared `ClearableProps` group, never re-declaring it or hand-rolling a cross; mechanism in `ARCHITECTURE.md` (Input family).
 - A standalone clear action (clear filters, clear tags) is `ClearButton`, never a default `Button`: it rides the field clear metrics, so its cross matches the clearable fields beside it.
 - A clearable multi-row field (`TagInput`, `TextArea`) anchors its cross to the first row/line rather than the field's height, so wrapping, growing, or resizing never moves it.
@@ -202,7 +207,7 @@ Project-specific development conventions for the UI Library web app.
 - A `Button` takes the text field's text metrics — font, radius, line box, and vertical padding — so one size step gives the same label size and the same outer box across controls; a filled, borderless variant (`primary`, `danger`) carries a transparent 1px border so its box includes the field's frame, while `ghost` stays a bare inline affordance. The glyph is the exception: it stays on the shared icon ratio rather than following the label's font ratio.
 - A sized control's icon slot is the size dimension itself (`icon` ratio `1`), while the glyph renders at the shared `ICON_RATIO` (`0.8125`), keeping the optical size the filled-viewBox glyphs were normalized from.
 - An icon-only `Button` renders its glyph 15% larger (`0.934375`) than a labelled button's while the slot and box stay the same, so the mark reads as the control.
-- An in-field affordance glyph rides a trimmed share of the icon slot rather than the whole slot — the dropdown trigger's chevron and its clear cross and a clearable field's cross at `0.625×`, the number steppers at `0.75×`, the date panel's clear cross at `0.8×`, the search icon at `0.9×` — so it reads lighter than the label while still scaling with the control.
+- An in-field affordance glyph rides a trimmed share of the icon slot rather than the whole slot — the dropdown trigger's chevron and its clear cross and a clearable field's cross at `0.625×`, the number steppers at `0.6×`, the date panel's clear cross at `0.8×`, the search icon at `0.9×` — so it reads lighter than the label while still scaling with the control.
 - `ChipDropdown` scales on the shared size axis (its ratios calibrated so `md` reproduces the original chip's label, padding, and gaps, with its chevron on `SelectDropdown`'s `0.625×` affordance share) and reserves the clear slot while holding its own label width, so clearing never resizes it.
 - `Chip` owns its size-scaled spacing (padding, font, line, gap) on the shared axis; `chipClass` supplies color and the static pill's shape (radius), so a caller passes `size` instead of baking padding/font into the class.
 - A chip color is a named `variant` (`cyan` default, sky/violet/amber/fuchsia/emerald/rose/neutral) with `appearance` (`soft` default, `solid`, `outline`) from `chip-variants.ts`; `chipClass` stays the full override for a custom pill, and `TagInput`'s default palette cycles the same tokens instead of keeping a second palette.

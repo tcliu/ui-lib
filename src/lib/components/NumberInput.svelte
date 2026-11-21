@@ -5,7 +5,7 @@
   // object tunes the whole control.
   export const NUMBER_INPUT_RATIOS = {
     ...TEXT_INPUT_RATIOS,
-    stepperIcon: 0.75,
+    stepperIcon: 0.6,
     stepperGutter: 1.25,
     stepperRadius: 0.375,
   }
@@ -156,6 +156,17 @@
   // once per gesture instead of racing through values, while a single mouse
   // notch (100px) steps once.
   const WHEEL_DELTA_THRESHOLD = 50
+  // A modifier turns one Arrow or wheel gesture into ten steps and both
+  // modifiers into a hundred, so a long range is reachable without repeating
+  // it. The nudge is internal: every field steps the same way, and the
+  // accelerated value keeps the single step's clamp, snapping, and decimals.
+  const STEP_MULTIPLIER = 10
+  const MAX_STEP_MULTIPLIER = STEP_MULTIPLIER * 10
+
+  function stepMultiplier(event: { altKey: boolean; shiftKey: boolean }): number {
+    if (event.altKey && event.shiftKey) return MAX_STEP_MULTIPLIER
+    return event.altKey || event.shiftKey ? STEP_MULTIPLIER : 1
+  }
 
   export function focus() {
     inputEl?.focus()
@@ -302,13 +313,13 @@
     onblur?.(event)
   }
 
-  function adjust(direction: 1 | -1) {
+  function adjust(direction: 1 | -1, multiplier = 1) {
     if (disabled) {
       return
     }
     const current = Number.parseFloat(value)
     const base = Number.isNaN(current) ? (min ?? 0) : current
-    let next = base + direction * step
+    let next = base + direction * step * multiplier
     if (min !== undefined && next < min) {
       next = min
     }
@@ -326,29 +337,34 @@
   }
 
   function handleKeydown(event: KeyboardEvent) {
+    const multiplier = stepMultiplier(event)
     if (event.key === 'ArrowUp') {
       event.preventDefault()
-      adjust(1)
+      adjust(1, multiplier)
     } else if (event.key === 'ArrowDown') {
       event.preventDefault()
-      adjust(-1)
+      adjust(-1, multiplier)
     }
     onkeydown?.(event)
   }
 
   function handleWheel(event: WheelEvent) {
     if (!focused || disabled) return
-    // Pinch-zoom arrives as a ctrl-modified wheel, and shift-scroll as a
-    // horizontal delta; leave both to the browser.
-    if (event.ctrlKey || event.deltaY === 0) return
+    // Pinch-zoom arrives as a ctrl-modified wheel; leave it to the browser.
+    if (event.ctrlKey) return
+    // Browsers report a shifted wheel as a horizontal delta, so read the axis
+    // that actually moved: while the field is focused, Shift accelerates its
+    // step instead of scrolling the page sideways.
+    const delta = event.deltaY !== 0 ? event.deltaY : event.shiftKey ? event.deltaX : 0
+    if (delta === 0) return
     // Own the wheel while focused so the page does not scroll instead of the
     // field stepping.
     event.preventDefault()
-    wheelDelta += event.deltaMode === 0 ? event.deltaY : event.deltaY * WHEEL_PIXELS_PER_UNIT
+    wheelDelta += event.deltaMode === 0 ? delta : delta * WHEEL_PIXELS_PER_UNIT
     if (Math.abs(wheelDelta) < WHEEL_DELTA_THRESHOLD) return
     const direction = wheelDelta < 0 ? 1 : -1
     wheelDelta = 0
-    adjust(direction)
+    adjust(direction, stepMultiplier(event))
   }
 </script>
 
@@ -360,7 +376,7 @@
     class="absolute inset-y-0 right-0 flex w-[var(--num-pad-right)] flex-col overflow-hidden rounded-r-[var(--num-radius)] border-y border-r border-transparent">
     <button
       type="button"
-      onclick={() => adjust(1)}
+      onclick={event => adjust(1, stepMultiplier(event))}
       disabled={disabled || isAtMax}
       tabindex="-1"
       aria-label={resolvedIncrementLabel}
@@ -369,7 +385,7 @@
     </button>
     <button
       type="button"
-      onclick={() => adjust(-1)}
+      onclick={event => adjust(-1, stepMultiplier(event))}
       disabled={disabled || isAtMin}
       tabindex="-1"
       aria-label={resolvedDecrementLabel}
