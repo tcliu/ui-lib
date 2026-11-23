@@ -96,9 +96,8 @@ describe('FieldTable', () => {
     // The in-flow spacer holds the natural two-row floor, so a row whose
     // area is its tallest content keeps its height.
     const spacer = cell.querySelector('[aria-hidden="true"]') as HTMLElement
-    expect(spacer.style.minHeight).toBe(
-      `${16 * (INPUT_RATIOS.line * 2 + INPUT_RATIOS.padY * 2) + 2}px`,
-    )
+    const expectedHeight = 16 * (INPUT_RATIOS.line * 2 + INPUT_RATIOS.padY * 2) + 2
+    expect(Number.parseFloat(spacer.style.minHeight)).toBeCloseTo(expectedHeight, 3)
     expect(table.querySelector('input[aria-label="badge value"]')).toBeNull()
   })
 

@@ -128,31 +128,37 @@ describe('Button dimension ratios', () => {
 })
 
 
-describe('Button label optical alignment', () => {
+describe('Button label and icon alignment', () => {
   const icon = createRawSnippet(() => ({ render: () => '<span data-icon></span>' }))
   const label = createRawSnippet(() => ({ render: () => '<span>Apply</span>' }))
 
-  it('shifts the label row by the nudge and counter-shifts the icon', () => {
+  it('centers the icon slot and the label on one axis', () => {
     instance = mount(Button, { target, props: { icon, children: label } })
     flushSync()
     const button = target.querySelector('button')!
     const style = button.getAttribute('style') ?? ''
-    expect(num(style, 'label-nudge')).toBeCloseTo(BUTTON_RATIOS.labelNudge * 16)
+    // One alignment for both parts: the row's centering, with no per-part
+    // vertical shift that would put the glyph and the text on two axes.
+    expect(style).not.toContain('--btn-label-nudge')
     const row = button.querySelector(':scope > span')!
-    expect(row.className).toContain('translate-y-[var(--btn-label-nudge)]')
+    expect(row.className).toContain('items-center')
+    expect(row.className).not.toMatch(/translate-y/)
     const iconBox = row.querySelector(':scope > span')!
-    expect(iconBox.className).toContain('-translate-y-[var(--btn-label-nudge)]')
+    expect(iconBox.className).toContain('items-center')
+    expect(iconBox.className).not.toMatch(/translate-y/)
   })
 
-  it('shifts a text-only label by the same nudge', () => {
+  it('renders a text-only label without a wrapper', () => {
     if (instance) {
       unmount(instance)
       instance = null
     }
     instance = mount(Button, { target, props: { children: label } })
     flushSync()
-    const wrapper = target.querySelector('button > span')!
-    expect(wrapper.className).toContain('translate-y-[var(--btn-label-nudge)]')
+    const button = target.querySelector('button')!
+    const child = button.firstElementChild as HTMLElement
+    expect(child.textContent).toBe('Apply')
+    expect(child.hasAttribute('class')).toBe(false)
   })
 })
 

@@ -39,6 +39,7 @@
     clearPlacement: staged('auto'),
     defaultValue: staged(''),
     showControls: staged('yes' as TriState),
+    slider: staged('no' as TriState),
     decrementLabel: staged(''),
     incrementLabel: staged(''),
     id: staged(''),
@@ -84,6 +85,7 @@
   })
   const demoRatios = $derived(appliedRatios(pg.ratios))
   const showControls = $derived(appliedFlag(pg.showControls))
+  const showSlider = $derived(appliedFlag(pg.slider))
   const hideOutline = $derived(appliedFlag(pg.hideOutline))
   const demoVariant = $derived(
     (applied(pg.variant) || undefined) as 'bordered' | 'embedded' | undefined,
@@ -126,6 +128,7 @@
       disabled: pg.disabled,
       hideOutline: pg.hideOutline,
       showControls: pg.showControls,
+      slider: pg.slider,
       clearable: pg.clearable,
       clearLabel: pg.clearLabel,
       clearPlacement: pg.clearPlacement,
@@ -161,6 +164,7 @@
     componentRatiosField({ base: NUMBER_INPUT_RATIOS, type: 'NumberInputRatioOverrides?', note: 'Partial override of the field and stepper-column ratios; the line box follows the font.', value: pg.ratios }),
     boolField({ name: 'showControls', defaultValue: 'true', note: 'Renders the stepper buttons; hiding them leaves the box and chrome untouched.', ...eyeFlag(pg.showControls) }),
     sizeField({ note: 'Control scale; numbers are icon-scale pixels scaled by fixed ratios.', ...eye(pg.size) }),
+    boolField({ name: 'slider', defaultValue: 'false', note: 'Renders a range slider under the box for scrubbing a long numeric range; the track doubles from the current value and keeps its bounds for the whole interaction so the thumb maps linearly.', ...eyeFlag(pg.slider) }),
     { name: 'step', type: 'number?', defaultValue: '1', editorDefaultValue: '1', note: 'Arrow/wheel/stepper step; Alt or Shift accelerates it tenfold (both, a hundredfold), and a written value keeps the longer of its own and the step’s decimals.', editor: 'number', clearable: true, ...eye(pg.step), onChange: value => stage(pg.step, value), placeholder: '1', toggle: eyeToggle(pg.step), sync: { kind: 'number' } },
     { name: 'value', type: 'string', defaultValue: '—', note: 'Bindable field value; the eye resets it to 5.', editor: 'text', clearable: true, ...eye(pg.value), onChange: value => stage(pg.value, value), toggle: eyeResetToggle(pg.value, () => (pg.value.value = '5')), sync: { kind: 'script' } },
     enumField({ name: 'variant', type: "'bordered' | 'embedded'", defaultValue: "'bordered'", note: 'Bordered keeps the shared chrome and metrics whether or not the steppers render; embedded drops them so the caller’s class owns the box.', options: variantOptions, placeholder: 'bordered', clearLabel: 'Clear variant', ...eye(pg.variant) }),
@@ -243,6 +247,7 @@
         ratios={demoRatios}
         {disabled}
         {showControls}
+        slider={showSlider}
         variant={demoVariant}
         hideOutline={hideOutline}
         {clearable}

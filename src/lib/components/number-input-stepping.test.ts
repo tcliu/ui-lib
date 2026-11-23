@@ -113,6 +113,21 @@ describe('NumberInput accelerated stepping', () => {
     expect(target.querySelector('input')!.value).toBe('5')
   })
 
+  it('steps a grouped value from its full amount instead of its leading digits', async () => {
+    await mountInput({ value: '25,291.00', step: 1 })
+    clickStepper('up')
+    expect(target.querySelector('input')!.value).toBe('25292.00')
+    clickStepper('down')
+    expect(target.querySelector('input')!.value).toBe('25291.00')
+  })
+
+  it('keeps a grouped value on blur instead of truncating at the comma', async () => {
+    const input = await mountInput({ value: '25,291.00', step: 1 })
+    input.dispatchEvent(new Event('blur', { bubbles: true }))
+    flushSync()
+    expect(input.value).toBe('25291.00')
+  })
+
   it('steps ten steps from a modified stepper click', async () => {
     await mountInput({ value: '5' })
     clickStepper('up', { shiftKey: true })

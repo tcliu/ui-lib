@@ -8,6 +8,8 @@
     stepperIcon: 0.6,
     stepperGutter: 1.25,
     stepperRadius: 0.375,
+    sliderHeight: 0.75,
+    sliderGap: 0.25,
   }
   export type NumberInputRatios = typeof NUMBER_INPUT_RATIOS
   export type NumberInputRatioOverrides = Partial<NumberInputRatios>
@@ -63,6 +65,11 @@
     ratios?: NumberInputRatioOverrides
     incrementLabel?: string
     decrementLabel?: string
+    // Renders a range slider under the box for scrubbing a long numeric
+    // range. The track doubles from the current value on the right, and its
+    // bounds stay frozen for the whole interaction so the thumb maps linearly to the
+    // value instead of compounding on every input.
+    slider?: boolean
     // The steppers own the field's right edge, so `clearPlacement` `auto`
     // renders the clear outside the input (an explicit `inside` sits left of
     // the steppers instead of over them).
@@ -91,6 +98,7 @@
     ratios,
     incrementLabel,
     decrementLabel,
+    slider = false,
     clearable = false,
     clearLabel,
     clearPlacement = 'auto',
@@ -110,6 +118,8 @@
       icon: resolvedRatios.stepperIcon,
       padRight: resolvedRatios.stepperGutter,
       radius: resolvedRatios.stepperRadius,
+      sliderHeight: resolvedRatios.sliderHeight,
+      sliderGap: resolvedRatios.sliderGap,
     }),
   )
   const numStyle = $derived(sizeVarStyle('num', numMetrics))
@@ -148,6 +158,7 @@
   let pointerFocused = false
   let focused = false
   let wheelDelta = 0
+  let sliderFrozen = $state<{ min: number; max: number } | null>(null)
 
   // Wheel deltas arrive as pixels (deltaMode 0), lines (1), or pages (2);
   // normalize the latter two to a pixel-equivalent scale.
@@ -210,7 +221,14 @@
     })
   }
 
-  const currentValue = $derived(Number.parseFloat(value))
+  // A caller may show a grouped value (`25,291.00`). `parseFloat` stops at the
+  // first comma, so strip grouping separators before reading the number; the
+  // field's own text always uses a dot decimal.
+  function parseValue(text: string): number {
+    return Number.parseFloat(text.replace(/,/g, ''))
+  }
+
+  const currentValue = $derived(parseValue(value))
   const isAtMax = $derived(max !== undefined && !Number.isNaN(currentValue) && currentValue >= max)
   const isAtMin = $derived(min !== undefined && !Number.isNaN(currentValue) && currentValue <= min)
   const inputType = $derived(step !== undefined && !Number.isInteger(step) ? 'decimal' : 'numeric')
@@ -293,7 +311,7 @@
     wheelDelta = 0
     const input = event.target as HTMLInputElement
     const text = input.value
-    const numValue = Number.parseFloat(text)
+    const numValue = parseValue(text)
     if (text === '' || Number.isNaN(numValue)) {
       onblur?.(event)
       return
@@ -317,7 +335,7 @@
     if (disabled) {
       return
     }
-    const current = Number.parseFloat(value)
+    const current = parseValue(value)
     const base = Number.isNaN(current) ? (min ?? 0) : current
     let next = base + direction * step * multiplier
     if (min !== undefined && next < min) {
@@ -366,6 +384,44 @@
     wheelDelta = 0
     adjust(direction, stepMultiplier(event))
   }
+
+  // Keeps a long range reachable: the track starts at the field's minimum and
+  // doubles from the current value on the right. The pair freezes from
+  // pointerdown, because recomputing the centred range on every input
+  // compounds the change and springs the thumb back to the middle.
+  const sliderBounds = $derived.by(() => {
+    if (sliderFrozen) return sliderFrozen
+    const low = min ?? 0
+    const unit = Number.isFinite(step) && step > 0 ? step : 1
+    const value = Number.isNaN(currentValue) ? low : currentValue
+    const top = low + Math.max(value > low ? (value - low) * 2 : unit * 100, unit)
+    return { min: low, max: max === undefined ? top : Math.max(low + unit, Math.min(max, top)) }
+  })
+  const resolvedSliderLabel = $derived(`${ariaLabel} ${i18n.t('number.slider')}`)
+
+  function freezeSlider() {
+    sliderFrozen ??= sliderBounds
+  }
+
+  function releaseSlider() {
+    sliderFrozen = null
+  }
+
+  function handleSliderInput(event: Event) {
+    const raw = parseValue((event.target as HTMLInputElement).value)
+    if (Number.isNaN(raw)) return
+    let next = raw
+    if (min !== undefined && next < min) next = min
+    if (max !== undefined && next > max) next = max
+    const text = formatValue(next, value)
+    value = text
+    if (inputEl) {
+      // Route through the field's own input path so a caller's `oninput` —
+      // which reads the text field — sees every slider move.
+      inputEl.value = text
+      inputEl.dispatchEvent(new Event('input', { bubbles: true }))
+    }
+  }
 </script>
 
 {#snippet steppers()}
@@ -395,46 +451,66 @@
   </div>
 {/snippet}
 
-<div onwheel={handleWheel} class={embedded ? 'flex flex-none items-stretch' : ''} style={numStyle}>
-  <TextInput
-    bind:inputRef={inputEl}
-    {id}
-    type="text"
-    inputmode={inputType}
-    {placeholder}
-    {disabled}
-    {ariaLabel}
-    {size}
-    ratios={fieldRatios}
-    {inputStyle}
-    {hideOutline}
-    bind:value
-    {defaultValue}
-    {variant}
-    className={embedded ? bareClass : framedClass}
-    trailing={showControls ? steppers : undefined}
-    {clearable}
-    {clearLabel}
-    {clearPlacement}
-    {wrapperStyle}
-    {onClear}
-    onpointerdown={() => {
-      pointerFocused = true
-    }}
-    onpointerup={() => {
-      queueMicrotask(() => {
+<div onwheel={handleWheel} class="group {embedded ? 'flex flex-none items-stretch' : ''}" style={numStyle}>
+  <div class={slider ? 'flex flex-col gap-[var(--num-slider-gap)]' : 'contents'}>
+    <TextInput
+      bind:inputRef={inputEl}
+      {id}
+      type="text"
+      inputmode={inputType}
+      {placeholder}
+      {disabled}
+      {ariaLabel}
+      {size}
+      ratios={fieldRatios}
+      {inputStyle}
+      {hideOutline}
+      bind:value
+      {defaultValue}
+      {variant}
+      className={embedded ? bareClass : framedClass}
+      trailing={showControls ? steppers : undefined}
+      {clearable}
+      {clearLabel}
+      {clearPlacement}
+      {wrapperStyle}
+      {onClear}
+      onpointerdown={() => {
+        pointerFocused = true
+      }}
+      onpointerup={() => {
+        queueMicrotask(() => {
+          pointerFocused = false
+        })
+      }}
+      onpointercancel={() => {
         pointerFocused = false
-      })
-    }}
-    onpointercancel={() => {
-      pointerFocused = false
-    }}
-    onfocus={handleFocus}
-    onclick={handleClick}
-    oninput={e => {
-      handleInput(e)
-      oninput?.(e)
-    }}
-    onblur={handleBlur}
-    onkeydown={handleKeydown} />
+      }}
+      onfocus={handleFocus}
+      onclick={handleClick}
+      oninput={e => {
+        handleInput(e)
+        oninput?.(e)
+      }}
+      onblur={handleBlur}
+      onkeydown={handleKeydown} />
+    {#if slider}
+      <input
+        type="range"
+        aria-label={resolvedSliderLabel}
+        min={sliderBounds.min}
+        max={sliderBounds.max}
+        {step}
+        value={Number.isNaN(currentValue) ? sliderBounds.min : currentValue}
+        {disabled}
+        oninput={handleSliderInput}
+        onpointerdown={freezeSlider}
+        onfocus={freezeSlider}
+        onpointerup={releaseSlider}
+        onpointercancel={releaseSlider}
+        onchange={releaseSlider}
+        onblur={releaseSlider}
+        class="block h-[var(--num-slider-height)] w-full cursor-pointer accent-cyan-500 opacity-45 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 disabled:cursor-not-allowed" />
+    {/if}
+  </div>
 </div>

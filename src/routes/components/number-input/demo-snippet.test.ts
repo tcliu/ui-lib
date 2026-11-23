@@ -18,6 +18,7 @@ function state(overrides: Partial<NumberInputSnippetState> = {}): NumberInputSni
     disabled: staged('', true),
     hideOutline: staged('', true),
     showControls: staged('', true),
+    slider: staged('', true),
     clearable: staged('', true),
     clearLabel: staged('', true),
     clearPlacement: staged('', true),

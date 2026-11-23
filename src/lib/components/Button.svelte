@@ -18,6 +18,12 @@
   // (`line + 2·padY`), so the glyph reads as a square at the text row height
   // instead of a shorter box — see `iconPadRatio`. Font weight is an emphasis
   // tier, not a length.
+  //
+  // The icon slot and the label share one center: the row's `items-center`
+  // centers the slot and the label's line box together, and no per-part
+  // translate sits between them, so the glyph and the text never read on two
+  // axes. A per-part optical shift would also break the label's parity with a
+  // text field beside it, whose own text is centered the same way.
   export const BUTTON_RATIOS = {
     font: FIELD_RATIOS.font,
     line: INPUT_RATIOS.line,
@@ -27,12 +33,6 @@
     // The icon→label gap: the original 8px at `md`, kept as one ratio so a
     // compact button never carries a gap wider than its own padding.
     gap: 0.5,
-    // Optical label nudge: the line box centers the font's ascent/descent box,
-    // but its ink sits above that center when a word has no descender (nearly
-    // half the descent reads as extra bottom space). Shifting the label by half
-    // that gap centers the cap height while descenders hang naturally; 1.6px at
-    // `md`. Box height and padding are untouched.
-    labelNudge: 0.1,
     icon: 1,
   }
   // An icon-only button has no label sharing the slot, so its glyph renders 15%
@@ -221,16 +221,14 @@ export const BUTTON_METRICS = {
 
 {#snippet buttonInner()}
   {#if icon && children}
-    <span class="inline-flex translate-y-[var(--btn-label-nudge)] items-center gap-[var(--btn-gap)]">
-      <span
-        class={`inline-flex -translate-y-[var(--btn-label-nudge)] items-center justify-center ${iconBoxClass} ${iconGlyphClass}`}
-        >{@render icon()}</span>
+    <span class="inline-flex items-center gap-[var(--btn-gap)]">
+      <span class={`inline-flex items-center justify-center ${iconBoxClass} ${iconGlyphClass}`}>{@render icon()}</span>
       {@render children()}
     </span>
   {:else if icon}
     <span class={`inline-flex items-center justify-center ${iconBoxClass} ${iconGlyphClass}`}>{@render icon()}</span>
   {:else if children}
-    <span class="translate-y-[var(--btn-label-nudge)]">{@render children()}</span>
+    {@render children()}
   {/if}
 {/snippet}
 

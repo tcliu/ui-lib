@@ -22,6 +22,7 @@ export interface NumberInputSnippetState {
   disabled: Staged<TriState>
   hideOutline: Staged<TriState>
   showControls: Staged<TriState>
+  slider: Staged<TriState>
   clearable: Staged<TriState>
   clearLabel: Staged<string>
   clearPlacement: Staged<string>
@@ -66,6 +67,7 @@ export function buildNumberInputSnippet(state: NumberInputSnippetState): string 
     disabled,
     hideOutline,
     showControls,
+    slider,
     clearable,
     clearLabel,
     clearPlacement,
@@ -104,6 +106,7 @@ export function buildNumberInputSnippet(state: NumberInputSnippetState): string 
     ...boolAttrLine('disabled', disabled, 'no'),
     ...boolAttrLine('hideOutline', hideOutline, 'no'),
     ...boolAttrLine('showControls', showControls, 'yes'),
+    ...boolAttrLine('slider', slider, 'no'),
     ...textAttrLine('className', className),
     ...boolAttrLine('clearable', clearable, 'no'),
     ...textAttrLine('clearLabel', clearLabel),

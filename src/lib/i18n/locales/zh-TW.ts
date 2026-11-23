@@ -19,6 +19,7 @@ export const zhTW = {
   number: {
     increment: '增加',
     decrement: '減少',
+    slider: '滑桿',
   },
   dropdown: {
     noOptions: '沒有選項',

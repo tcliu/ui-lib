@@ -19,6 +19,7 @@ export const zhCN = {
   number: {
     increment: '增加',
     decrement: '减少',
+    slider: '滑块',
   },
   dropdown: {
     noOptions: '没有选项',

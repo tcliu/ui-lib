@@ -19,6 +19,7 @@ export const en = {
   number: {
     increment: 'Increment',
     decrement: 'Decrement',
+    slider: 'slider',
   },
   dropdown: {
     noOptions: 'No options',
