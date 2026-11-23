@@ -5,22 +5,63 @@ version has one section, newest first; the format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.4.2] - 2026-11-21
+## [0.4.2] - 2026-11-23
 
 ### Added
 
+- `AppShell` takes `size` (the shared `SIZE_PX` axis, default `md`): it scales
+  the top bar as a unit — header/footer padding, the band gap, the icon-to-title
+  gap, the title font, and (through the header snippet's `api.size`) the drawer
+  toggle's icon and box — so the band height follows. The panes keep their own
+  widths and spacing, and `md` reproduces the previous values exactly.
+- `AppShell` takes `motion` (default `true`): `false` swaps a pane open and
+  closed without the sideways slide, for a shell whose drawer should appear
+  instantly; a user's reduced-motion preference still forces the instant swap.
+- `CollapseIcon` and `ExpandIcon` join the icon set: the rounded panel split by
+  a divider, with a chevron inside the left pane pointing at the edge it
+  collapses toward (`Collapse`) or into the panel (`Expand`), so a drawer
+  toggle swaps the pair as its pane opens and closes.
 - `NumberInput` accelerates its step on a modifier: Alt or Shift with
   ArrowUp/Down, the wheel, or a stepper click moves `step × 10` at once, and
   both modifiers move `step × 100`, keeping the same clamp, snapping, and
   written decimals as a single step. A shifted wheel arrives as a horizontal
   delta, so the focused field reads that axis instead of scrolling the page
   sideways.
+- `NumberInput` takes `slider` (default `false`): an inline range under the box
+  scrubs a long numeric range, starting at the field's minimum and doubling from
+  the current value on the right. The bounds freeze for the whole interaction so the
+  thumb maps linearly instead of compounding, and the range shares the field's
+  clamp, step, disabled state, and `oninput`.
+- `Menu` takes `triggerVariant` (default `secondary`): the trigger's shared
+  `Button` skin, so a `ghost` menu sits borderless in a row of icon actions
+  without restating the Button's variant utilities in `triggerClass`.
 
 ### Changed
 
+- `AppShell`'s header and footer bands use `p-3` at every width instead of
+  `px-3 py-3 sm:px-4`, so a consumer's panes can share the same 12px inset at
+  every breakpoint and the header's drawer toggle sits flush with the pane
+  content with no negative margin.
 - `NumberInput`'s stepper chevrons shrink by 20% (`stepperIcon` `0.75` → `0.6`,
   9.6px in the md stepper slot), so they read lighter beside the value while
   the gutter, radius, and button boxes stay unchanged.
+- `Button` centers its label and icon on one axis: the inner row's
+  `items-center` replaces the former `0.1×` label nudge, so a button's label
+  sits on the same text axis as an adjacent text field and no per-part
+  translate offsets the glyph.
+- `EditableText`'s field padding is 20% tighter than the shared field chrome
+  (`padX` and `padY`): a name fits a compact row beside its actions while the
+  shared font, line, radius, and alignment stay unchanged.
+
+### Fixed
+
+- `NumberInput` reads a caller-provided grouped value (`25,291.00`) from its
+  full amount instead of stopping at the first comma, so a stepper click,
+  Arrow key, wheel, or blur steps `25,291` to `25,292` rather than `26`.
+- `EditableText`'s hover-only edit and copy actions no longer reserve the row's
+  action gap in display mode: the label's own horizontal padding already
+  separates them, so a name that fits the field is no longer truncated by
+  controls that appear only on hover.
 
 ## [0.4.1] - 2026-11-20
 
@@ -271,4 +312,3 @@ version has one section, newest first; the format follows
 - Initial public release: the shared Svelte 5 components (inputs, selects,
   dialogs, tables, grid, tree, charts, editor), the icon set, actions, the i18n
   store, and the size and persistence helpers, with the showcase app that
-  catalogues them.
