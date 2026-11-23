@@ -192,7 +192,13 @@ byte-identically by the consuming apps through the parity gate's server list.
   (`use-app-shell-drawer.svelte.ts`). Nested shells publish an `AppShellNesting`
   context callback and visibility-hide their own floating panes (kept mounted,
   `open` preserved) while an ancestor overlay is open, so an outer overlay
-  always covers an inner one.
+  always covers an inner one. The shell's own chrome rides the shared size axis:
+  `size` (default `md`) resolves `APP_SHELL_SIZE_RATIOS` into
+  `--shell-pad`/`--shell-gap`/`--shell-title-gap`/`--shell-title` — header/footer
+  padding and band gap, the header's icon-to-title gap, and the title font — and
+  the header snippet receives the step as `api.size` for its own controls (the
+  drawer toggle's icon and box). The panes keep their own spacing and widths, so
+  the step never reaches pane content.
 
 ## Worktrees
 
@@ -388,7 +394,14 @@ of building a parallel control.
   both modifiers move a hundred, and the accelerated value keeps the same
   clamp, snapping, and decimals; the multiplier is internal. A shifted wheel
   arrives as a horizontal delta, so the focused field reads that axis instead
-  of leaving it to the page.
+  of leaving it to the page. `NumberInput` also takes `slider` (default
+  `false`): an inline range under the box scrubs a long numeric range, starting
+  at the field's minimum and doubling from the current value on the right; the
+  pair freezes for the whole interaction (drag or keyboard focus) so the thumb maps linearly to the value
+  instead of compounding on every input. The range shares the field's `min`,
+  `max`, `step`, `disabled`, and value, writes through the text field's own
+  `input` path so a caller's `oninput` sees every move, and dims until the
+  control is hovered or focused.
   `EditableText`
   rides `TextInput` the same way and keeps its own skin — an outline ring
   standing in for the text — through that override, since it paints its own
@@ -475,11 +488,11 @@ of building a parallel control.
   off that scale: it keeps the shared icon ratio rather than following the
   label, so one glyph size serves a button and an icon anywhere else at that
   step.
-  Its label carries a `0.1×` optical nudge (`--btn-label-nudge`): the line box
-  centers the font's ascent/descent box, but a word without descenders fills
-  only the ascent side, so half the unused descent reads as extra bottom space;
-  the nudge centers the cap height while descenders hang naturally, leaving the
-  box height and padding untouched.
+  A button's icon slot and its label share one vertical center: the inner row's
+  `items-center` centers the slot and the label's line box together, so one
+  alignment places the glyph and the text, with no per-part translate between
+  them. A per-part shift would also put the label on a different axis from an
+  adjacent text field's text, which centers the same way.
   `TagInput` derives the same way: its container padding carries only the
   remainder of the field's padding (`INPUT_RATIOS.padY − inputPadY`), so the
   inner input's share never adds height and an empty tag row matches a same-size
@@ -614,8 +627,10 @@ of building a parallel control.
   its trigger is the shared `Button`, so the box, the hit area, the focus ring,
   and the glyph's size all come from the shared button, and the `size` prop
   scales the trigger on the shared axis (the panel chrome keeps its own
-  metrics). The trigger's icon therefore carries no `size` of its own, and
-  `triggerClass` never restates the trigger's padding. The panel is a
+  metrics). `triggerVariant` picks the trigger's Button skin (`secondary` by
+  default, `ghost` for a row of icon actions). The trigger's icon therefore
+  carries no `size` of its own, and
+  `triggerClass` never restates the trigger's padding or variant. The panel is a
   `role="menu"` listbox over the shared interaction core, with rows taking
   focus (unlike the never-focused listbox rows) and the phone sheet as the
   narrow-viewport presentation (`MenuSheet` is that sheet).

@@ -55,7 +55,10 @@ Project-specific development conventions for the UI Library web app.
   running `npm publish`; npm's `prepublishOnly` hook checks the target registry's
   credentials (`tools/check-publish-auth.mjs`) and then runs
   `npm run publish:check`, and the build does not diff against the registry or
-  bump.
+  bump. Take every version from the one published to npm (`npm view <pkg>
+  version`) plus one patch: never skip a patch (publishing `0.4.3` while npm's
+  latest is `0.4.1` leaves a `0.4.2` gap), and an added glyph is a patch
+  release, never a minor bump for icons alone.
 - The root `README.md` is the npm page, so it leads with the package (install,
   stylesheet, imports, i18n, versioning) and keeps the showcase's setup and
   deployment below those sections; never link to repo-only files from it, since
@@ -186,6 +189,11 @@ Project-specific development conventions for the UI Library web app.
   only metric); the buttons keep the size the caller gives them, and a custom
   `className` replaces the row, dropping the gap with it.
 - The `AppShell` aside carries no padding; left-pane content owns its spacing.
+- The showcase chrome mirrors the consuming apps: the header keeps `flex-wrap`
+  on the shared `p-3` band and its drawer toggle keeps the bordered `secondary`
+  box, while the picker's row and list share that same `px-3` inset — one inset
+  for the whole chrome at every width, so the toggle box and the field below
+  share a left edge without a negative margin.
 - `AppShell` pane presentation derives from one container-measured `floating`
   boolean, never viewport breakpoint classes; docked and floating are the only
   presentations. Mechanics are in `ARCHITECTURE.md`.
@@ -196,6 +204,7 @@ Project-specific development conventions for the UI Library web app.
 - Component attributes stay camelCase.
 - A sized component exposes one numeric size dimension (`xs`–`xl` aliases of the `SIZE_PX` axis) and scales every metric by a fixed ratio; an interrelated metric derives from its base rather than being tuned beside it (the input line box follows the font; a clear cross's inset follows the horizontal padding), per `~/.agents/references/tailwind.md` (Derived custom properties); details in `ARCHITECTURE.md`.
 - A composite embedding sized controls exposes `size?: SizeInput` and forwards it to every inner sized control, defaulting to the shared `md` step so both agree.
+- `AppShell` takes the shared `size` axis for its own chrome — header/footer padding and band gap, the header's icon–title gap, and the title font, published as `--shell-pad`/`--shell-gap`/`--shell-title-gap`/`--shell-title` with the step also handed to the header snippet as `api.size` (`APP_SHELL_SIZE_RATIOS`). Pane widths and the panes' own spacing stay the caller's.
 - `SelectDropdown`'s trigger and its option rows (also `AutoComplete`'s) take
   the text field's box — the input chrome's font, line, and padding — so a
   select sits level with a `TextInput` in one row; never tune the select padding
@@ -234,7 +243,11 @@ Project-specific development conventions for the UI Library web app.
 - Reuse this project's existing UI primitives; every button is the shared
   `Button` (icon-only through its `icon` snippet) per
   `~/.agents/references/ui-patterns.md`, never a raw `<button>`.
-- A `Button`'s label takes a `0.1×` optical nudge so cap-height text centers; its metrics and frame are covered by the size-metric rule above. Mechanism in `ARCHITECTURE.md`.
+- A `Button` centers its label and its icon on one axis: the inner row's
+  `items-center` centers the icon slot and the label's line box together, so no
+  per-part translate sits between them (a nudge would also put the label off the
+  axis of an adjacent text field's text); its metrics and frame are covered by
+  the size-metric rule above. Mechanism in `ARCHITECTURE.md`.
 - A composite trigger that renders the shared `Button` (the `Menu` trigger)
   inherits its box, hit area, focus ring, and glyph size, so the trigger's
   icon carries no `size` and a trigger class never restates padding; the

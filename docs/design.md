@@ -18,11 +18,15 @@ Show-code playground on every page. It supports multiple themes.
 ### Top bar
 
 The app shell's top bar has:
-- **Component-picker toggle** (menu icon button) plus the localized
-  showcase **title** on the left
+- **Component-picker toggle** (menu icon button) plus the localized showcase
+  **title** on the left
 - **Theme** and **language** icon-button menus on the right
-- Wrapping header row (`flex-wrap`); the shell itself is a non-shrinking
-  `h-full flex-col overflow-hidden` column inside an app-supplied `h-dvh` box
+- Wrapping header row (`flex-wrap`) on the shared `p-3` band, so the shell
+  itself is a non-shrinking `h-full flex-col overflow-hidden` column inside an
+  app-supplied `h-dvh` box
+- One inset for the whole chrome at every width: the picker's first row and list
+  share the header's `px-3` (its content starts at `pt-2`), so the toggle box and
+  the field below share a left edge without a negative margin
 
 ### Main content
 
