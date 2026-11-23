@@ -110,14 +110,16 @@ describe('EditableText numeric size', () => {
     const display = target.querySelector('button')
     expect(display?.className).toContain('var(--input-font)')
     expect(display?.getAttribute('style')).toContain(`--input-font: ${16 * INPUT_RATIOS.font}px`)
-    expect(display?.getAttribute('style')).toContain('--input-pad-x: 9px')
+    // EditableText tightens the shared field padding by 20% for compact rows.
+    expect(display?.getAttribute('style')).toContain(`--input-pad-x: ${16 * (INPUT_RATIOS.padX * 0.8)}px`)
+    expect(display?.getAttribute('style')).toContain(`--input-pad-y: ${16 * (INPUT_RATIOS.padY * 0.8)}px`)
     await unmount(instance!)
     instance = mount(EditableText, { target, props: { text: 'hi', size: 14, onChange: () => {} } })
     flushSync()
     const custom = target.querySelector('button')
     expect(custom?.className).toContain('var(--input-font)')
     expect(custom?.getAttribute('style')).toContain(`--input-font: ${14 * INPUT_RATIOS.font}px`)
-    expect(custom?.getAttribute('style')).toContain('--input-pad-x: 7.875px')
+    expect(custom?.getAttribute('style')).toContain(`--input-pad-x: ${14 * (INPUT_RATIOS.padX * 0.8)}px`)
     await unmount(instance!)
     instance = null
     // Non-finite numbers fall back to md, never "undefined".

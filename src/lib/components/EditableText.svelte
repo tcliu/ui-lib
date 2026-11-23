@@ -1,3 +1,16 @@
+<script module lang="ts">
+  import { FIELD_RATIOS } from './input-chrome'
+
+  // EditableText sits in compact rows (a name beside its actions), so its field
+  // padding is 20% tighter than the shared field chrome while the font, line,
+  // radius, and gap stay the shared ones. The `ratios` prop overrides this base.
+  export const EDITABLE_TEXT_RATIOS = {
+    ...FIELD_RATIOS,
+    padX: FIELD_RATIOS.padX * 0.8,
+    padY: FIELD_RATIOS.padY * 0.8,
+  }
+</script>
+
 <script lang="ts">
   import { onDestroy, tick, untrack } from 'svelte'
   import Button from './Button.svelte'
@@ -6,7 +19,7 @@
   import EditIcon from '#lib/icons/EditIcon.svelte'
   import type { SizeInput } from '#lib/size-scale.js'
   import { copyToClipboard } from './copy-to-clipboard'
-  import { FIELD_RATIOS, INPUT_METRIC_CLASS, type FieldRatioOverrides } from './input-chrome'
+  import { INPUT_METRIC_CLASS, type FieldRatioOverrides } from './input-chrome'
   import { dimensionMetrics, sizeVarStyle } from './size-metrics'
   import { fieldOverrides, withLine } from './text-input-metrics'
   import TextInput from './TextInput.svelte'
@@ -24,8 +37,8 @@
     onChange: (text: string) => void | boolean
     size?: SizeInput
     // Partial override of the label's and field's tunable ratios (font, radius,
-    // and both paddings); omitted keys keep the shared defaults. The line box is
-    // not an override: both derive it from `font`.
+    // and both paddings); omitted keys keep EditableText's own defaults, whose
+    // padding is 20% tighter than a standalone field's.
     ratios?: FieldRatioOverrides
     className?: string
     onActivate?: () => void
@@ -77,9 +90,8 @@
     try {
       const labelRect = displayBtn?.getBoundingClientRect()
       const editRect = editBtn?.getBoundingClientRect()
-      const gapPx = metrics.rowGap
       if (labelRect) {
-        inputWidth = Math.ceil(labelRect.width + (editRect?.width ?? 0) + gapPx)
+        inputWidth = Math.ceil(labelRect.width + (editRect?.width ?? 0))
       } else {
         inputWidth = null
       }
@@ -185,11 +197,13 @@
   // drives font, radius, and padding from the size dimension, emitted as
   // `--input-*` vars consumed by `INPUT_METRIC_CLASS` below. Both the label and
   // the edit field derive their line box from the font, so one font override
-  // keeps them on one height.
-  const resolvedRatios = $derived({ ...FIELD_RATIOS, ...ratios })
-  // The row's label→field→action gap is its own metric (8px at `md`), not a
-  // field tunable, so the measurement below and the flex gap read one value.
-  const metrics = $derived(dimensionMetrics(size, withLine({ ...resolvedRatios, rowGap: 0.5 })))
+  // keeps them on one height. The padding base is EditableText's own, 20%
+  // tighter than a standalone field.
+  const resolvedRatios = $derived({ ...EDITABLE_TEXT_RATIOS, ...ratios })
+  // The hover actions sit directly after the label: its own horizontal padding
+  // already separates them, so no extra row gap is reserved. Reserving one would
+  // truncate a name the label has room for.
+  const metrics = $derived(dimensionMetrics(size, withLine(resolvedRatios)))
   const sizeStyle = $derived(sizeVarStyle('input', metrics))
   // The edit field rides the same metrics; TextInput derives its own line from
   // the font, so it takes only the tunable subset.
@@ -271,7 +285,7 @@
        pushed to the right. Keep min-w-0 so truncation still works.
        `items-center` centers the icon wrappers (edit + copy) on the text field's
        own vertical middle, so no nudge is needed to align them with the text. -->
-  <div class="group flex min-w-0 items-center gap-[var(--input-row-gap)]" style={sizeStyle}>
+  <div class="group flex min-w-0 items-center" style={sizeStyle}>
     {@render displayContent()}
     {#if copyable && text.trim() !== ''}
       <span class="shrink-0 transition group-hover:opacity-100 focus-within:opacity-100 [@media(hover:hover)]:opacity-0">

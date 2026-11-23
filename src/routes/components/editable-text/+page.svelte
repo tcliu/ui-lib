@@ -1,5 +1,5 @@
 <script lang="ts">
-  import EditableText from '#lib/components/EditableText.svelte'
+  import EditableText, { EDITABLE_TEXT_RATIOS } from '#lib/components/EditableText.svelte'
   import { getI18nContext } from '#lib/i18n/store.svelte.js'
   import ShowcasePage from '#showcase/shell/ShowcasePage.svelte'
   import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
@@ -7,7 +7,7 @@
   import { textField, boolField, sizeField } from '#showcase/playground/snippet-field.js'
   import { type TriState } from '#showcase/playground/snippet-build.js'
   import { appliedRatios, componentRatiosField } from '#showcase/playground/text-input-ratios.js'
-  import { FIELD_RATIOS, type FieldRatioOverrides } from '#lib/components/input-chrome.js'
+  import type { FieldRatioOverrides } from '#lib/components/input-chrome.js'
   import { DEFAULT_CLASS_NAME, DEFAULT_MAX_WIDTH, DEFAULT_TEXT, buildEditableTextSnippet } from './demo-snippet'
   import { parseSizeValue } from '#showcase/playground/size-input.js'
 
@@ -73,7 +73,7 @@
     textField({ name: 'className', type: 'string?', defaultValue: "'text-slate-200'", note: 'Classes for the display label.', editorDefaultValue: 'text-slate-200', clearable: true, placeholder: 'text-slate-200', ...eye(pg.className) }),
     boolField({ name: 'copyable', defaultValue: 'false', note: 'Adds a copy button beside the label.', ...eyeFlag(pg.copyable) }),
     { name: 'maxWidth', type: 'number?', defaultValue: '480', editorDefaultValue: '480', note: 'Maximum input width in px; the field also stops at the viewport edge.', editor: 'number', clearable: true, ...eye(pg.maxWidth), onChange: value => stage(pg.maxWidth, value), placeholder: '480', toggle: eyeToggle(pg.maxWidth), sync: { kind: 'number' } },
-    componentRatiosField({ base: FIELD_RATIOS, type: 'FieldRatioOverrides?', note: 'Partial override of the label and field ratios (font, radius, paddings); both line boxes follow the font.', value: pg.ratios }),
+    componentRatiosField({ base: EDITABLE_TEXT_RATIOS, type: 'FieldRatioOverrides?', note: 'Partial override of the label and field ratios (font, radius, paddings); both line boxes follow the font.', value: pg.ratios }),
     sizeField({ note: 'Text size for the label and the input.', ...eye(pg.size) }),
     { name: 'text', type: 'string', defaultValue: '—', note: 'Displayed value; double-click or use the edit button to change it (required); the eye resets to the default.', editor: 'text', clearable: true, ...eye(pg.value), onChange: value => stage(pg.value, value), toggle: eyeResetToggle(pg.value, () => (pg.value.value = DEFAULT_TEXT)), sync: { kind: 'script', attr: 'value' } },
     { name: 'onActivate', type: '() => void', defaultValue: '—', note: 'Fires when the field enters edit mode.' },
