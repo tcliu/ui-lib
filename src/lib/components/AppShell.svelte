@@ -3,12 +3,15 @@
   import { getContext, onMount, setContext } from 'svelte'
   import { slide } from 'svelte/transition'
   import { getI18nContext } from '#lib/i18n/store.svelte.js'
+  import type { SizeInput } from '#lib/size-scale.js'
+  import { dimensionMetrics, sizeVarStyle } from './size-metrics'
   import {
     APP_SHELL_DEFAULT_WIDTH,
     APP_SHELL_DESKTOP_BREAKPOINT,
     APP_SHELL_MAX_WIDTH,
     APP_SHELL_MIN_WIDTH,
     APP_SHELL_RAIL_WIDTH,
+    APP_SHELL_SIZE_RATIOS,
     resolveDrawerFloating,
     shouldSuppressFloatingPane,
     combineNestingOverlay,
@@ -55,8 +58,18 @@
   interface Props {
     className?: string
     mode?: AppShellDrawerMode
+    // Panes slide sideways while their open state changes; `false` swaps them
+    // instantly, for an app whose drawer should appear and disappear without an
+    // animation. A user's reduced-motion preference already forces the instant
+    // swap, so this prop only overrides the default.
+    motion?: boolean
     closeLabel?: string
     classNames?: AppShellClassNames
+    // The shell's own chrome scale: header/footer padding and band gap, the
+    // header's icon-to-title gap and title font (published as `--shell-*` vars),
+    // and the step the header snippet receives for its own controls. Pane
+    // widths and the panes' own spacing stay the caller's.
+    size?: SizeInput
     left?: AppShellPaneConfig
     right?: AppShellPaneConfig
     onLayoutModeChange?: (floating: boolean) => void
@@ -70,8 +83,10 @@
   let {
     className = 'flex h-full min-h-0 flex-col bg-slate-950 text-slate-100',
     mode = 'auto',
+    motion = true,
     closeLabel = undefined,
     classNames = {},
+    size = 'md',
     left = {},
     right = {},
     onLayoutModeChange = undefined,
@@ -81,6 +96,11 @@
     rightPane = undefined,
     children = undefined,
   }: Props = $props()
+
+  // The shell's chrome metrics ride one size dimension; the geometry (pane
+  // widths, presentation breakpoint) stays independent of it.
+  const shellMetrics = $derived(dimensionMetrics(size, APP_SHELL_SIZE_RATIOS))
+  const shellStyle = $derived(sizeVarStyle('shell', shellMetrics))
 
   const i18n = getI18nContext()
 
@@ -166,10 +186,11 @@
   // The slide responds to a user toggle (the header menu), never the initial
   // paint: until the first interaction the duration is zero, so a pane that
   // mounts while the page settles (the docked pane once the container measures
-  // desktop) appears in place instead of sweeping across on load.
+  // desktop) appears in place instead of sweeping across on load. `motion`
+  // opts an app out of the slide entirely.
   const slideParams = $derived({
     axis: 'x',
-    duration: userInteracted && !reduceMotion ? 200 : 0,
+    duration: motion && userInteracted && !reduceMotion ? 200 : 0,
   } as const)
 
   const leftDrawer: AppShellDrawer = new AppShellDrawer({
@@ -231,6 +252,7 @@
     rightOpen,
     toggleLeft: () => leftDrawer.setOpen(!leftOpen),
     toggleRight: () => rightDrawer.setOpen(!rightOpen),
+    size,
   })
 
   // Report the resolved presentation so a caller can keep app-level behavior
@@ -338,10 +360,10 @@
 
 <svelte:document onkeydown={handleDrawerEscape} />
 
-<div class={className} data-shell-measured={mode === 'auto' ? String(measured) : null}>
+<div class={className} data-shell-measured={mode === 'auto' ? String(measured) : null} style={shellStyle}>
   {#if header}
     <header
-      class={`flex flex-none items-center justify-between gap-4 border-b border-slate-800 px-3 py-3 sm:px-4 ${headerClass}`}>
+      class={`flex flex-none items-center justify-between gap-[var(--shell-gap)] border-b border-slate-800 p-[var(--shell-pad)] ${headerClass}`}>
       {@render header(headerApi)}
     </header>
   {/if}
@@ -384,7 +406,7 @@
   </div>
   {#if footer}
     <footer
-      class={`flex flex-none items-center justify-between gap-4 border-t border-slate-800 px-3 py-3 sm:px-4 ${footerClass}`}>
+      class={`flex flex-none items-center justify-between gap-[var(--shell-gap)] border-t border-slate-800 p-[var(--shell-pad)] ${footerClass}`}>
       {@render footer?.()}
     </footer>
   {/if}

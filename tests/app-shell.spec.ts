@@ -249,6 +249,42 @@ test('showcase: the AppShell header eye omits and restores the header', async ({
   await expect(headerToggle()).toBeVisible()
 })
 
+test('showcase: the AppShell size row scales the top bar, not the panes', async ({ page }) => {
+  await page.goto('/components/app-shell')
+  await page.waitForLoadState('networkidle')
+  const demo = showcaseDemo(page)
+  const header = demo.locator('header')
+  const aside = demo.locator('aside')
+  const toggle = header.getByRole('button', { name: 'Hide pane' })
+  const title = header.getByText('UI Library', { exact: true })
+
+  // md = 16px dimension → 12px band padding and an 18px title.
+  await expect(header).toHaveCSS('padding-left', '12px')
+  await expect(title).toHaveCSS('font-size', '18px')
+  const mdBand = await header.boundingBox()
+  const mdToggle = await toggle.boundingBox()
+
+  const size = page.getByRole('region', { name: 'Props' }).getByRole('combobox', { name: 'size value', exact: true })
+  await size.click()
+  await page.getByRole('option', { name: 'lg', exact: true }).click()
+
+  // lg = 18px → 13.5px padding, a 20.25px title, and a taller toggle and band.
+  await expect(header).toHaveCSS('padding-left', '13.5px')
+  await expect(title).toHaveCSS('font-size', '20.25px')
+  const lgBand = await header.boundingBox()
+  const lgToggle = await toggle.boundingBox()
+  expect(lgBand!.height).toBeGreaterThan(mdBand!.height)
+  expect(lgToggle!.height).toBeGreaterThan(mdToggle!.height)
+
+  // The panes keep their own spacing: the shell step never reaches them.
+  await expect(aside).toHaveCSS('row-gap', '8px')
+
+  // The seed carries the step on the shell tag.
+  await showCodeToggle(page).click()
+  await expect(snippetEditor(page)).toBeVisible()
+  expect(await editorContains(page, 'size="lg"')).toBe(true)
+})
+
 test('showcase: the AppShell rail pane shows a compact rail variant', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.goto('/components/app-shell')

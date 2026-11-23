@@ -22,6 +22,7 @@ import ChevronUpIcon from '#lib/icons/ChevronUpIcon.svelte'
 import CloseIcon from '#lib/icons/CloseIcon.svelte'
 import CloudIcon from '#lib/icons/CloudIcon.svelte'
 import CodeIcon from '#lib/icons/CodeIcon.svelte'
+import CollapseIcon from '#lib/icons/CollapseIcon.svelte'
 import ColumnsIcon from '#lib/icons/ColumnsIcon.svelte'
 import CompareIcon from '#lib/icons/CompareIcon.svelte'
 import CopyIcon from '#lib/icons/CopyIcon.svelte'
@@ -34,6 +35,7 @@ import DoubleChevronRightIcon from '#lib/icons/DoubleChevronRightIcon.svelte'
 import DoubleChevronUpIcon from '#lib/icons/DoubleChevronUpIcon.svelte'
 import DownloadIcon from '#lib/icons/DownloadIcon.svelte'
 import EditIcon from '#lib/icons/EditIcon.svelte'
+import ExpandIcon from '#lib/icons/ExpandIcon.svelte'
 import ExportIcon from '#lib/icons/ExportIcon.svelte'
 import ExternalLinkIcon from '#lib/icons/ExternalLinkIcon.svelte'
 import EyeIcon from '#lib/icons/EyeIcon.svelte'
@@ -111,6 +113,7 @@ export const ICON_ENTRIES: IconEntry[] = [
   { name: 'Close' },
   { name: 'Cloud' },
   { name: 'Code' },
+  { name: 'Collapse' },
   { name: 'Columns' },
   { name: 'Compare' },
   { name: 'Copy' },
@@ -123,6 +126,7 @@ export const ICON_ENTRIES: IconEntry[] = [
   { name: 'DoubleChevronUp' },
   { name: 'Download' },
   { name: 'Edit' },
+  { name: 'Expand' },
   { name: 'Export' },
   { name: 'ExternalLink' },
   { name: 'Eye' },
@@ -223,6 +227,7 @@ export const ICON_COMPONENTS: Record<string, Component> = {
   Close: CloseIcon,
   Cloud: CloudIcon,
   Code: CodeIcon,
+  Collapse: CollapseIcon,
   Columns: ColumnsIcon,
   Compare: CompareIcon,
   Copy: CopyIcon,
@@ -235,6 +240,7 @@ export const ICON_COMPONENTS: Record<string, Component> = {
   DoubleChevronUp: DoubleChevronUpIcon,
   Download: DownloadIcon,
   Edit: EditIcon,
+  Expand: ExpandIcon,
   Export: ExportIcon,
   ExternalLink: ExternalLinkIcon,
   Eye: EyeIcon,

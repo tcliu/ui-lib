@@ -60,6 +60,7 @@ import ChevronUpIcon from '#lib/icons/ChevronUpIcon.svelte'
 import CloseIcon from '#lib/icons/CloseIcon.svelte'
 import CloudIcon from '#lib/icons/CloudIcon.svelte'
 import CodeIcon from '#lib/icons/CodeIcon.svelte'
+import CollapseIcon from '#lib/icons/CollapseIcon.svelte'
 import ColumnsIcon from '#lib/icons/ColumnsIcon.svelte'
 import CompareIcon from '#lib/icons/CompareIcon.svelte'
 import CopyIcon from '#lib/icons/CopyIcon.svelte'
@@ -72,6 +73,7 @@ import DoubleChevronRightIcon from '#lib/icons/DoubleChevronRightIcon.svelte'
 import DoubleChevronUpIcon from '#lib/icons/DoubleChevronUpIcon.svelte'
 import DownloadIcon from '#lib/icons/DownloadIcon.svelte'
 import EditIcon from '#lib/icons/EditIcon.svelte'
+import ExpandIcon from '#lib/icons/ExpandIcon.svelte'
 import ExportIcon from '#lib/icons/ExportIcon.svelte'
 import ExternalLinkIcon from '#lib/icons/ExternalLinkIcon.svelte'
 import EyeIcon from '#lib/icons/EyeIcon.svelte'
@@ -198,6 +200,7 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/CloseIcon.svelte': { default: CloseIcon },
   'ui/CloudIcon.svelte': { default: CloudIcon },
   'ui/CodeIcon.svelte': { default: CodeIcon },
+  'ui/CollapseIcon.svelte': { default: CollapseIcon },
   'ui/ColumnsIcon.svelte': { default: ColumnsIcon },
   'ui/CompareIcon.svelte': { default: CompareIcon },
   'ui/CopyIcon.svelte': { default: CopyIcon },
@@ -210,6 +213,7 @@ const MODULE_REGISTRY: Record<string, unknown> = {
   'ui/DoubleChevronUpIcon.svelte': { default: DoubleChevronUpIcon },
   'ui/DownloadIcon.svelte': { default: DownloadIcon },
   'ui/EditIcon.svelte': { default: EditIcon },
+  'ui/ExpandIcon.svelte': { default: ExpandIcon },
   'ui/ExportIcon.svelte': { default: ExportIcon },
   'ui/ExternalLinkIcon.svelte': { default: ExternalLinkIcon },
   'ui/EyeIcon.svelte': { default: EyeIcon },

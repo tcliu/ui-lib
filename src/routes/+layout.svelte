@@ -46,11 +46,12 @@
 </script>
 
 <div class="h-dvh">
-  <AppShell left={layoutLeft}>
+  <AppShell left={layoutLeft} classNames={{ header: 'flex-wrap' }}>
     {#snippet header(api: AppShellHeaderApi)}
-      <div class="flex flex-none items-center gap-2">
+      <div class="flex flex-none items-center gap-[var(--shell-title-gap)]">
         <Button
           variant="secondary"
+          size={api.size}
           ariaLabel={i18n.t('showcase.toggleComponents')}
           ariaExpanded={api.open}
           tooltip={i18n.t('showcase.toggleComponents')}
@@ -61,7 +62,8 @@
             <MenuIcon />
           {/snippet}
         </Button>
-        <h1 class="flex-none text-base font-semibold tracking-tight whitespace-nowrap text-slate-200 sm:text-lg">
+        <h1
+          class="flex-none text-[length:var(--shell-title)] font-semibold tracking-tight whitespace-nowrap text-slate-200">
           {i18n.t('showcase.title')}
         </h1>
       </div>
@@ -71,11 +73,11 @@
       </div>
     {/snippet}
     {#snippet leftPane()}
-      <div class="px-2 pt-3 sm:px-3">
+      <div class="px-3 pt-2">
         <SearchInput bind:value={query} ariaLabel={i18n.t('showcase.searchComponents')} clearable />
       </div>
       <nav
-        class="min-h-0 flex-1 overflow-y-auto px-2 pb-3 sm:px-3"
+        class="min-h-0 flex-1 overflow-y-auto px-3 pb-3"
         tabindex="-1"
         aria-label={i18n.t('showcase.components')}>
         <ul class="flex flex-col gap-1">

@@ -14,7 +14,14 @@
 // The frame chrome and sizing on the `Resizable` itself; `w-full` is what the
 // frame's own `maxWidth="parent"` measures against, and `overflow-hidden`
 // contains the demo without a scrollbar over the frame handles.
-import { enumAttrLine, escapeRawLine, textAttrLine } from '#showcase/playground/snippet-build.js'
+import {
+  boolAttrLine,
+  enumAttrLine,
+  escapeRawLine,
+  sizeAttrLine,
+  textAttrLine,
+  type TriState,
+} from '#showcase/playground/snippet-build.js'
 import type { Staged } from '#showcase/playground/staged.js'
 
 export const SHELL_STAGE_FRAME = 'w-full overflow-hidden rounded-lg border border-slate-800'
@@ -99,6 +106,10 @@ export interface AppShellClassNamesJson {
 
 export interface AppShellSnippetState {
   mode: Staged<string>
+  // Pane motion; `true` is the component default, so the seed omits it.
+  motion: Staged<TriState>
+  // The shell chrome scale; the default step (`md`) is omitted from the seed.
+  size: Staged<string>
   className: Staged<string>
   closeLabel: Staged<string>
   // The class-name map applies only while its eye toggle is on, mirroring the
@@ -433,10 +444,12 @@ export function parseAppShellRightPane(draft: string): string | null {
 export const APP_SHELL_HEADER_MARKUP = [
   '{#snippet header(api)}',
   '  {@const toggleLabel = api.open ? hideLabel : showLabel}',
-  '  <Button variant="secondary" className="-ml-1" ariaLabel={toggleLabel} ariaExpanded={api.open} tooltip={toggleLabel} tooltipAlign="left" preventFocusSteal onClick={api.toggleLeft}>',
-  '    {#snippet icon()}<MenuIcon />{/snippet}',
-  '  </Button>',
-  '  <span class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-200">{demoTitle}</span>',
+  '  <div class="flex flex-none items-center gap-[var(--shell-title-gap)]">',
+  '    <Button variant="secondary" size={api.size} ariaLabel={toggleLabel} ariaExpanded={api.open} tooltip={toggleLabel} tooltipAlign="left" preventFocusSteal onClick={api.toggleLeft}>',
+  '      {#snippet icon()}<MenuIcon />{/snippet}',
+  '    </Button>',
+  '    <span class="min-w-0 flex-1 truncate text-[length:var(--shell-title)] font-semibold text-slate-200">{demoTitle}</span>',
+  '  </div>',
   '{/snippet}',
 ].join('\n')
 
@@ -559,6 +572,8 @@ export function normalizeAppShellFooter(draft: string): string {
 
 export function buildAppShellSnippet({
   mode,
+  motion,
+  size,
   className,
   closeLabel,
   classNames,
@@ -583,6 +598,8 @@ export function buildAppShellSnippet({
     // The mode Value prefills the component default; the builder omits it so
     // Show-code stays minimal.
     ...enumAttrLine('mode', mode, 'auto', attributeIndent),
+    ...boolAttrLine('motion', motion, 'yes', attributeIndent),
+    ...sizeAttrLine(size, attributeIndent),
     ...textAttrLine('closeLabel', closeLabel, attributeIndent),
     ...(classNames.on
       ? objectAttr(
@@ -605,10 +622,12 @@ export function buildAppShellSnippet({
       ? [
           '    {#snippet header(api)}',
           '      {@const toggleLabel = api.open ? hideLabel : showLabel}',
-          '      <Button variant="secondary" className="-ml-1" ariaLabel={toggleLabel} ariaExpanded={api.open} tooltip={toggleLabel} tooltipAlign="left" preventFocusSteal onClick={api.toggleLeft}>',
-          '        {#snippet icon()}<MenuIcon />{/snippet}',
-          '      </Button>',
-          '      <span class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-200">{demoTitle}</span>',
+          '      <div class="flex flex-none items-center gap-[var(--shell-title-gap)]">',
+          '        <Button variant="secondary" size={api.size} ariaLabel={toggleLabel} ariaExpanded={api.open} tooltip={toggleLabel} tooltipAlign="left" preventFocusSteal onClick={api.toggleLeft}>',
+          '          {#snippet icon()}<MenuIcon />{/snippet}',
+          '        </Button>',
+          '        <span class="min-w-0 flex-1 truncate text-[length:var(--shell-title)] font-semibold text-slate-200">{demoTitle}</span>',
+          '      </div>',
           '    {/snippet}',
         ]
       : []),

@@ -30,6 +30,8 @@ import {
 
 const unset: AppShellSnippetState = {
   mode: staged(''),
+  motion: staged(''),
+  size: staged(''),
   className: staged(''),
   closeLabel: staged(''),
   classNames: staged({}, true),
@@ -83,6 +85,32 @@ describe('buildAppShellSnippet', () => {
   it('emits the drawer mode override', () => {
     const source = buildAppShellSnippet({ ...unset, mode: staged('floating', true) })
     expect(source).toContain('mode="floating"')
+  })
+
+  it('emits the motion opt-out only when the slide is turned off', () => {
+    const tagOf = (state: AppShellSnippetState) => {
+      const source = buildAppShellSnippet(state)
+      return source.slice(source.indexOf('<AppShell'), source.indexOf('>', source.indexOf('<AppShell')))
+    }
+    // The default is on, so the seed omits it, eye on or off.
+    expect(tagOf(unset)).not.toContain('motion')
+    expect(tagOf({ ...unset, motion: staged('yes', true) })).not.toContain('motion')
+    expect(tagOf({ ...unset, motion: staged('no', true) })).toContain('motion={false}')
+    // The eye gates it, so a committed opt-out stays out of the seed while off.
+    expect(tagOf({ ...unset, motion: staged('no') })).not.toContain('motion')
+  })
+
+  it('emits the chrome scale only past the default step', () => {
+    const tagOf = (state: AppShellSnippetState) => {
+      const source = buildAppShellSnippet(state)
+      return source.slice(source.indexOf('<AppShell'), source.indexOf('>', source.indexOf('<AppShell')))
+    }
+    expect(tagOf(unset)).not.toContain('size')
+    expect(tagOf({ ...unset, size: staged('md', true) })).not.toContain('size')
+    expect(tagOf({ ...unset, size: staged('lg', true) })).toContain('size="lg"')
+    expect(tagOf({ ...unset, size: staged('18', true) })).toContain('size={18}')
+    // The eye keeps a committed step out of the seed.
+    expect(tagOf({ ...unset, size: staged('lg') })).not.toContain('size')
   })
 
   it('omits the staged mode while its eye is off', () => {
@@ -253,14 +281,19 @@ describe('buildAppShellSnippet', () => {
     expect(source).not.toContain('i18n')
     expect(source).toContain('{@const toggleLabel = api.open ? hideLabel : showLabel}')
     // Same props and class strings as the static demo's toggle and title.
-    expect(source).toContain('className="-ml-1"')
+    expect(source).toContain('<Button variant="secondary"')
+    expect(source).not.toContain('-ml-1')
     expect(source).toContain('tooltip={toggleLabel}')
     expect(source).toContain('tooltipAlign="left"')
     expect(source).toContain('preventFocusSteal')
     // No `size` on the toggle icon: the Button icon box owns the geometry, so
     // the icon rides its default.
     expect(source).toContain('<MenuIcon />')
-    expect(source).toContain('class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-200"')
+    expect(source).toContain('<div class="flex flex-none items-center gap-[var(--shell-title-gap)]">')
+    expect(source).toContain('size={api.size}')
+    expect(source).toContain(
+      'class="min-w-0 flex-1 truncate text-[length:var(--shell-title)] font-semibold text-slate-200"',
+    )
   })
 })
 

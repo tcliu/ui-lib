@@ -4,6 +4,7 @@ import {
   APP_SHELL_MAX_WIDTH,
   APP_SHELL_MIN_WIDTH,
   APP_SHELL_RAIL_WIDTH,
+  APP_SHELL_SIZE_RATIOS,
   clampPaneWidth,
   collapsesToRail,
   combineNestingOverlay,
@@ -12,6 +13,25 @@ import {
   savePaneSize,
   shouldSuppressFloatingPane,
 } from './app-shell'
+import { SIZE_PX, type SizeInput } from './size-scale'
+
+// The component resolves the ratios through `dimensionMetrics`; mirroring that
+// one multiplication here keeps the anchors the component must reproduce.
+function shellMetrics(size: SizeInput): Record<string, number> {
+  const dimension = typeof size === 'number' ? size : SIZE_PX[size]
+  return Object.fromEntries(Object.entries(APP_SHELL_SIZE_RATIOS).map(([key, ratio]) => [key, dimension * ratio]))
+}
+
+describe('APP_SHELL_SIZE_RATIOS', () => {
+  it('reproduces the pre-size chrome at md', () => {
+    expect(shellMetrics('md')).toEqual({ pad: 12, gap: 16, titleGap: 8, title: 18 })
+  })
+
+  it('scales every metric from one dimension', () => {
+    expect(shellMetrics('lg')).toEqual({ pad: 13.5, gap: 18, titleGap: 9, title: 20.25 })
+    expect(shellMetrics(20)).toEqual({ pad: 15, gap: 20, titleGap: 10, title: 22.5 })
+  })
+})
 
 describe('clampPaneWidth', () => {
   it('rounds and clamps into range', () => {

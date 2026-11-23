@@ -47,6 +47,9 @@ export const COMPANIONS = {
 // entry that no longer appears also fails, so the list cannot rot.
 export const ALLOWED = {
   ...COMPANIONS,
+  'AppShell.svelte': [
+    { tokens: ['inset-0'], reason: 'drawer backdrop covers the shell; it carries no control metric' },
+  ],
   'Button.svelte': [
     { tokens: ['min-h-11', 'min-w-11'], reason: 'phone touch target, constant by design' },
   ],

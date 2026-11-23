@@ -9,6 +9,8 @@
 // Persistence is opt-in: without `storageKey` every function degrades to
 // session-only defaults and never touches storage.
 
+import type { SizeInput } from './size-scale.js'
+
 export const APP_SHELL_MIN_WIDTH = 160
 export const APP_SHELL_MAX_WIDTH = 480
 export const APP_SHELL_DEFAULT_WIDTH = 288
@@ -20,6 +22,15 @@ export const APP_SHELL_RAIL_WIDTH = 64
 // against the shell's own container width so an embedded shell floats when
 // *its* space is narrow, even on a wide screen.
 export const APP_SHELL_DESKTOP_BREAKPOINT = 768
+
+// The shell's own chrome rides the shared size axis: the header/footer padding
+// and the gap between its content groups, plus the header's icon-to-title gap
+// and the title font the caller's header renders through the published vars.
+// Ratios of the size dimension, calibrated so `md` (16) reproduces the pre-size
+// chrome — 12px padding, 16px band gap, 8px icon gap, an 18px title. Pane
+// widths and the presentation ruler stay geometry, and the panes' own spacing
+// is the caller's, never the shell's.
+export const APP_SHELL_SIZE_RATIOS = { pad: 0.75, gap: 1, titleGap: 0.5, title: 1.125 }
 
 export type AppShellCollapseMode = 'hide' | 'rail'
 
@@ -40,6 +51,9 @@ export interface AppShellHeaderApi {
   rightOpen: boolean
   toggleLeft: () => void
   toggleRight: () => void
+  // The shell's resolved chrome step, so the header's own controls (the drawer
+  // toggle's icon) ride the same size as the band's padding, gap, and title.
+  size: SizeInput
 }
 
 // Nesting contract for stacked shells (e.g. a component demo rendered

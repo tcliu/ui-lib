@@ -7,8 +7,18 @@
   import { getI18nContext } from '#lib/i18n/store.svelte.js'
   import ShowcasePage from '#showcase/shell/ShowcasePage.svelte'
   import { type SyncableFieldConfig } from '#showcase/playground/snippet-sync.js'
-  import { applied, eye, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
-  import { enumField, textField, jsonField, snippetDialog, snippetField } from '#showcase/playground/snippet-field.js'
+  import { applied, appliedFlag, eye, eyeFlag, eyeToggle, stage, staged } from '#showcase/playground/staged.js'
+  import { type TriState } from '#showcase/playground/snippet-build.js'
+  import { parseSizeValue } from '#showcase/playground/size-input.js'
+  import {
+    boolField,
+    enumField,
+    textField,
+    jsonField,
+    sizeField,
+    snippetDialog,
+    snippetField,
+  } from '#showcase/playground/snippet-field.js'
   import {
     APP_SHELL_HEADER_MARKUP,
     appShellChildrenMarkup,
@@ -53,6 +63,10 @@
   // the right config's open flag and the footer snippet on the footer row, so
   // no separate demo-data panel is needed; stage size is interaction state.
   let pgMode = $state(staged('auto'))
+  // Pane motion defaults to on, so the eye starts off; `no` turns the slide off.
+  let pgMotion = $state(staged('yes' as TriState))
+  // The shell chrome scale; the default step applies no override.
+  let pgSize = $state(staged('md'))
   // The serializable pane configs. Empty renders the component default, so the
   // cleared form applies no overrides; the callbacks in `AppShellPaneConfig`
   // ride the demo objects below, never the editor text. Both start applied, so
@@ -89,6 +103,8 @@
   ]
 
   const demoMode = $derived((applied(pgMode) || undefined) as 'auto' | 'docked' | 'floating' | undefined)
+  const demoMotion = $derived(appliedFlag(pgMotion))
+  const demoSize = $derived(applied(pgSize) === undefined ? undefined : parseSizeValue(pgSize.value))
   // Unset renders the component default: the right pane stays shut until its
   // config opens it (which also applies its snippet below).
   const demoRightOpen = $derived(pgRight.value.open ?? false)
@@ -108,6 +124,8 @@
   function clearPlayground(): void {
     pgMode.value = 'auto'
     pgMode.on = false
+    pgSize.value = 'md'
+    pgSize.on = false
     pgLeft.value = {}
     pgLeft.on = true
     pgRight.value = {}
@@ -163,6 +181,8 @@
     const footer = { value: footerSnippet, on: pgFooter.on }
     return buildAppShellSnippet({
       mode: pgMode,
+      motion: pgMotion,
+      size: pgSize,
       className: pgClassName,
       closeLabel: pgCloseLabel,
       classNames: pgClassNames,
@@ -329,6 +349,7 @@
       toggle: eyeToggle(pgLeftPane),
     }),
     enumField({ name: 'mode', type: "'auto' | 'docked' | 'floating'", defaultValue: "'auto'", note: 'Auto docks beside content while the shell container is wide and floats above it when narrow (measured on the shell, not the viewport). Pinned docked stays an in-flow row at every width; rail panes float as an open-or-closed overlay below the breakpoint.', options: modeOptions, placeholder: 'auto', clearLabel: 'Clear mode', ...eye(pgMode) }),
+    boolField({ name: 'motion', defaultValue: 'true', note: 'Slides a pane in and out while its open state changes; `false` swaps it instantly.', ...eyeFlag(pgMotion) }),
     jsonField({
       name: 'right',
       type: 'AppShellPaneConfig',
@@ -370,6 +391,10 @@
       dialog: snippetDialog(parseAppShellRightPane, 'Use <p class="px-3 py-2 text-sm text-slate-300">…</p>.'),
       toggle: eyeToggle(pgRightPane),
     }),
+    sizeField({
+      note: 'Top-bar scale: header/footer padding and band gap, the icon-to-title gap, the title font, and the drawer toggle (through api.size). Panels keep their own widths and spacing, and md reproduces the pre-size chrome.',
+      ...eye(pgSize),
+    }),
     {
       name: 'onLayoutModeChange',
       type: '(floating: boolean) => void',
@@ -386,20 +411,23 @@
 
 {#snippet headerContent(api: AppShellHeaderApi)}
   {@const toggleLabel = api.open ? i18n.t('appShell.hidePane') : i18n.t('appShell.showPane')}
-  <Button
-    variant="secondary"
-    className="-ml-1"
-    ariaLabel={toggleLabel}
-    ariaExpanded={api.open}
-    tooltip={toggleLabel}
-    tooltipAlign="left"
-    preventFocusSteal
-    onClick={api.toggleLeft}>
-    {#snippet icon()}
-      <MenuIcon />
-    {/snippet}
-  </Button>
-  <span class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-200">{i18n.t('showcase.title')}</span>
+  <div class="flex flex-none items-center gap-[var(--shell-title-gap)]">
+    <Button
+      variant="secondary"
+      size={api.size}
+      ariaLabel={toggleLabel}
+      ariaExpanded={api.open}
+      tooltip={toggleLabel}
+      tooltipAlign="left"
+      preventFocusSteal
+      onClick={api.toggleLeft}>
+      {#snippet icon()}
+        <MenuIcon />
+      {/snippet}
+    </Button>
+    <span class="min-w-0 flex-1 truncate text-[length:var(--shell-title)] font-semibold text-slate-200"
+      >{i18n.t('showcase.title')}</span>
+  </div>
 {/snippet}
 
 {#snippet leftPaneContent()}
@@ -458,6 +486,8 @@
     <AppShell
       className={applied(pgClassName) || undefined}
       mode={demoMode}
+      motion={demoMotion}
+      size={demoSize}
       closeLabel={applied(pgCloseLabel) || undefined}
       classNames={applied(pgClassNames)}
       left={pgLeft.on ? demoLeft : undefined}
