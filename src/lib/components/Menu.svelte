@@ -31,11 +31,15 @@
     // Scale of the trigger button, on the shared size axis. The panel chrome
     // keeps its own metrics.
     size?: SizeInput
+    // Skin of the trigger, on the shared Button variant axis. The default
+    // `secondary` keeps the bordered control chrome; `ghost` drops the frame
+    // so a menu can sit in a row of existing icon actions.
+    triggerVariant?: 'secondary' | 'ghost'
     // Extra classes for the shared Button trigger. Never padding: the trigger
     // takes its box from Button's icon-only metrics so it matches every other
-    // icon button. Never restate a variant utility either — the Button's own
-    // classes win on source order, so the extra class would read as applied
-    // while changing nothing.
+    // icon button. Never restate a variant utility either — pick
+    // `triggerVariant` instead, because the Button's own classes win on source
+    // order and the extra class would read as applied while changing nothing.
     triggerClass?: string
     triggerTooltip?: { text: string; align?: 'left' | 'center' | 'right' }
     itemClass?: (item: T, state: MenuItemState) => string
@@ -63,6 +67,7 @@
     size = 'md',
     align = 'right',
     autoPlace = true,
+    triggerVariant = 'secondary',
     triggerClass = '',
     triggerTooltip,
     panelClass = '',
@@ -266,6 +271,7 @@
     ariaExpanded={open}
     ariaControls={open ? menuId : undefined}
     {size}
+    variant={triggerVariant}
     tooltip={triggerTooltip?.text}
     tooltipAlign={triggerTooltip?.align ?? 'center'}
     className={triggerClass}

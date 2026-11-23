@@ -26,6 +26,7 @@ function state(overrides: Partial<MenuSnippetState> = {}): MenuSnippetState {
     phoneSheetTitle: staged('', true),
     closeLabel: staged('', true),
     triggerClass: staged(''),
+    triggerVariant: staged(''),
     panelClass: staged('w-44', true),
     size: staged('md'),
     iconClass: staged(''),
@@ -67,6 +68,7 @@ describe('buildMenuSnippet', () => {
         phoneSheetTitle: staged('Actions', true),
         closeLabel: staged('Close', true),
         triggerClass: staged('text-cyan-300', true),
+        triggerVariant: staged('ghost', true),
       }),
     )
     expect(source).toContain('align="left"')
@@ -78,6 +80,7 @@ describe('buildMenuSnippet', () => {
     expect(source).toContain('phoneSheetTitle="Actions"')
     expect(source).toContain('closeLabel="Close"')
     expect(source).toContain('triggerClass="text-cyan-300"')
+    expect(source).toContain('triggerVariant="ghost"')
     expect(source).toContain('panelClass="w-44"')
     expect(source).toContain('itemClass={menuItemClass}')
   })

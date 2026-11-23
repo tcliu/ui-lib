@@ -44,6 +44,7 @@
     items: staged(seedMenuItems(), true),
     autoPlace: staged('yes' as TriState),
     triggerClass: staged(''),
+    triggerVariant: staged('secondary'),
     panelClass: staged('w-44', true),
     size: staged('md'),
     id: staged(''),
@@ -74,6 +75,10 @@
   const itemRoleOptions = [
     { value: 'menuitem', label: 'menuitem' },
     { value: 'menuitemradio', label: 'menuitemradio' },
+  ]
+  const triggerVariantOptions = [
+    { value: 'secondary', label: 'secondary' },
+    { value: 'ghost', label: 'ghost' },
   ]
 
   const demoAlign = $derived((applied(pg.align) || undefined) as 'left' | 'right' | undefined)
@@ -125,6 +130,9 @@
     return JSON.stringify(out)
   }
   const demoItemRole = $derived((applied(pg.itemRole) || undefined) as 'menuitem' | 'menuitemradio' | undefined)
+  const demoTriggerVariant = $derived(
+    (applied(pg.triggerVariant) || undefined) as 'secondary' | 'ghost' | undefined,
+  )
   const triggerLabel = $derived(applied(pg.triggerLabel) || i18n.t('kebab.label'))
   // The sheet props form a required pair in the component: a title always
   // carries a close label. Unset, the pair is absent; the component otherwise
@@ -171,6 +179,7 @@
       phoneSheetTitle: pg.phoneSheetTitle,
       closeLabel: pg.closeLabel,
       triggerClass: pg.triggerClass,
+      triggerVariant: pg.triggerVariant,
       panelClass: pg.panelClass,
       size: pg.size,
       iconClass: pg.iconClass,
@@ -229,6 +238,7 @@
     textField({ name: 'phoneSheetTitle', type: 'string?', defaultValue: '—', note: 'Opts into the phone bottom-sheet presentation; pair with closeLabel.', clearable: true, ...eye(pg.phoneSheetTitle) }),
     sizeField({ note: 'Scale of the trigger button; the trigger glyph follows it, and the panel chrome keeps its own metrics.', ...eye(pg.size) }),
     textField({ name: 'triggerClass', type: 'string?', defaultValue: "''", note: 'Extra classes for the trigger button; never padding — the trigger takes its box from the Button’s icon-only metrics.', editorDefaultValue: '', clearable: true, ...eye(pg.triggerClass) }),
+    enumField({ name: 'triggerVariant', type: "'secondary' | 'ghost'", defaultValue: "'secondary'", note: 'Skin of the trigger button; ghost drops the bordered chrome for a row of icon actions.', options: triggerVariantOptions, placeholder: 'secondary', clearLabel: 'Clear trigger variant', ...eye(pg.triggerVariant) }),
     jsonField({
       name: 'triggerTooltip',
       type: '{ text: string; align?: "center" | "left" | "right" }',
@@ -289,6 +299,7 @@
         id={applied(pg.id) || undefined}
         triggerTooltip={applied(pg.triggerTooltip) ? demoTriggerTooltip : undefined}
         triggerClass={applied(pg.triggerClass) || undefined}
+        triggerVariant={demoTriggerVariant}
         panelClass={applied(pg.panelClass) || undefined}
         itemRole={demoItemRole}
         {...demoPhoneSheet}

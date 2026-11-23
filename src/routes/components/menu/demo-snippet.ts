@@ -89,6 +89,7 @@ export interface MenuSnippetState {
   phoneSheetTitle: Staged<string>
   closeLabel: Staged<string>
   triggerClass: Staged<string>
+  triggerVariant: Staged<string>
   panelClass: Staged<string>
   size: Staged<string>
   iconClass: Staged<string>
@@ -174,6 +175,7 @@ export function buildMenuSnippet({
   phoneSheetTitle,
   closeLabel,
   triggerClass,
+  triggerVariant,
   panelClass,
   size,
   iconClass,
@@ -207,6 +209,7 @@ export function buildMenuSnippet({
     ...textAttrLine('id', id, indent),
     ...tooltipLine(triggerTooltip, triggerTooltipAlign, indent),
     ...textAttrLine('triggerClass', triggerClass, indent),
+    ...enumAttrLine('triggerVariant', triggerVariant, 'secondary', indent),
     ...textAttrLine('panelClass', panelClass, indent),
     // The trigger's scale rides the shared size axis; the default step is
     // omitted so Show-code stays minimal.
