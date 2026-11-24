@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Production deploy to Vercel or Cloudflare Pages: syncs the target env,
+// Production deploy to Vercel or Cloudflare Workers: syncs the target env,
 // optionally applies the Neon schema, deploys (Vercel with `vercel deploy
-// --prod` and a READY wait, or `wrangler pages deploy` on Cloudflare Pages),
+// --prod` and a READY wait, or `wrangler deploy` on Cloudflare Workers),
 // and points the target at its production URL.
 //
 // Usage:
@@ -35,9 +35,9 @@ function usage() {
 
 Targets (--target, prod profile only; repeatable, comma-separated, or all):
   vercel       Deploy the app to Vercel.
-  cloudflare   Deploy the app to Cloudflare Pages (reads .env.prod +
+  cloudflare   Deploy the app to Cloudflare Workers (reads .env.prod +
                .env.cloudflare, syncs vars/secrets via wrangler, removes
-               forbidden keys, builds with CF_PAGES=1).
+               forbidden keys, builds with CF_WORKERS=1).
   all          Deploy to every target in parallel (the shared schema applies once).
 
 The database backend is configuration, not target identity: a configured D1
