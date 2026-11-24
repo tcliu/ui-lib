@@ -247,7 +247,7 @@ real.
 ## Deployment
 
 The showcase app ships with `@sveltejs/adapter-vercel` (Node.js runtime) and
-`@sveltejs/adapter-cloudflare` (`CF_PAGES=1` selects it in `vite.config.ts`).
+`@sveltejs/adapter-cloudflare` (`CF_WORKERS=1` selects it in `vite.config.ts`).
 Deploy plugins and targets are selected by the committed `deploy.config.json`,
 so the shared deploy modules stay app-agnostic.
 
@@ -274,7 +274,7 @@ defaults in code.
 
 `vercel.json` sets the SvelteKit framework with `npm run build`.
 
-### Cloudflare Pages
+### Cloudflare Workers
 
 ```bash
 npm run deploy -- --target cloudflare

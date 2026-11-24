@@ -10,7 +10,7 @@ organized, see `ARCHITECTURE.md`; for how to write code in this project, see
 - **Svelte 5** (runes) + **SvelteKit** (routing, server endpoints)
 - **Tailwind CSS v4** (utility-first styling, theme via CSS variable overrides)
 - **Vercel** deployment by default (`@sveltejs/adapter-vercel`, Node.js runtime),
-  or **Cloudflare Pages** (`@sveltejs/adapter-cloudflare`, selected by `CF_PAGES=1`
+  or **Cloudflare Workers** (`@sveltejs/adapter-cloudflare`, selected by `CF_WORKERS=1`
   / `npm run deploy -- --target cloudflare` on the existing Neon backend)
 
 ## Environment variables
@@ -19,7 +19,7 @@ organized, see `ARCHITECTURE.md`; for how to write code in this project, see
 |----------|----------|---------|-------------|
 | `APP_BASE_URL` | No (Vercel only) | — | Public URL the app is reachable at; the deploy points the Vercel production domain at its hostname |
 | `VERCEL_PROJECT` | No | — | Vercel project slug used to auto-link an unlinked checkout |
-| `CLOUDFLARE_PROJECT` | Cloudflare only | — | Pages project name; the live URL is the Pages production hostname derived from it |
+| `CLOUDFLARE_PROJECT` | Cloudflare only | — | Worker name; the live URL is the Workers.dev host derived from it |
 | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare only | — | Cloudflare account ID for the Pages/API steps |
 | `DEV_TAG` | No | — | Worktree badge label (set in `.env.local` by `tools/create-worktree.mjs`) |
 | `PROFILE` | No | — | Explicit `dev`/`prod` runtime profile. The scripts fall back to `dev` when it is unset; the `/api/info` card reports it as `null` in an app with no runtime profile |

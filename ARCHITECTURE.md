@@ -9,7 +9,7 @@ for how to write code in this project, see `AGENTS.md`.
 
 - **Svelte 5** (runes) + **SvelteKit** (routing, server endpoints)
 - **Tailwind CSS v4** (utility-first styling, theme via CSS variable overrides)
-- **Vercel** deployment by default (`@sveltejs/adapter-vercel`, Node.js runtime), or **Cloudflare Pages** (`@sveltejs/adapter-cloudflare`, selected by `CF_PAGES=1`)
+- **Vercel** deployment by default (`@sveltejs/adapter-vercel`, Node.js runtime), or **Cloudflare Workers** (`@sveltejs/adapter-cloudflare`, selected by `CF_WORKERS=1`)
 
 ## Project structure
 
@@ -59,7 +59,7 @@ ui-lib/
 │   ├── deploy.config.mjs         # Loads the repo-root deploy.config.json (project-owned selection)
 │   ├── _deploy/                  # Pipeline core + backend selection + targets/{vercel,cloudflare} + plugins
 │   ├── sync-vercel-env.mjs       # Push .env.vercel values to the Vercel project
-│   ├── sync-cloudflare-env.mjs   # Push .env.cloudflare values to the Cloudflare Pages project
+│   ├── sync-cloudflare-env.mjs   # Push .env.cloudflare values to the Worker
 │   ├── heartbeat.mjs             # Liveness heartbeat
 │   ├── log-event.mjs             # Structured event logger
 │   ├── create-worktree.mjs       # Worktree creation
