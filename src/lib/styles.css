@@ -52,18 +52,19 @@
  * Tailwind v4 compiles every palette utility to a `var(--color-<name>-<grade>)`
  * reference, overriding those variables under [data-theme='…'] re-themes the
  * whole app centrally. Mapping rules per theme:
- *   - Light themes ('light', 'sepia', 'sky', 'mint', 'lavender') mirror the
+ *   - Light themes ('light', 'sepia', 'olive', 'mint', 'lavender') mirror the
  *     slate scale around its midpoint so surface/border/text roles invert
  *     (slate-900 becomes white so panels read raised on the canvas), and
  *     darken accent grades 100–400 so text/hover roles keep AA contrast on
  *     light surfaces.
- *   - Dark variants ('ember', 'nebula', 'forest', 'midnight') shift surface
- *     and text hues; text grades stay light and hover fills brighten past
- *     the base.
+ *   - Dark variants ('ember', 'nebula', 'forest', 'graphite', 'plum') shift
+ *     surface and text hues; text grades stay light and hover fills brighten
+ *     past the base. 'graphite' is the neutral (zero-chroma) dark surface and
+ *     keeps the default cyan accent.
  *   - 'sepia' and 'ember' remap cyan to amber so the accent family matches
- *     their warm palettes; 'nebula' and 'lavender' remap cyan to violet;
- *     'forest' and 'mint' remap cyan to emerald; 'midnight' remaps it to
- *     sky-blue.
+ *     their warm palettes; 'olive' remaps it to lime; 'nebula' and 'lavender'
+ *     remap cyan to violet; 'plum' remaps it to pink; 'forest' and 'mint'
+ *     remap cyan to emerald.
  * Grade 500+ accents are otherwise untouched: vivid accent fills work on both
  * dark and light surfaces. When introducing new colors, prefer grades these
  * mappings already cover so components theme automatically. Colored shadows
@@ -72,7 +73,7 @@
  */
 [data-theme='light'],
 [data-theme='sepia'],
-[data-theme='sky'],
+[data-theme='olive'],
 [data-theme='mint'],
 [data-theme='lavender'] {
   --toast-success-bg: #27ae49;
@@ -102,15 +103,48 @@
 
   --color-emerald-100: #064e3b;
   --color-emerald-200: #065f46;
+  --color-emerald-300: #047857;
   --color-emerald-400: #059669;
 
   --color-amber-100: #78350f;
   --color-amber-200: #92400e;
+  --color-amber-300: #b45309;
   --color-amber-400: #d97706;
 
   --color-violet-100: #4c1d95;
   --color-violet-200: #5b21b6;
-  --color-violet-400: #6d28d9;
+  --color-violet-300: #6d28d9;
+  --color-violet-400: #7c3aed;
+
+  --color-sky-100: #0c4a6e;
+  --color-sky-200: #075985;
+  --color-sky-300: #0369a1;
+  --color-sky-400: #0284c7;
+
+  --color-fuchsia-100: #701a75;
+  --color-fuchsia-200: #86198f;
+  --color-fuchsia-300: #a21caf;
+  --color-fuchsia-400: #c026d3;
+
+  --color-red-100: #7f1d1d;
+  --color-red-200: #991b1b;
+  --color-red-300: #b91c1c;
+  --color-red-400: #dc2626;
+
+  --color-indigo-100: #312e81;
+  --color-indigo-200: #3730a3;
+  --color-indigo-300: #4338ca;
+  --color-indigo-400: #4f46e5;
+
+  --color-teal-100: #134e4a;
+  --color-teal-200: #115e59;
+  --color-teal-300: #0f766e;
+  --color-teal-400: #0d9488;
+
+  --color-orange-100: #7c2d12;
+  --color-orange-200: #9a3412;
+  --color-orange-300: #c2410c;
+  --color-orange-400: #ea580c;
 }
 
 [data-theme='light'] {
@@ -191,19 +225,25 @@
   --color-cyan-500: #8b5cf6;
 }
 
-[data-theme='sky'] {
-  /* Cool blue-white ramp mirroring the light roles; the shared light-family
-      rule already darkens the cyan accents. */
-  --color-slate-100: #14263c;
-  --color-slate-200: #24374f;
-  --color-slate-300: #3c516b;
-  --color-slate-400: #4d647c;
-  --color-slate-500: #556a80;
-  --color-slate-600: #93a7bb;
-  --color-slate-700: #bcd0e0;
-  --color-slate-800: #d3e2ee;
-  --color-slate-900: #ffffff;
-  --color-slate-950: #eff5fa;
+[data-theme='olive'] {
+  /* Pale olive ramp mirroring the light roles; cyan shifts to lime. */
+  --color-slate-100: #1f2410;
+  --color-slate-200: #30391a;
+  --color-slate-300: #465024;
+  --color-slate-400: #5b6631;
+  --color-slate-500: #67723c;
+  --color-slate-600: #8d9863;
+  --color-slate-700: #c2cba0;
+  --color-slate-800: #dfe5c6;
+  --color-slate-900: #fdfeef;
+  --color-slate-950: #edf2d8;
+
+  /* Accent family shifts from cyan to lime. */
+  --color-cyan-100: #365314;
+  --color-cyan-200: #3f6212;
+  --color-cyan-300: #4d7c0f;
+  --color-cyan-400: #5c8a0b;
+  --color-cyan-500: #84cc16;
 }
 
 [data-theme='mint'] {
@@ -267,25 +307,42 @@
   --color-cyan-500: #10b981;
 }
 
-[data-theme='midnight'] {
-  /* Deep midnight dark ramp: blue-black surfaces and cool text neutrals. */
-  --color-slate-100: #eef2ff;
-  --color-slate-200: #d6ddf5;
-  --color-slate-300: #b9c2e2;
-  --color-slate-400: #94a0c2;
-  --color-slate-500: #7a86a6;
-  --color-slate-600: #555e7a;
-  --color-slate-700: #2b324d;
-  --color-slate-800: #1d2439;
-  --color-slate-900: #151a2b;
-  --color-slate-950: #0e1120;
+[data-theme='graphite'] {
+  /* Neutral dark ramp: zero-chroma surfaces and true grays, so the palette
+     reads as charcoal rather than the default theme's deep navy. Keeps the
+     default cyan accent. */
+  --color-slate-100: #fafafa;
+  --color-slate-200: #f0f0f0;
+  --color-slate-300: #d9d9d9;
+  --color-slate-400: #a6a6a6;
+  --color-slate-500: #8a8a8a;
+  --color-slate-600: #616161;
+  --color-slate-700: #3d3d3d;
+  --color-slate-800: #292929;
+  --color-slate-900: #1b1b1b;
+  --color-slate-950: #111111;
+}
 
-  /* Accent family shifts from cyan to sky-blue, keeping the dark-theme grade direction. */
-  --color-cyan-100: #dbeafe;
-  --color-cyan-200: #bfdbfe;
-  --color-cyan-300: #93c5fd;
-  --color-cyan-400: #60a5fa;
-  --color-cyan-500: #3b82f6;
+[data-theme='plum'] {
+  /* Plum-dark ramp: magenta-black surfaces with pink-tinted text neutrals. */
+  --color-slate-100: #fbeef6;
+  --color-slate-200: #f6dcec;
+  --color-slate-300: #e6bcd6;
+  --color-slate-400: #c294b4;
+  --color-slate-500: #a47696;
+  --color-slate-600: #7a5673;
+  --color-slate-700: #4a2b43;
+  --color-slate-800: #341d30;
+  --color-slate-900: #22141f;
+  --color-slate-950: #150b13;
+
+  /* Accent family shifts from cyan to pink, keeping the dark-theme grade
+     direction. */
+  --color-cyan-100: #fce7f3;
+  --color-cyan-200: #fbcfe8;
+  --color-cyan-300: #f9a8d4;
+  --color-cyan-400: #f472b6;
+  --color-cyan-500: #ec4899;
 }
 
 html,

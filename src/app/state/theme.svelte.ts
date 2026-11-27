@@ -5,7 +5,17 @@ import { readWebSettings, writeWebSetting } from './web-settings'
 // theme opts in through `data-theme`, matching the palettes in `src/lib/styles.css`
 // and the pre-paint script in `src/app.html`.
 export type UiTheme =
-  'dark' | 'light' | 'ember' | 'sepia' | 'nebula' | 'sky' | 'forest' | 'midnight' | 'mint' | 'lavender'
+  | 'dark'
+  | 'light'
+  | 'ember'
+  | 'sepia'
+  | 'nebula'
+  | 'graphite'
+  | 'forest'
+  | 'plum'
+  | 'mint'
+  | 'olive'
+  | 'lavender'
 
 export const THEMES: UiTheme[] = [
   'dark',
@@ -13,10 +23,11 @@ export const THEMES: UiTheme[] = [
   'ember',
   'sepia',
   'nebula',
-  'sky',
+  'graphite',
   'forest',
-  'midnight',
+  'plum',
   'mint',
+  'olive',
   'lavender',
 ]
 

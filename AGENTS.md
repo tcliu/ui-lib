@@ -338,6 +338,14 @@ Project-specific development conventions for the UI Library web app.
   or duplicate palette values.
 - Ink on vivid accent fills uses the fixed `text-onaccent` token, never a
   remapped slate grade.
+- The shared light-family block remaps every accent family the components use
+  as ink (`cyan`, `rose`, `emerald`, `amber`, `violet`, `sky`, `fuchsia`,
+  `red`, `indigo`, `teal`, `orange` at grades 100–400); add the missing
+  family/grade there rather than at a call site, and let
+  `tools/check-theme-coverage.mjs` prove the coverage.
+- A tinted slab, banner, or chip on a light surface takes the vivid grade at
+  low alpha (`bg-*-500/10`), never a `-900`/`-950` fill, which stays near-black
+  under a light theme.
 - Adding or renaming a theme means updating every sync point in one change;
   missed sync points silently fall back to the default palette.
 

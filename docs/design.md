@@ -136,11 +136,11 @@ control's rounded frame and spacing.
 
 ## Theming
 
-The app supports ten themes; `dark` is the default palette (no `data-theme`
+The app supports eleven themes; `dark` is the default palette (no `data-theme`
 attribute, applied pre-paint by the inline script in `src/app.html`), and the
-other nine opt in through `data-theme`:
-- **Dark**: `dark` (default), `ember`, `nebula`, `forest`, `midnight`
-- **Light**: `light`, `sepia`, `sky`, `mint`, `lavender`
+other ten opt in through `data-theme`:
+- **Dark**: `dark` (default), `ember`, `forest`, `graphite` (neutral gray), `nebula`, `plum`
+- **Light**: `light`, `mint`, `olive`, `sepia`, `lavender`
 
 Theme selection (plus picker visibility) is persisted as fields of one JSON
 object in localStorage under `ui-lib:web-settings`.

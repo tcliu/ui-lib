@@ -11,7 +11,7 @@
       // src/lib/styles.css.
       try {
         var stored = JSON.parse(localStorage.getItem('ui-lib:web-settings') || '{}').theme
-        var themes = ['light', 'ember', 'sepia', 'nebula', 'sky', 'forest', 'midnight', 'mint', 'lavender']
+        var themes = ['light', 'ember', 'sepia', 'nebula', 'graphite', 'forest', 'plum', 'mint', 'olive', 'lavender']
         if (themes.indexOf(stored) !== -1) {
           document.documentElement.dataset.theme = stored
         }

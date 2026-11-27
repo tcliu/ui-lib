@@ -25,9 +25,9 @@
   // An alternate palette, to show the `palette` prop overriding the built-in
   // per-tag colours.
   const ALT_PALETTE = [
-    'border-amber-700 bg-amber-950/50 text-amber-200',
-    'border-teal-700 bg-teal-950/50 text-teal-200',
-    'border-fuchsia-700 bg-fuchsia-950/50 text-fuchsia-200',
+    'border-amber-500/40 bg-amber-500/10 text-amber-200',
+    'border-teal-500/40 bg-teal-500/10 text-teal-200',
+    'border-fuchsia-500/40 bg-fuchsia-500/10 text-fuchsia-200',
   ]
 
   // Customizer playground state. Every curated option starts at the

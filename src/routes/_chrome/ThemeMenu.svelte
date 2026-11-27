@@ -4,6 +4,7 @@
   import { getTheme, setTheme, THEMES, type UiTheme } from '#appLib/state/theme.svelte.js'
   import PaletteIcon from '#lib/icons/PaletteIcon.svelte'
   import { menuRadioItemClass } from './menu-item-class'
+  import { THEME_ICONS } from './theme-icons'
 
   const i18n = getI18nContext()
   const currentTheme = $derived(getTheme())
@@ -44,6 +45,10 @@
     <PaletteIcon />
   {/snippet}
   {#snippet item(option: ThemeOption, _state: MenuItemState)}
-    <span>{option.label}</span>
+    {@const OptionIcon = THEME_ICONS[option.value]}
+    <span class="flex min-w-0 items-center gap-2">
+      <OptionIcon className="shrink-0" />
+      <span>{option.label}</span>
+    </span>
   {/snippet}
 </Menu>
