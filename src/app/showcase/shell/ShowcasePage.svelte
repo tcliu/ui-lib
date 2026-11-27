@@ -287,7 +287,7 @@
   fallback. -->
 <div
   data-showcase-block
-  class="mx-auto flex h-full w-full flex-col gap-3 px-4 pt-6 max-w-7xl">
+  class="mx-auto flex h-full w-full flex-col gap-3 px-4 pt-3 max-w-7xl">
   <div class="flex flex-none flex-col gap-3">
     <header data-showcase-titlebar class="flex items-start justify-between gap-3">
       <h2 class="text-lg font-semibold tracking-tight sm:text-xl">{title}</h2>

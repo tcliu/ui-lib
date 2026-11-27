@@ -229,8 +229,8 @@ test('showcase: the header Reset clears the Button playground', async ({ page, c
   await reset.click()
   await expect(page.getByRole('button', { name: 'Apply (0)' })).toBeVisible()
 
-  // At rest the block sits flush at the scroller top with the title one pt-6
-  // below it — the page container's 24px top rhythm.
+  // At rest the block sits flush at the scroller top with the title one pt-3
+  // below it — the page container's 12px top rhythm.
   const scroller = page.getByRole('main')
   const block = showcaseBlock(page)
   const titlebar = showcaseTitlebar(page)
@@ -239,7 +239,7 @@ test('showcase: the header Reset clears the Button playground', async ({ page, c
   await expect.poll(async () => (await block.boundingBox())?.y).toBeCloseTo(mainBox?.y ?? 0, 0)
   await expect
     .poll(async () => (await titlebar.boundingBox())?.y)
-    .toBeCloseTo((mainBox?.y ?? 0) + 24, 0)
+    .toBeCloseTo((mainBox?.y ?? 0) + 12, 0)
 
   // The body scrolls inside its own scrollport while the fixed header band
   // stays put: only tbody rows move. Scoped to the region holding the body —
