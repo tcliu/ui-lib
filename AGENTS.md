@@ -267,7 +267,7 @@ Project-specific development conventions for the UI Library web app.
 - Portal dialogs to `document.body` through `positionPanel` sheet mode so no
   ancestor stacking context can clip or trap them.
 - Temporary scratch (plans in `.tmp/plans/`, requirements in `.tmp/features/`)
-  lives in `.tmp/`, never in source directories.
+  lives in `.tmp/`, never in source directories or a system temporary directory.
 - The shared `CodeEditor`/`LazyCodeEditor` load language packs on demand through
   a `docType` lookup; its CodeMirror packages are optional peer dependencies,
   and its theme package needs `@babel/runtime` in any app that vendors it. Its
